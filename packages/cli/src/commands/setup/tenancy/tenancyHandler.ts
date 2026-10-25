@@ -563,7 +563,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           5. What each role may do is in ${c.highlight('api/src/lib/permissions')}. Guard
              organization fields with ${c.highlight('@requirePermission(permission: "...")')}
              (or ${c.highlight('@requireAuth(roles: [...])')}), and check permissions on the
-             web with ${c.highlight('useCan()')} from ${c.highlight('@cedarjs/tenancy/web')}.
+             web with ${c.highlight('useAuth().hasPermission()')}.
           6. ${c.highlight('@requireAuth')} is now about the current organization: it needs
              one, and checks the user's role in it. Add ${c.highlight('scope: USER')} to
              your fields that are about the signed-in user instead (their

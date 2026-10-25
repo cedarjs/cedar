@@ -12,14 +12,14 @@ import { createPermissions } from '@cedarjs/tenancy'
  * user, in any organization or none (their own account, say).
  *
  * `getCurrentUser` adds each membership's permissions with
- * `withPermissions`, so the web can check them with `useCan()` from
- * `@cedarjs/tenancy/web` without a copy of this map. The web only decides
+ * `withPermissions`, so the web can check them with
+ * `useAuth().hasPermission()` without a copy of this map. The web only decides
  * what to show; these checks are the guard.
  *
  * Who may grant which role is `ROLE_GRANTS` in
  * api/src/services/organizations/organizations.
  */
-export const { can, requirePermission, permissionsOf, withPermissions } =
+export const { hasPermission, requirePermission, permissionsOf, withPermissions } =
   createPermissions({
     roles: {
       owner: ['organization.read', 'members.manage'],

@@ -1,6 +1,7 @@
 import React from 'react'
 
 import type { AuthContextInterface } from './AuthContext.js'
+import { HasPermissionContext } from './HasPermissionContext.js'
 import { HasRoleContext } from './HasRoleContext.js'
 
 export function createUseAuth<
@@ -57,9 +58,17 @@ export function createUseAuth<
   > => {
     const context = React.useContext(AuthContext)
     const hasRole = React.useContext(HasRoleContext)
+    const hasPermission = React.useContext(HasPermissionContext)
     const scoped = React.useMemo(
-      () => (context && hasRole ? { ...context, hasRole } : context),
-      [context, hasRole],
+      () =>
+        context && (hasRole || hasPermission)
+          ? {
+              ...context,
+              hasRole: hasRole ?? context.hasRole,
+              hasPermission: hasPermission ?? context.hasPermission,
+            }
+          : context,
+      [context, hasRole, hasPermission],
     )
 
     if (!scoped) {
@@ -99,6 +108,7 @@ export function useNoAuth(): AuthContextInterface<
     getToken: async () => null,
     getCurrentUser: async () => null,
     hasRole: () => false,
+    hasPermission: () => false,
     reauthenticate: async () => {},
     forgotPassword: async () => {},
     resetPassword: async () => {},

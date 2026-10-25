@@ -41,7 +41,5 @@ export interface OrgContextValue {
   org: CurrentOrgSummary | undefined
   memberships: OrgMembership[]
   hasOrgRole(roles: string | string[], organizationId?: string): boolean
-  /** Whether the membership in the current organization has `permission` */
-  can(permission: string): boolean
   setOrg(idOrSlug: string): void
 }

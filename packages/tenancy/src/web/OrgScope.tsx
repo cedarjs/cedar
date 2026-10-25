@@ -3,7 +3,7 @@ import React from 'react'
 import { ApolloProvider } from '@apollo/client/react'
 
 import type { UseAuth } from '@cedarjs/auth'
-import { HasRoleContext, useNoAuth } from '@cedarjs/auth'
+import { HasPermissionContext, HasRoleContext, useNoAuth } from '@cedarjs/auth'
 import {
   navigate,
   Redirect,
@@ -221,14 +221,21 @@ export function OrgScope({
     [role],
   )
 
+  // And `useAuth().hasPermission`: the membership's permissions here
+  const membershipPermissions = membership?.permissions
+  const hasPermission = React.useCallback(
+    (permissionToCheck: string) =>
+      membershipPermissions?.includes(permissionToCheck) ?? false,
+    [membershipPermissions],
+  )
+
   if (!membership || !userId || !orgSlug) {
     return <>{notAMember}</>
   }
 
-  const permissions = membership.permissions ?? []
   const allowed =
     (roles === undefined || hasRole(roles)) &&
-    (permission === undefined || permissions.includes(permission))
+    (permission === undefined || hasPermission(permission))
 
   if (!allowed) {
     if (!unauthorized) {
@@ -254,7 +261,7 @@ export function OrgScope({
     name: membership.organization.name,
     role: membership.role,
     membershipId: membership.id,
-    permissions,
+    permissions: membership.permissions ?? [],
   }
 
   const orgClient = getOrgClient({
@@ -271,7 +278,6 @@ export function OrgScope({
     memberships,
     hasOrgRole: (roles, organizationId) =>
       hasOrgRole(memberships, roles, organizationId ?? org.id),
-    can: (permissionToCheck) => permissions.includes(permissionToCheck),
     setOrg,
   }
 
@@ -279,7 +285,9 @@ export function OrgScope({
     <ApolloProvider client={orgClient}>
       <OrgContext.Provider value={contextValue}>
         <HasRoleContext.Provider value={hasRole}>
-          {children}
+          <HasPermissionContext.Provider value={hasPermission}>
+            {children}
+          </HasPermissionContext.Provider>
         </HasRoleContext.Provider>
       </OrgContext.Provider>
     </ApolloProvider>

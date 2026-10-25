@@ -104,20 +104,22 @@ one.
 
 ```ts
 // api/src/lib/permissions.ts
-export const { can, requirePermission, withPermissions } = createPermissions({
-  roles: {
-    owner: ['projects.read', 'projects.edit', 'members.manage'],
-    member: ['projects.read'],
-  },
-  user: ['account.manage'],
-})
+export const { hasPermission, requirePermission, withPermissions } =
+  createPermissions({
+    roles: {
+      owner: ['projects.read', 'projects.edit', 'members.manage'],
+      member: ['projects.read'],
+    },
+    user: ['account.manage'],
+  })
 ```
 
 Roles map to permissions in one place; fields ask for a permission with
 `@requirePermission(permission: "projects.edit")` or `requirePermission()`.
 A role only gets what its list says, so a new role is one entry. Permission
 names are typed from the map. `withPermissions` in `getCurrentUser` gives each
-membership its permissions, which `useCan()` from `@cedarjs/tenancy/web` reads.
+membership its permissions, which `useAuth().hasPermission()` checks inside
+`OrgScope`.
 
 ## Web
 

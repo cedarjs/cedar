@@ -444,7 +444,7 @@ export function createPermissions(config: {
   roles: Record<string, readonly string[]>
   user?: readonly string[]
 }): {
-  can(permission: Permission): boolean
+  hasPermission(permission: Permission): boolean
   requirePermission(options: { permission: Permission }): void
   permissionsOf(role: string): Permission[]
   withPermissions<User extends { memberships: { role: string }[] }>(
@@ -459,15 +459,19 @@ a type error.
 `setup tenancy` generates the map in `api/src/lib/permissions.ts`:
 
 ```ts title="api/src/lib/permissions.ts"
-export const { can, requirePermission, permissionsOf, withPermissions } =
-  createPermissions({
-    roles: {
-      owner: ['organization.read', 'members.manage'],
-      admin: ['organization.read', 'members.manage'],
-      member: ['organization.read'],
-    },
-    user: [],
-  })
+export const {
+  hasPermission,
+  requirePermission,
+  permissionsOf,
+  withPermissions,
+} = createPermissions({
+  roles: {
+    owner: ['organization.read', 'members.manage'],
+    admin: ['organization.read', 'members.manage'],
+    member: ['organization.read'],
+  },
+  user: [],
+})
 ```
 
 - `roles`: what each role may do in an organization. A permission listed here
@@ -476,9 +480,9 @@ export const { can, requirePermission, permissionsOf, withPermissions } =
 - `user`: what every signed-in user may do, in any organization or none (their
   own account, say). These need no organization.
 
-`can(permission)` answers for the current request. `requirePermission()`
+`hasPermission(permission)` answers for the current request. `requirePermission()`
 throws `AuthenticationError` when no one is signed in and `ForbiddenError` when
-`can()` is false, with a message saying an organization is needed when that's
+`hasPermission()` is false, with a message saying an organization is needed when that's
 why. Both throw a plain `Error` for a name that isn't in the map, so a typo in
 an SDL directive (which TypeScript can't see) is a loud error rather than a
 field nobody can use.
@@ -572,11 +576,8 @@ export function useCurrentOrg(): {
   org: CurrentOrgSummary | undefined
   memberships: OrgMembership[]
   hasOrgRole(roles: string | string[], organizationId?: string): boolean
-  can(permission: string): boolean
   setOrg(idOrSlug: string): void
 }
-
-export function useCan(permission: string): boolean
 
 export const OrgContext: React.Context<...>
 
@@ -665,16 +666,18 @@ Reads `OrgContext`. `setOrg(idOrSlug)` navigates to the current route with a new
 default; when `OrgScope` is given an `onSetOrg` prop, `setOrg` calls that
 instead.
 
-### `useCan(permission)`
+### `useAuth().hasPermission(permission)`
 
-Whether the membership in the current organization has `permission`: the same
-as `useCurrentOrg().can(permission)`, but `false` outside an `OrgScope` rather
-than throwing, so a check in the wrong place hides rather than shows. Reads the
-`permissions` that `withPermissions` added to the membership.
+Under `OrgScope`, `useAuth().hasPermission(permission)` checks the
+`permissions` that `withPermissions` added to the user's membership in that
+organization. Outside one it's `false`, so a check in the wrong place hides
+rather than shows. `OrgScope` provides it through `HasPermissionContext` from
+`@cedarjs/auth`, the same way it provides `hasRole`.
 
 ```tsx
 const MembersPage = () => {
-  const canManage = useCan('members.manage')
+  const { hasPermission } = useAuth()
+  const canManage = hasPermission('members.manage')
 
   return <MemberList editable={canManage} />
 }

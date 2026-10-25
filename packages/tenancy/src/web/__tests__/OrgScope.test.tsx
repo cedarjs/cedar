@@ -8,7 +8,7 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { AuthContextInterface, UseAuth } from '@cedarjs/auth'
-import { HasRoleContext } from '@cedarjs/auth'
+import { HasPermissionContext, HasRoleContext } from '@cedarjs/auth'
 import {
   LocationProvider,
   navigate,
@@ -22,8 +22,6 @@ import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 import { clearOrgClients } from '../orgClients.js'
 import { OrgScope } from '../OrgScope.js'
 import type { OrgMembership } from '../types.js'
-import { useCan } from '../useCan.js'
-import { useCurrentOrg } from '../useCurrentOrg.js'
 
 globalThis.RWJS_API_GRAPHQL_URL = 'https://example.com/graphql'
 
@@ -115,6 +113,7 @@ function createUseAuth(state: AuthState): UseAuth {
       getToken: async () => null,
       getCurrentUser: async () => null,
       hasRole: () => false,
+      hasPermission: () => false,
       reauthenticate: async () => {},
       client: undefined,
       type: 'custom',
@@ -603,15 +602,15 @@ describe('OrgScope', () => {
         },
       })
 
-      test('useCan and useCurrentOrg().can check the membership in the current organization', async () => {
+      test("makes useAuth().hasPermission check the organization's membership", async () => {
         setupFetchMock()
 
         const Can = () => {
-          const { can } = useCurrentOrg()
+          const hasPermission = React.useContext(HasPermissionContext)
           return (
             <>
-              read: {String(useCan('projects.read'))}, edit:{' '}
-              {String(can('settings.edit'))}
+              read: {String(hasPermission?.('projects.read'))}, edit:{' '}
+              {String(hasPermission?.('settings.edit'))}
             </>
           )
         }
@@ -633,15 +632,6 @@ describe('OrgScope', () => {
 
         rerender(<Tree orgSlug="org-b" />)
         await screen.findByText('read: true, edit: true')
-      })
-
-      test('useCan is false outside an OrgScope', () => {
-        const Can = () => <>read: {String(useCan('projects.read'))}</>
-
-        render(<Can />)
-
-        // Throws when it isn't there
-        screen.getByText('read: false')
       })
 
       test('OrgScope with a permission lets in only memberships that have it', async () => {

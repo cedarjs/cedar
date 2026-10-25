@@ -33,9 +33,9 @@ export interface Permissions<Permission extends string> {
    * permission needs only a signed-in user; any other needs a current
    * organization whose membership's role has it.
    */
-  can(permission: Permission): boolean
+  hasPermission(permission: Permission): boolean
   /**
-   * Guards a service or directive on `can(permission)`. Throws
+   * Guards a service or directive on `hasPermission(permission)`. Throws
    * `AuthenticationError` when no one is signed in, and `ForbiddenError`
    * when they may not.
    */
@@ -45,7 +45,7 @@ export interface Permissions<Permission extends string> {
   /**
    * `user` with each of its memberships' permissions added, for
    * `getCurrentUser` to return, so the web knows them without a copy of
-   * this map (`useCurrentOrg().can`).
+   * this map (`useAuth().hasPermission`).
    */
   withPermissions<User extends { memberships: { role: string }[] }>(
     user: User,
@@ -69,7 +69,7 @@ export interface Permissions<Permission extends string> {
  *
  * ```ts
  * // api/src/lib/permissions.ts
- * export const { can, requirePermission, withPermissions } =
+ * export const { hasPermission, requirePermission, withPermissions } =
  *   createPermissions({
  *     roles: {
  *       owner: ['projects.read', 'projects.edit', 'members.manage'],
@@ -113,7 +113,7 @@ export function createPermissions<
     }
   }
 
-  const can = (permission: Permission): boolean => {
+  const hasPermission = (permission: Permission): boolean => {
     assertKnown(permission)
 
     if (!context.currentUser) {
@@ -150,7 +150,7 @@ export function createPermissions<
   }
 
   return {
-    can,
+    hasPermission,
     permissionsOf,
     withPermissions,
     requirePermission({ permission }) {
@@ -166,7 +166,7 @@ export function createPermissions<
         )
       }
 
-      if (!can(permission)) {
+      if (!hasPermission(permission)) {
         throw new ForbiddenError("You don't have access to do that.")
       }
     },

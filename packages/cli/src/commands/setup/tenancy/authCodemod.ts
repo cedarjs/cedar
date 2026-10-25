@@ -72,7 +72,7 @@ const USER_LOOKUP = {
 /**
  * Wraps `getCurrentUser`'s `db.user.findUnique(...)` in `withPermissions`
  * from `api/src/lib/permissions`, so each membership the web gets carries
- * its permissions (`useCan()`). A lookup that's already wrapped is left
+ * its permissions (`useAuth().hasPermission()`). A lookup that's already wrapped is left
  * alone.
  */
 function addWithPermissions(root: j.Collection) {

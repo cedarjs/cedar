@@ -42,6 +42,7 @@ export function useAuth() {
 
       return false
     },
+    hasPermission: () => false,
     reauthenticate: async () => {},
     forgotPassword: async () => {},
     resetPassword: async () => {},

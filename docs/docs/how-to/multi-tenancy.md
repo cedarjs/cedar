@@ -716,15 +716,19 @@ role to what it may do, and an `@requirePermission` directive that asks for one
 of those permissions:
 
 ```ts title="api/src/lib/permissions.ts"
-export const { can, requirePermission, permissionsOf, withPermissions } =
-  createPermissions({
-    roles: {
-      owner: ['organization.read', 'members.manage'],
-      admin: ['organization.read', 'members.manage'],
-      member: ['organization.read'],
-    },
-    user: [],
-  })
+export const {
+  hasPermission,
+  requirePermission,
+  permissionsOf,
+  withPermissions,
+} = createPermissions({
+  roles: {
+    owner: ['organization.read', 'members.manage'],
+    admin: ['organization.read', 'members.manage'],
+    member: ['organization.read'],
+  },
+  user: [],
+})
 ```
 
 The generated organizations SDL uses it: `inviteMember` and `removeMember` are
@@ -736,13 +740,15 @@ and edit every field it should reach, and a field written later would be open
 or closed to it depending on whether its author remembered it.
 
 `getCurrentUser` returns each membership with its `permissions`
-(`withPermissions`), so the web asks the same question with `useCan()`:
+(`withPermissions`), so the web asks the same question with
+`useAuth().hasPermission()`:
 
 ```tsx
-import { useCan } from '@cedarjs/tenancy/web'
+import { useAuth } from 'src/auth'
 
 const MembersPage = () => {
-  const canManage = useCan('members.manage')
+  const { hasPermission } = useAuth()
+  const canManage = hasPermission('members.manage')
   // ...
 }
 ```

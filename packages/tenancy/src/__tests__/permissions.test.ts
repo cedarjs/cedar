@@ -34,35 +34,35 @@ const inOrg1 = {
 }
 
 describe('createPermissions', () => {
-  describe('can', () => {
+  describe('hasPermission', () => {
     it("checks the role's permissions in the current organization", async () => {
       await run(() => {
         setContext({ currentUser, currentOrg: inOrg1 })
-        expect(permissions.can('projects.read')).toBe(true)
+        expect(permissions.hasPermission('projects.read')).toBe(true)
         // The user is owner of org2, not of this one
-        expect(permissions.can('projects.edit')).toBe(false)
+        expect(permissions.hasPermission('projects.edit')).toBe(false)
       })
     })
 
     it('is false for an organization permission outside an organization', async () => {
       await run(() => {
         setContext({ currentUser })
-        expect(permissions.can('projects.read')).toBe(false)
+        expect(permissions.hasPermission('projects.read')).toBe(false)
       })
     })
 
     it('gives user permissions to every signed-in user', async () => {
       await run(() => {
         setContext({ currentUser })
-        expect(permissions.can('account.manage')).toBe(true)
+        expect(permissions.hasPermission('account.manage')).toBe(true)
         setContext({ currentUser, currentOrg: inOrg1 })
-        expect(permissions.can('account.manage')).toBe(true)
+        expect(permissions.hasPermission('account.manage')).toBe(true)
       })
     })
 
     it('is false with no current user', async () => {
       await run(() => {
-        expect(permissions.can('account.manage')).toBe(false)
+        expect(permissions.hasPermission('account.manage')).toBe(false)
       })
     })
 
@@ -72,7 +72,7 @@ describe('createPermissions', () => {
           currentUser,
           currentOrg: { ...inOrg1, role: 'constructor' },
         })
-        expect(permissions.can('projects.read')).toBe(false)
+        expect(permissions.hasPermission('projects.read')).toBe(false)
       })
     })
 
@@ -80,7 +80,7 @@ describe('createPermissions', () => {
       await run(() => {
         setContext({ currentUser, currentOrg: inOrg1 })
         // @ts-expect-error - a typo is a type error too
-        expect(() => permissions.can('projects.raed')).toThrow(
+        expect(() => permissions.hasPermission('projects.raed')).toThrow(
           'Unknown permission "projects.raed"',
         )
       })

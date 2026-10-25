@@ -78,6 +78,12 @@ export interface AuthContextInterface<
    **/
   hasRole(rolesToCheck: string | string[]): boolean
   /**
+   * Whether the user has `permission` where they are in the app. Always
+   * `false` outside a scope that provides permissions, such as `OrgScope`
+   * from `@cedarjs/tenancy/web`.
+   */
+  hasPermission(permission: string): boolean
+  /**
    * Redetermine authentication state and update the state.
    */
   reauthenticate(): Promise<void>
