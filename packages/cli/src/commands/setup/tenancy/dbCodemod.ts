@@ -33,24 +33,31 @@ export default function transform(
   // can't parse.
   const root = j.withParser('tsx')(fileInfo.source)
 
-  // Already wired, by an earlier run
+  // Already wired, by an earlier run: `db` is extended with it
   if (
-    root.find(j.ImportSpecifier, {
-      imported: { name: 'createTenancyExtension' },
+    root.find(j.CallExpression, {
+      callee: { name: 'createTenancyExtension' },
     }).length > 0
   ) {
     return fileInfo.source
   }
 
-  const imports = root.find(j.ImportDeclaration)
-  imports
-    .at(-1) // add it after the last one
-    .insertAfter(
-      j.importDeclaration(
-        [j.importSpecifier(j.identifier('createTenancyExtension'))],
-        j.literal('@cedarjs/tenancy'),
-      ),
-    )
+  const hasImport =
+    root.find(j.ImportSpecifier, {
+      imported: { name: 'createTenancyExtension' },
+    }).length > 0
+
+  if (!hasImport) {
+    root
+      .find(j.ImportDeclaration)
+      .at(-1) // add it after the last one
+      .insertAfter(
+        j.importDeclaration(
+          [j.importSpecifier(j.identifier('createTenancyExtension'))],
+          j.literal('@cedarjs/tenancy'),
+        ),
+      )
+  }
 
   const tenantField =
     typeof options.tenantField === 'string' ? options.tenantField : undefined

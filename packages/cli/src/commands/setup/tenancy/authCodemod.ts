@@ -112,19 +112,32 @@ export default function transform(fileInfo: j.FileInfo) {
     throw new Error('CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
   }
 
-  const tenancyExportSnippet = `export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'\n`
-  const tenancyExport = j
-    .withParser('ts')(tenancyExportSnippet)
-    .find(j.ExportNamedDeclaration)
-    .nodes()[0]
+  // The names this file already re-exports from @cedarjs/tenancy, so a
+  // re-run adds nothing and an app's own re-exports stay as they are
+  const exported = new Set<string>()
 
-  // Not again on a re-run
-  const alreadyExported =
-    root.find(j.ExportNamedDeclaration, {
-      source: { value: '@cedarjs/tenancy' },
-    }).length > 0
+  root
+    .find(j.ExportNamedDeclaration, { source: { value: '@cedarjs/tenancy' } })
+    .forEach((path) => {
+      for (const specifier of path.node.specifiers ?? []) {
+        if (j.Identifier.check(specifier.exported)) {
+          exported.add(specifier.exported.name)
+        }
+      }
+    })
 
-  if (!alreadyExported) {
+  const missing = ['hasOrgRole', 'requireMembership'].filter(
+    (name) => !exported.has(name),
+  )
+
+  if (missing.length > 0) {
+    const tenancyExport = j
+      .withParser('ts')(
+        `export { ${missing.join(', ')} } from '@cedarjs/tenancy'\n`,
+      )
+      .find(j.ExportNamedDeclaration)
+      .nodes()[0]
+
     root.find(j.Program).forEach((path) => {
       path.node.body.push(tenancyExport)
     })
