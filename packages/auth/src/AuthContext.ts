@@ -16,11 +16,10 @@ export interface LoggedInUser {}
 
 /**
  * What `getCurrentUser` returns: the logged-in user, or `null` when nobody is
- * logged in.
- *
- * `& object` keeps primitives out: `LoggedInUser` is `{}` until it's
- * augmented, and `{}` accepts any non-nullish value, strings included.
+ * logged in
  */
+// `& object` keeps primitives out. Plain `LoggedInUser` is `{}` until it's
+// augmented, and `{}` accepts any non-nullish value, strings included.
 export type CurrentUser = (LoggedInUser & object) | null
 
 export interface AuthContextInterface<
