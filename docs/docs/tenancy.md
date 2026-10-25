@@ -524,6 +524,11 @@ organization rather than `currentUser.roles` (`HasRoleContext` is from
 `@cedarjs/auth`). That includes a `<PrivateSet roles>` nested inside the
 `OrgScope` set, as the router reads `hasRole` through the same `useAuth`.
 
+Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
+`currentUser.id` changes, every cached client is dropped after `clearStore()`.
+When a memberships refresh shows a membership gone or its role changed, that
+organization's client alone is dropped the same way.
+
 #### Guarding routes by role
 
 A `<PrivateSet roles>` _around_ `OrgScope` is checked before `OrgScope` has
@@ -549,11 +554,6 @@ A member without one of `roles` is redirected to the `unauthorized` route,
 which gets the organization's `orgSlug` when its path has an `{orgSlug}`. With
 no `unauthorized`, they get `notAMember`. As with every check on the web, this
 only decides what to show: the api's `@requireAuth` is what protects the data.
-
-Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
-`currentUser.id` changes, every cached client is dropped after `clearStore()`.
-When a memberships refresh shows a membership gone or its role changed, that
-organization's client alone is dropped the same way.
 
 ### `useCurrentOrg()`
 

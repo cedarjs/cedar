@@ -463,6 +463,8 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             path.join(paths.api.functions, 'graphql.ts'),
             path.join(paths.api.functions, 'auth.js'),
             path.join(paths.api.functions, 'auth.ts'),
+            path.join(paths.api.directives, 'requireAuth', 'requireAuth.js'),
+            path.join(paths.api.directives, 'requireAuth', 'requireAuth.ts'),
           ]
 
           for (const prettifyPath of prettifyPaths) {
