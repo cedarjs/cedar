@@ -1,11 +1,14 @@
 /**
  * A simple wrapper around jscodeshift.
  *
+ * jscodeshift is only needed by codemod-based `setup` commands, so it's an
+ * optional peer dependency, loaded lazily here instead of imported statically.
+ *
  * @see jscodeshift JS usage {@link https://github.com/facebook/jscodeshift#usage-js}
  * @see prisma/codemods {@link https://github.com/prisma/codemods/blob/main/utils/runner.ts}
  * @see react-codemod {@link https://github.com/reactjs/react-codemod/blob/master/bin/cli.js}
  */
-import * as jscodeshift from 'jscodeshift/src/Runner.js'
+import type * as JscodeshiftRunner from 'jscodeshift/src/Runner.js'
 
 // jscodeshift has an `Options` type export we could use here, but currently
 // it's just a map of anys, so not really useful. In our case, leaving that
@@ -52,6 +55,17 @@ export const runTransform = async ({
   parser = 'tsx',
   options = {},
 }: RunTransform) => {
+  let jscodeshift: typeof JscodeshiftRunner
+  try {
+    jscodeshift = await import('jscodeshift/src/Runner.js')
+  } catch {
+    throw new Error(
+      "Could not find the 'jscodeshift' package, which this command needs " +
+        'to run its codemod. Install it with `npm i -D jscodeshift` (or the ' +
+        'yarn/pnpm equivalent) and try again.',
+    )
+  }
+
   // We have to do this here for the tests, because jscodeshift.run actually
   // spawns a different process. If we use getPaths() in the transform, it
   // would not find cedar.toml

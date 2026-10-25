@@ -71,7 +71,6 @@
     "execa": "5.1.1",
     "fast-glob": "3.3.3",
     "humanize-string": "2.1.0",
-    "jscodeshift": "17.4.0",
     "jsonc-parser": "3.3.1",
     "latest-version": "9.0.0",
     "listr2": "10.2.2",
@@ -97,11 +96,20 @@
     "@cedarjs/framework-tools": "workspace:*",
     "@prisma/dmmf": "7.10.1",
     "@types/archiver": "^7.0.0",
+    "jscodeshift": "17.4.0",
     "memfs": "4.80.0",
     "node-ssh": "13.2.1",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
+  },
+  "peerDependencies": {
+    "jscodeshift": "17.4.0"
+  },
+  "peerDependenciesMeta": {
+    "jscodeshift": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=24"
