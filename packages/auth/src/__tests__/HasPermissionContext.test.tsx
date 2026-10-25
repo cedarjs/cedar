@@ -20,10 +20,22 @@ const { AuthProvider, useAuth } = createCustomTestAuth({
   changePassword: () => true,
 })
 
+// Without permission names (an app's are generated), `hasPermission` takes
+// `never`, so calling it is a type error; these tests call it anyway
+const hasPermission = (auth: { hasPermission: unknown }) =>
+  auth.hasPermission as (permission: string) => boolean
+
 describe('HasPermissionContext', () => {
   test('useAuth().hasPermission is false without it', () => {
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
 
+    expect(hasPermission(result.current)('members.manage')).toBe(false)
+  })
+
+  test('hasPermission takes no names in an app without permissions', () => {
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+
+    // @ts-expect-error - there are no permission names to pass
     expect(result.current.hasPermission('members.manage')).toBe(false)
   })
 
@@ -40,8 +52,8 @@ describe('HasPermissionContext', () => {
       ),
     })
 
-    expect(result.current.hasPermission('members.manage')).toBe(true)
-    expect(result.current.hasPermission('billing.manage')).toBe(false)
+    expect(hasPermission(result.current)('members.manage')).toBe(true)
+    expect(hasPermission(result.current)('billing.manage')).toBe(false)
     // hasRole is still the provider's
     expect(result.current.hasRole('owner')).toBe(false)
   })
@@ -60,6 +72,6 @@ describe('HasPermissionContext', () => {
     })
 
     expect(result.current.hasRole('owner')).toBe(true)
-    expect(result.current.hasPermission('members.manage')).toBe(true)
+    expect(hasPermission(result.current)('members.manage')).toBe(true)
   })
 })

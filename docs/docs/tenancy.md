@@ -720,8 +720,9 @@ const MembersPage = () => {
 `hasPermission` only takes the names in `packages/permissions`, so a typo is a
 type error: `cedar generate types` writes them to
 `.cedar/types/includes/all-permissions.d.ts`, which fills in
-`AvailablePermissions` from `@cedarjs/auth`. Without a permissions package it
-takes any string.
+`AvailablePermissions` from `@cedarjs/auth`. In an app without permissions (no
+`packages/permissions`, as in a single-tenant app) it takes no names at all, so
+calling it is a type error rather than a check that's always `false`.
 
 Like every check on the web, this only decides what to show; the api's
 `@requirePermission` is the guard. For a page only some may open, give `OrgScope`

@@ -18,15 +18,18 @@ export type CurrentUser = LoggedInUser | null
 /**
  * The app's permission names, as keys. Cedar generates them from the app's
  * permission definitions (`packages/permissions`, set up by
- * `cedar setup tenancy`). Empty when there are none, and then
- * `hasPermission` takes any string.
+ * `cedar setup tenancy`). Empty when the app has none, and then
+ * `hasPermission` takes nothing: it could only ever answer `false`.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AvailablePermissions {}
 
-/** A permission name `hasPermission` takes: see `AvailablePermissions` */
+/**
+ * A permission name `hasPermission` takes: see `AvailablePermissions`.
+ * `never` in an app without permissions, so calling it is a type error.
+ */
 export type PermissionName = [keyof AvailablePermissions] extends [never]
-  ? string
+  ? never
   : Extract<keyof AvailablePermissions, string>
 
 export interface AuthContextInterface<
