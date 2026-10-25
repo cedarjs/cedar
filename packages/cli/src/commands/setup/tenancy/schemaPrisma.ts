@@ -192,6 +192,11 @@ export interface RequiredUserField {
   value: string
 }
 
+/**
+ * The value written for a required `User` field, by its Prisma type, as
+ * TypeScript source. `__NAME__` is the field's name and `__N__` a number
+ * that's different for each user, so `@unique` fields don't collide.
+ */
 const SCALAR_PLACEHOLDERS: Record<string, string> = {
   String: "'__NAME__ __N__'",
   Int: '__N__',
