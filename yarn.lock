@@ -3731,6 +3731,11 @@ __metadata:
     uuid: "npm:11.1.1"
     vitest: "npm:4.1.12"
     yargs: "npm:18.2.0"
+  peerDependencies:
+    systeminformation: 5.33.16
+  peerDependenciesMeta:
+    systeminformation:
+      optional: true
   languageName: unknown
   linkType: soft
 
