@@ -4,7 +4,7 @@ import { context, setContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
-import { hasOrgRole, requireMembership } from '../auth.js'
+import { createTenancyAuth, getCurrentRoles, hasOrgRole } from '../auth.js'
 
 const currentUser = {
   id: 'user1',
@@ -72,50 +72,158 @@ describe('hasOrgRole', () => {
   })
 })
 
-describe('requireMembership', () => {
-  it('throws AuthenticationError with no current user', async () => {
-    await getAsyncStoreInstance().run(new Map(), async () => {
-      expect(() => requireMembership()).toThrow(AuthenticationError)
+const run = (fn: () => void | Promise<void>) =>
+  getAsyncStoreInstance().run(new Map(), async () => fn())
+
+describe('getCurrentRoles', () => {
+  it('is empty with no current user', async () => {
+    await run(() => {
+      expect(getCurrentRoles()).toEqual([])
     })
   })
 
-  it('throws ForbiddenError with no current organization', async () => {
-    await getAsyncStoreInstance().run(new Map(), async () => {
+  it("is the membership's role inside an organization", async () => {
+    await run(() => {
+      setContext({
+        currentUser: { ...currentUser, roles: ['superuser'] },
+        currentOrg: currentOrg1Viewer,
+      })
+      expect(getCurrentRoles()).toEqual(['viewer'])
+    })
+  })
+
+  it('is currentUser.roles outside one', async () => {
+    await run(() => {
+      setContext({ currentUser: { ...currentUser, roles: ['superuser'] } })
+      expect(getCurrentRoles()).toEqual(['superuser'])
+      setContext({ currentUser: { ...currentUser, roles: 'superuser' } })
+      expect(getCurrentRoles()).toEqual(['superuser'])
       setContext({ currentUser })
-      expect(() => requireMembership()).toThrow(ForbiddenError)
+      expect(getCurrentRoles()).toEqual([])
+    })
+  })
+})
+
+describe('createTenancyAuth', () => {
+  describe('hasRole', () => {
+    const { hasRole } = createTenancyAuth()
+
+    it('checks the role in the current organization', async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: currentOrg1Viewer })
+        expect(hasRole('viewer')).toBe(true)
+        expect(hasRole(['owner', 'viewer'])).toBe(true)
+        // The user's role in org2, not the current organization
+        expect(hasRole('owner')).toBe(false)
+      })
+    })
+
+    it('is false with no current user', async () => {
+      await run(() => {
+        expect(hasRole('viewer')).toBe(false)
+      })
     })
   })
 
-  it('passes with a current organization and no roles specified', async () => {
-    await getAsyncStoreInstance().run(new Map(), async () => {
-      setContext({ currentUser, currentOrg: currentOrg1Viewer })
-      expect(() => requireMembership()).not.toThrow()
+  describe('requireAuth', () => {
+    const { requireAuth } = createTenancyAuth()
+
+    it('throws AuthenticationError with no current user', async () => {
+      await run(() => {
+        expect(() => requireAuth()).toThrow(AuthenticationError)
+        expect(() => requireAuth({ scope: 'USER' })).toThrow(
+          AuthenticationError,
+        )
+      })
+    })
+
+    it('throws ForbiddenError with no current organization', async () => {
+      await run(() => {
+        setContext({ currentUser })
+        expect(() => requireAuth()).toThrow(ForbiddenError)
+      })
+    })
+
+    it("doesn't fall back to currentUser.roles without an organization", async () => {
+      await run(() => {
+        // The role an app might have copied from some other membership
+        setContext({ currentUser: { ...currentUser, roles: ['owner'] } })
+        expect(() => requireAuth({ roles: 'owner' })).toThrow(ForbiddenError)
+      })
+    })
+
+    it('passes any membership when no roles are given', async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: currentOrg1Viewer })
+        expect(() => requireAuth()).not.toThrow()
+        expect(() => requireAuth({ roles: [] })).not.toThrow()
+      })
+    })
+
+    it('checks the role in the current organization', async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: currentOrg1Viewer })
+        expect(() => requireAuth({ roles: 'viewer' })).not.toThrow()
+        expect(() => requireAuth({ roles: ['owner', 'viewer'] })).not.toThrow()
+        // owner in org2 doesn't count in org1
+        expect(() => requireAuth({ roles: 'owner' })).toThrow(ForbiddenError)
+      })
+    })
+
+    it('scope USER needs a signed-in user only', async () => {
+      await run(() => {
+        setContext({ currentUser })
+        expect(() => requireAuth({ scope: 'USER' })).not.toThrow()
+      })
+    })
+
+    it("scope USER checks currentUser.roles, not the membership's", async () => {
+      await run(() => {
+        setContext({
+          currentUser: { ...currentUser, roles: ['superuser'] },
+          currentOrg: currentOrg1Viewer,
+        })
+        expect(() =>
+          requireAuth({ scope: 'USER', roles: 'superuser' }),
+        ).not.toThrow()
+        expect(() => requireAuth({ scope: 'USER', roles: 'viewer' })).toThrow(
+          ForbiddenError,
+        )
+      })
     })
   })
 
-  it('passes when the role matches', async () => {
-    await getAsyncStoreInstance().run(new Map(), async () => {
-      setContext({ currentUser, currentOrg: currentOrg1Viewer })
-      expect(() => requireMembership({ roles: 'viewer' })).not.toThrow()
-      expect(() =>
-        requireMembership({ roles: ['owner', 'viewer'] }),
-      ).not.toThrow()
+  describe('defaultRoles', () => {
+    const { requireAuth, hasOrgRole: defaultedHasOrgRole } = createTenancyAuth({
+      defaultRoles: ['owner', 'admin'],
     })
-  })
 
-  it('throws ForbiddenError when the role does not match', async () => {
-    await getAsyncStoreInstance().run(new Map(), async () => {
-      setContext({ currentUser, currentOrg: currentOrg1Viewer })
-      expect(() => requireMembership({ roles: 'owner' })).toThrow(
-        ForbiddenError,
-      )
+    it('admits only the default roles when a check lists none', async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: currentOrg1Viewer })
+        expect(() => requireAuth()).toThrow(ForbiddenError)
+        expect(() => requireAuth({ roles: [] })).toThrow(ForbiddenError)
+        expect(defaultedHasOrgRole()).toBe(false)
+        // owner in org2 is a default role
+        expect(defaultedHasOrgRole(undefined, 'org2')).toBe(true)
+      })
     })
-  })
 
-  it('an empty roles array only requires a membership', async () => {
-    await getAsyncStoreInstance().run(new Map(), async () => {
-      setContext({ currentUser, currentOrg: currentOrg1Viewer })
-      expect(() => requireMembership({ roles: [] })).not.toThrow()
+    it('lets a field opt a narrower role in by listing it', async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: currentOrg1Viewer })
+        expect(() =>
+          requireAuth({ roles: ['owner', 'admin', 'viewer'] }),
+        ).not.toThrow()
+        expect(defaultedHasOrgRole('viewer')).toBe(true)
+      })
+    })
+
+    it("don't apply to scope USER", async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: currentOrg1Viewer })
+        expect(() => requireAuth({ scope: 'USER' })).not.toThrow()
+      })
     })
   })
 })
