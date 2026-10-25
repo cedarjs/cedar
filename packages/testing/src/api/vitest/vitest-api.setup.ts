@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { afterAll, beforeEach, it, describe, vi, beforeAll } from 'vitest'
 
-import type { LoggedInUser } from '@cedarjs/auth'
+import type { CurrentUser } from '@cedarjs/auth'
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { defineScenario } from '@cedarjs/testing/api'
 import type { DefineScenario } from '@cedarjs/testing/api'
@@ -52,10 +52,10 @@ beforeEach(() => {
 
 declare global {
   // eslint-disable-next-line no-var
-  var mockCurrentUser: (currentUser: Partial<LoggedInUser> | null) => void
+  var mockCurrentUser: (currentUser: Partial<CurrentUser>) => void
 }
 
-globalThis.mockCurrentUser = (currentUser: Partial<LoggedInUser> | null) => {
+globalThis.mockCurrentUser = (currentUser: Partial<CurrentUser>) => {
   mockContextStore.set('context', { currentUser })
 }
 

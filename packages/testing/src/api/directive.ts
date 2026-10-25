@@ -1,6 +1,6 @@
 import type { A } from 'ts-toolbelt'
 
-import type { LoggedInUser } from '@cedarjs/auth'
+import type { CurrentUser } from '@cedarjs/auth'
 import { setContext, context as globalContext } from '@cedarjs/context'
 import type { GlobalContext } from '@cedarjs/context'
 import type {
@@ -18,7 +18,7 @@ export { getDirectiveName } from '@cedarjs/graphql-server'
  * uses.
  */
 type MockContext = Omit<GlobalContext, 'currentUser'> & {
-  currentUser?: Partial<LoggedInUser> | null
+  currentUser?: Partial<CurrentUser>
 }
 
 type ExecutionMock = A.Compute<
