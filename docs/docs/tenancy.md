@@ -441,8 +441,9 @@ repeating role lists.
 
 `setup tenancy` generates `packages/permissions`, a package that both sides
 share: the api checks the permissions, and the web can import their names. It
-turns on
-`experimental.packagesWorkspace` in `cedar.toml` for it.
+turns on `experimental.packagesWorkspace` in `cedar.toml` for it, and names the
+package in the scope your other packages use (`@my-org/permissions`), or after
+your app's folder when there are none.
 
 ```ts title="packages/permissions/src/index.ts"
 import { definePermissions } from '@cedarjs/tenancy/permissions'
@@ -716,6 +717,12 @@ const MembersPage = () => {
 }
 ```
 
+`hasPermission` only takes the names in `packages/permissions`, so a typo is a
+type error: `cedar generate types` writes them to
+`.cedar/types/includes/all-permissions.d.ts`, which fills in
+`AvailablePermissions` from `@cedarjs/auth`. Without a permissions package it
+takes any string.
+
 Like every check on the web, this only decides what to show; the api's
 `@requirePermission` is the guard. For a page only some may open, give `OrgScope`
 a `permission` (see [Guarding routes by role](#guarding-routes-by-role)).
@@ -802,6 +809,18 @@ scenario('lists only the current organization's projects', async (scenario) => {
 
 Unset `context.currentOrg` (or don't set it) to test the `TenantScopeError` /
 unauthorized paths.
+
+On the web, the mocked `useAuth` in tests behaves like the real one: inside an
+`OrgScope`, `hasRole` and `hasPermission` check the membership in that
+organization, so give the user from `mockCurrentUser()` the `memberships` your
+component's organization needs. Outside one, `hasRole` checks
+`currentUser.roles` and `hasPermission` is `false`.
+
+`setup tenancy` also updates the `requireAuth` directive's test, as a bare
+`@requireAuth` now needs a current organization: the case that let any
+signed-in user through becomes cases for a member, for no organization, and for
+`scope: USER`. A test that doesn't have that case is left as it is, with a note
+to check it.
 
 ## Limitations
 
