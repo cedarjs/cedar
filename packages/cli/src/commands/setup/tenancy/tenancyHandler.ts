@@ -389,8 +389,10 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
               'utf-8',
             ),
           )
-          const withUserFields = (content: string) =>
-            addRequiredUserFields(content, userFields)
+          // Numbered apart, as the scenario's users are there during the
+          // tests, which create more
+          const withUserFields = (firstNumber: number) => (content: string) =>
+            addRequiredUserFields(content, userFields, { firstNumber })
 
           await writeTemplateFile(
             'organizations.ts.template',
@@ -400,13 +402,13 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             'organizations.test.ts.template',
             path.join(serviceDir, `organizations.test.${ext}`),
             {},
-            withUserFields,
+            withUserFields(101),
           )
           await writeTemplateFile(
             'organizations.scenarios.ts.template',
             path.join(serviceDir, `organizations.scenarios.${ext}`),
             {},
-            withUserFields,
+            withUserFields(1),
           )
           await writeTemplateFile(
             'organizations.sdl.ts.template',

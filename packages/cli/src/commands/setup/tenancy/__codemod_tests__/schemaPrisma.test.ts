@@ -203,8 +203,10 @@ describe('requiredUserFields', () => {
 
 enum Plan {
   // The free one
-  FREE
-  PRO
+  FREE @map("free")
+  PRO  @map("pro")
+
+  @@map("plans")
 }`
 
   it("finds the required fields without a default that setup doesn't fill", () => {
@@ -216,12 +218,28 @@ enum Plan {
     ])
   })
 
+  it("uses an enum member's name, not its mapped value", () => {
+    expect(
+      requiredUserFields(schema).find((field) => field.name === 'plan'),
+    ).toEqual({ name: 'plan', value: "'FREE'" })
+  })
+
   it('finds none for a plain dbAuth User', () => {
     expect(requiredUserFields(BASE_SCHEMA)).toEqual([])
   })
 })
 
 describe('addRequiredUserFields', () => {
+  it('numbers from firstNumber, so two files can keep their users apart', () => {
+    expect(
+      addRequiredUserFields(
+        "  salt: 'x',",
+        [{ name: 'username', value: "'username __N__'" }],
+        { firstNumber: 101 },
+      ),
+    ).toBe("  salt: 'x',\n  username: 'username 101',")
+  })
+
   it('sets the fields on every user, numbered', () => {
     const source = [
       '        user: {',

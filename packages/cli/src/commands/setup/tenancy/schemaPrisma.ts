@@ -224,8 +224,15 @@ export function requiredUserFields(schema: string): RequiredUserField[] {
     schema
       .match(new RegExp(`\\benum\\s+${name}\\s*\\{([\\s\\S]*?)\\}`))?.[1]
       .split('\n')
-      .map((line) => line.replace(/\/\/.*/, '').trim())
-      .find((line) => /^\w+$/.test(line))
+      // The member's name, before any attributes such as `@map("free")`
+      .map(
+        (line) =>
+          line
+            .replace(/\/\/.*/, '')
+            .trim()
+            .match(/^([A-Za-z_]\w*)(?:\s|$)/)?.[1],
+      )
+      .find((member) => member !== undefined)
 
   // Foreign keys: a made-up value would break the relation
   const relationKeys = [
@@ -267,18 +274,21 @@ export function requiredUserFields(schema: string): RequiredUserField[] {
 
 /**
  * `source` (a generated test or scenario) with `fields` set on every user it
- * creates: after each `salt: 'x',` line, numbered so a `@unique` field gets
- * a different value for each user.
+ * creates: after each `salt: 'x',` line, numbered from `firstNumber` so a
+ * `@unique` field gets a different value for each user. Give files whose
+ * users exist at the same time (a test and its scenario) different
+ * `firstNumber`s.
  */
 export function addRequiredUserFields(
   source: string,
   fields: RequiredUserField[],
+  { firstNumber = 1 }: { firstNumber?: number } = {},
 ): string {
   if (fields.length === 0) {
     return source
   }
 
-  let n = 0
+  let n = firstNumber - 1
 
   return source.replace(/^(\s*)salt: 'x',$/gm, (line, indent: string) => {
     n++
