@@ -3658,8 +3658,6 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/cookie-jar": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    esbuild: "npm:0.28.2"
-    fast-glob: "npm:3.3.3"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
