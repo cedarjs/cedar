@@ -117,7 +117,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/core": "^7.26.10",
+    "@babel/core": "7.29.7",
     "@babel/parser": "7.29.9",
     "@babel/traverse": "7.29.10",
     "@cedarjs/api": "workspace:*",
@@ -162,7 +162,7 @@
     "tsconfig-paths": "4.2.0",
     "typescript": "5.9.3",
     "vite": "7.3.7",
-    "vite-tsconfig-paths": "^6.1.1"
+    "vite-tsconfig-paths": "6.1.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
