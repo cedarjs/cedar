@@ -250,7 +250,7 @@ user's role in the current organization:
 -  // ...
 -}
 +export const { hasRole, hasOrgRole, requireOrgAuth, requireUserAuth } =
-+  createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
++  createTenancyAuth()
 ```
 
 There's no `requireAuth` any more. `requireOrgAuth` (and `@requireOrgAuth`) is
@@ -259,8 +259,8 @@ about the current organization: it needs one, and checks the user's role in it.
 than an organization, as the generated `myMemberships`, `createOrganization`
 and `acceptInvitation` are: it needs a signed-in user, and checks `roles`
 against `currentUser.roles`, as `requireAuth` did. `@requireOrgAuth` with no
-roles admits the `defaultRoles`, so a role you add later reaches only the fields
-that list it (see [`defaultRoles`](../tenancy.md#defaultroles)).
+roles admits any member of the organization, as a bare `@requireAuth` admits
+any signed-in user. Guard anything narrower with `roles`.
 
 Before tenancy there are no organizations, so every field your app already has
 is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and
@@ -704,8 +704,7 @@ const validate = ({ directiveArgs }) => {
 
 Both throw `AuthenticationError` when there's no `context.currentUser`.
 `requireOrgAuth()` throws `ForbiddenError` when there's no `context.currentOrg`
-or the user's role in it isn't one of `roles` (or of `defaultRoles`, when the
-field lists none). `requireUserAuth()` throws `ForbiddenError` when `roles` are
+or, when the field lists `roles`, the user's role in it isn't one of them. `requireUserAuth()` throws `ForbiddenError` when `roles` are
 given and `currentUser.roles` has none of them. These are the error types
 `requireAuth` always threw, so any error handling you already have on the web
 side keeps working.

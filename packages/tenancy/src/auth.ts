@@ -57,8 +57,7 @@ export function getCurrentRoles(): string[] {
  * Returns `false` when there's no authenticated user, no matching
  * organization, or no matching membership. An empty `roles` array returns
  * `true` as long as a matching membership exists, mirroring `hasRole()`'s
- * behavior for global roles. The `hasOrgRole` from
- * `createTenancyAuth({ defaultRoles })` admits `defaultRoles` instead.
+ * behavior for global roles.
  */
 export function hasOrgRole(roles: Roles, organizationId?: string): boolean {
   const roleList = toList(roles)
@@ -90,21 +89,6 @@ export function hasOrgRole(roles: Roles, organizationId?: string): boolean {
   return roleList.length === 0 || roleList.includes(currentOrg.role)
 }
 
-export interface TenancyAuthOptions {
-  /**
-   * The roles an organization check admits when it lists none: a bare
-   * `@requireOrgAuth`, `requireOrgAuth()`, and `hasOrgRole()` without roles.
-   * Unset, any membership is enough. An empty list admits no one.
-   *
-   * Set it to the roles that may use everything (`cedar setup tenancy`
-   * sets the roles it generates), and a role added later is refused
-   * everywhere until a field lets it in by listing it. Without it, a new,
-   * narrower role can use every field that doesn't list roles, including
-   * the ones added after it.
-   */
-  defaultRoles?: readonly string[]
-}
-
 export interface TenancyAuth {
   /**
    * Whether the signed-in user holds one of `roles` for this request: their
@@ -113,9 +97,11 @@ export interface TenancyAuth {
    */
   hasRole(roles: Roles): boolean
   /**
-   * Guards a service or directive on the current organization: signed in, a
-   * member of the current organization, and with one of `roles` there, or
-   * of `defaultRoles` when none are given.
+   * Guards a service or directive on the current organization: signed in,
+   * a member of the current organization and, when `roles` are given, with
+   * one of them there. With no `roles`, any member gets in, as any
+   * signed-in user gets past the single-tenant `requireAuth()`: use `roles`
+   * or `requirePermission()` for anything narrower.
    *
    * Throws `AuthenticationError` when no one is signed in, and
    * `ForbiddenError` otherwise.
@@ -131,7 +117,7 @@ export interface TenancyAuth {
    * `ForbiddenError` otherwise.
    */
   requireUserAuth(options?: { roles?: Roles }): void
-  /** `hasOrgRole`, admitting `defaultRoles` when given no roles */
+  /** The standalone `hasOrgRole`: with no roles, any membership */
   hasOrgRole(roles?: Roles, organizationId?: string): boolean
 }
 
@@ -141,26 +127,13 @@ export interface TenancyAuth {
  *
  * ```ts
  * export const { hasRole, requireOrgAuth, requireUserAuth, hasOrgRole } =
- *   createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
+ *   createTenancyAuth()
  * ```
  *
  * There's no `requireAuth`: every check says whether it's about the
  * current organization or the signed-in user alone.
  */
-export function createTenancyAuth(
-  options: TenancyAuthOptions = {},
-): TenancyAuth {
-  const defaultRoles = options.defaultRoles && [...options.defaultRoles]
-
-  /**
-   * The roles a check admits: the ones it lists, else `defaultRoles`.
-   * `undefined` when neither is set, which admits any membership.
-   */
-  const orDefault = (roles: Roles | undefined) => {
-    const roleList = toList(roles)
-    return roleList.length > 0 ? roleList : defaultRoles
-  }
-
+export function createTenancyAuth(): TenancyAuth {
   return {
     hasRole(roles) {
       const roleList = toList(roles)
@@ -192,22 +165,14 @@ export function createTenancyAuth(
         )
       }
 
-      const admitted = orDefault(roles)
-
-      if (admitted && !admitted.includes(currentOrg.role)) {
+      // As `requireUserAuth`: `roles`, even an empty list, must match
+      if (roles && !toList(roles).includes(currentOrg.role)) {
         throw new ForbiddenError("You don't have access to do that.")
       }
     },
 
-    hasOrgRole(roles, organizationId) {
-      const admitted = orDefault(roles)
-
-      // The standalone `hasOrgRole` takes an empty list as any membership
-      if (admitted?.length === 0) {
-        return false
-      }
-
-      return hasOrgRole(admitted ?? [], organizationId)
+    hasOrgRole(roles = [], organizationId) {
+      return hasOrgRole(roles, organizationId)
     },
   }
 }

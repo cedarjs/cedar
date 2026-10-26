@@ -80,7 +80,7 @@ import {
 import { createTenancyAuth } from '@cedarjs/tenancy'
 
 export const { hasRole, requireOrgAuth, requireUserAuth, hasOrgRole } =
-  createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
+  createTenancyAuth()
 
 // In a service:
 requireOrgAuth({ roles: ['owner', 'admin'] }) // in the current organization
@@ -93,8 +93,8 @@ if (hasRole('owner')) { ... }
 `requireOrgAuth` (and the `@requireOrgAuth` directive `setup tenancy` adds) is
 about the current organization: it throws `AuthenticationError` with no
 current user, and `ForbiddenError` with no current organization or when the
-user's role there isn't one of `roles`, or of `defaultRoles` when none are
-given. `requireUserAuth` (and `@requireUserAuth`) is for fields about the user
+user's role there isn't one of `roles` when they're given. With no `roles`,
+any member gets in. `requireUserAuth` (and `@requireUserAuth`) is for fields about the user
 rather than an organization: it needs a signed-in user, and checks `roles`
 against `currentUser.roles`. There's no `requireAuth`. `hasRole` checks
 `getCurrentRoles()`: the membership's role in the current organization, or
