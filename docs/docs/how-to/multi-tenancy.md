@@ -588,7 +588,8 @@ type Invitation {
 
 type Query {
   myMemberships: [Membership!]! @requireUserAuth
-  organization(id: String!): Organization @requireOrgAuth
+  organization(id: String!): Organization
+    @requirePermission(permission: "organization.read")
 }
 
 input CreateOrganizationInput {
@@ -609,14 +610,14 @@ type Mutation {
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   inviteMember(input: InviteMemberInput!): Invitation!
-    @requireOrgAuth(roles: ["owner", "admin"])
+    @requirePermission(permission: "members.manage")
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   acceptInvitation(token: String!): Organization! @requireUserAuth
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   removeMember(membershipId: String!): Membership!
-    @requireOrgAuth(roles: ["owner", "admin"])
+    @requirePermission(permission: "members.manage")
 }
 ```
 
@@ -652,8 +653,8 @@ export const organization = () => {
 export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
   const currentOrg = requireCurrentOrg()
 
-  // @requireOrgAuth(roles: ["owner", "admin"]) on the SDL only checks that the
-  // caller is an owner or admin of this organization; whether *this* role
+  // @requirePermission(permission: "members.manage") on the SDL only checks
+  // that the caller's role here may manage members; whether *this* role
   // may be granted is checked here, against the caller's own role, so an
   // admin can invite an admin or a member but never an owner.
   if (!canGrantRole(currentOrg.role, input.role)) {
