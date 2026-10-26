@@ -2,7 +2,7 @@ import React from 'react'
 
 import { ApolloProvider } from '@apollo/client/react'
 
-import type { UseAuth } from '@cedarjs/auth'
+import type { PermissionName, UseAuth } from '@cedarjs/auth'
 import { HasPermissionContext, HasRoleContext, useNoAuth } from '@cedarjs/auth'
 import {
   navigate,
@@ -38,7 +38,7 @@ export interface OrgScopeProps {
    * Only members whose membership has this permission get in (see
    * `createPermissions` in `@cedarjs/tenancy`). Checked like `roles`.
    */
-  permission?: string
+  permission?: PermissionName
   /**
    * The name of the route a member without one of `roles`, or without
    * `permission`, is redirected to. It gets the `orgSlug` param when its
