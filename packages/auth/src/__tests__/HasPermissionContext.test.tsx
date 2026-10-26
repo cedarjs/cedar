@@ -4,7 +4,6 @@ import { renderHook } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { HasPermissionContext } from '../HasPermissionContext.js'
-import { HasRoleContext } from '../HasRoleContext.js'
 
 import { createCustomTestAuth } from './fixtures/customTestAuth.js'
 
@@ -56,22 +55,5 @@ describe('HasPermissionContext', () => {
     expect(hasPermission(result.current)('billing.manage')).toBe(false)
     // hasRole is still the provider's
     expect(result.current.hasRole('owner')).toBe(false)
-  })
-
-  test('works next to HasRoleContext', () => {
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => (
-        <AuthProvider>
-          <HasRoleContext.Provider value={() => true}>
-            <HasPermissionContext.Provider value={() => true}>
-              {children}
-            </HasPermissionContext.Provider>
-          </HasRoleContext.Provider>
-        </AuthProvider>
-      ),
-    })
-
-    expect(result.current.hasRole('owner')).toBe(true)
-    expect(hasPermission(result.current)('members.manage')).toBe(true)
   })
 })

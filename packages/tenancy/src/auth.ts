@@ -73,10 +73,12 @@ export function hasOrgRole(roles: Roles, organizationId?: string): boolean {
 export interface TenancyAuth {
   /**
    * Whether the signed-in user holds one of `roles` in `currentUser.roles`,
-   * in any organization or none. What the single-tenant `hasRole()` checked;
-   * `hasOrgRole()` checks the role in an organization.
+   * as the single-tenant `hasRole()` checked. A user-level check: it never
+   * looks at the current organization. False when no one is signed in, and
+   * an empty `roles` matches no one. `hasOrgRole()` checks the role in an
+   * organization.
    */
-  hasUserRole(roles: Roles): boolean
+  hasRole(roles: Roles): boolean
   /**
    * Guards a service or directive on the current organization: signed in,
    * a member of the current organization and, when `roles` are given, with
@@ -107,16 +109,18 @@ export interface TenancyAuth {
  * exports in place of its single-tenant `hasRole` and `requireAuth`:
  *
  * ```ts
- * export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
+ * export const { hasRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
  *   createTenancyAuth()
  * ```
  *
- * There's no `hasRole` or `requireAuth`: every check says whether it's
- * about the signed-in user alone or the current organization.
+ * `hasRole` and `requireUserAuth` are about the signed-in user alone
+ * (`currentUser.roles`); `hasOrgRole` and `requireOrgAuth` are about their
+ * role in an organization. There's no `requireAuth`: each guard says which
+ * it is.
  */
 export function createTenancyAuth(): TenancyAuth {
   return {
-    hasUserRole(roles) {
+    hasRole(roles) {
       const roleList = toList(roles)
 
       return (

@@ -22,54 +22,39 @@ const LIB_AUTH_IMPORT =
   /import\s*\{([^}]*)\}\s*from\s*(['"])((?:src|\.{1,2})(?:\/[^'"]*)?\/lib\/auth(?:\.[jt]s)?)\2/g
 
 /**
- * What `api/src/lib/auth` exported before tenancy, and what checks the same
- * thing once it's set up
+ * `source` with `requireAuth`, imported from `api/src/lib/auth`, renamed
+ * `requireUserAuth`, where it's imported and where it's used. That checks
+ * what `requireAuth` did, and `lib/auth` doesn't export `requireAuth` once
+ * tenancy is set up. `hasRole` stays: `lib/auth` still exports it, checking
+ * `currentUser.roles` as before.
  */
-const LIB_AUTH_RENAMES = {
-  requireAuth: 'requireUserAuth',
-  hasRole: 'hasUserRole',
-} as const
+export function renameRequireAuthImport(source: string): string {
+  let renameUses = false
 
-/**
- * `source` with `requireAuth` and `hasRole`, imported from
- * `api/src/lib/auth`, renamed `requireUserAuth` and `hasUserRole`, where
- * they're imported and where they're used. Those check what the old ones
- * did, and `lib/auth` exports neither old name once tenancy is set up.
- */
-export function renameLibAuthImports(source: string): string {
-  let result = source
+  const result = source.replace(
+    LIB_AUTH_IMPORT,
+    (statement: string, specifiers: string) => {
+      const renamed = specifiers.replace(
+        /(?<![\w$])requireAuth(?![\w$])(\s+as\s+[\w$]+)?/g,
+        (_specifier, alias: string | undefined) => {
+          if (!alias) {
+            renameUses = true
+          }
 
-  for (const [from, to] of Object.entries(LIB_AUTH_RENAMES)) {
-    let renameUses = false
-
-    result = result.replace(
-      LIB_AUTH_IMPORT,
-      (statement: string, specifiers: string) => {
-        const renamed = specifiers.replace(
-          new RegExp(`(?<![\\w$])${from}(?![\\w$])(\\s+as\\s+[\\w$]+)?`, 'g'),
-          (_specifier, alias: string | undefined) => {
-            if (!alias) {
-              renameUses = true
-            }
-
-            return `${to}${alias ?? ''}`
-          },
-        )
-
-        return statement.replace(specifiers, renamed)
-      },
-    )
-
-    if (renameUses) {
-      // Every use, but not a property (`auth.requireAuth`) or a directive
-      result = result.replace(
-        new RegExp(`(?<![\\w$@.])${from}(?![\\w$])`, 'g'),
-        to,
+          return `requireUserAuth${alias ?? ''}`
+        },
       )
-    }
+
+      return statement.replace(specifiers, renamed)
+    },
+  )
+
+  if (!renameUses) {
+    return result
   }
 
-  return result
+  // Every use, but not a property (`auth.requireAuth`) or a directive
+  return result.replace(/(?<![\w$@.])requireAuth(?![\w$])/g, 'requireUserAuth')
 }
 
 /**
