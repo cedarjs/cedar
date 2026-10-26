@@ -299,16 +299,14 @@ From `@cedarjs/tenancy`:
 
 ```ts
 export function createTenancyAuth(): {
-  hasRole(roles: string | readonly string[]): boolean
-  requireOrgAuth(options?: { roles?: string | readonly string[] }): void
-  requireUserAuth(options?: { roles?: string | readonly string[] }): void
+  hasUserRole(roles: string | readonly string[]): boolean
   hasOrgRole(
     roles?: string | readonly string[],
     organizationId?: string
   ): boolean
+  requireUserAuth(options?: { roles?: string | readonly string[] }): void
+  requireOrgAuth(options?: { roles?: string | readonly string[] }): void
 }
-
-export function getCurrentRoles(): string[]
 
 export function hasOrgRole(
   roles: string | readonly string[],
@@ -322,11 +320,11 @@ The setup command replaces the single-tenant `hasRole` and `requireAuth` in
 `api/src/lib/auth.ts` with these:
 
 ```ts title="api/src/lib/auth.ts"
-export const { hasRole, hasOrgRole, requireOrgAuth, requireUserAuth } =
+export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
   createTenancyAuth()
 ```
 
-There's no `requireAuth`: each check says what it's about.
+There's no `hasRole` or `requireAuth`: each check says what it's about.
 
 - `requireOrgAuth({ roles })`: for fields about the current organization.
   Throws `AuthenticationError` when no one is signed in, and `ForbiddenError`
@@ -343,15 +341,11 @@ There's no `requireAuth`: each check says what it's about.
   of them. No organization is needed. It checks what the single-tenant
   `requireAuth` did.
 
-`hasRole(roles)` checks `getCurrentRoles()`. `hasOrgRole(roles?,
-organizationId?)` is the standalone `hasOrgRole` below: with no roles, it's
-whether the user is a member.
-
-### `getCurrentRoles()`
-
-The current user's roles for this request: inside an organization (when
-`context.currentOrg` is set), their membership's role there; outside one,
-`currentUser.roles`. Empty when no one is signed in.
+`hasUserRole(roles)` checks `currentUser.roles`, as the single-tenant
+`hasRole` did. `hasOrgRole(roles?, organizationId?)` is the standalone
+`hasOrgRole` below: with no roles, it's whether the user is a member. Setup
+renames `hasRole` and `requireAuth` imported from `api/src/lib/auth` to
+`hasUserRole` and `requireUserAuth`.
 
 With tenancy, a role belongs to a membership, so don't copy one into
 `currentUser.roles` in `getCurrentUser`: a user who is `owner` in one
@@ -366,7 +360,7 @@ matching role; without one, checks `context.currentOrg.role`. Returns `false`
 when unauthenticated, when there's no matching organization, or when
 `context.currentOrg` is unset. An empty `roles` array returns `true` as long as
 a membership exists. Use it for an organization other than the current one;
-for the current one, `requireOrgAuth` and `hasRole` already check it.
+for the current one, `requireOrgAuth` already checks it.
 
 ## The `@requireOrgAuth` and `@requireUserAuth` directives
 
