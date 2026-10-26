@@ -25,7 +25,7 @@ export type CurrentUser = (LoggedInUser & object) | null
 /**
  * Whether the app has tenancy (`cedar setup tenancy`). This is a
  * declaration-merging target: `cedar generate types` writes
- * `.cedar/types/includes/all-tenancy.d.ts`, which augments it with
+ * `.cedar/types/includes/web-tenancy.d.ts`, which augments it with
  * `{ enabled: true }` in an app with tenancy. Empty otherwise.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

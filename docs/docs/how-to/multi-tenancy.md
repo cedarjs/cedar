@@ -267,8 +267,8 @@ Before tenancy there are no organizations, so every field your app already has
 is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and
 each `requireAuth()` and `hasRole()` from `src/lib/auth` to `requireUserAuth()`
 and `hasUserRole()`. On the web, it renames `hasRole` from `useAuth()` to
-`hasUserRole`. Your app works as it did. When you give a model an `organizationId`, switch its fields to
-`@requireOrgAuth`. `cedar generate sdl` and `cedar generate scaffold` pick the
+`hasUserRole`. Your app works as it did. When you give a model an
+`organizationId`, switch its fields to `@requireOrgAuth`. `cedar generate sdl` and `cedar generate scaffold` pick the
 right one for new models, and a leftover `@requireAuth` is an unknown directive,
 so it fails when the schema is built.
 
