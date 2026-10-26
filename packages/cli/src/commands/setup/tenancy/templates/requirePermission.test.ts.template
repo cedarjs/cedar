@@ -2,13 +2,6 @@ import { mockRedwoodDirective, getDirectiveName } from '@cedarjs/testing/api'
 
 import requirePermission from './requirePermission.js'
 
-/**
- * `context.currentUser` is typed from this app's `getCurrentUser`, which
- * selects more fields than these tests need.
- */
-const asCurrentUser = (user: { id: string; memberships?: unknown[] }) =>
-  user as unknown as NonNullable<typeof context.currentUser>
-
 const currentOrg = (role: string) => ({
   id: 'org-1',
   slug: 'org-1',
@@ -34,7 +27,7 @@ describe('requirePermission directive', () => {
   it("throws when the role in the current organization doesn't have it", () => {
     const mockExecution = mockRedwoodDirective(requirePermission, {
       context: {
-        currentUser: asCurrentUser({ id: '1' }),
+        currentUser: { id: 'user-1' },
         currentOrg: currentOrg('member'),
       },
       directiveArgs: { permission: 'members.manage' },
@@ -46,7 +39,7 @@ describe('requirePermission directive', () => {
   it('passes when the role in the current organization has it', () => {
     const mockExecution = mockRedwoodDirective(requirePermission, {
       context: {
-        currentUser: asCurrentUser({ id: '1' }),
+        currentUser: { id: 'user-1' },
         currentOrg: currentOrg('owner'),
       },
       directiveArgs: { permission: 'members.manage' },
