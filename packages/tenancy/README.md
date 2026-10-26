@@ -107,17 +107,11 @@ against `currentUser.roles`. There's no `requireAuth`. `hasRole` checks
 import { definePermissions } from '@cedarjs/tenancy/permissions'
 
 export const permissions = definePermissions({
-  permissions: [
-    'projects.read',
-    'projects.edit',
-    'members.manage',
-    'account.manage',
-  ],
+  permissions: ['projects.read', 'projects.edit', 'members.manage'],
   roles: {
     owner: ['projects.read', 'projects.edit', 'members.manage'],
     member: ['projects.read'],
   },
-  user: ['account.manage'],
 })
 ```
 
@@ -136,7 +130,8 @@ Roles map to permissions in one place; fields ask for a permission with
 A role only gets what its list says, so a new role is one entry. Permission
 names are typed from the definitions. `withPermissions` in `getCurrentUser` gives each
 membership its permissions, which `useAuth().hasPermission()` checks inside
-`OrgScope`.
+`OrgScope`. Every permission is about an organization: fields about the user
+rather than an organization use `@requireUserAuth`.
 
 ## Web
 
