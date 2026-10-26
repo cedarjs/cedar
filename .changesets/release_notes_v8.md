@@ -297,3 +297,24 @@ To fix it, add the field to what `getCurrentUser` returns (for example to
 the `select` in your `db.user.findUnique` call), or stop reading it. The same
 applies to `mockCurrentUser()` in tests: the object you pass must match the
 `getCurrentUser` return type.
+
+## Your app owns its copy of Prisma
+
+Cedar uses the `prisma` and `@prisma/client` your app installs instead of
+installing its own copies, so every app has exactly one copy of each. Your
+app needs:
+
+- `prisma` in the `devDependencies` of the root `package.json`
+- `@prisma/client` in the `dependencies` of `api/package.json`
+
+Both must be on the version Cedar supports, which `@cedarjs/cli` declares as
+its `prisma` peer dependency. Apps created before these entries were part of
+the app template, including apps migrated from Redwood, often don't have
+them yet.
+
+When either is missing, `yarn cedar upgrade` stops before changing anything
+and lists what to add, with the Prisma version to use. Add them and run the
+upgrade again. From then on, every `yarn cedar upgrade` sets `prisma`,
+`@prisma/client` and any `@prisma/adapter-*` packages to the version Cedar
+supports, and adds `prisma` and `@prisma/client` if they go missing. If you
+upgrade your Cedar packages without `yarn cedar upgrade`, add them yourself.

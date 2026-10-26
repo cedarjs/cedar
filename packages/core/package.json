@@ -59,7 +59,11 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
+    "prisma": "7.10.1",
     "publint": "0.3.25"
+  },
+  "peerDependencies": {
+    "prisma": "7.10.1"
   },
   "engines": {
     "node": ">=24"
