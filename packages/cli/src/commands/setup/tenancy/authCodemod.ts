@@ -180,17 +180,19 @@ function addPermissionsImport(source: string): string {
     return source
   }
 
-  const dbImport = /^import \{ db \} from (['"])(.*?)db(\.js)?\1;?\n/m
+  // The file's own line endings: CRLF when git checks it out on Windows
+  const eol = source.includes('\r\n') ? '\r\n' : '\n'
+  const dbImport = /^import \{ db \} from (['"])(.*?)db(\.js)?\1;?\r?\n/m
 
   if (dbImport.test(source)) {
     return source.replace(
       dbImport,
       (line, quote, dir, ext = '') =>
-        `${line}import { withPermissions } from ${quote}${dir}permissions${ext}${quote}\n`,
+        `${line}import { withPermissions } from ${quote}${dir}permissions${ext}${quote}${eol}`,
     )
   }
 
-  return `import { withPermissions } from 'src/lib/permissions'\n${source}`
+  return `import { withPermissions } from 'src/lib/permissions'${eol}${source}`
 }
 
 /**
