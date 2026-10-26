@@ -250,7 +250,7 @@ user's role in the current organization:
 -export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
 -  // ...
 -}
-+export const { hasRole, hasOrgRole, requireOrgAuth, requireUserAuth } =
++export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
 +  createTenancyAuth()
 ```
 
@@ -273,7 +273,7 @@ right one for new models, and a leftover `@requireAuth` is an unknown directive,
 so it fails when the schema is built.
 
 With tenancy, `getCurrentUser` shouldn't copy a membership's role into
-`currentUser.roles`: `requireOrgAuth` and `hasRole` get the role from the
+`currentUser.roles`: `requireOrgAuth` and `hasOrgRole` get the role from the
 membership in the current organization, and a copied role would leak one
 organization's role into checks made outside it.
 

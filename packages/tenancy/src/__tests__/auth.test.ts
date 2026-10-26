@@ -4,7 +4,7 @@ import { context, setContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
-import { createTenancyAuth, getCurrentRoles, hasOrgRole } from '../auth.js'
+import { createTenancyAuth, hasOrgRole } from '../auth.js'
 
 const currentUser = {
   id: 'user1',
@@ -75,52 +75,27 @@ describe('hasOrgRole', () => {
 const run = (fn: () => void | Promise<void>) =>
   getAsyncStoreInstance().run(new Map(), async () => fn())
 
-describe('getCurrentRoles', () => {
-  it('is empty with no current user', async () => {
-    await run(() => {
-      expect(getCurrentRoles()).toEqual([])
-    })
-  })
-
-  it("is the membership's role inside an organization", async () => {
-    await run(() => {
-      setContext({
-        currentUser: { ...currentUser, roles: ['superuser'] },
-        currentOrg: currentOrg1Viewer,
-      })
-      expect(getCurrentRoles()).toEqual(['viewer'])
-    })
-  })
-
-  it('is currentUser.roles outside one', async () => {
-    await run(() => {
-      setContext({ currentUser: { ...currentUser, roles: ['superuser'] } })
-      expect(getCurrentRoles()).toEqual(['superuser'])
-      setContext({ currentUser: { ...currentUser, roles: 'superuser' } })
-      expect(getCurrentRoles()).toEqual(['superuser'])
-      setContext({ currentUser })
-      expect(getCurrentRoles()).toEqual([])
-    })
-  })
-})
-
 describe('createTenancyAuth', () => {
-  describe('hasRole', () => {
-    const { hasRole } = createTenancyAuth()
+  describe('hasUserRole', () => {
+    const { hasUserRole } = createTenancyAuth()
 
-    it('checks the role in the current organization', async () => {
+    it("checks currentUser.roles, not the membership's", async () => {
       await run(() => {
-        setContext({ currentUser, currentOrg: currentOrg1Viewer })
-        expect(hasRole('viewer')).toBe(true)
-        expect(hasRole(['owner', 'viewer'])).toBe(true)
-        // The user's role in org2, not the current organization
-        expect(hasRole('owner')).toBe(false)
+        setContext({
+          currentUser: { ...currentUser, roles: ['superuser'] },
+          currentOrg: currentOrg1Viewer,
+        })
+        expect(hasUserRole('superuser')).toBe(true)
+        expect(hasUserRole(['admin', 'superuser'])).toBe(true)
+        // The role in the current organization doesn't count
+        expect(hasUserRole('viewer')).toBe(false)
+        expect(hasUserRole([])).toBe(false)
       })
     })
 
     it('is false with no current user', async () => {
       await run(() => {
-        expect(hasRole('viewer')).toBe(false)
+        expect(hasUserRole('superuser')).toBe(false)
       })
     })
   })
