@@ -1,0 +1,10 @@
+import '@cedarjs/graphql-server'
+
+import type { CedarRealtimeOptions } from '@cedarjs/realtime'
+
+// The full type of the realtime option createGraphQLHandler() takes
+declare module '@cedarjs/graphql-server' {
+  interface RealtimeTypeMap {
+    options: CedarRealtimeOptions
+  }
+}

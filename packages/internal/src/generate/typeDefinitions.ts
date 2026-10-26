@@ -62,6 +62,7 @@ export const generateTypeDefs = async () => {
       ...generateTypeDefRouterPages(),
       ...generateTypeDefCurrentUser(),
       ...generateTypeDefGqlorm(),
+      ...generateTypeDefRealtime(),
       ...generateTypeDefRouterRoutes(),
       ...generateTypeDefGlobImports(),
       ...generateTypeDefGlobalContext(),
@@ -422,6 +423,43 @@ export const generateTypeDefCurrentUser = () => {
 
 export const generateTypeDefGqlorm = () => {
   return writeTypeDefIncludeFile('all-gqlorm.d.ts.template')
+}
+
+/**
+ * The full type of the GraphQL handler's `realtime` option, when the api side
+ * depends on `@cedarjs/realtime` (`cedar setup realtime` adds it). None
+ * otherwise, and a stale file goes.
+ */
+export const generateTypeDefRealtime = () => {
+  const paths = getPaths()
+  const typeDefPath = path.join(
+    paths.generated.types.includes,
+    'api-realtime.d.ts',
+  )
+
+  let packageJson: {
+    dependencies?: Record<string, unknown>
+    devDependencies?: Record<string, unknown>
+  }
+
+  try {
+    packageJson = JSON.parse(
+      fs.readFileSync(path.join(paths.api.base, 'package.json'), 'utf-8'),
+    )
+  } catch {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  if (
+    !packageJson.dependencies?.['@cedarjs/realtime'] &&
+    !packageJson.devDependencies?.['@cedarjs/realtime']
+  ) {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  return writeTypeDefIncludeFile('api-realtime.d.ts.template')
 }
 
 export const generateTypeDefScenarios = () => {
