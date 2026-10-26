@@ -12,15 +12,38 @@ export function hasTenancyAuthDirectives() {
 }
 
 /**
+ * The column tenant-owned models are scoped by: the `tenantField` given to
+ * `createTenancyExtension` in `api/src/lib/db` (`setup tenancy
+ * --tenant-field`), else `organizationId`
+ */
+export function tenantField() {
+  for (const ext of ['ts', 'js']) {
+    const dbPath = path.join(getPaths().api.lib, `db.${ext}`)
+
+    if (fs.existsSync(dbPath)) {
+      const match = fs
+        .readFileSync(dbPath, 'utf-8')
+        .match(/\btenantField:\s*['"](\w+)['"]/)
+
+      return match?.[1] ?? 'organizationId'
+    }
+  }
+
+  return 'organizationId'
+}
+
+/**
  * Whether a Prisma model's rows belong to an organization: it has the
- * `organizationId` that `cedar setup tenancy` asks for, or a relation to
- * `Organization`
+ * tenant field `cedar setup tenancy` asks for (`organizationId`, unless
+ * the app chose another), or a relation to `Organization`
  */
 export function belongsToOrganization(model: {
   fields: readonly { name: string; type: string }[]
 }) {
+  const field = tenantField()
+
   return model.fields.some(
-    (field) => field.name === 'organizationId' || field.type === 'Organization',
+    ({ name, type }) => name === field || type === 'Organization',
   )
 }
 

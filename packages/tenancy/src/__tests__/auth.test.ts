@@ -198,6 +198,13 @@ describe('createTenancyAuth', () => {
         )
       })
     })
+
+    it('refuses everyone for an empty list, as requireAuth did', async () => {
+      await run(() => {
+        setContext({ currentUser: { ...currentUser, roles: ['superuser'] } })
+        expect(() => requireUserAuth({ roles: [] })).toThrow(ForbiddenError)
+      })
+    })
   })
 
   describe('defaultRoles', () => {
@@ -225,6 +232,19 @@ describe('createTenancyAuth', () => {
           requireOrgAuth({ roles: ['owner', 'admin', 'viewer'] }),
         ).not.toThrow()
         expect(defaultedHasOrgRole('viewer')).toBe(true)
+      })
+    })
+
+    it('admit no one when empty', async () => {
+      const closed = createTenancyAuth({ defaultRoles: [] })
+
+      await run(() => {
+        setContext({ currentUser, currentOrg: currentOrg1Viewer })
+        expect(() => closed.requireOrgAuth()).toThrow(ForbiddenError)
+        expect(closed.hasOrgRole()).toBe(false)
+        expect(closed.hasOrgRole(undefined, 'org2')).toBe(false)
+        // A field that lists roles still gets them
+        expect(() => closed.requireOrgAuth({ roles: 'viewer' })).not.toThrow()
       })
     })
 

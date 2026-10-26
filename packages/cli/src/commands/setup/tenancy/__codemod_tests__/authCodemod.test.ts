@@ -20,6 +20,17 @@ describe('tenancy authCodemod', () => {
     expect(transformResult.error).toContain('ERR_AUTH_CHECKS_NOT_FOUND')
   })
 
+  it("throws CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED rather than dropping requireAuth's own checks", async () => {
+    const transformResult = await runTransform({
+      transformPath: path.join(__dirname, '../authCodemod.ts'), // Use TS here!
+      targetPaths: [
+        path.join(__dirname, '../__testfixtures__/customAuthChecks.input.ts'),
+      ],
+    })
+
+    expect(transformResult.error).toContain('ERR_AUTH_CHECKS_CHANGED')
+  })
+
   it('only adds withPermissions to an auth file that already uses createTenancyAuth', async () => {
     await matchTransformSnapshot('authCodemod', 'wiredAuth')
   })

@@ -7,9 +7,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { belongsToOrganization, withAuthDirective } from '../authDirective.js'
 
 let directivesDir: string
+let libDir: string
 
 vi.mock('../index.js', () => ({
-  getPaths: () => ({ api: { directives: directivesDir } }),
+  getPaths: () => ({ api: { directives: directivesDir, lib: libDir } }),
 }))
 
 const sdl = 'todos: [Todo!]! @requireAuth @requireAuthor'
@@ -40,6 +41,14 @@ describe('withAuthDirective', () => {
 })
 
 describe('belongsToOrganization', () => {
+  beforeEach(() => {
+    libDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-test-'))
+  })
+
+  afterEach(() => {
+    fs.rmSync(libDir, { recursive: true, force: true })
+  })
+
   it('is true for a model with organizationId or an Organization relation', () => {
     expect(
       belongsToOrganization({
@@ -53,6 +62,24 @@ describe('belongsToOrganization', () => {
     ).toBe(true)
     expect(
       belongsToOrganization({ fields: [{ name: 'userId', type: 'String' }] }),
+    ).toBe(false)
+  })
+
+  it("uses the app's own tenant field", () => {
+    fs.writeFileSync(
+      path.join(libDir, 'db.ts'),
+      "createTenancyExtension({ tenantField: 'accountId' })",
+    )
+
+    expect(
+      belongsToOrganization({
+        fields: [{ name: 'accountId', type: 'String' }],
+      }),
+    ).toBe(true)
+    expect(
+      belongsToOrganization({
+        fields: [{ name: 'organizationId', type: 'String' }],
+      }),
     ).toBe(false)
   })
 })

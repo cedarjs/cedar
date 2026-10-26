@@ -334,7 +334,8 @@ There's no `requireAuth`: each check says what it's about.
   Throws `AuthenticationError` when no one is signed in, and `ForbiddenError`
   when there's no `context.currentOrg` or the user's role in it isn't one of
   `roles`. With no `roles` (or an empty list), it checks `defaultRoles`
-  instead, and with no `defaultRoles` any membership is enough.
+  instead. With no `defaultRoles` any membership is enough, and with an
+  empty list no one is.
 - `requireUserAuth({ roles })`: for fields about the signed-in user rather
   than an organization (their account, their memberships, accepting an
   invitation). Throws `AuthenticationError` when no one is signed in, and,
@@ -404,9 +405,10 @@ one is left for you to move your changes over.
 When a model gets an `organizationId`, switch its fields to
 `@requireOrgAuth`. From then on `cedar generate sdl` and `cedar generate
 scaffold` pick the directive for you: `@requireOrgAuth` for a model with an
-`organizationId` or an `Organization` relation, `@requireUserAuth` for one
-without. Writing `@requireAuth` in a tenancy app is an unknown directive, so
-it fails when the schema is built rather than when the field is first called.
+`organizationId` (or the field you gave `--tenant-field`) or an
+`Organization` relation, `@requireUserAuth` for one without. Writing
+`@requireAuth` in a tenancy app is an unknown directive, so it fails when the
+schema is built rather than when the field is first called.
 
 ### Upgrading from `@requireMembership`
 
