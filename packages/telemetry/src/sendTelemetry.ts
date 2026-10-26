@@ -5,7 +5,6 @@ import path from 'path'
 import { fetch } from '@whatwg-node/fetch'
 import ci from 'ci-info'
 import envinfo from 'envinfo'
-import system from 'systeminformation'
 import { v4 as uuidv4 } from 'uuid'
 import yargsParser from 'yargs/yargs'
 
@@ -98,8 +97,8 @@ const getInfo = async (presets: Args = {}) => {
     info.System.Shell.name = info.System.Shell.path.split('\\').pop()
   }
 
-  const cpu = await system.cpu()
-  const mem = await system.mem()
+  const cpuCount = os.availableParallelism()
+  const memoryGb = Math.round(os.totalmem() / 1073741824)
 
   // Returns a list of all enabled experiments
   // This detects all top level [experimental.X] and returns all X's, ignoring all Y's for any [experimental.X.Y]
@@ -115,7 +114,7 @@ const getInfo = async (presets: Args = {}) => {
     vsCodeVersion: info.IDEs?.VSCode?.version,
     cedarVersion:
       presets.cedarVersion || info.npmPackages?.['@cedarjs/core']?.installed,
-    system: `${cpu.physicalCores}.${Math.round(mem.total / 1073741824)}`,
+    system: `${cpuCount}.${memoryGb}`,
     experiments,
   }
 }
