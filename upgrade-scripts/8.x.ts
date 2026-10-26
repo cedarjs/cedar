@@ -308,7 +308,7 @@ function findMissingPrismaPackages() {
     .map(
       ({ pkgJsonPath, field, depName }) =>
         `${depName} in the ${field} of ` +
-        path.relative(projectPaths.base, pkgJsonPath),
+        path.relative(projectPaths.base, pkgJsonPath).split(path.sep).join('/'),
     )
 }
 
