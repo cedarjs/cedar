@@ -232,7 +232,14 @@ test('generate current user ', () => {
   const paths = generateTypeDefCurrentUser()
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.cedar/types/includes/all-currentUser.d.ts')
-  // The type definition output is static, so there's nothing to test.
+
+  // An interface can't extend never, which is what InferredLoggedInUser is
+  // when getCurrentUser() only throws
+  const c = fs.readFileSync(paths[0], 'utf-8')
+  expect(c).toContain(
+    'type LoggedInUserFields = [InferredLoggedInUser] extends [never]',
+  )
+  expect(c).toContain('interface LoggedInUser extends LoggedInUserFields {}')
 })
 
 test('generate gqlorm db augmentation', () => {
@@ -270,12 +277,29 @@ test('generate glob imports', () => {
   const paths = generateTypeDefGlobImports()
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.cedar/types/includes/api-globImports.d.ts')
+
+  // TypeScript only accepts ambient module names with at most one "*"
+  const c = fs.readFileSync(paths[0], 'utf-8')
+  const moduleNames = [...c.matchAll(/^declare module '(.+)'$/gm)].map(
+    (match) => match[1],
+  )
+  expect(moduleNames).toContain('src/services/*.{js,ts}')
+  expect(moduleNames).toContain('src/graphql/*.sdl.{js,ts}')
+  for (const moduleName of moduleNames) {
+    expect(moduleName.split('*')).toHaveLength(2)
+  }
 })
 
 test('generate api global context', () => {
   const paths = generateTypeDefGlobalContext()
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.cedar/types/includes/api-globalContext.d.ts')
+
+  // @cedarjs/context declares the global, so declaring it here as well would
+  // be a redeclaration
+  const c = fs.readFileSync(paths[0], 'utf-8')
+  expect(c).toContain("import '@cedarjs/context'")
+  expect(c).not.toContain('declare global')
 })
 
 test('generate scenario type defs', () => {
