@@ -1,6 +1,7 @@
 // @dependency: oxc-parser@0.144.0
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import util from 'node:util'
 
 import { parseSync, Visitor } from 'oxc-parser'
@@ -243,7 +244,7 @@ async function findSetsWithWrapperProps() {
  */
 function findSupportedPrismaVersion() {
   let dir = path.dirname(
-    new URL(import.meta.resolve('@cedarjs/project-config')).pathname,
+    fileURLToPath(import.meta.resolve('@cedarjs/project-config')),
   )
 
   while (dir !== path.dirname(dir)) {
@@ -267,7 +268,10 @@ function findSupportedPrismaVersion() {
 /**
  * Returns the Prisma packages the project has to declare itself, as lines like
  * "prisma in the devDependencies of package.json", for the ones it doesn't
- * declare. Projects without an api side don't need either.
+ * declare. `prisma` can be in either section. `@prisma/client` must be in the
+ * api side's `dependencies`, because the api side imports the generated client
+ * at runtime and production installs leave out `devDependencies`. Projects
+ * without an api side don't need either.
  */
 function findMissingPrismaPackages() {
   const apiPkgJsonPath = path.join(projectPaths.api.base, 'package.json')
@@ -281,17 +285,24 @@ function findMissingPrismaPackages() {
       pkgJsonPath: path.join(projectPaths.base, 'package.json'),
       field: 'devDependencies',
       depName: 'prisma',
+      onlyInField: false,
     },
     {
       pkgJsonPath: apiPkgJsonPath,
       field: 'dependencies',
       depName: '@prisma/client',
+      onlyInField: true,
     },
   ]
 
   return required
-    .filter(({ pkgJsonPath, depName }) => {
+    .filter(({ pkgJsonPath, field, depName, onlyInField }) => {
       const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'))
+
+      if (onlyInField) {
+        return !pkg[field]?.[depName]
+      }
+
       return !pkg.dependencies?.[depName] && !pkg.devDependencies?.[depName]
     })
     .map(

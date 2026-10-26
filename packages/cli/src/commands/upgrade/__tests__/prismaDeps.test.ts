@@ -123,6 +123,32 @@ describe('addMissingDependency', () => {
     expect(pkg).toEqual({ dependencies: { prisma: '7.10.1' } })
     expect(messages).toEqual([])
   })
+
+  it('moves a package to its section with onlyInField', () => {
+    const pkg = {
+      dependencies: { '@cedarjs/api': '7.1.0' },
+      devDependencies: { '@prisma/client': '7.10.1', vitest: '4.1.12' },
+    }
+    const messages: string[] = []
+
+    const added = addMissingDependency(
+      pkg,
+      'dependencies',
+      '@prisma/client',
+      '7.11.0',
+      messages,
+      { onlyInField: true },
+    )
+
+    expect(added).toBe(true)
+    expect(pkg).toEqual({
+      dependencies: { '@cedarjs/api': '7.1.0', '@prisma/client': '7.10.1' },
+      devDependencies: { vitest: '4.1.12' },
+    })
+    expect(messages).toEqual([
+      ' - @prisma/client: moved from devDependencies to dependencies',
+    ])
+  })
 })
 
 describe('fetchPrismaPeerVersion', () => {

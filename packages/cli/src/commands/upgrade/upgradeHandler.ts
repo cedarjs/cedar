@@ -510,9 +510,12 @@ export function updatePrismaDependencies(
 }
 
 /**
- * Adds `depName` at `version` to `pkg[field]` when `pkg` doesn't declare it in
- * either `dependencies` or `devDependencies`, keeping `pkg[field]` sorted.
- * Collects a line into `messages` when it adds the package.
+ * Makes sure `pkg[field]` declares `depName`, keeping `pkg[field]` sorted, and
+ * collects a line into `messages` for every change.
+ *
+ * A package `pkg` declares in the other section counts as declared, unless
+ * `onlyInField` is set. Then it's moved to `pkg[field]`, for packages that
+ * production installs, which leave out `devDependencies`, need.
  */
 export function addMissingDependency(
   pkg: TemplatePackageJson,
@@ -520,17 +523,34 @@ export function addMissingDependency(
   depName: string,
   version: string,
   messages: string[],
+  { onlyInField = false }: { onlyInField?: boolean } = {},
 ) {
-  if (pkg.dependencies?.[depName] || pkg.devDependencies?.[depName]) {
+  const otherField =
+    field === 'dependencies' ? 'devDependencies' : 'dependencies'
+
+  if (pkg[field]?.[depName]) {
     return false
   }
 
-  const deps = { ...pkg[field], [depName]: version }
+  const otherVersion = pkg[otherField]?.[depName]
+
+  if (otherVersion && !onlyInField) {
+    return false
+  }
+
+  if (otherVersion) {
+    const { [depName]: _moved, ...otherDeps } = pkg[otherField] ?? {}
+    pkg[otherField] = otherDeps
+    messages.push(` - ${depName}: moved from ${otherField} to ${field}`)
+  } else {
+    messages.push(` - ${depName}: added at ${version}`)
+  }
+
+  const deps = { ...pkg[field], [depName]: otherVersion ?? version }
 
   pkg[field] = Object.fromEntries(
     Object.entries(deps).sort(([a], [b]) => a.localeCompare(b)),
   )
-  messages.push(` - ${depName}: added at ${version}`)
 
   return true
 }
@@ -570,11 +590,20 @@ async function updatePrismaDeps(
   const projectPackages = [
     {
       basePath: getPaths().base,
-      required: { field: 'devDependencies', depName: 'prisma' },
+      required: {
+        field: 'devDependencies',
+        depName: 'prisma',
+        onlyInField: false,
+      },
     },
     {
       basePath: getPaths().api.base,
-      required: { field: 'dependencies', depName: '@prisma/client' },
+      // The api side imports the generated Prisma client at runtime
+      required: {
+        field: 'dependencies',
+        depName: '@prisma/client',
+        onlyInField: true,
+      },
     },
   ] as const
 
@@ -596,6 +625,7 @@ async function updatePrismaDeps(
         required.depName,
         prismaVersion,
         pkgMessages,
+        { onlyInField: required.onlyInField },
       )
     const updated = updatePrismaDependencies(pkg, prismaVersion, pkgMessages, {
       dryRun,

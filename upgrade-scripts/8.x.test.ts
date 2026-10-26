@@ -177,10 +177,10 @@ describe('8.x: Prisma packages the project declares', () => {
     }
   })
 
-  test('accepts Prisma packages in either dependency section', () => {
+  test('accepts prisma in the root dependencies', () => {
     const projectPath = createProject(
       { dependencies: { prisma: '7.10.1' } },
-      { devDependencies: { '@prisma/client': '7.10.1' } },
+      { dependencies: { '@prisma/client': '7.10.1' } },
     )
 
     try {
@@ -188,6 +188,26 @@ describe('8.x: Prisma packages the project declares', () => {
 
       assert.equal(status, 0)
       assert.doesNotMatch(stdout, /Prisma packages/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('requires @prisma/client in the api dependencies', () => {
+    const projectPath = createProject(
+      { devDependencies: { prisma: '7.10.1' } },
+      { devDependencies: { '@prisma/client': '7.10.1' } },
+    )
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 1)
+      assert.match(
+        stdout,
+        / {2}@prisma\/client in the dependencies of api\/package\.json/,
+      )
+      assert.doesNotMatch(stdout, / {2}prisma in the/)
     } finally {
       fs.rmSync(projectPath, { recursive: true, force: true })
     }
