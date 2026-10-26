@@ -381,6 +381,18 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           const isInOldDirective = (file: string) =>
             file.startsWith(oldDirectiveDir + path.sep)
 
+          const oldDirectivePath = path.join(
+            oldDirectiveDir,
+            `requireAuth.${ext}`,
+          )
+          // An app's own `@requireAuth` stays, and so do its fields, so its
+          // checks keep running until the app moves them over
+          const keepOldDirective =
+            fs.existsSync(oldDirectivePath) &&
+            !isDefaultRequireAuthDirective(
+              fs.readFileSync(oldDirectivePath, 'utf-8'),
+            )
+
           // Before tenancy there are no organizations, so every existing
           // field is about the user
           const sourceFiles = fs
@@ -393,9 +405,10 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
 
           for (const file of sourceFiles) {
             const source = fs.readFileSync(file, 'utf-8')
-            // The old directive declares `@requireAuth`, which stays as it is
+            // `lib/auth` exports no `requireAuth` any more, so imports of it
+            // are renamed even in a kept directive
             const renamed = renameRequireAuthImport(
-              isInOldDirective(file)
+              keepOldDirective || isInOldDirective(file)
                 ? source
                 : renameRequireAuthDirective(source),
             )
@@ -406,22 +419,11 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             }
           }
 
-          const oldDirectivePath = path.join(
-            oldDirectiveDir,
-            `requireAuth.${ext}`,
-          )
-
-          if (fs.existsSync(oldDirectivePath)) {
-            if (
-              isDefaultRequireAuthDirective(
-                fs.readFileSync(oldDirectivePath, 'utf-8'),
-              )
-            ) {
-              // `@requireUserAuth` checks the same thing
-              fs.rmSync(oldDirectiveDir, { recursive: true, force: true })
-            } else {
-              ctx.keptRequireAuthDirective = true
-            }
+          if (keepOldDirective) {
+            ctx.keptRequireAuthDirective = true
+          } else if (fs.existsSync(oldDirectivePath)) {
+            // `@requireUserAuth` checks the same thing
+            fs.rmSync(oldDirectiveDir, { recursive: true, force: true })
           }
 
           for (const name of ['requireOrgAuth', 'requireUserAuth']) {
@@ -652,8 +654,9 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
                ctx.keptRequireAuthDirective
                  ? `
              api/src/directives/requireAuth was changed from Cedar's, so
-             it's still there: move your changes to requireUserAuth or
-             requireOrgAuth, then delete it.`
+             it and your @requireAuth fields were left as they are: move
+             its checks to requireUserAuth or requireOrgAuth, switch the
+             fields over, then delete it.`
                  : ''
              }
 

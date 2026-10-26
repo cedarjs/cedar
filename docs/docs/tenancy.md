@@ -399,8 +399,9 @@ Before tenancy there are no organizations, so every field the app already has
 is about the user: setup renames each `@requireAuth` to `@requireUserAuth`,
 and each `requireAuth` imported from `api/src/lib/auth` to `requireUserAuth`.
 They check what they did before. It deletes
-`api/src/directives/requireAuth/` when it's the one Cedar generates; a changed
-one is left for you to move your changes over.
+`api/src/directives/requireAuth/` when it's the one Cedar generates. A changed
+one is left, and so are its `@requireAuth` fields, so its checks keep running
+until you move them to `@requireUserAuth` or `@requireOrgAuth`.
 
 When a model gets an `organizationId`, switch its fields to
 `@requireOrgAuth`. From then on `cedar generate sdl` and `cedar generate
