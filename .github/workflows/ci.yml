@@ -284,6 +284,19 @@ jobs:
     with:
       os: ${{ matrix.os }}
 
+  tenancy-e2e:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.code == 'true'
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    name: 🏢 Tenancy E2E test / ${{ matrix.os }}
+    uses: ./.github/workflows/tenancy-e2e.yml
+    with:
+      os: ${{ matrix.os }}
+
   e2e-netlify:
     needs: detect-changes
     if: >-
@@ -334,6 +347,7 @@ jobs:
       - cli-pm-smoke-tests
       - ud-tests
       - background-jobs-e2e
+      - tenancy-e2e
       - e2e-netlify
       - e2e-vercel
       - e2e-node

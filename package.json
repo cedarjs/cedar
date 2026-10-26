@@ -25,6 +25,7 @@
     "clean": "node ./tasks/clean.mjs",
     "e2e": "node ./tasks/run-e2e.cjs",
     "e2e:background-jobs": "node ./tasks/e2e-background-jobs/run.mts",
+    "e2e:tenancy": "node ./tasks/e2e-tenancy/run.mts",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "generate-dependency-graph": "node ./tasks/generateDependencyGraph.mjs",
