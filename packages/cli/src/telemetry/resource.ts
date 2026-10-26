@@ -1,10 +1,10 @@
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'path'
 
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import ci from 'ci-info'
 import envinfo from 'envinfo'
-import system from 'systeminformation'
 import { v4 as uuidv4, validate as validateUUID } from 'uuid'
 
 import { getPaths, getRawConfig } from '@cedarjs/project-config'
@@ -60,8 +60,8 @@ export async function getResources() {
   } else if (shell?.path.match('\\')) {
     info.System.Shell.name = info.System.Shell.path.split('\\').pop()
   }
-  const cpu = await system.cpu()
-  const mem = await system.mem()
+  const cpuCount = os.availableParallelism()
+  const memoryGb = Math.round(os.totalmem() / 1073741824)
 
   // Record any specific development environment
   let developmentEnvironment: string | undefined = undefined
@@ -100,8 +100,8 @@ export async function getResources() {
     'yarn.version': info.Binaries?.Yarn?.version,
     'npm.version': info.Binaries?.npm?.version,
     'vscode.version': info.IDEs?.VSCode?.version,
-    'cpu.count': cpu.physicalCores,
-    'memory.gb': Math.round(mem.total / 1073741824),
+    'cpu.count': cpuCount,
+    'memory.gb': memoryGb,
     'env.node_env': process.env.NODE_ENV || undefined,
     'ci.redwood': !!process.env.CEDAR_CI,
     'ci.isci': ci.isCI,

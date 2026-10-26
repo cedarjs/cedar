@@ -3006,7 +3006,6 @@ __metadata:
     smol-toml: "npm:1.9.1"
     srvx: "npm:0.12.8"
     string-env-interpolation: "npm:1.0.1"
-    systeminformation: "npm:5.33.16"
     termi-link: "npm:1.1.0"
     title-case: "npm:3.0.3"
     ts-dedent: "npm:2.3.0"
@@ -3728,7 +3727,6 @@ __metadata:
     "@whatwg-node/fetch": "npm:0.12.1"
     ci-info: "npm:4.4.0"
     envinfo: "npm:7.21.0"
-    systeminformation: "npm:5.33.16"
     typescript: "npm:5.9.3"
     uuid: "npm:11.1.1"
     vitest: "npm:4.1.12"
@@ -15486,7 +15484,6 @@ __metadata:
     execa: "npm:5.1.1"
     gradient-string: "npm:3.0.0"
     klaw-sync: "npm:7.0.0"
-    systeminformation: "npm:5.33.16"
     termi-link: "npm:1.1.0"
     untildify: "npm:4.0.0"
     uuid: "npm:11.1.1"
@@ -27757,16 +27754,6 @@ __metadata:
     "@dual-bundle/import-meta-resolve": "npm:^4.2.1"
     "@pkgr/core": "npm:^0.3.6"
   checksum: 10c0/e7c3c5bd8272c55c0e108c296dbd0d326e9f22614227079b46ff7bd51c0970d810b222a3a14f5b0f1797d8af2c82058b9a927ac63a06219ead8535d271b382e1
-  languageName: node
-  linkType: hard
-
-"systeminformation@npm:5.33.16":
-  version: 5.33.16
-  resolution: "systeminformation@npm:5.33.16"
-  bin:
-    systeminformation: lib/cli.js
-  checksum: 10c0/b63a2d7eafed679d7541de3dbcad4b0fd4384774c7c506a2847f62b5eb38ef55f81b55fce9d29a0308e0922c25adbcbc120129009819911aeb0b2985b4ab1335
-  conditions: (os=darwin | os=linux | os=win32 | os=freebsd | os=openbsd | os=netbsd | os=sunos | os=android)
   languageName: node
   linkType: hard
 

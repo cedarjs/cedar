@@ -1,3 +1,5 @@
+import os from 'node:os'
+
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api'
 import opentelemetry, { SpanStatusCode } from '@opentelemetry/api'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
@@ -15,7 +17,6 @@ import {
 } from '@opentelemetry/semantic-conventions'
 import ci from 'ci-info'
 import envinfo from 'envinfo'
-import system from 'systeminformation'
 import { v4 as uuidv4 } from 'uuid'
 
 import pkgJson from '../package.json' with { type: 'json' }
@@ -55,8 +56,8 @@ export async function startTelemetry(): Promise<void> {
   } else if (shell?.path.match('\\')) {
     info.System.Shell.name = info.System.Shell.path.split('\\').pop()
   }
-  const cpu = await system.cpu()
-  const mem = await system.mem()
+  const cpuCount = os.availableParallelism()
+  const memoryGb = Math.round(os.totalmem() / 1073741824)
 
   // Record any specific development environment
   let developmentEnvironment = undefined
@@ -76,8 +77,8 @@ export async function startTelemetry(): Promise<void> {
       'yarn.version': info.Binaries?.Yarn?.version,
       'npm.version': info.Binaries?.npm?.version,
       'vscode.version': info.IDEs?.VSCode?.version,
-      'cpu.count': cpu.physicalCores,
-      'memory.gb': Math.round(mem.total / 1073741824),
+      'cpu.count': cpuCount,
+      'memory.gb': memoryGb,
       'env.node_env': process.env.NODE_ENV || undefined,
       'ci.redwood': !!process.env.CEDAR_CI,
       'ci.isci': ci.isCI,
