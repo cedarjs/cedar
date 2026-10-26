@@ -115,6 +115,7 @@ describe('Custom auth provider', () => {
       reauthenticate,
       hasError,
       hasRole,
+      hasUserRole,
       error,
     } = useAuth()
 
@@ -161,6 +162,10 @@ describe('Custom auth provider', () => {
             </p>
             <p>Has Admin: {hasRole('admin') ? 'yes' : 'no'}</p>
             <p>Has Super User: {hasRole('superuser') ? 'yes' : 'no'}</p>
+            <p>User Has Admin: {hasUserRole('admin') ? 'yes' : 'no'}</p>
+            <p>
+              User Has Super User: {hasUserRole('superuser') ? 'yes' : 'no'}
+            </p>
             <p>Has Admin as Array: {hasRole(['admin']) ? 'yes' : 'no'}</p>
             <p>Has Editor: {hasRole(['editor', 'publisher']) ? 'yes' : 'no'}</p>
             <p>
@@ -293,6 +298,8 @@ describe('Custom auth provider', () => {
 
     expect(screen.getByText('Has Admin: no')).toBeInTheDocument()
     expect(screen.getByText('Has Super User: no')).toBeInTheDocument()
+    expect(screen.getByText('User Has Admin: no')).toBeInTheDocument()
+    expect(screen.getByText('User Has Super User: no')).toBeInTheDocument()
 
     // Log out
     fireEvent.click(screen.getByText('Log Out'))
@@ -332,6 +339,8 @@ describe('Custom auth provider', () => {
 
     expect(screen.getByText('Has Admin: yes')).toBeInTheDocument()
     expect(screen.getByText('Has Super User: yes')).toBeInTheDocument()
+    expect(screen.getByText('User Has Admin: yes')).toBeInTheDocument()
+    expect(screen.getByText('User Has Super User: yes')).toBeInTheDocument()
 
     // Log out
     fireEvent.click(screen.getByText('Log Out'))
@@ -371,6 +380,8 @@ describe('Custom auth provider', () => {
 
     expect(screen.getByText('Has Admin: yes')).toBeInTheDocument()
     expect(screen.getByText('Has Super User: no')).toBeInTheDocument()
+    expect(screen.getByText('User Has Admin: yes')).toBeInTheDocument()
+    expect(screen.getByText('User Has Super User: no')).toBeInTheDocument()
 
     // Log out
     fireEvent.click(screen.getByText('Log Out'))

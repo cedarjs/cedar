@@ -196,6 +196,7 @@ no-op, `--force` or not.
 | `api/src/lib/permissions.ts`, `api/src/directives/requirePermission/` | Generates the permissions map and the `@requirePermission` directive                                                                               |
 | `api/src/services/organizations/`                                     | Generates the organizations service and SDL                                                                                                        |
 | `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts`   | Backfills memberships for existing users                                                                                                           |
+| `web/src/` files                                                      | Renames `hasRole` from `useAuth()` to `hasUserRole`                                                                                                |
 | `web/src/components/OrgScope/OrgScope.tsx`                            | Generates the app-owned `OrgScope` wrapper                                                                                                         |
 | `web/src/pages/InvitePage/InvitePage.tsx`                             | Generates the invitation landing page                                                                                                              |
 | `api/package.json`, `web/package.json`                                | Adds `@cedarjs/tenancy`                                                                                                                            |
@@ -219,8 +220,8 @@ as `@cedarjs/storage`'s):
 ```
 
 `auth.ts` gains `memberships` in the `getCurrentUser()` select, and its
-single-tenant `hasRole` and `requireAuth` are replaced with `createTenancyAuth`'s
-checks, which add ones for the user's role in the current organization:
+single-tenant `hasRole` and `requireAuth` are replaced with ones that check the
+user's role in the current organization:
 
 ```diff title="api/src/lib/auth.ts"
  export const getCurrentUser = async (session) => {
@@ -250,14 +251,12 @@ checks, which add ones for the user's role in the current organization:
 -export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
 -  // ...
 -}
-+export const { hasRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
++export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
 +  createTenancyAuth()
 ```
 
-`hasRole` checks `currentUser.roles`, as before, and `hasOrgRole` the user's
-role in the current organization. There's no `requireAuth` any more.
-`requireOrgAuth` (and `@requireOrgAuth`) is about the current organization: it
-needs one, and checks the user's role in it.
+There's no `requireAuth` any more. `requireOrgAuth` (and `@requireOrgAuth`) is
+about the current organization: it needs one, and checks the user's role in it.
 `requireUserAuth` (and `@requireUserAuth`) is about the signed-in user rather
 than an organization, as the generated `myMemberships`, `createOrganization`
 and `acceptInvitation` are: it needs a signed-in user, and checks `roles`
@@ -268,9 +267,10 @@ any signed-in user. Guard anything narrower with `roles` or
 
 Before tenancy there are no organizations, so every field your app already has
 is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and
-each `requireAuth()` from `src/lib/auth` to `requireUserAuth()`. Your app works
-as it did. When you give a model an `organizationId`, switch its fields to
-`@requireOrgAuth`. `cedar generate sdl` and `cedar generate scaffold` pick the
+each `requireAuth()` and `hasRole()` from `src/lib/auth` to `requireUserAuth()`
+and `hasUserRole()`. On the web, it renames `hasRole` from `useAuth()` to
+`hasUserRole`. Your app works as it did. When you give a model an
+`organizationId`, switch its fields to `@requireOrgAuth`. `cedar generate sdl` and `cedar generate scaffold` pick the
 right one for new models, and a leftover `@requireAuth` is an unknown directive,
 so it fails when the schema is built.
 
@@ -834,15 +834,16 @@ const ProjectList = () => {
 }
 ```
 
-`useAuth().hasRole(roles)` and `<PrivateSet roles>` check `currentUser.roles`,
-as in any Cedar app, inside `OrgScope` or not: the user's role in the
-organization is `hasOrgRole`. `hasOrgRole(roles, organizationId?)` also takes
-an `organizationId`, and then checks `currentUser.memberships` for a match,
-which is how you'd show a switcher entry as disabled for an organization the
-user isn't an admin of, without navigating there first.
+`hasOrgRole(roles, organizationId?)` also takes an `organizationId`, and then
+checks `currentUser.memberships` for a match, which is how you'd show a switcher
+entry as disabled for an organization the user isn't an admin of, without
+navigating there first. For `currentUser.roles`, use `useAuth().hasUserRole`.
+With tenancy there's no `useAuth().hasRole`: setup renames your existing uses
+to `hasUserRole`, and using it is a type error.
 
-For a page only some roles in the organization may open, give `OrgScope`
-`roles` and `unauthorized` from a small wrapper component (see
+`<PrivateSet roles>` isn't available with tenancy either. For a page only some
+roles in the organization may open, give `OrgScope` `roles` and `unauthorized`
+from a small wrapper component (see
 [Guarding routes by role](../tenancy.md#guarding-routes-by-role)):
 
 ```tsx title="web/src/Routes.tsx"

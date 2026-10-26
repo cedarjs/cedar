@@ -165,6 +165,7 @@ export function createAuthProvider<
           getToken,
           getCurrentUser,
           hasRole,
+          hasUserRole: hasRole,
           hasPermission: noPermissions,
           reauthenticate,
           forgotPassword,

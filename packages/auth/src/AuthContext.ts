@@ -39,6 +39,28 @@ export type PermissionName = [keyof AvailablePermissions] extends [never]
   ? never
   : Extract<keyof AvailablePermissions, string>
 
+/**
+ * Whether the app has tenancy (`cedar setup tenancy`). This is a
+ * declaration-merging target: `cedar generate types` writes
+ * `.cedar/types/includes/web-tenancy.d.ts`, which augments it with
+ * `{ enabled: true }` in an app with tenancy. Empty otherwise.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface AuthTenancy {}
+
+/**
+ * The roles `useAuth().hasRole` and `<PrivateSet roles>` take: a role, or a
+ * list of roles, in `currentUser.roles`.
+ *
+ * `never` in an app with tenancy (see `AuthTenancy`), so passing any is a
+ * type error: there, every role check says which kind it is. Use
+ * `useAuth().hasUserRole` for `currentUser.roles`, or
+ * `useCurrentOrg().hasOrgRole` for the role in the current organization.
+ */
+export type RolesToCheck = AuthTenancy extends { enabled: true }
+  ? never
+  : string | string[]
+
 export interface AuthContextInterface<
   TUser,
   TLogInOptions,
@@ -99,8 +121,19 @@ export interface AuthContextInterface<
    * is assigned a role or one of a list of roles.
    * If the user is assigned any of the provided list of roles,
    * the hasRole is considered to be true.
+   *
+   * Not available in an app with tenancy: use `hasUserRole` for
+   * `currentUser.roles`, or `useCurrentOrg().hasOrgRole` for the role in the
+   * current organization.
    **/
-  hasRole(rolesToCheck: string | string[]): boolean
+  hasRole(rolesToCheck: RolesToCheck): boolean
+  /**
+   * Whether the "currentUser" from the api side has one of `rolesToCheck`
+   * (a role, or a list of roles) in `currentUser.roles`. The same check as
+   * `hasRole`, under a name that says it's about the user, not the
+   * organization they're in.
+   */
+  hasUserRole(rolesToCheck: string | string[]): boolean
   /**
    * Whether the user has `permission` where they are in the app. Always
    * `false` outside a scope that provides permissions, such as `OrgScope`
