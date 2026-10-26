@@ -399,24 +399,6 @@ scaffold` pick the directive for you: `@requireOrgAuth` for a model with an
 app is an unknown directive, so it fails when the schema is built rather than
 when the field is first called.
 
-### Upgrading from `@requireMembership`
-
-Canary versions of `@cedarjs/tenancy` had a separate `@requireMembership`
-directive and `requireMembership()` function for organization fields, next to
-a user-level `@requireAuth`. They're gone. To upgrade an app set up with them:
-
-1. Replace `hasRole` and `requireAuth` in `api/src/lib/auth.ts` with the
-   `createTenancyAuth` line above, and drop the
-   `export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'` line.
-2. Copy `api/src/directives/requireOrgAuth/` and
-   `api/src/directives/requireUserAuth/` from a fresh `setup tenancy` run, and
-   delete `api/src/directives/requireAuth/` and
-   `api/src/directives/requireMembership/`.
-3. Rename `@requireAuth` to `@requireUserAuth`, and `@requireMembership` to
-   `@requireOrgAuth`. They check what they did before.
-4. Rename the functions to match: `requireAuth()` to `requireUserAuth()`, and
-   `requireMembership()` to `requireOrgAuth()`.
-
 ## Web API
 
 From `@cedarjs/tenancy/web`:
