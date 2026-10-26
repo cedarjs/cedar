@@ -135,7 +135,7 @@ rather than an organization use `@requireUserAuth`.
 
 ## Web
 
-`@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg`, `OrgContext` and
+`@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg` and
 `getMemberships`/`hasOrgRole` for the client side: a per-organization Apollo
 client provided under organization routes, keyed by the immutable organization
 id so switching organizations never mixes caches. Under `OrgScope`,
