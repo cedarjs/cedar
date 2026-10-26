@@ -129,4 +129,16 @@ describe('running the tenancy codemods again', () => {
     expect(count(once, '.then(withPermissions)')).toBe(1)
     expect(twice).toBe(once)
   })
+
+  it("authCodemod doesn't wrap a user lookup without memberships", async () => {
+    const output = await runOn(
+      'authCodemod',
+      fixture('defaultAuth.input.ts') +
+        '\nexport const findUser = (id: number) =>\n' +
+        '  db.user.findUnique({ where: { id } })\n',
+    )
+
+    expect(count(output, 'withPermissions(')).toBe(1)
+    expect(output).not.toContain('.then(withPermissions)')
+  })
 })
