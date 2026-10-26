@@ -183,6 +183,32 @@ export function permissionsPackageFiles({
   }
 }
 
+/**
+ * Writes `files` into `packageDir`, keeping the ones that are already there
+ * (from an earlier run, or the app's own) unless `force`. Returns the kept
+ * ones.
+ */
+export function writePermissionsPackageFiles(
+  packageDir: string,
+  files: Record<string, string>,
+  { force }: { force: boolean },
+): string[] {
+  const kept: string[] = []
+
+  for (const [file, content] of Object.entries(files)) {
+    const filePath = path.join(packageDir, file)
+
+    if (fs.existsSync(filePath) && !force) {
+      kept.push(filePath)
+      continue
+    }
+
+    writeFile(filePath, content, { overwriteExisting: force })
+  }
+
+  return kept
+}
+
 export interface PermissionsPackageCtx {
   /** Whether this turned on `experimental.packagesWorkspace` */
   packagesWorkspaceTurnedOn?: boolean
@@ -252,17 +278,16 @@ export function addPermissionsPackageTasks({
     },
     {
       title: `Writing ${packageName}...`,
-      task: () => {
+      task: (_ctx, task) => {
         const files = permissionsPackageFiles({
           packageName,
           cedarVersion,
           indexSource,
         })
+        const kept = writePermissionsPackageFiles(packageDir, files, { force })
 
-        for (const [file, content] of Object.entries(files)) {
-          writeFile(path.join(packageDir, file), content, {
-            overwriteExisting: force,
-          })
+        if (kept.length === Object.keys(files).length) {
+          task.skip('Already there (run with --force to overwrite)')
         }
       },
     },

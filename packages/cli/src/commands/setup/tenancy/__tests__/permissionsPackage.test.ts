@@ -9,6 +9,7 @@ import {
   enablePackagesWorkspace,
   permissionsPackageFiles,
   permissionsPackageName,
+  writePermissionsPackageFiles,
 } from '../permissionsPackage.js'
 
 describe('enablePackagesWorkspace', () => {
@@ -167,5 +168,39 @@ describe('permissionsPackageName', () => {
         packagesDir({ a: 'plain', b: '@my-org/validators' }),
       ),
     ).toBe('@my-org/permissions')
+  })
+})
+
+describe('writePermissionsPackageFiles', () => {
+  let projectDir: string
+
+  afterEach(() => {
+    delete process.env.CEDAR_CWD
+    fs.rmSync(projectDir, { recursive: true, force: true })
+  })
+
+  it('keeps files that are already there, unless forced', () => {
+    projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-permissions-'))
+    fs.writeFileSync(path.join(projectDir, 'cedar.toml'), '')
+    process.env.CEDAR_CWD = projectDir
+
+    const packageDir = path.join(projectDir, 'packages', 'permissions')
+    fs.mkdirSync(packageDir, { recursive: true })
+    fs.writeFileSync(path.join(packageDir, 'package.json'), 'edited')
+
+    const files = { 'package.json': 'new', 'tsconfig.json': 'new' }
+    const read = (file: string) =>
+      fs.readFileSync(path.join(packageDir, file), 'utf-8')
+
+    expect(
+      writePermissionsPackageFiles(packageDir, files, { force: false }),
+    ).toEqual([path.join(packageDir, 'package.json')])
+    expect(read('package.json')).toBe('edited')
+    expect(read('tsconfig.json')).toBe('new')
+
+    expect(
+      writePermissionsPackageFiles(packageDir, files, { force: true }),
+    ).toEqual([])
+    expect(read('package.json')).toBe('new')
   })
 })
