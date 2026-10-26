@@ -31,6 +31,20 @@ describe('tenancy authCodemod', () => {
     expect(transformResult.error).toContain('ERR_AUTH_CHECKS_CHANGED')
   })
 
+  it.each(['customHasRole', 'wrappedRequireAuth'])(
+    'throws CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED for %s',
+    async (fixture) => {
+      const transformResult = await runTransform({
+        transformPath: path.join(__dirname, '../authCodemod.ts'), // Use TS here!
+        targetPaths: [
+          path.join(__dirname, `../__testfixtures__/${fixture}.input.ts`),
+        ],
+      })
+
+      expect(transformResult.error).toContain('ERR_AUTH_CHECKS_CHANGED')
+    },
+  )
+
   it('leaves an auth file that already uses createTenancyAuth as it is', async () => {
     await matchTransformSnapshot('authCodemod', 'wiredAuth')
   })

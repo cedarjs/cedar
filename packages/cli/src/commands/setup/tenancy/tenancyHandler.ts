@@ -324,7 +324,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           })
 
           if (transformResult.error?.includes('AUTH_CHECKS_CHANGED')) {
-            task.output = `api/src/lib/auth's requireAuth has checks of its own, so it was left as it is. Please add this by hand, keeping your checks in requireUserAuth and requireOrgAuth:\n${AUTH_SNIPPET}`
+            task.output = `api/src/lib/auth's requireAuth or hasRole has checks of its own, so it was left as it is. Please add this by hand, keeping your checks:\n${AUTH_SNIPPET}`
           } else if (transformResult.error) {
             task.output = `Could not update api/src/lib/auth automatically. Please add this by hand:\n${AUTH_SNIPPET}`
           }
