@@ -56,18 +56,83 @@ export function renameRequireAuthImport(source: string): string {
   return result.replace(/(?<![\w$@.])requireAuth(?![\w$])/g, 'requireUserAuth')
 }
 
-const DEFAULT_SDL =
-  'directive @requireAuth(roles: [String]) on FIELD_DEFINITION'
+/**
+ * The `requireAuth` directive as `create-cedar-app` generates it, in
+ * TypeScript and JavaScript. The tests check these against its templates.
+ */
+export const DEFAULT_REQUIRE_AUTH_DIRECTIVES = [
+  `import { gql } from 'graphql-tag'
 
-// The whole of \`validate\`'s body, so a check added to it counts as a change
-const DEFAULT_CALL =
-  /=> \{\s*const \{ roles \} = directiveArgs;?\s+applicationRequireAuth\(\{ roles \}\);?\s*\}/
+import type { ValidatorDirectiveFunc } from '@cedarjs/graphql-server'
+import { createValidatorDirective } from '@cedarjs/graphql-server'
+
+import { requireAuth as applicationRequireAuth } from 'src/lib/auth'
+
+export const schema = gql\`
+  """
+  Use to check whether or not a user is authenticated and is associated
+  with an optional set of roles.
+  """
+  directive @requireAuth(roles: [String]) on FIELD_DEFINITION
+\`
+
+type RequireAuthValidate = ValidatorDirectiveFunc<{ roles?: string[] }>
+
+const validate: RequireAuthValidate = ({ directiveArgs }) => {
+  const { roles } = directiveArgs
+  applicationRequireAuth({ roles })
+}
+
+const requireAuth = createValidatorDirective(schema, validate)
+
+export default requireAuth
+`,
+  `import { gql } from 'graphql-tag'
+
+import { createValidatorDirective } from '@cedarjs/graphql-server'
+
+import { requireAuth as applicationRequireAuth } from 'src/lib/auth'
+
+export const schema = gql\`
+  """
+  Use to check whether or not a user is authenticated and is associated
+  with an optional set of roles.
+  """
+  directive @requireAuth(roles: [String]) on FIELD_DEFINITION
+\`
+
+const validate = ({ directiveArgs }) => {
+  const { roles } = directiveArgs
+  applicationRequireAuth({ roles })
+}
+
+const requireAuth = createValidatorDirective(schema, validate)
+
+export default requireAuth
+`,
+]
 
 /**
- * Whether `source` is the `requireAuth` directive as Cedar generates it, so
- * it can go: `@requireUserAuth` checks the same thing. A changed one is
- * left for the app to move its changes over.
+ * `source` without what formatting changes: comments, whitespace,
+ * semicolons, trailing commas and the kind of quotes
+ */
+function withoutFormatting(source: string) {
+  return source
+    .replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, '')
+    .replace(/["']/g, "'")
+    .replace(/[;\s]/g, '')
+    .replace(/,([)\]}>])/g, '$1')
+}
+
+/**
+ * Whether `source` is the `requireAuth` directive as Cedar generates it,
+ * however it's been formatted since, so it can go: `@requireUserAuth`
+ * checks the same thing. Anything else, a check added to `validate` or a
+ * wrapper around the export, counts as the app's own and is left for it to
+ * move over.
  */
 export function isDefaultRequireAuthDirective(source: string): boolean {
-  return source.includes(DEFAULT_SDL) && DEFAULT_CALL.test(source)
+  return DEFAULT_REQUIRE_AUTH_DIRECTIVES.some(
+    (directive) => withoutFormatting(directive) === withoutFormatting(source),
+  )
 }
