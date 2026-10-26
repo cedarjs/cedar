@@ -26,14 +26,15 @@ import { runTransform } from '../../../lib/runTransform.js'
 
 import { TENANCY_AUTH_EXPORT } from './authCodemod.js'
 import {
+  isDefaultRequireAuthDirective,
+  renameRequireAuthDirective,
+  renameRequireAuthImport,
+} from './authDirectives.js'
+import {
   authNotSetUpMessage,
   hasWebAuthFile,
   noUserModelMessage,
 } from './preflight.js'
-import {
-  addScopeToRequireAuthDirective,
-  REQUIRE_AUTH_DIRECTIVE_SNIPPET,
-} from './requireAuthDirective.js'
 import {
   addRequiredUserFields,
   editSchema,
@@ -92,6 +93,11 @@ interface TenancyOptions {
 interface TenancyCtx {
   /** Set once the schema-editing task runs; read by the "Next steps" task. */
   modelsExistOutcome?: ModelsExistOutcome
+  /**
+   * Set when the app's `requireAuth` directive was changed from Cedar's, so
+   * was left for the app to move its changes over
+   */
+  keptRequireAuthDirective?: boolean
 }
 
 export const handler = async ({ tenantField, force }: TenancyOptions) => {
@@ -305,7 +311,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title:
-          'Adding memberships to getCurrentUser and organization roles to requireAuth...',
+          'Adding memberships to getCurrentUser and the tenancy auth checks to api/src/lib/auth...',
         task: async (_ctx, task) => {
           if (!fs.existsSync(authPath)) {
             task.skip('No api/src/lib/auth file found; skipping.')
@@ -366,28 +372,67 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           isDbAuthProject ? false : 'Not a dbAuth project; skipping.',
       },
       {
-        title: 'Adding a scope to the requireAuth directive...',
-        task: async (_ctx, task) => {
-          const directivePath = path.join(
-            paths.api.directives,
-            'requireAuth',
-            `requireAuth.${ext}`,
-          )
-          const byHand = `Please update api/src/directives/requireAuth by hand:\n${REQUIRE_AUTH_DIRECTIVE_SNIPPET}`
+        title:
+          'Switching @requireAuth to @requireOrgAuth and @requireUserAuth...',
+        task: async (ctx) => {
+          const oldDirectiveDir = path.join(paths.api.directives, 'requireAuth')
+          const isInOldDirective = (file: string) =>
+            file.startsWith(oldDirectiveDir + path.sep)
 
-          if (!fs.existsSync(directivePath)) {
-            task.output = byHand
-            return
+          // Before tenancy there are no organizations, so every existing
+          // field is about the user
+          const sourceFiles = fs
+            .readdirSync(paths.api.src, {
+              recursive: true,
+              withFileTypes: true,
+            })
+            .filter((entry) => entry.isFile() && /\.[jt]sx?$/.test(entry.name))
+            .map((entry) => path.join(entry.parentPath, entry.name))
+
+          for (const file of sourceFiles) {
+            const source = fs.readFileSync(file, 'utf-8')
+            // The old directive declares `@requireAuth`, which stays as it is
+            const renamed = renameRequireAuthImport(
+              isInOldDirective(file)
+                ? source
+                : renameRequireAuthDirective(source),
+            )
+
+            if (renamed !== source) {
+              fs.writeFileSync(file, renamed)
+              writtenFiles.push(file)
+            }
           }
 
-          try {
-            const source = fs.readFileSync(directivePath, 'utf-8')
-            fs.writeFileSync(
-              directivePath,
-              addScopeToRequireAuthDirective(source),
+          const oldDirectivePath = path.join(
+            oldDirectiveDir,
+            `requireAuth.${ext}`,
+          )
+
+          if (fs.existsSync(oldDirectivePath)) {
+            if (
+              isDefaultRequireAuthDirective(
+                fs.readFileSync(oldDirectivePath, 'utf-8'),
+              )
+            ) {
+              // `@requireUserAuth` checks the same thing
+              fs.rmSync(oldDirectiveDir, { recursive: true, force: true })
+            } else {
+              ctx.keptRequireAuthDirective = true
+            }
+          }
+
+          for (const name of ['requireOrgAuth', 'requireUserAuth']) {
+            const directiveDir = path.join(paths.api.directives, name)
+
+            await writeTemplateFile(
+              `${name}.ts.template`,
+              path.join(directiveDir, `${name}.${ext}`),
             )
-          } catch {
-            task.output = byHand
+            await writeTemplateFile(
+              `${name}.test.ts.template`,
+              path.join(directiveDir, `${name}.test.${ext}`),
+            )
           }
         },
       },
@@ -510,7 +555,6 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             ...['graphql', 'auth'].map((name) =>
               path.join(paths.api.functions, name),
             ),
-            path.join(paths.api.directives, 'requireAuth', 'requireAuth'),
           ]
             .flatMap((file) =>
               path.extname(file) ? [file] : [`${file}.js`, `${file}.ts`],
@@ -581,7 +625,8 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              User/Organization/Membership. For each existing model (e.g.
              Contact) whose rows belong to one organization, add
              ${c.highlight('organizationId String')} plus ${c.highlight('@@index([organizationId])')} to it in
-             schema.prisma; for each one that stays global, add it
+             schema.prisma, and switch its fields from ${c.highlight('@requireUserAuth')}
+             to ${c.highlight('@requireOrgAuth')}. For each one that stays global, add it
              to the ${c.highlight('allExcept')} list in api/src/lib/db instead.
           3. Wrap your organization routes with the generated OrgScope in
              web/src/Routes.tsx:
@@ -598,11 +643,17 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              tenant-owned models with ${c.highlight('withTenancy')} from ${c.highlight(
                '@cedarjs/tenancy',
              )}.
-          5. ${c.highlight('@requireAuth')} is now about the current organization: it needs
-             one, and checks the user's role in it. Add ${c.highlight('scope: USER')} to
-             your fields that are about the signed-in user instead (their
-             account, their settings), e.g.
-             ${c.highlight('me: User! @requireAuth(scope: USER)')}.
+          5. ${c.highlight('@requireAuth')} is gone. Your fields use ${c.highlight('@requireUserAuth')} now,
+             which checks what ${c.highlight('@requireAuth')} did: there were no organizations
+             before. ${c.highlight('@requireOrgAuth')} needs a current organization, and checks
+             the user's role in it.${
+               ctx.keptRequireAuthDirective
+                 ? `
+             api/src/directives/requireAuth was changed from Cedar's, so
+             it's still there: move your changes to requireUserAuth or
+             requireOrgAuth, then delete it.`
+                 : ''
+             }
 
 ${
   keptFiles.length > 0

@@ -42,9 +42,8 @@ function buildMembershipsSelectProperty() {
  * lists no roles admits only these, so a role an app adds later is refused
  * until a field lets it in.
  */
-export const TENANCY_AUTH_EXPORT = `export const { hasRole, requireAuth, hasOrgRole } = createTenancyAuth({
-  defaultRoles: ['owner', 'admin', 'member'],
-})
+export const TENANCY_AUTH_EXPORT = `export const { hasRole, hasOrgRole, requireOrgAuth, requireUserAuth } =
+  createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
 `
 
 /** The top-level `export const <name> = ...` statement, if there is one */
@@ -66,8 +65,8 @@ function findExportedConst(root: j.Collection, name: string) {
  *   the memberships `OrgScope`, `hasOrgRole` and `resolveCurrentOrg` need.
  * - Replaces the single-tenant `hasRole` and `requireAuth` with
  *   `@cedarjs/tenancy`'s `createTenancyAuth`, which also gives `hasOrgRole`:
- *   roles come from the membership in the current organization, and
- *   `requireAuth` needs one unless told `scope: 'USER'`. The `AllowedRoles`
+ *   `requireOrgAuth` checks the role in the current organization, and
+ *   `requireUserAuth` what `requireAuth` did. The `AllowedRoles`
  *   type and the error imports go too when nothing else uses them.
  *
  * Throws `CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND` when `db.user.findUnique`'s
