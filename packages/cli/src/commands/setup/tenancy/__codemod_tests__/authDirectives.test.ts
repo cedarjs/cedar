@@ -5,6 +5,7 @@ import dedent from 'ts-dedent'
 import { describe, expect, it } from 'vitest'
 
 import {
+  DEFAULT_REQUIRE_AUTH_DIRECTIVES,
   isDefaultRequireAuthDirective,
   renameRequireAuthDirective,
   renameRequireAuthImport,
@@ -128,6 +129,34 @@ describe('isDefaultRequireAuthDirective', () => {
       expect(isDefaultRequireAuthDirective(read(lang))).toBe(true)
     },
   )
+
+  it.each(['ts', 'js'] as const)(
+    'matches the generated %s template exactly',
+    (lang) => {
+      expect(DEFAULT_REQUIRE_AUTH_DIRECTIVES).toContain(read(lang))
+    },
+  )
+
+  it('recognizes it however it has been formatted', () => {
+    const reformatted = read('ts')
+      .replaceAll("'", '"')
+      .replace(
+        'applicationRequireAuth({ roles })',
+        'applicationRequireAuth({ roles, });',
+      )
+      .replace('// ', '// a comment ')
+
+    expect(isDefaultRequireAuthDirective(reformatted)).toBe(true)
+  })
+
+  it("doesn't recognize a wrapped export", () => {
+    const wrapped = read('ts').replace(
+      'const requireAuth = createValidatorDirective(schema, validate)',
+      'const requireAuth = withAudit(createValidatorDirective(schema, validate))',
+    )
+
+    expect(isDefaultRequireAuthDirective(wrapped)).toBe(false)
+  })
 
   it("doesn't recognize a changed one", () => {
     const changed = read('ts').replace(
