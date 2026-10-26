@@ -14,6 +14,7 @@ import {
   generateTypeDefRouterPages,
   generateTypeDefCurrentUser,
   generateTypeDefGqlorm,
+  generateTypeDefRealtime,
   generateTypeDefRouterRoutes,
   generateTypeDefGlobImports,
   generateTypeDefGlobalContext,
@@ -246,6 +247,46 @@ test('generate gqlorm db augmentation', () => {
   const paths = generateTypeDefGqlorm()
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.cedar/types/includes/all-gqlorm.d.ts')
+})
+
+test('no realtime types without @cedarjs/realtime', () => {
+  expect(generateTypeDefRealtime()).toEqual([])
+})
+
+test('generates realtime types when the api side uses @cedarjs/realtime', () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-realtime-'))
+  const apiPackageJsonPath = path.join(projectDir, 'api', 'package.json')
+  fs.writeFileSync(path.join(projectDir, 'cedar.toml'), '')
+  fs.mkdirSync(path.join(projectDir, 'api'))
+  fs.writeFileSync(
+    apiPackageJsonPath,
+    JSON.stringify({ dependencies: { '@cedarjs/realtime': '1.0.0' } }),
+  )
+
+  process.env.CEDAR_CWD = projectDir
+
+  try {
+    const [typeDefPath] = generateTypeDefRealtime()
+
+    expect(ensurePosixPath(path.relative(projectDir, typeDefPath))).toEqual(
+      '.cedar/types/includes/api-realtime.d.ts',
+    )
+
+    const contents = fs.readFileSync(typeDefPath, 'utf-8')
+    expect(contents).toContain(
+      "import type { CedarRealtimeOptions } from '@cedarjs/realtime'",
+    )
+    expect(contents).toContain('options: CedarRealtimeOptions')
+
+    // Without @cedarjs/realtime the file goes
+    fs.writeFileSync(apiPackageJsonPath, JSON.stringify({ dependencies: {} }))
+
+    expect(generateTypeDefRealtime()).toEqual([])
+    expect(fs.existsSync(typeDefPath)).toBe(false)
+  } finally {
+    process.env.CEDAR_CWD = FIXTURE_PATH
+    fs.rmSync(projectDir, { recursive: true, force: true })
+  }
 })
 
 test('generates the router routes', () => {
