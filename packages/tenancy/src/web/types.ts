@@ -35,7 +35,7 @@ export interface CurrentOrgSummary {
 }
 
 /**
- * The value `OrgContext` carries, read through `useCurrentOrg()`.
+ * What `OrgScope` provides below it, read through `useCurrentOrg()`.
  */
 export interface OrgContextValue {
   org: CurrentOrgSummary | undefined

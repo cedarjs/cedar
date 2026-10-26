@@ -555,7 +555,7 @@ export interface CurrentOrgSummary {
 export function hasOrgRole(
   memberships: OrgMembership[] | undefined,
   roles: string | string[],
-  organizationId: string,
+  organizationId: string
 ): boolean
 
 export function getMemberships(currentUser: unknown): OrgMembership[]
@@ -583,8 +583,6 @@ export function useCurrentOrg(): {
   setOrg(idOrSlug: string): void
 }
 
-export const OrgContext: React.Context<...>
-
 export function clearOrgClients(): Promise<void>
 ```
 
@@ -609,23 +607,12 @@ lives in the URL (see the
 for why). Pass the `orgSlug` prop only when it genuinely can't come from the
 route: a subdomain- or custom-domain-derived organization, or an in-page
 switcher that doesn't navigate. `memberships` come from
-`getMemberships(useAuth().currentUser)`. Internally, `OrgScope` builds (or
-reuses) a per-organization Apollo client keyed by `${userId}:${organizationId}`
-and renders:
+`getMemberships(useAuth().currentUser)`.
 
-```tsx
-<ApolloProvider client={client}>
-  <OrgContext.Provider value={...}>
-    <HasRoleContext.Provider value={hasRoleInThisOrganization}>
-      {children}
-    </HasRoleContext.Provider>
-  </OrgContext.Provider>
-</ApolloProvider>
-```
-
-So under `OrgScope`, `useAuth().hasRole(roles)` checks the user's role in that
-organization rather than `currentUser.roles` (`HasRoleContext` is from
-`@cedarjs/auth`). That includes a `<PrivateSet roles>` nested inside the
+Below it, `OrgScope` provides a per-organization Apollo client (built or reused,
+keyed by `${userId}:${organizationId}`), the organization for
+`useCurrentOrg()`, and a `useAuth().hasRole` that checks the user's role in that
+organization rather than `currentUser.roles`. That includes a `<PrivateSet roles>` nested inside the
 `OrgScope` set, as the router reads `hasRole` through the same `useAuth`.
 
 Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
@@ -683,7 +670,7 @@ data.
 
 ### `useCurrentOrg()`
 
-Reads `OrgContext`. `setOrg(idOrSlug)` navigates to the current route with a new
+Reads the organization `OrgScope` resolved. `setOrg(idOrSlug)` navigates to the current route with a new
 `orgSlug` param (using `navigate` and `routes` from `@cedarjs/router`) by
 default; when `OrgScope` is given an `onSetOrg` prop, `setOrg` calls that
 instead.
