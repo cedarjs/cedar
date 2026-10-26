@@ -298,9 +298,7 @@ anywhere `@cedarjs/context` is imported once the package is installed.
 From `@cedarjs/tenancy`:
 
 ```ts
-export function createTenancyAuth(options?: {
-  defaultRoles?: readonly string[]
-}): {
+export function createTenancyAuth(): {
   hasRole(roles: string | readonly string[]): boolean
   requireOrgAuth(options?: { roles?: string | readonly string[] }): void
   requireUserAuth(options?: { roles?: string | readonly string[] }): void
@@ -318,46 +316,35 @@ export function hasOrgRole(
 ): boolean
 ```
 
-### `createTenancyAuth(options?)`
+### `createTenancyAuth()`
 
 The setup command replaces the single-tenant `hasRole` and `requireAuth` in
 `api/src/lib/auth.ts` with these:
 
 ```ts title="api/src/lib/auth.ts"
 export const { hasRole, hasOrgRole, requireOrgAuth, requireUserAuth } =
-  createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
+  createTenancyAuth()
 ```
 
 There's no `requireAuth`: each check says what it's about.
 
 - `requireOrgAuth({ roles })`: for fields about the current organization.
   Throws `AuthenticationError` when no one is signed in, and `ForbiddenError`
-  when there's no `context.currentOrg` or the user's role in it isn't one of
-  `roles`. With no `roles` (or an empty list), it checks `defaultRoles`
-  instead. With no `defaultRoles` any membership is enough, and with an
-  empty list no one is.
+  when there's no `context.currentOrg`, or when `roles` are given and the
+  user's role in it isn't one of them. With no `roles`, any member gets in,
+  just as any signed-in user gets past a bare single-tenant `@requireAuth`:
+  a role you add later can use every field that lists no roles. For anything
+  narrower, list `roles`.
 - `requireUserAuth({ roles })`: for fields about the signed-in user rather
   than an organization (their account, their memberships, accepting an
   invitation). Throws `AuthenticationError` when no one is signed in, and,
   when `roles` are given, `ForbiddenError` unless `currentUser.roles` has one
-  of them. No organization is needed, and `defaultRoles` don't apply. It
-  checks what the single-tenant `requireAuth` did.
+  of them. No organization is needed. It checks what the single-tenant
+  `requireAuth` did.
 
 `hasRole(roles)` checks `getCurrentRoles()`. `hasOrgRole(roles?,
-organizationId?)` is the standalone `hasOrgRole` below, with `defaultRoles`
-standing in for missing or empty `roles`.
-
-#### `defaultRoles`
-
-The roles an organization check admits when it lists none. Set it to the roles
-that may use everything, and a role you add later (say, a field worker who may
-only read one area) is refused by every field that doesn't list it: you opt it
-in field by field, and a field added later is closed to it until you do.
-Without `defaultRoles`, the new role could use every field that lists no roles,
-including the ones written after it.
-
-The setup command sets it to the roles it generates: `owner`, `admin` and
-`member` (`ROLE_GRANTS` in `api/src/services/organizations/organizations.ts`).
+organizationId?)` is the standalone `hasOrgRole` below: with no roles, it's
+whether the user is a member.
 
 ### `getCurrentRoles()`
 

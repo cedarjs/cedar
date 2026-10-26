@@ -36,14 +36,9 @@ function buildMembershipsSelectProperty() {
   return property
 }
 
-/**
- * What replaces the app's `hasRole` and `requireAuth`. `defaultRoles` are
- * the roles `organizations.ts`'s `ROLE_GRANTS` generates: a field that
- * lists no roles admits only these, so a role an app adds later is refused
- * until a field lets it in.
- */
+/** What replaces the app's `hasRole` and `requireAuth` */
 export const TENANCY_AUTH_EXPORT = `export const { hasRole, hasOrgRole, requireOrgAuth, requireUserAuth } =
-  createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
+  createTenancyAuth()
 `
 
 /**
