@@ -321,9 +321,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/client-s3@npm:3.1155.0":
-  version: 3.1155.0
-  resolution: "@aws-sdk/client-s3@npm:3.1155.0"
+"@aws-sdk/client-s3@npm:3.1156.0":
+  version: 3.1156.0
+  resolution: "@aws-sdk/client-s3@npm:3.1156.0"
   dependencies:
     "@aws-sdk/checksums": "npm:^3.1001.5"
     "@aws-sdk/core": "npm:^3.978.5"
@@ -336,7 +336,7 @@ __metadata:
     "@smithy/node-http-handler": "npm:^4.12.1"
     "@smithy/types": "npm:^4.19.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/b9e12e038fe55b1b6496f96714d742f850a6648b9efdfe775ce7792223de3423f10339487f774ff2f1fe05c8f368bfa9dec033e4917c068d0cbe5c579f883397
+  checksum: 10c0/804edddf479c44db6579ea82c3f46f339cfb8a7e7e59d6a70732541ffd3b079ca3cee23f1e3da41a6906ee281680b0575d2390f3de4cd8194518d5bba90736a5
   languageName: node
   linkType: hard
 
@@ -510,9 +510,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/s3-request-presigner@npm:3.1155.0":
-  version: 3.1155.0
-  resolution: "@aws-sdk/s3-request-presigner@npm:3.1155.0"
+"@aws-sdk/s3-request-presigner@npm:3.1156.0":
+  version: 3.1156.0
+  resolution: "@aws-sdk/s3-request-presigner@npm:3.1156.0"
   dependencies:
     "@aws-sdk/core": "npm:^3.978.5"
     "@aws-sdk/signature-v4-multi-region": "npm:^3.996.49"
@@ -520,7 +520,7 @@ __metadata:
     "@smithy/core": "npm:^3.36.1"
     "@smithy/types": "npm:^4.19.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/3df0257883f8c0ee79c6b8d9a4e7e422b60f76909a1ceb6959af32a747effe69875f20a2219328583af8651f018ce59f3125287337480d443729f15583606ca3
+  checksum: 10c0/e48c781f64033ff294ae68467ceaa15fb302f9863047dc4e52a89db1db6760de12058b1a20f3ac69b9ea9f02dbd0291f6d0dac81b0a581f8eb450cc2c8805d63
   languageName: node
   linkType: hard
 
@@ -2996,6 +2996,7 @@ __metadata:
     lodash: "npm:4.18.1"
     memfs: "npm:4.80.0"
     node-ssh: "npm:13.2.1"
+    package-json: "npm:10.0.1"
     pascalcase: "npm:1.0.0"
     pluralize: "npm:8.0.0"
     portfinder: "npm:1.0.38"
@@ -3015,6 +3016,8 @@ __metadata:
     verkit: "npm:0.5.0"
     vitest: "npm:4.1.12"
     yargs: "npm:18.2.0"
+  peerDependencies:
+    prisma: 7.10.1
   bin:
     cedar: ./dist/index.js
     cedarjs: ./dist/index.js
@@ -3078,8 +3081,6 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     cookie: "npm:1.1.1"
-    esbuild: "npm:0.28.2"
-    fast-glob: "npm:3.3.3"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.12"
   languageName: unknown
@@ -3099,8 +3100,11 @@ __metadata:
     "@cedarjs/web-server": "workspace:*"
     graphql-tag: "npm:2.12.7"
     nodemon: "npm:3.1.14"
+    prisma: "npm:7.10.1"
     publint: "npm:0.3.25"
     typescript: "npm:5.9.3"
+  peerDependencies:
+    prisma: 7.10.1
   bin:
     cedar: ./dist/bins/cedar.js
     cedar-api-server-watch: ./dist/bins/cedar-api-server-watch.js
@@ -3359,7 +3363,7 @@ __metadata:
     tsconfig-paths: "npm:4.2.0"
     typescript: "npm:5.9.3"
     vite: "npm:7.3.7"
-    vite-tsconfig-paths: "npm:^6.1.1"
+    vite-tsconfig-paths: "npm:6.1.1"
     vitest: "npm:4.1.12"
   bin:
     cedar-gen: ./dist/generate/generate.js
@@ -3432,7 +3436,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
     "@types/nodemailer": "npm:^6"
-    nodemailer: "npm:10.2.0"
+    nodemailer: "npm:10.2.1"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3533,7 +3537,7 @@ __metadata:
     "@rollup/plugin-commonjs": "npm:28.0.9"
     "@rollup/plugin-node-resolve": "npm:16.0.3"
     "@rollup/plugin-replace": "npm:6.0.3"
-    "@swc/core": "npm:1.16.18"
+    "@swc/core": "npm:1.16.20"
     "@types/mime-types": "npm:2.1.4"
     "@types/react": "npm:^19.2.0"
     "@whatwg-node/fetch": "npm:0.12.1"
@@ -3615,7 +3619,6 @@ __metadata:
     "@cedarjs/api": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
-    "@prisma/client": "npm:7.10.1"
     "@prisma/internals": "npm:7.10.1"
     camelcase: "npm:6.3.0"
     esbuild: "npm:0.28.2"
@@ -3660,8 +3663,6 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/cookie-jar": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
-    esbuild: "npm:0.28.2"
-    fast-glob: "npm:3.3.3"
     typescript: "npm:5.9.3"
   languageName: unknown
   linkType: soft
@@ -3687,6 +3688,8 @@ __metadata:
     typescript: "npm:5.9.3"
     ulid: "npm:3.0.2"
     vitest: "npm:4.1.12"
+  peerDependencies:
+    "@prisma/client": 7.10.1
   languageName: unknown
   linkType: soft
 
@@ -3773,6 +3776,7 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
+    "@prisma/client": 7.10.1
     react: 19.3.1
   peerDependenciesMeta:
     "@apollo/client":
@@ -3782,6 +3786,8 @@ __metadata:
     "@cedarjs/router":
       optional: true
     "@cedarjs/web":
+      optional: true
+    "@prisma/client":
       optional: true
     react:
       optional: true
@@ -3800,6 +3806,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
+    "@prisma/internals": "npm:7.10.1"
     "@testing-library/dom": "npm:10.4.2"
     "@testing-library/jest-dom": "npm:6.9.1"
     "@testing-library/react": "npm:16.3.3"
@@ -3852,8 +3859,8 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:4.3.5"
     "@arethetypeswrong/cli": "npm:0.18.5"
-    "@aws-sdk/client-s3": "npm:3.1155.0"
-    "@aws-sdk/s3-request-presigner": "npm:3.1155.0"
+    "@aws-sdk/client-s3": "npm:3.1156.0"
+    "@aws-sdk/s3-request-presigner": "npm:3.1156.0"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/context": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
@@ -3975,24 +3982,25 @@ __metadata:
     "@hyrious/esbuild-plugin-commonjs": "npm:0.2.6"
     "@jridgewell/trace-mapping": "npm:0.3.31"
     "@oxc-project/types": "npm:^0.155.0"
-    "@swc/core": "npm:1.16.18"
+    "@swc/core": "npm:1.16.20"
     "@types/aws-lambda": "npm:8.10.164"
     "@types/busboy": "npm:^1"
     "@types/express": "npm:5.0.6"
     "@types/react": "npm:^19.2.0"
     "@types/ws": "npm:^8"
     "@types/yargs-parser": "npm:21.0.3"
-    "@universal-deploy/store": "npm:^0.3.0"
-    "@universal-deploy/vite": "npm:^0.2.0"
+    "@universal-deploy/store": "npm:0.3.0"
+    "@universal-deploy/vite": "npm:0.2.2"
     "@vitejs/plugin-react": "npm:4.7.0"
     "@whatwg-node/fetch": "npm:0.12.1"
-    "@whatwg-node/server": "npm:0.13.0"
+    "@whatwg-node/server": "npm:0.13.1"
     acorn: "npm:8.19.0"
     acorn-loose: "npm:8.5.2"
     ansis: "npm:4.4.0"
-    busboy: "npm:^1.6.0"
+    busboy: "npm:1.6.0"
     concurrently: "npm:9.2.5"
     dotenv-defaults: "npm:5.0.2"
+    esbuild: "npm:0.28.2"
     express: "npm:5.3.0"
     fast-glob: "npm:3.3.3"
     find-my-way: "npm:9.10.0"
@@ -4013,7 +4021,7 @@ __metadata:
     vite: "npm:7.3.7"
     vite-plugin-cjs-interop: "npm:2.4.4"
     vite-plugin-graphql-tag: "npm:0.1.1"
-    vite-tsconfig-paths: "npm:^6.1.1"
+    vite-tsconfig-paths: "npm:6.1.1"
     vitest: "npm:4.1.12"
     ws: "npm:8.22.0"
     yargs-parser: "npm:21.1.1"
@@ -11400,106 +11408,106 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-arm64@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-darwin-arm64@npm:1.16.18"
+"@swc/core-darwin-arm64@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-darwin-arm64@npm:1.16.20"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-x64@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-darwin-x64@npm:1.16.18"
+"@swc/core-darwin-x64@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-darwin-x64@npm:1.16.20"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm-gnueabihf@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.16.18"
+"@swc/core-linux-arm-gnueabihf@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.16.20"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-gnu@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-linux-arm64-gnu@npm:1.16.18"
+"@swc/core-linux-arm64-gnu@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.16.20"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-musl@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-linux-arm64-musl@npm:1.16.18"
+"@swc/core-linux-arm64-musl@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-linux-arm64-musl@npm:1.16.20"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-linux-ppc64-gnu@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-linux-ppc64-gnu@npm:1.16.18"
+"@swc/core-linux-ppc64-gnu@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-linux-ppc64-gnu@npm:1.16.20"
   conditions: os=linux & cpu=ppc64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-s390x-gnu@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-linux-s390x-gnu@npm:1.16.18"
+"@swc/core-linux-s390x-gnu@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-linux-s390x-gnu@npm:1.16.20"
   conditions: os=linux & cpu=s390x & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-gnu@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-linux-x64-gnu@npm:1.16.18"
+"@swc/core-linux-x64-gnu@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-linux-x64-gnu@npm:1.16.20"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-musl@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-linux-x64-musl@npm:1.16.18"
+"@swc/core-linux-x64-musl@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-linux-x64-musl@npm:1.16.20"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-win32-arm64-msvc@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-win32-arm64-msvc@npm:1.16.18"
+"@swc/core-win32-arm64-msvc@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.16.20"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-win32-ia32-msvc@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-win32-ia32-msvc@npm:1.16.18"
+"@swc/core-win32-ia32-msvc@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.16.20"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@swc/core-win32-x64-msvc@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core-win32-x64-msvc@npm:1.16.18"
+"@swc/core-win32-x64-msvc@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core-win32-x64-msvc@npm:1.16.20"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core@npm:1.16.18":
-  version: 1.16.18
-  resolution: "@swc/core@npm:1.16.18"
+"@swc/core@npm:1.16.20":
+  version: 1.16.20
+  resolution: "@swc/core@npm:1.16.20"
   dependencies:
-    "@swc/core-darwin-arm64": "npm:1.16.18"
-    "@swc/core-darwin-x64": "npm:1.16.18"
-    "@swc/core-linux-arm-gnueabihf": "npm:1.16.18"
-    "@swc/core-linux-arm64-gnu": "npm:1.16.18"
-    "@swc/core-linux-arm64-musl": "npm:1.16.18"
-    "@swc/core-linux-ppc64-gnu": "npm:1.16.18"
-    "@swc/core-linux-s390x-gnu": "npm:1.16.18"
-    "@swc/core-linux-x64-gnu": "npm:1.16.18"
-    "@swc/core-linux-x64-musl": "npm:1.16.18"
-    "@swc/core-win32-arm64-msvc": "npm:1.16.18"
-    "@swc/core-win32-ia32-msvc": "npm:1.16.18"
-    "@swc/core-win32-x64-msvc": "npm:1.16.18"
+    "@swc/core-darwin-arm64": "npm:1.16.20"
+    "@swc/core-darwin-x64": "npm:1.16.20"
+    "@swc/core-linux-arm-gnueabihf": "npm:1.16.20"
+    "@swc/core-linux-arm64-gnu": "npm:1.16.20"
+    "@swc/core-linux-arm64-musl": "npm:1.16.20"
+    "@swc/core-linux-ppc64-gnu": "npm:1.16.20"
+    "@swc/core-linux-s390x-gnu": "npm:1.16.20"
+    "@swc/core-linux-x64-gnu": "npm:1.16.20"
+    "@swc/core-linux-x64-musl": "npm:1.16.20"
+    "@swc/core-win32-arm64-msvc": "npm:1.16.20"
+    "@swc/core-win32-ia32-msvc": "npm:1.16.20"
+    "@swc/core-win32-x64-msvc": "npm:1.16.20"
     "@swc/counter": "npm:^0.1.3"
     "@swc/types": "npm:^0.1.28"
   peerDependencies:
@@ -11532,7 +11540,7 @@ __metadata:
   peerDependenciesMeta:
     "@swc/helpers":
       optional: true
-  checksum: 10c0/af2810b1283df88e699a97b11e4b57ac952501390b221f83b816d1042b9e9e98b89ce76eea4ff8848706dc8893292902ed5ea1613977d84c47486059d74d0570
+  checksum: 10c0/1dae88a3c5c9c78ed463ad6b166943249f8af3705dc523d59545811dd02a738f69f31e399e8ea0e24f64ecb9b94ded57dc2e189618e544f4dbcaa430417cc813
   languageName: node
   linkType: hard
 
@@ -12628,7 +12636,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@universal-deploy/store@npm:^0.3.0":
+"@universal-deploy/store@npm:0.3.0, @universal-deploy/store@npm:^0.3.0":
   version: 0.3.0
   resolution: "@universal-deploy/store@npm:0.3.0"
   dependencies:
@@ -12642,7 +12650,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@universal-deploy/vite@npm:^0.2.0":
+"@universal-deploy/vite@npm:0.2.2":
   version: 0.2.2
   resolution: "@universal-deploy/vite@npm:0.2.2"
   dependencies:
@@ -13316,16 +13324,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:0.13.0":
-  version: 0.13.0
-  resolution: "@whatwg-node/server@npm:0.13.0"
+"@whatwg-node/server@npm:0.13.1":
+  version: 0.13.1
+  resolution: "@whatwg-node/server@npm:0.13.1"
   dependencies:
     "@envelop/instrumentation": "npm:^1.0.0"
     "@whatwg-node/disposablestack": "npm:^0.1.0"
     "@whatwg-node/fetch": "npm:^0.12.0"
     "@whatwg-node/promise-helpers": "npm:^2.0.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/d3631b0021e441bd3d944ad20233118ac94f9b1d3779664a93dfdf4e043b67426451cbd214c064b4da81b8a7dfd8ef675b9a078597159327f9b91c7bbe43b85e
+  checksum: 10c0/924d5d6d3413bcd89c71d2fccdd38d379d7f0075701e8fc20f950676952abba87c6ac488df3a826e936feaf79e4378f3b63116d16bce4d78f7421eba27f86e52
   languageName: node
   linkType: hard
 
@@ -14543,7 +14551,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"busboy@npm:^1.6.0":
+"busboy@npm:1.6.0":
   version: 1.6.0
   resolution: "busboy@npm:1.6.0"
   dependencies:
@@ -22890,10 +22898,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemailer@npm:10.2.0":
-  version: 10.2.0
-  resolution: "nodemailer@npm:10.2.0"
-  checksum: 10c0/5f37531f85829b4f91fcf2bca17665a28e78cae98e4e8ab0bfa29d49a4cf60baca29727ca5666433ee83650607d12e178795a6704976d5844f03564b061215e2
+"nodemailer@npm:10.2.1":
+  version: 10.2.1
+  resolution: "nodemailer@npm:10.2.1"
+  checksum: 10c0/c5268903736b8070e8b421142ff8f18229018e7c80da76f5593a796398537d3badd3091484303a084431cfd147b7315f2570b9087f26f63b966972cdff86c9d0
   languageName: node
   linkType: hard
 
@@ -23946,7 +23954,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-json@npm:^10.0.0":
+"package-json@npm:10.0.1, package-json@npm:^10.0.0":
   version: 10.0.1
   resolution: "package-json@npm:10.0.1"
   dependencies:
@@ -29015,7 +29023,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite-tsconfig-paths@npm:^6.1.1":
+"vite-tsconfig-paths@npm:6.1.1":
   version: 6.1.1
   resolution: "vite-tsconfig-paths@npm:6.1.1"
   dependencies:

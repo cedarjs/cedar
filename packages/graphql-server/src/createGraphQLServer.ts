@@ -13,6 +13,7 @@ import type { Plugin, YogaServerInstance } from 'graphql-yoga'
 import type { Logger } from '@cedarjs/api/logger'
 import { buildCedarContext } from '@cedarjs/api/runtime'
 import type { CedarRequestContext } from '@cedarjs/api/runtime'
+import type { CedarRealtimeOptions } from '@cedarjs/realtime'
 
 import { mapRwCorsOptionsToYoga } from './cors.js'
 import { makeDirectivesForPlugin } from './directives/makeDirectives.js'
@@ -146,7 +147,10 @@ export const createGraphQLServer = async ({
       // This registers the @live directive on the schema and handles live query
       // execution
       const { useCedarRealtime } = await import('@cedarjs/realtime')
-      plugins.push(useCedarRealtime(realtime))
+      // Inside this package `realtime` is MinimalRealtimeOptions. Apps that
+      // use realtime get CedarRealtimeOptions here through the generated
+      // RealtimeTypeMap, so the value is the full options object
+      plugins.push(useCedarRealtime(realtime as CedarRealtimeOptions))
     }
 
     // Abort resolver execution when the client disconnects (e.g., page

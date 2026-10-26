@@ -11,6 +11,7 @@
     "@cedarjs/realtime": "7.1.0",
     "@my-org/validators": "workspace:*",
     "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "ioredis": "^5",
     "pg": "^8.13.0"
   }

@@ -5,6 +5,7 @@ import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import execa from 'execa'
 import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
+import packageJson from 'package-json'
 import { terminalLink } from 'termi-link'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
@@ -147,6 +148,14 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
         enabled: (ctx) =>
           String(ctx.versionToUpgradeTo).includes('canary') &&
           notBlockedByPreUpgradeChecks(ctx),
+      },
+      {
+        title: 'Updating Prisma to the version CedarJS supports',
+        // Runs after the canary template sync, so the Prisma versions come
+        // from the target release rather than from the template on main
+        task: (ctx, task) => updatePrismaDeps(ctx, task, { dryRun, verbose }),
+        enabled: (ctx) =>
+          !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
       },
       {
         title: 'Downloading yarn patches',
@@ -423,6 +432,220 @@ function updateCedarJSDepsForAllSides(
       }
     }),
   )
+}
+
+/**
+ * Fetches the `prisma` version that `@cedarjs/cli@<cedarVersion>` declares as
+ * its peer dependency, from the npm registry the project is configured to use.
+ * Returns `undefined` for CedarJS versions that don't declare `prisma` as a
+ * peer.
+ */
+export async function fetchPrismaPeerVersion(
+  cedarVersion: string,
+): Promise<string | undefined> {
+  // Registry metadata doesn't include build metadata, like the `+dd79f1726` in
+  // '4.0.0-rc.428+dd79f1726'
+  const version = cedarVersion.split('+')[0]
+
+  let manifest: Awaited<ReturnType<typeof packageJson>>
+
+  try {
+    manifest = await packageJson('@cedarjs/cli', { version })
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    throw new Error(
+      `Failed to fetch @cedarjs/cli@${version} from the npm registry: ` +
+        message,
+    )
+  }
+
+  const prismaVersion = manifest.peerDependencies?.['prisma']
+
+  return typeof prismaVersion === 'string' ? prismaVersion : undefined
+}
+
+/**
+ * Whether `depName` is a Prisma package that's released together with the
+ * `prisma` CLI, and so shares its version
+ */
+function isPrismaReleasePackage(depName: string) {
+  return (
+    depName === 'prisma' ||
+    depName === '@prisma/client' ||
+    depName.startsWith('@prisma/adapter-')
+  )
+}
+
+/**
+ * Sets every Prisma package in the `dependencies` and `devDependencies` of
+ * `pkg` to `prismaVersion`, collecting a line into `messages` for every change.
+ * Only packages `pkg` already declares are updated.
+ */
+export function updatePrismaDependencies(
+  pkg: TemplatePackageJson,
+  prismaVersion: string,
+  messages: string[],
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean } = {},
+) {
+  let updated = false
+
+  for (const field of ['dependencies', 'devDependencies'] as const) {
+    const deps = pkg[field] ?? {}
+
+    for (const [depName, depVersion] of Object.entries(deps)) {
+      if (!isPrismaReleasePackage(depName) || depVersion === prismaVersion) {
+        continue
+      }
+
+      if (verbose || dryRun) {
+        messages.push(` - ${depName}: ${depVersion} => ${prismaVersion}`)
+      }
+
+      deps[depName] = prismaVersion
+      updated = true
+    }
+  }
+
+  return updated
+}
+
+/**
+ * Makes sure `pkg[field]` declares `depName`, keeping `pkg[field]` sorted, and
+ * collects a line into `messages` for every change.
+ *
+ * A package `pkg` declares in the other section counts as declared, unless
+ * `onlyInField` is set. Then it's moved to `pkg[field]`, for packages that
+ * production installs, which leave out `devDependencies`, need.
+ */
+export function addMissingDependency(
+  pkg: TemplatePackageJson,
+  field: 'dependencies' | 'devDependencies',
+  depName: string,
+  version: string,
+  messages: string[],
+  { onlyInField = false }: { onlyInField?: boolean } = {},
+) {
+  const otherField =
+    field === 'dependencies' ? 'devDependencies' : 'dependencies'
+
+  if (pkg[field]?.[depName]) {
+    return false
+  }
+
+  const otherVersion = pkg[otherField]?.[depName]
+
+  if (otherVersion && !onlyInField) {
+    return false
+  }
+
+  if (otherVersion) {
+    const { [depName]: _moved, ...otherDeps } = pkg[otherField] ?? {}
+    pkg[otherField] = otherDeps
+    messages.push(` - ${depName}: moved from ${otherField} to ${field}`)
+  } else {
+    messages.push(` - ${depName}: added at ${version}`)
+  }
+
+  const deps = { ...pkg[field], [depName]: otherVersion ?? version }
+
+  pkg[field] = Object.fromEntries(
+    Object.entries(deps).sort(([a], [b]) => a.localeCompare(b)),
+  )
+
+  return true
+}
+
+/**
+ * Sets the project's Prisma packages to the version the CedarJS release being
+ * upgraded to declares as its `prisma` peer dependency. CedarJS uses the
+ * project's copy of Prisma, so the versions need to match, and projects with
+ * an api side need `prisma` in the root package.json and `@prisma/client` in
+ * the api side's. The step adds them when they're missing.
+ */
+async function updatePrismaDeps(
+  ctx: Record<string, unknown>,
+  task: { title: string; skip: (message: string) => void },
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
+) {
+  if (!ctx.versionToUpgradeTo) {
+    throw new Error('Failed to upgrade')
+  }
+
+  const prismaVersion = await fetchPrismaPeerVersion(
+    String(ctx.versionToUpgradeTo),
+  )
+
+  if (!prismaVersion) {
+    task.skip(
+      `CedarJS ${ctx.versionToUpgradeTo} doesn't declare a Prisma version`,
+    )
+    return
+  }
+
+  const messages: string[] = []
+
+  const hasApiSide = fs.existsSync(
+    path.join(getPaths().api.base, 'package.json'),
+  )
+  const projectPackages = [
+    {
+      basePath: getPaths().base,
+      required: {
+        field: 'devDependencies',
+        depName: 'prisma',
+        onlyInField: false,
+      },
+    },
+    {
+      basePath: getPaths().api.base,
+      // The api side imports the generated Prisma client at runtime
+      required: {
+        field: 'dependencies',
+        depName: '@prisma/client',
+        onlyInField: true,
+      },
+    },
+  ] as const
+
+  for (const { basePath, required } of projectPackages) {
+    const pkgJsonPath = path.join(basePath, 'package.json')
+
+    if (!fs.existsSync(pkgJsonPath)) {
+      continue
+    }
+
+    const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
+    const pkgMessages: string[] = []
+
+    const added =
+      hasApiSide &&
+      addMissingDependency(
+        pkg,
+        required.field,
+        required.depName,
+        prismaVersion,
+        pkgMessages,
+        { onlyInField: required.onlyInField },
+      )
+    const updated = updatePrismaDependencies(pkg, prismaVersion, pkgMessages, {
+      dryRun,
+      verbose,
+    })
+
+    if (added || updated) {
+      if (pkgMessages.length > 0) {
+        messages.push(`Updating ${pkgJsonPath}`, ...pkgMessages)
+      }
+
+      if (!dryRun) {
+        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, undefined, 2))
+      }
+    }
+  }
+
+  if (messages.length > 0) {
+    task.title = task.title + '\n' + messages.join('\n')
+  }
 }
 
 interface TemplatePackageJson {

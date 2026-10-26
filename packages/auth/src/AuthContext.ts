@@ -3,17 +3,24 @@ import React from 'react'
 /**
  * The user returned by your app's `getCurrentUser` function on the api side,
  * when someone is logged in. Cedar generates the fields from your
- * `getCurrentUser` function
+ * `getCurrentUser` function.
+ *
+ * This is a declaration-merging target: Cedar's generated
+ * `.cedar/types/includes/all-currentUser.d.ts` augments it with the app's
+ * `getCurrentUser` return type. It has no fields of its own, so
+ * `LoggedInUser` has exactly the fields `getCurrentUser` returns, and is `{}`
+ * in apps where `getCurrentUser` doesn't return a user.
  */
-export interface LoggedInUser {
-  [key: string]: unknown
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface LoggedInUser {}
 
 /**
  * What `getCurrentUser` returns: the logged-in user, or `null` when nobody is
  * logged in
  */
-export type CurrentUser = LoggedInUser | null
+// `& object` keeps primitives out. Plain `LoggedInUser` is `{}` until it's
+// augmented, and `{}` accepts any non-nullish value, strings included.
+export type CurrentUser = (LoggedInUser & object) | null
 
 export interface AuthContextInterface<
   TUser,

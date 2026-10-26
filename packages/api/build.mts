@@ -4,14 +4,18 @@ import { build, defaultBuildOptions } from '@cedarjs/framework-tools'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8')) as {
   version: string
-  dependencies: Record<string, string>
+  devDependencies: Record<string, string>
 }
 
 if (!pkg.version) {
   throw new Error('build error: No version specified')
 }
 
-if (!pkg.dependencies['@prisma/client']) {
+// `@prisma/client` is a devDependency: apps install their own copy, and this
+// is the version Cedar is built and tested against
+const prismaClientVersion = pkg.devDependencies['@prisma/client']
+
+if (!prismaClientVersion) {
   throw new Error('build error: @prisma/client is not available')
 }
 
@@ -23,9 +27,7 @@ await build({
     packages: 'external',
     define: {
       __CEDAR_API_VERSION__: JSON.stringify(pkg.version),
-      __PRISMA_CLIENT_VERSION__: JSON.stringify(
-        pkg.dependencies?.['@prisma/client'],
-      ),
+      __PRISMA_CLIENT_VERSION__: JSON.stringify(prismaClientVersion),
     },
   },
 })

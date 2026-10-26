@@ -28,7 +28,7 @@ export const MEMBERSHIP_MODEL = `model Membership {
   invitedById     String?
   invitationToken String?      @unique
   createdAt       DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  updatedAt       DateTime     @updatedAt
   user            User?        @relation(fields: [userId], references: [id])
   organization    Organization @relation(fields: [organizationId], references: [id])
   invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
@@ -52,6 +52,17 @@ export const RW_DATA_MIGRATION_MODEL = `model RW_DataMigration {
   finishedAt DateTime
 }`
 
+/** `text` with each run of whitespace as one space */
+const collapseWhitespace = (text: string) => text.replace(/\s+/g, ' ').trim()
+
+/**
+ * True when `schema` contains `model` as this command writes it, however
+ * `prisma format` has aligned it since
+ */
+export function hasCanonicalModel(schema: string, model: string): boolean {
+  return collapseWhitespace(schema).includes(collapseWhitespace(model))
+}
+
 /**
  * True when `schema` already declares `model <modelName> { ... }`, ignoring
  * how the model's body is formatted.
@@ -66,14 +77,14 @@ export function addTenancyModels(schema: string): string {
 }
 
 /**
- * Appends `model`, unless the schema already contains it exactly as written
- * here, which makes running the command twice a no-op rather than a
+ * Appends `model`, unless the schema already contains it as written here
+ * (however it's been formatted since), which makes running the command twice a no-op rather than a
  * duplicate. A model of the same name that differs is left alone and this one
  * appended beside it, so Prisma reports the clash rather than this command
  * guessing which one the app wanted.
  */
 function appendModel(schema: string, model: string): string {
-  if (schema.includes(model)) {
+  if (hasCanonicalModel(schema, model)) {
     return schema
   }
 
@@ -102,7 +113,7 @@ export interface EditSchemaOptions {
 /**
  * - `'added'` &mdash; the canonical `Organization`/`Membership` models are
  *   now in `schema`, whether this call just wrote them or they were already
- *   there byte-identical (an idempotent re-run).
+ *   there already (an idempotent re-run).
  * - `'skipped'` &mdash; a customized `Organization`/`Membership` already
  *   existed and `force` was not passed, so `schema` is unchanged: the app's
  *   models are left exactly as they were.
@@ -147,9 +158,11 @@ export function editSchema(
   // half of the "skipped" guidance by hand) still gets the missing one
   // added, rather than being treated as fully customized.
   const organizationIsCustomized =
-    hasModel(schema, 'Organization') && !schema.includes(ORGANIZATION_MODEL)
+    hasModel(schema, 'Organization') &&
+    !hasCanonicalModel(schema, ORGANIZATION_MODEL)
   const membershipIsCustomized =
-    hasModel(schema, 'Membership') && !schema.includes(MEMBERSHIP_MODEL)
+    hasModel(schema, 'Membership') &&
+    !hasCanonicalModel(schema, MEMBERSHIP_MODEL)
 
   const modelsCustomized = organizationIsCustomized || membershipIsCustomized
 
@@ -170,4 +183,130 @@ export function editSchema(
     schema: addDataMigrationModel(withTenancyModels),
     outcome: modelsCustomized ? 'forced' : 'added',
   }
+}
+
+/** A required `User` field the generated tests and scenarios must fill */
+export interface RequiredUserField {
+  name: string
+  /** A TypeScript expression for a placeholder value; `__N__` numbers it */
+  value: string
+}
+
+/**
+ * The value written for a required `User` field, by its Prisma type, as
+ * TypeScript source. `requiredUserFields` replaces `__NAME__` with the
+ * field's name, and `addRequiredUserFields` replaces `__N__` with a number
+ * that's different for each user, so `@unique` fields don't collide. E.g.
+ * `fullName String` gives `fullName: 'fullName 1',` and `age Int` gives
+ * `age: 1,`.
+ */
+const SCALAR_PLACEHOLDERS: Record<string, string> = {
+  String: "'__NAME__ __N__'",
+  Int: '__N__',
+  BigInt: '__N__',
+  Float: '__N__',
+  Decimal: '__N__',
+  Boolean: 'false',
+  DateTime: 'new Date()',
+  Json: '{}',
+  Bytes: 'new Uint8Array()',
+}
+
+/** The fields the generated tests and scenarios already set on a `User` */
+const FILLED_USER_FIELDS = ['email', 'hashedPassword', 'salt']
+
+/**
+ * The `User` model's required fields that have no default, other than the
+ * ones the generated tests and scenarios already set, with a placeholder
+ * value for each. Relations and their foreign keys are left out: there's no
+ * placeholder that would satisfy one.
+ */
+export function requiredUserFields(schema: string): RequiredUserField[] {
+  const body = schema.match(/\bmodel\s+User\s*\{([\s\S]*?)\n\}/)?.[1]
+
+  if (!body) {
+    return []
+  }
+
+  const enumValues = (name: string) =>
+    schema
+      .match(new RegExp(`\\benum\\s+${name}\\s*\\{([\\s\\S]*?)\\}`))?.[1]
+      .split('\n')
+      // The member's name, before any attributes such as `@map("free")`
+      .map(
+        (line) =>
+          line
+            .replace(/\/\/.*/, '')
+            .trim()
+            .match(/^([A-Za-z_]\w*)(?:\s|$)/)?.[1],
+      )
+      .find((member) => member !== undefined)
+
+  // Foreign keys: a made-up value would break the relation
+  const relationKeys = [
+    ...body.matchAll(/@relation\([^)]*fields:\s*\[([^\]]*)\]/g),
+  ].flatMap((match) => match[1].split(',').map((key) => key.trim()))
+
+  return body.split('\n').flatMap((line) => {
+    const field = line
+      .replace(/\/\/.*/, '')
+      .trim()
+      .match(/^(\w+)\s+(\w+)(\?|\[\])?(.*)$/)
+
+    if (!field) {
+      return []
+    }
+
+    const [, name, type, modifier, attributes] = field
+
+    if (
+      modifier ||
+      FILLED_USER_FIELDS.includes(name) ||
+      relationKeys.includes(name) ||
+      /@(default|updatedAt|relation)\b/.test(attributes)
+    ) {
+      return []
+    }
+
+    const scalar = SCALAR_PLACEHOLDERS[type]
+
+    if (scalar) {
+      return [{ name, value: scalar.replace('__NAME__', name) }]
+    }
+
+    const enumValue = enumValues(type)
+
+    return enumValue ? [{ name, value: `'${enumValue}'` }] : []
+  })
+}
+
+/**
+ * `source` (a generated test or scenario) with `fields` set on every user it
+ * creates: after each `salt: 'x',` line, numbered from `firstNumber` so a
+ * `@unique` field gets a different value for each user. Give files whose
+ * users exist at the same time (a test and its scenario) different
+ * `firstNumber`s.
+ */
+export function addRequiredUserFields(
+  source: string,
+  fields: RequiredUserField[],
+  { firstNumber = 1 }: { firstNumber?: number } = {},
+): string {
+  if (fields.length === 0) {
+    return source
+  }
+
+  let n = firstNumber - 1
+
+  return source.replace(/^(\s*)salt: 'x',$/gm, (line, indent: string) => {
+    n++
+
+    return [
+      line,
+      ...fields.map(
+        (field) =>
+          `${indent}${field.name}: ${field.value.replaceAll('__N__', String(n))},`,
+      ),
+    ].join('\n')
+  })
 }

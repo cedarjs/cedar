@@ -84,6 +84,9 @@ export default function transform(fileInfo: j.FileInfo) {
   const root = j.withParser('tsx')(fileInfo.source)
 
   let selectFound = false
+  // Whether this run adds anything. When it doesn't, the file is returned
+  // as it was, rather than reprinted (which, e.g., changes CRLF line endings)
+  let changed = false
 
   root
     .find(j.CallExpression, {
@@ -128,6 +131,7 @@ export default function transform(fileInfo: j.FileInfo) {
 
       if (!alreadyHasMemberships) {
         selectProperty.value.properties.push(buildMembershipsSelectProperty())
+        changed = true
       }
 
       selectFound = true
@@ -142,7 +146,7 @@ export default function transform(fileInfo: j.FileInfo) {
       .length > 0
 
   if (alreadyWired) {
-    return root.toSource()
+    return changed ? root.toSource() : fileInfo.source
   }
 
   const hasRole = findExportedConst(root, 'hasRole')

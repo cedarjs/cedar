@@ -1,6 +1,7 @@
 // @dependency: oxc-parser@0.144.0
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import util from 'node:util'
 
 import { parseSync, Visitor } from 'oxc-parser'
@@ -235,11 +236,108 @@ async function findSetsWithWrapperProps() {
   }
 }
 
+/**
+ * Returns the Prisma version the CedarJS release being upgraded to supports.
+ * The upgrade installs `@cedarjs/project-config` at that release's version to
+ * run this script, and its `@prisma/internals` dependency is always on the
+ * same version as the `prisma` peer dependency of `@cedarjs/cli`.
+ */
+function findSupportedPrismaVersion() {
+  let dir = path.dirname(
+    fileURLToPath(import.meta.resolve('@cedarjs/project-config')),
+  )
+
+  while (dir !== path.dirname(dir)) {
+    const pkgJsonPath = path.join(dir, 'package.json')
+
+    if (fs.existsSync(pkgJsonPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'))
+
+      if (pkg.name === '@cedarjs/project-config') {
+        const version = pkg.dependencies?.['@prisma/internals']
+        return typeof version === 'string' ? version : undefined
+      }
+    }
+
+    dir = path.dirname(dir)
+  }
+
+  return undefined
+}
+
+/**
+ * Returns the Prisma packages the project has to declare itself, as lines like
+ * "prisma in the devDependencies of package.json", for the ones it doesn't
+ * declare. `prisma` can be in either section. `@prisma/client` must be in the
+ * api side's `dependencies`, because the api side imports the generated client
+ * at runtime and production installs leave out `devDependencies`. Projects
+ * without an api side don't need either.
+ */
+function findMissingPrismaPackages() {
+  const apiPkgJsonPath = path.join(projectPaths.api.base, 'package.json')
+
+  if (!fs.existsSync(apiPkgJsonPath)) {
+    return []
+  }
+
+  const required = [
+    {
+      pkgJsonPath: path.join(projectPaths.base, 'package.json'),
+      field: 'devDependencies',
+      depName: 'prisma',
+      onlyInField: false,
+    },
+    {
+      pkgJsonPath: apiPkgJsonPath,
+      field: 'dependencies',
+      depName: '@prisma/client',
+      onlyInField: true,
+    },
+  ]
+
+  return required
+    .filter(({ pkgJsonPath, field, depName, onlyInField }) => {
+      const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'))
+
+      if (onlyInField) {
+        return !pkg[field]?.[depName]
+      }
+
+      return !pkg.dependencies?.[depName] && !pkg.devDependencies?.[depName]
+    })
+    .map(
+      ({ pkgJsonPath, field, depName }) =>
+        `${depName} in the ${field} of ` +
+        path.relative(projectPaths.base, pkgJsonPath).split(path.sep).join('/'),
+    )
+}
+
 async function main() {
   // Set by any check that has found something the user must fix before
   // upgrading. Checked once at the end so every problem gets reported in one
   // pass, rather than the user fixing one and rerunning to find the next
   let shouldAbort = false
+
+  const missingPrismaPackages = findMissingPrismaPackages()
+
+  if (missingPrismaPackages.length > 0) {
+    shouldAbort = true
+
+    const prismaVersion = findSupportedPrismaVersion()
+    const versionText = prismaVersion
+      ? `version ${prismaVersion}, the Prisma version this CedarJS release\n` +
+        'supports'
+      : 'the Prisma version this CedarJS release supports (see the\n' +
+        'release notes)'
+
+    fail('Prisma packages your project needs to declare', [
+      'CedarJS uses the prisma and @prisma/client packages your project\n' +
+        'installs, so your project has to declare them. Add:\n\n' +
+        missingPrismaPackages.map((line) => `  ${line}`).join('\n'),
+      `Use ${versionText}. Then run the upgrade again. Later upgrades keep\n` +
+        'these packages on the version CedarJS supports.',
+    ])
+  }
 
   const { sets: setsWithWrapperProps, unparsedFiles } =
     await findSetsWithWrapperProps()

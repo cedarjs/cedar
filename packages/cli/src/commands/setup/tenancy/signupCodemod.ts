@@ -199,6 +199,20 @@ export default function transform(fileInfo: j.FileInfo) {
   // can't parse.
   const root = j.withParser('tsx')(fileInfo.source)
 
+  // Already wired, by an earlier run: the handler calls it
+  if (
+    root.find(j.CallExpression, {
+      callee: { name: 'ensureDefaultOrganization' },
+    }).length > 0
+  ) {
+    return fileInfo.source
+  }
+
+  const hasImport =
+    root.find(j.ImportSpecifier, {
+      local: { name: 'ensureDefaultOrganization' },
+    }).length > 0
+
   const signupOptionsDeclarators = root.find(j.VariableDeclarator, {
     id: { name: 'signupOptions' },
   })
@@ -247,15 +261,17 @@ export default function transform(fileInfo: j.FileInfo) {
 
   addInvitationTokenToUserAttributes(root)
 
-  const imports = root.find(j.ImportDeclaration)
-  imports
-    .at(-1)
-    .insertAfter(
-      j.importDeclaration(
-        [j.importSpecifier(j.identifier('ensureDefaultOrganization'))],
-        j.literal('src/services/organizations/organizations'),
-      ),
-    )
+  if (!hasImport) {
+    root
+      .find(j.ImportDeclaration)
+      .at(-1)
+      .insertAfter(
+        j.importDeclaration(
+          [j.importSpecifier(j.identifier('ensureDefaultOrganization'))],
+          j.literal('src/services/organizations/organizations'),
+        ),
+      )
+  }
 
   return root.toSource()
 }

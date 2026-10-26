@@ -402,15 +402,18 @@ Setup also adds the `RW_DataMigration` model if it isn't already there (the one
 without it, and most projects run `setup tenancy` before they've ever written a
 data migration.
 
-Run the two commands the setup output prints, in order:
+Run the commands the setup output prints, in order:
 
 ```shell
 yarn cedar prisma migrate dev
+yarn cedar prisma generate
 yarn cedar data-migrate up
 ```
 
 The migration creates the tables (`Organization`, `Membership` and, if it was
-just added, `RW_DataMigration`); the data migration backfills a default
+just added, `RW_DataMigration`); `prisma generate` updates the Prisma client,
+which Prisma 7's `migrate dev` no longer does, so the data migration can use
+the new models; the data migration backfills a default
 organization and membership for every existing user, so nobody is left without a
 `currentOrg` to resolve into.
 

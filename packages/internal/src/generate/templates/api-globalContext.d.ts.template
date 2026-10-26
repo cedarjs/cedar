@@ -1,7 +1,3 @@
-import type { GlobalContext } from "@cedarjs/context"
-
-export {}
-
-declare global {
-  const context: GlobalContext
-}
+// @cedarjs/context declares the global "context" variable. Importing it here
+// makes that global available in all api side files
+import '@cedarjs/context'
