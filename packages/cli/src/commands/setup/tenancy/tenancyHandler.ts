@@ -28,7 +28,7 @@ import { TENANCY_AUTH_EXPORT } from './authCodemod.js'
 import {
   isDefaultRequireAuthDirective,
   renameRequireAuthDirective,
-  renameRequireAuthImport,
+  renameLibAuthImports,
 } from './authDirectives.js'
 import {
   authNotSetUpMessage,
@@ -407,7 +407,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             const source = fs.readFileSync(file, 'utf-8')
             // `lib/auth` exports no `requireAuth` any more, so imports of it
             // are renamed even in a kept directive
-            const renamed = renameRequireAuthImport(
+            const renamed = renameLibAuthImports(
               keepOldDirective || isInOldDirective(file)
                 ? source
                 : renameRequireAuthDirective(source),
