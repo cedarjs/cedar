@@ -64,14 +64,18 @@ const toList = (roles: string | string[]) =>
 
 const REPLACE = { replace: true }
 
+type NamedRoute = (params?: Record<string, string>) => string
+
+/** Whether `value` is one of `routes`' named route functions */
+function isNamedRoute(value: unknown): value is NamedRoute {
+  return typeof value === 'function'
+}
+
 /**
  * The `unauthorized` route's path: with the organization's `orgSlug` when
  * the route needs one (a page of the same organization), else without.
  */
-function unauthorizedPath(
-  route: (params?: Record<string, string>) => string,
-  orgSlug: string,
-): string {
+function unauthorizedPath(route: NamedRoute, orgSlug: string): string {
   try {
     return route()
   } catch (e) {
@@ -245,13 +249,13 @@ export function OrgScope({
       return <>{notAMember}</>
     }
 
-    const namedRoutes = routes as Record<
-      string,
-      ((params?: Record<string, string>) => string) | undefined
-    >
-    const route = namedRoutes[unauthorized]
+    // `unauthorized` is any string, so look it up rather than index with it.
+    // Own properties only, so a name like `toString` isn't a route.
+    const route: unknown = Object.hasOwn(routes, unauthorized)
+      ? Reflect.get(routes, unauthorized)
+      : undefined
 
-    if (!route) {
+    if (!isNamedRoute(route)) {
       throw new Error(`We could not find a route named ${unauthorized}`)
     }
 
