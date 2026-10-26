@@ -1,6 +1,6 @@
 import type { vi as _vi } from 'vitest'
 
-import type { LoggedInUser } from '@cedarjs/auth'
+import type { CurrentUser } from '@cedarjs/auth'
 
 declare global {
   // describe, it, expect etc. are typed by @types/jest. Referencing
@@ -8,5 +8,5 @@ declare global {
   // is declared
   const vi: typeof _vi
   // Partial: a mocked user only needs the fields the test uses
-  const mockCurrentUser: (currentUser: Partial<LoggedInUser> | null) => void
+  const mockCurrentUser: (currentUser: Partial<CurrentUser>) => void
 }

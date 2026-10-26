@@ -1,6 +1,6 @@
 import type { vi as _vi } from 'vitest'
 
-import type { LoggedInUser } from '@cedarjs/auth'
+import type { CurrentUser } from '@cedarjs/auth'
 import type {
   mockGraphQLMutation as _mockGraphQLMutation,
   mockGraphQLQuery as _mockGraphQLQuery,
@@ -12,7 +12,7 @@ declare global {
   // is declared
   const vi: typeof _vi
   // Partial: a mocked user only needs the fields the test uses
-  const mockCurrentUser: (currentUser: Partial<LoggedInUser> | null) => void
+  const mockCurrentUser: (currentUser: Partial<CurrentUser>) => void
   const mockGraphQLQuery: typeof _mockGraphQLQuery
   const mockGraphQLMutation: typeof _mockGraphQLMutation
 }
