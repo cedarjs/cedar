@@ -12,6 +12,10 @@ import { getConfig } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 import { pluralize } from '@cedarjs/utils/cedarPluralize'
 
+import {
+  belongsToOrganization,
+  withAuthDirective,
+} from '../../../lib/authDirective.js'
 import { transformTSToJS } from '../../../lib/index.js'
 import {
   prepareForRollback,
@@ -257,6 +261,7 @@ const sdlFromSchemaModel = async (
     idName: idName(model, crud),
     relations: relationsForModel(model),
     enums,
+    belongsToOrg: belongsToOrganization(model),
   }
 }
 
@@ -289,9 +294,10 @@ export const files = async ({
     outputPath: `${camelcase(pluralize(name))}.sdl.${extension}`,
   })
 
-  const template = typescript
-    ? content
-    : await transformTSToJS(outputPath, content)
+  const sdl = withAuthDirective(content, {
+    belongsToOrg: sdlData.belongsToOrg,
+  })
+  const template = typescript ? sdl : await transformTSToJS(outputPath, sdl)
 
   return {
     [outputPath]: template,

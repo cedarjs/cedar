@@ -10,6 +10,7 @@ import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+import { withAuthDirective } from '../../../lib/authDirective.js'
 // Move this check out of experimental when server file is moved as well
 import {
   generateTemplate,
@@ -157,16 +158,20 @@ export async function handler({
                 exampleSubscriptionTemplateContent,
               )
 
-          const blankTemplateContent = await generateTemplate(
-            setupScriptContent,
-            templateVariables(name),
+          const blankTemplateContent = withAuthDirective(
+            await generateTemplate(setupScriptContent, templateVariables(name)),
+            // Not about a model, so the safe default
+            { belongsToOrg: true },
           )
 
           // write all files
           return [
             writeFile(
               sdlFile,
-              await generateTemplate(sdlContent, templateVariables(name)),
+              withAuthDirective(
+                await generateTemplate(sdlContent, templateVariables(name)),
+                { belongsToOrg: true },
+              ),
               {
                 overwriteExisting: force,
               },
@@ -226,7 +231,10 @@ export async function handler({
           return [
             writeFile(
               sdlFile,
-              await generateTemplate(sdlContent, templateVariables(name)),
+              withAuthDirective(
+                await generateTemplate(sdlContent, templateVariables(name)),
+                { belongsToOrg: true },
+              ),
               {
                 overwriteExisting: force,
               },
