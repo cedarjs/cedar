@@ -116,5 +116,4 @@ describe('running the tenancy codemods again', () => {
     expect(count(output, 'ensureDefaultOrganization(')).toBe(1)
     expect(count(output, 'import { ensureDefaultOrganization }')).toBe(1)
   })
-
 })
