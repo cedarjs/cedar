@@ -299,7 +299,7 @@ From `@cedarjs/tenancy`:
 
 ```ts
 export function createTenancyAuth(): {
-  hasUserRole(roles: string | readonly string[]): boolean
+  hasRole(roles: string | readonly string[]): boolean
   hasOrgRole(
     roles?: string | readonly string[],
     organizationId?: string
@@ -320,11 +320,13 @@ The setup command replaces the single-tenant `hasRole` and `requireAuth` in
 `api/src/lib/auth.ts` with these:
 
 ```ts title="api/src/lib/auth.ts"
-export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
+export const { hasRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
   createTenancyAuth()
 ```
 
-There's no `hasRole` or `requireAuth`: each check says what it's about.
+`hasRole` and `requireUserAuth` are about the signed-in user
+(`currentUser.roles`); `hasOrgRole` and `requireOrgAuth` are about their role
+in an organization. There's no `requireAuth`: each guard says which it is.
 
 - `requireOrgAuth({ roles })`: for fields about the current organization.
   Throws `AuthenticationError` when no one is signed in, and `ForbiddenError`
@@ -340,11 +342,11 @@ There's no `hasRole` or `requireAuth`: each check says what it's about.
   of them. No organization is needed. It checks what the single-tenant
   `requireAuth` did.
 
-`hasUserRole(roles)` checks `currentUser.roles`, as the single-tenant
-`hasRole` did. `hasOrgRole(roles?, organizationId?)` is the standalone
-`hasOrgRole` below: with no roles, it's whether the user is a member. Setup
-renames `hasRole` and `requireAuth` imported from `api/src/lib/auth` to
-`hasUserRole` and `requireUserAuth`.
+`hasRole(roles)` checks `currentUser.roles`, as the single-tenant `hasRole`
+did. It never looks at the current organization. `hasOrgRole(roles?,
+organizationId?)` is the standalone `hasOrgRole` below: with no roles, it's
+whether the user is a member. Setup renames `requireAuth` imported from
+`api/src/lib/auth` to `requireUserAuth`; `hasRole` keeps its name.
 
 With tenancy, a role belongs to a membership, so don't copy one into
 `currentUser.roles` in `getCurrentUser`: a user who is `owner` in one
@@ -469,10 +471,13 @@ switcher that doesn't navigate. `memberships` come from
 `getMemberships(useAuth().currentUser)`.
 
 Below it, `OrgScope` provides a per-organization Apollo client (built or reused,
-keyed by `${userId}:${organizationId}`), the organization for
-`useCurrentOrg()`, and a `useAuth().hasRole` that checks the user's role in that
-organization rather than `currentUser.roles`. That includes a `<PrivateSet roles>` nested inside the
-`OrgScope` set, as the router reads `hasRole` through the same `useAuth`.
+keyed by `${userId}:${organizationId}`) and the organization for
+`useCurrentOrg()`.
+
+On the web, `useAuth().hasRole` and `<PrivateSet roles>` check
+`currentUser.roles`, as in any Cedar app, inside `OrgScope` or not. The user's
+role in the organization is `useCurrentOrg().hasOrgRole`, and `OrgScope`'s
+`roles` prop for routes.
 
 Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
 `currentUser.id` changes, every cached client is dropped after `clearStore()`.
@@ -481,27 +486,9 @@ organization's client alone is dropped the same way.
 
 #### Guarding routes by role
 
-The simplest is a `<PrivateSet roles>` _inside_ the `OrgScope` set. Under
-`OrgScope`, `useAuth().hasRole` checks the role in that organization, so this
-lets only its owners in:
-
-```tsx title="web/src/Routes.tsx"
-<Set wrap={[OrgScope, OrgLayout]}>
-  <PrivateSet unauthenticated="login" roles="owner">
-    <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
-  </PrivateSet>
-</Set>
-```
-
-A member without the role is sent to the `unauthenticated` route, just like
-someone who isn't signed in, and that route can't take route parameters, so it
-can't be a page in the same organization. A `<PrivateSet roles>` _around_
-`OrgScope` doesn't work at all: it's checked before `OrgScope` has resolved the
-organization, so it checks `currentUser.roles` instead.
-
-To send a member without the role somewhere in the organization, give
-`OrgScope` `roles` and `unauthorized` instead, from a small wrapper component
-(`Set` doesn't pass props on to `wrap` components):
+To let only some roles in the organization open a page, give `OrgScope` `roles`
+and `unauthorized`, from a small wrapper component (`Set` doesn't pass props on
+to `wrap` components):
 
 ```tsx title="web/src/Routes.tsx"
 const OwnersOnly = ({ children }: { children: React.ReactNode }) => (

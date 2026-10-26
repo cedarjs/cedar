@@ -79,7 +79,7 @@ import {
 // api/src/lib/auth.ts, in place of the single-tenant hasRole/requireAuth
 import { createTenancyAuth } from '@cedarjs/tenancy'
 
-export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
+export const { hasRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
   createTenancyAuth()
 
 // In a service:
@@ -88,7 +88,7 @@ requireUserAuth() // signed in, no organization needed
 
 // Anywhere:
 if (hasOrgRole('owner')) { ... } // in the current organization
-if (hasUserRole('superuser')) { ... } // currentUser.roles
+if (hasRole('superuser')) { ... } // currentUser.roles
 ```
 
 `requireOrgAuth` (and the `@requireOrgAuth` directive `setup tenancy` adds) is
@@ -97,15 +97,17 @@ current user, and `ForbiddenError` with no current organization or when the
 user's role there isn't one of `roles` when they're given. With no `roles`,
 any member gets in. `requireUserAuth` (and `@requireUserAuth`) is for fields about the user
 rather than an organization: it needs a signed-in user, and checks `roles`
-against `currentUser.roles`. `hasOrgRole` and `hasUserRole` are the boolean
-checks to match. There's no `requireAuth` or `hasRole`.
+against `currentUser.roles`. `hasOrgRole` and `hasRole` are the boolean
+checks to match. There's no `requireAuth`.
 
 ## Web
 
 `@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg` and
 `getMemberships`/`hasOrgRole` for the client side: a per-organization Apollo
 client provided under organization routes, keyed by the immutable organization
-id so switching organizations never mixes caches. Under `OrgScope`,
-`useAuth().hasRole` checks the user's role in that organization, and
-`OrgScope`'s `roles` and `unauthorized` props guard routes by it. See the how-to for the full
+id so switching organizations never mixes caches. `useCurrentOrg().hasOrgRole`
+checks the user's role in the organization, and `OrgScope`'s `roles` and
+`unauthorized` props guard routes by it. `useAuth().hasRole` and
+`<PrivateSet roles>` check `currentUser.roles`, as in any Cedar app. See the
+how-to for the full
 `<Set wrap={OrgScope}>` setup `yarn cedar setup tenancy` generates.

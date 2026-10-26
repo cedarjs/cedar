@@ -4,7 +4,6 @@ export type {
   LoggedInUser,
 } from './AuthContext.js'
 export type { AuthProviderProps } from './AuthProvider/AuthProvider.js'
-export { HasRoleContext } from './HasRoleContext.js'
 export { useNoAuth } from './useAuth.js'
 export type { UseAuth } from './useAuth.js'
 export { createAuthentication } from './authFactory.js'

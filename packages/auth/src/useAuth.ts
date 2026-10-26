@@ -1,7 +1,6 @@
 import React from 'react'
 
 import type { AuthContextInterface } from './AuthContext.js'
-import { HasRoleContext } from './HasRoleContext.js'
 
 export function createUseAuth<
   TUser,
@@ -56,17 +55,12 @@ export function createUseAuth<
     TChangePassword
   > => {
     const context = React.useContext(AuthContext)
-    const hasRole = React.useContext(HasRoleContext)
-    const scoped = React.useMemo(
-      () => (context && hasRole ? { ...context, hasRole } : context),
-      [context, hasRole],
-    )
 
-    if (!scoped) {
+    if (!context) {
       throw new Error('useAuth must be used within an AuthProvider')
     }
 
-    return scoped
+    return context
   }
 
   return useAuth

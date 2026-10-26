@@ -3,7 +3,7 @@ import React from 'react'
 import { ApolloProvider } from '@apollo/client/react'
 
 import type { UseAuth } from '@cedarjs/auth'
-import { HasRoleContext, useNoAuth } from '@cedarjs/auth'
+import { useNoAuth } from '@cedarjs/auth'
 import {
   navigate,
   Redirect,
@@ -98,8 +98,7 @@ function membershipRoleMap(
  * that organization (or not one with `roles`, see `unauthorized`);
  * otherwise wraps `children` in that organization's own `ApolloProvider`,
  * so every Cell, `useQuery` and `useMutation` under it carries the
- * `cedar-org` header and reads from that organization's cache. Under it,
- * `useAuth().hasRole` checks the user's role in that organization.
+ * `cedar-org` header and reads from that organization's cache.
  */
 export function OrgScope({
   orgSlug: orgSlugProp,
@@ -211,21 +210,13 @@ export function OrgScope({
   const membership = orgSlug
     ? memberships.find((m) => m.organization.slug === orgSlug)
     : undefined
-  const role = membership?.role
-
-  // `useAuth().hasRole` below this point: the role in this organization,
-  // not `currentUser.roles`
-  const hasRole = React.useCallback(
-    (rolesToCheck: string | string[]) =>
-      role !== undefined && toList(rolesToCheck).includes(role),
-    [role],
-  )
 
   if (!membership || !userId || !orgSlug) {
     return <>{notAMember}</>
   }
 
-  if (roles !== undefined && !hasRole(roles)) {
+  // The role in this organization, not `currentUser.roles`
+  if (roles !== undefined && !toList(roles).includes(membership.role)) {
     if (!unauthorized) {
       return <>{notAMember}</>
     }
@@ -270,11 +261,7 @@ export function OrgScope({
 
   return (
     <ApolloProvider client={orgClient}>
-      <OrgContext.Provider value={contextValue}>
-        <HasRoleContext.Provider value={hasRole}>
-          {children}
-        </HasRoleContext.Provider>
-      </OrgContext.Provider>
+      <OrgContext.Provider value={contextValue}>{children}</OrgContext.Provider>
     </ApolloProvider>
   )
 }
