@@ -2,13 +2,6 @@ import { mockRedwoodDirective, getDirectiveName } from '@cedarjs/testing/api'
 
 import requireOrgAuth from './requireOrgAuth.js'
 
-/**
- * `context.currentUser` is typed from this app's `getCurrentUser`, which
- * selects more fields than these tests need.
- */
-const asCurrentUser = (user: { id: string; memberships?: unknown[] }) =>
-  user as unknown as NonNullable<typeof context.currentUser>
-
 const currentOrg = (role: string) => ({
   id: 'org-1',
   slug: 'org-1',
@@ -30,7 +23,7 @@ describe('requireOrgAuth directive', () => {
 
   it('throws when there is no current organization', () => {
     const mockExecution = mockRedwoodDirective(requireOrgAuth, {
-      context: { currentUser: asCurrentUser({ id: '1', memberships: [] }) },
+      context: { currentUser: { id: 'user-1' } },
     })
 
     expect(mockExecution).toThrowError(
@@ -41,7 +34,7 @@ describe('requireOrgAuth directive', () => {
   it('does not throw for a member of the current organization', () => {
     const mockExecution = mockRedwoodDirective(requireOrgAuth, {
       context: {
-        currentUser: asCurrentUser({ id: '1', memberships: [] }),
+        currentUser: { id: 'user-1' },
         currentOrg: currentOrg('member'),
       },
     })
@@ -52,7 +45,7 @@ describe('requireOrgAuth directive', () => {
   it("throws when the role in the current organization isn't listed", () => {
     const mockExecution = mockRedwoodDirective(requireOrgAuth, {
       context: {
-        currentUser: asCurrentUser({ id: '1', memberships: [] }),
+        currentUser: { id: 'user-1' },
         currentOrg: currentOrg('member'),
       },
       directiveArgs: { roles: ['owner'] },
