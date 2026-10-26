@@ -226,23 +226,30 @@ function addOrganizationPages(projectPath: string) {
 }
 
 /**
- * A hash of every source file `setup tenancy` writes or edits, keyed by
- * path, to compare before and after running it again
+ * A hash of every file `setup tenancy` writes or edits, keyed by path, to
+ * compare before and after running it again
  */
 function snapshot(projectPath: string) {
   const files = [
     'cedar.toml',
+    '.gitignore',
     'package.json',
+    'yarn.lock',
     'api/package.json',
     'web/package.json',
+    'api/tsconfig.json',
+    'web/tsconfig.json',
+    'scripts/tsconfig.json',
     'api/db/schema.prisma',
+    'packages/permissions/package.json',
+    'packages/permissions/tsconfig.json',
     ...[
       'api/src',
       'api/db/dataMigrations',
       'web/src',
       'packages/permissions/src',
     ].flatMap((dir) => filesIn(projectPath, dir)),
-  ]
+  ].filter((file) => fs.existsSync(path.join(projectPath, file)))
 
   return new Map(
     files.map((file) => [
