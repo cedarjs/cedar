@@ -182,7 +182,21 @@ function addWithPermissions(root: j.Collection): boolean {
       ? path.parent
       : null
 
-    if (isWithPermissionsCall((awaited ?? path).parent.node)) {
+    // `withPermissions(await ...)`, or `....then(withPermissions)` when the
+    // lookup isn't awaited
+    const thenCall = path.parent.parent?.node
+    const isThenWithPermissions =
+      j.MemberExpression.check(path.parent.node) &&
+      j.Identifier.check(path.parent.node.property) &&
+      path.parent.node.property.name === 'then' &&
+      j.CallExpression.check(thenCall) &&
+      j.Identifier.check(thenCall.arguments[0]) &&
+      thenCall.arguments[0].name === 'withPermissions'
+
+    if (
+      isWithPermissionsCall((awaited ?? path).parent.node) ||
+      isThenWithPermissions
+    ) {
       return
     }
 
