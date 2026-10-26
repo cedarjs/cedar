@@ -8,12 +8,11 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { AuthContextInterface, UseAuth } from '@cedarjs/auth'
-import { HasPermissionContext, HasRoleContext } from '@cedarjs/auth'
+import { HasPermissionContext } from '@cedarjs/auth'
 import {
   LocationProvider,
   navigate,
   ParamsProvider,
-  PrivateSet,
   Route,
   Router,
   Set,
@@ -739,76 +738,6 @@ describe('OrgScope', () => {
 
         await screen.findByText('not allowed')
         expect(fetchMock).not.toHaveBeenCalled()
-      })
-
-      test('lets a PrivateSet inside it check the role in the organization', async () => {
-        setupFetchMock()
-
-        // As the app's `useAuth` from `@cedarjs/auth` does: `hasRole` comes
-        // from a scope above when there is one
-        const useScopedAuth: UseAuth = () => ({
-          ...useAuth(),
-          hasRole: React.useContext(HasRoleContext) ?? (() => false),
-        })
-        const AnyMember = ({ children }: { children: React.ReactNode }) => (
-          <OrgScope useAuth={useAuth}>{children}</OrgScope>
-        )
-        const OrgPage = () => <>settings</>
-        const LoginPage = () => <>login</>
-
-        render(
-          <CedarApolloProvider>
-            <Router useAuth={useScopedAuth}>
-              <Set wrap={AnyMember}>
-                <PrivateSet unauthenticated="login" roles="owner">
-                  <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
-                </PrivateSet>
-              </Set>
-              <Route path="/login" page={LoginPage} name="login" />
-            </Router>
-          </CedarApolloProvider>,
-        )
-
-        // An owner of org B, but only a member of org A
-        act(() => navigate('/org/org-b'))
-        await waitFor(() => screen.getByText('settings'))
-
-        // A role failure goes to `unauthenticated`, like not being signed in
-        act(() => navigate('/org/org-a'))
-        await waitFor(() => screen.getByText('login'))
-        expect(window.location.pathname).toBe('/login')
-      })
-
-      test("makes useAuth().hasRole check the organization's role", async () => {
-        setupFetchMock()
-
-        const Roles = () => {
-          const hasRole = React.useContext(HasRoleContext)
-          return (
-            <>
-              owner: {String(hasRole?.('owner'))}, member:{' '}
-              {String(hasRole?.(['admin', 'member']))}
-            </>
-          )
-        }
-
-        const Tree = ({ orgSlug }: { orgSlug: string }) => (
-          <LocationProvider>
-            <ParamsProvider allParams={{}}>
-              <CedarApolloProvider>
-                <OrgScope useAuth={useAuth} orgSlug={orgSlug}>
-                  <Roles />
-                </OrgScope>
-              </CedarApolloProvider>
-            </ParamsProvider>
-          </LocationProvider>
-        )
-
-        const { rerender } = render(<Tree orgSlug="org-a" />)
-        await screen.findByText('owner: false, member: true')
-
-        rerender(<Tree orgSlug="org-b" />)
-        await screen.findByText('owner: true, member: false')
       })
     })
   })

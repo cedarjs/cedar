@@ -2,7 +2,6 @@ import React from 'react'
 
 import type { AuthContextInterface } from './AuthContext.js'
 import { HasPermissionContext } from './HasPermissionContext.js'
-import { HasRoleContext } from './HasRoleContext.js'
 
 export function createUseAuth<
   TUser,
@@ -57,18 +56,11 @@ export function createUseAuth<
     TChangePassword
   > => {
     const context = React.useContext(AuthContext)
-    const hasRole = React.useContext(HasRoleContext)
     const hasPermission = React.useContext(HasPermissionContext)
     const scoped = React.useMemo(
       () =>
-        context && (hasRole || hasPermission)
-          ? {
-              ...context,
-              hasRole: hasRole ?? context.hasRole,
-              hasPermission: hasPermission ?? context.hasPermission,
-            }
-          : context,
-      [context, hasRole, hasPermission],
+        context && hasPermission ? { ...context, hasPermission } : context,
+      [context, hasPermission],
     )
 
     if (!scoped) {

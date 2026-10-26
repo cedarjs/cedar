@@ -3,7 +3,7 @@ import React from 'react'
 import { ApolloProvider } from '@apollo/client/react'
 
 import type { PermissionName, UseAuth } from '@cedarjs/auth'
-import { HasPermissionContext, HasRoleContext, useNoAuth } from '@cedarjs/auth'
+import { HasPermissionContext, useNoAuth } from '@cedarjs/auth'
 import {
   navigate,
   Redirect,
@@ -105,7 +105,8 @@ function membershipRoleMap(
  * otherwise wraps `children` in that organization's own `ApolloProvider`,
  * so every Cell, `useQuery` and `useMutation` under it carries the
  * `cedar-org` header and reads from that organization's cache. Under it,
- * `useAuth().hasRole` checks the user's role in that organization.
+ * `useAuth().hasPermission` checks the user's membership in that
+ * organization.
  */
 export function OrgScope({
   orgSlug: orgSlugProp,
@@ -218,17 +219,9 @@ export function OrgScope({
   const membership = orgSlug
     ? memberships.find((m) => m.organization.slug === orgSlug)
     : undefined
-  const role = membership?.role
 
-  // `useAuth().hasRole` below this point: the role in this organization,
-  // not `currentUser.roles`
-  const hasRole = React.useCallback(
-    (rolesToCheck: string | string[]) =>
-      role !== undefined && toList(rolesToCheck).includes(role),
-    [role],
-  )
-
-  // And `useAuth().hasPermission`: the membership's permissions here
+  // `useAuth().hasPermission` below this point: the membership's
+  // permissions here
   const membershipPermissions = membership?.permissions
   const hasPermission = React.useCallback(
     (permissionToCheck: string) =>
@@ -240,8 +233,9 @@ export function OrgScope({
     return <>{notAMember}</>
   }
 
+  // The role in this organization, not `currentUser.roles`
   const allowed =
-    (roles === undefined || hasRole(roles)) &&
+    (roles === undefined || toList(roles).includes(membership.role)) &&
     (permission === undefined || hasPermission(permission))
 
   if (!allowed) {
@@ -291,11 +285,9 @@ export function OrgScope({
   return (
     <ApolloProvider client={orgClient}>
       <OrgContext.Provider value={contextValue}>
-        <HasRoleContext.Provider value={hasRole}>
-          <HasPermissionContext.Provider value={hasPermission}>
-            {children}
-          </HasPermissionContext.Provider>
-        </HasRoleContext.Provider>
+        <HasPermissionContext.Provider value={hasPermission}>
+          {children}
+        </HasPermissionContext.Provider>
       </OrgContext.Provider>
     </ApolloProvider>
   )

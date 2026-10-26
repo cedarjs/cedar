@@ -33,8 +33,10 @@ export interface OrgScopeProps {
  *     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
  *   </Set>
  *
- * Under it, `useAuth().hasRole` checks the user's role in the organization.
- * For pages only some roles may open, wrap them in a component that passes
+ * Under it, `useAuth().hasPermission` and `useCurrentOrg().hasOrgRole`
+ * check the user's membership in the organization; `useAuth().hasRole` and
+ * `<PrivateSet roles>` check `currentUser.roles`, as anywhere else. For pages
+ * only some members may open, wrap them in a component that passes
  * `permission` (or `roles`):
  *
  *   const MemberManagers = ({ children }: { children: ReactNode }) => (
