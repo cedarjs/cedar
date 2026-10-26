@@ -781,7 +781,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:7.29.7, @babel/core@npm:^7.11.1, @babel/core@npm:^7.11.6, @babel/core@npm:^7.12.3, @babel/core@npm:^7.18.9, @babel/core@npm:^7.21.3, @babel/core@npm:^7.24.7, @babel/core@npm:^7.28.0, @babel/core@npm:^7.28.6, @babel/core@npm:^7.29.7":
+"@babel/core@npm:^7.11.1, @babel/core@npm:^7.11.6, @babel/core@npm:^7.12.3, @babel/core@npm:^7.18.9, @babel/core@npm:^7.21.3, @babel/core@npm:^7.24.7, @babel/core@npm:^7.26.10, @babel/core@npm:^7.28.0, @babel/core@npm:^7.28.6, @babel/core@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/core@npm:7.29.7"
   dependencies:
@@ -2830,7 +2830,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/babel-config@workspace:packages/babel-config"
   dependencies:
-    "@babel/core": "npm:7.29.7"
+    "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.9"
     "@babel/plugin-transform-react-jsx": "npm:7.29.7"
     "@babel/preset-env": "npm:7.29.7"
@@ -2946,7 +2946,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/cli@workspace:packages/cli"
   dependencies:
-    "@babel/core": "npm:7.29.7"
+    "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.9"
     "@babel/preset-typescript": "npm:7.29.7"
     "@babel/traverse": "npm:7.29.10"
@@ -3028,7 +3028,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/codemods@workspace:packages/codemods"
   dependencies:
-    "@babel/core": "npm:7.29.7"
+    "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.9"
     "@babel/traverse": "npm:7.29.10"
     "@cedarjs/cli-helpers": "workspace:*"
@@ -3304,7 +3304,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/internal@workspace:packages/internal"
   dependencies:
-    "@babel/core": "npm:7.29.7"
+    "@babel/core": "npm:^7.26.10"
     "@babel/parser": "npm:7.29.9"
     "@babel/traverse": "npm:7.29.10"
     "@cedarjs/api": "workspace:*"
@@ -3946,7 +3946,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/vite@workspace:packages/vite"
   dependencies:
-    "@babel/core": "npm:7.29.7"
+    "@babel/core": "npm:^7.26.10"
     "@babel/generator": "npm:7.29.8"
     "@babel/parser": "npm:7.29.9"
     "@babel/preset-typescript": "npm:7.29.7"

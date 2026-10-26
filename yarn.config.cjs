@@ -247,10 +247,16 @@ function enforceWorkspaceDependenciesWhenPossible({ Yarn }) {
  * an exact version would make the package manager warn on every user-side
  * bump.
  *
+ * `@babel/core` is the exception and uses a caret range in `dependencies`.
+ * Many packages apps install (Storybook, for one) depend on it with a range,
+ * and a range lets the package manager install a single shared copy instead
+ * of nesting Cedar's own copy next to a newer one.
+ *
  * @param {Context} context
  */
 function enforceExactVersionsInPublishedWorkspaces({ Yarn }) {
   const exactVersion = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/
+  const rangeAllowed = new Set(['@babel/core'])
 
   /** @param {string} range */
   const isPinned = (range) =>
@@ -265,6 +271,10 @@ function enforceExactVersionsInPublishedWorkspaces({ Yarn }) {
       workspace,
       type: 'dependencies',
     })) {
+      if (rangeAllowed.has(dependency.ident)) {
+        continue
+      }
+
       if (!isPinned(dependency.range)) {
         dependency.error(
           `The dependency '${dependency.ident}' must use an exact version or ` +
