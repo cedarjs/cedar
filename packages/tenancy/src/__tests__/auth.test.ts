@@ -153,7 +153,13 @@ describe('createTenancyAuth', () => {
       await run(() => {
         setContext({ currentUser, currentOrg: currentOrg1Viewer })
         expect(() => requireOrgAuth()).not.toThrow()
-        expect(() => requireOrgAuth({ roles: [] })).not.toThrow()
+      })
+    })
+
+    it('refuses everyone for an empty list, as requireUserAuth does', async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: currentOrg1Viewer })
+        expect(() => requireOrgAuth({ roles: [] })).toThrow(ForbiddenError)
       })
     })
 
@@ -207,51 +213,16 @@ describe('createTenancyAuth', () => {
     })
   })
 
-  describe('defaultRoles', () => {
-    const {
-      requireOrgAuth,
-      requireUserAuth,
-      hasOrgRole: defaultedHasOrgRole,
-    } = createTenancyAuth({ defaultRoles: ['owner', 'admin'] })
+  describe('hasOrgRole', () => {
+    const { hasOrgRole: orgRole } = createTenancyAuth()
 
-    it('admits only the default roles when a check lists none', async () => {
+    it('is any membership with no roles', async () => {
       await run(() => {
         setContext({ currentUser, currentOrg: currentOrg1Viewer })
-        expect(() => requireOrgAuth()).toThrow(ForbiddenError)
-        expect(() => requireOrgAuth({ roles: [] })).toThrow(ForbiddenError)
-        expect(defaultedHasOrgRole()).toBe(false)
-        // owner in org2 is a default role
-        expect(defaultedHasOrgRole(undefined, 'org2')).toBe(true)
-      })
-    })
-
-    it('lets a field opt a narrower role in by listing it', async () => {
-      await run(() => {
-        setContext({ currentUser, currentOrg: currentOrg1Viewer })
-        expect(() =>
-          requireOrgAuth({ roles: ['owner', 'admin', 'viewer'] }),
-        ).not.toThrow()
-        expect(defaultedHasOrgRole('viewer')).toBe(true)
-      })
-    })
-
-    it('admit no one when empty', async () => {
-      const closed = createTenancyAuth({ defaultRoles: [] })
-
-      await run(() => {
-        setContext({ currentUser, currentOrg: currentOrg1Viewer })
-        expect(() => closed.requireOrgAuth()).toThrow(ForbiddenError)
-        expect(closed.hasOrgRole()).toBe(false)
-        expect(closed.hasOrgRole(undefined, 'org2')).toBe(false)
-        // A field that lists roles still gets them
-        expect(() => closed.requireOrgAuth({ roles: 'viewer' })).not.toThrow()
-      })
-    })
-
-    it("don't apply to requireUserAuth", async () => {
-      await run(() => {
-        setContext({ currentUser, currentOrg: currentOrg1Viewer })
-        expect(() => requireUserAuth()).not.toThrow()
+        expect(orgRole()).toBe(true)
+        expect(orgRole(undefined, 'org2')).toBe(true)
+        expect(orgRole('owner')).toBe(false)
+        expect(orgRole('owner', 'org2')).toBe(true)
       })
     })
   })
