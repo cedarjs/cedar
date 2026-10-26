@@ -14,6 +14,7 @@ import {
   generateTypeDefRouterPages,
   generateTypeDefCurrentUser,
   generateTypeDefGqlorm,
+  generateTypeDefRealtime,
   generateTypeDefRouterRoutes,
   generateTypeDefGlobImports,
   generateTypeDefGlobalContext,
@@ -232,13 +233,60 @@ test('generate current user ', () => {
   const paths = generateTypeDefCurrentUser()
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.cedar/types/includes/all-currentUser.d.ts')
-  // The type definition output is static, so there's nothing to test.
+
+  // An interface can't extend never, which is what InferredLoggedInUser is
+  // when getCurrentUser() only throws
+  const c = fs.readFileSync(paths[0], 'utf-8')
+  expect(c).toContain(
+    'type LoggedInUserFields = [InferredLoggedInUser] extends [never]',
+  )
+  expect(c).toContain('interface LoggedInUser extends LoggedInUserFields {}')
 })
 
 test('generate gqlorm db augmentation', () => {
   const paths = generateTypeDefGqlorm()
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.cedar/types/includes/all-gqlorm.d.ts')
+})
+
+test('no realtime types without @cedarjs/realtime', () => {
+  expect(generateTypeDefRealtime()).toEqual([])
+})
+
+test('generates realtime types when the api side uses @cedarjs/realtime', () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-realtime-'))
+  const apiPackageJsonPath = path.join(projectDir, 'api', 'package.json')
+  fs.writeFileSync(path.join(projectDir, 'cedar.toml'), '')
+  fs.mkdirSync(path.join(projectDir, 'api'))
+  fs.writeFileSync(
+    apiPackageJsonPath,
+    JSON.stringify({ dependencies: { '@cedarjs/realtime': '1.0.0' } }),
+  )
+
+  process.env.CEDAR_CWD = projectDir
+
+  try {
+    const [typeDefPath] = generateTypeDefRealtime()
+
+    expect(ensurePosixPath(path.relative(projectDir, typeDefPath))).toEqual(
+      '.cedar/types/includes/api-realtime.d.ts',
+    )
+
+    const contents = fs.readFileSync(typeDefPath, 'utf-8')
+    expect(contents).toContain(
+      "import type { CedarRealtimeOptions } from '@cedarjs/realtime'",
+    )
+    expect(contents).toContain('options: CedarRealtimeOptions')
+
+    // Without @cedarjs/realtime the file goes
+    fs.writeFileSync(apiPackageJsonPath, JSON.stringify({ dependencies: {} }))
+
+    expect(generateTypeDefRealtime()).toEqual([])
+    expect(fs.existsSync(typeDefPath)).toBe(false)
+  } finally {
+    process.env.CEDAR_CWD = FIXTURE_PATH
+    fs.rmSync(projectDir, { recursive: true, force: true })
+  }
 })
 
 test('generates the router routes', () => {
@@ -270,12 +318,29 @@ test('generate glob imports', () => {
   const paths = generateTypeDefGlobImports()
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.cedar/types/includes/api-globImports.d.ts')
+
+  // TypeScript only accepts ambient module names with at most one "*"
+  const c = fs.readFileSync(paths[0], 'utf-8')
+  const moduleNames = [...c.matchAll(/^declare module '(.+)'$/gm)].map(
+    (match) => match[1],
+  )
+  expect(moduleNames).toContain('src/services/*.{js,ts}')
+  expect(moduleNames).toContain('src/graphql/*.sdl.{js,ts}')
+  for (const moduleName of moduleNames) {
+    expect(moduleName.split('*')).toHaveLength(2)
+  }
 })
 
 test('generate api global context', () => {
   const paths = generateTypeDefGlobalContext()
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.cedar/types/includes/api-globalContext.d.ts')
+
+  // @cedarjs/context declares the global, so declaring it here as well would
+  // be a redeclaration
+  const c = fs.readFileSync(paths[0], 'utf-8')
+  expect(c).toContain("import '@cedarjs/context'")
+  expect(c).not.toContain('declare global')
 })
 
 test('generate scenario type defs', () => {

@@ -240,6 +240,75 @@ function enforceWorkspaceDependenciesWhenPossible({ Yarn }) {
 }
 
 /**
+ * This rule will enforce that published (non-private) workspaces declare exact
+ * versions.
+ *
+ * Every `dependencies` entry must be an exact version (like `1.2.3` or
+ * `1.2.3-rc.4`) or `workspace:*`. A `peerDependencies` entry must also be
+ * exact or `workspace:*`, unless it's marked optional in
+ * `peerDependenciesMeta`. Optional peers belong to opt-in features that the
+ * app installs and upgrades itself via a setup command, so they use a range;
+ * an exact version would make the package manager warn on every user-side
+ * bump.
+ *
+ * `@babel/core` is the exception and uses a caret range in `dependencies`.
+ * Many packages apps install (Storybook, for one) depend on it with a range,
+ * and a range lets the package manager install a single shared copy instead
+ * of nesting Cedar's own copy next to a newer one.
+ *
+ * @param {Context} context
+ */
+function enforceExactVersionsInPublishedWorkspaces({ Yarn }) {
+  const exactVersion = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/
+  const rangeAllowed = new Set(['@babel/core'])
+
+  /** @param {string} range */
+  const isPinned = (range) =>
+    exactVersion.test(range) || range === 'workspace:*'
+
+  for (const workspace of Yarn.workspaces()) {
+    if (workspace.manifest.private) {
+      continue
+    }
+
+    for (const dependency of Yarn.dependencies({
+      workspace,
+      type: 'dependencies',
+    })) {
+      if (rangeAllowed.has(dependency.ident)) {
+        continue
+      }
+
+      if (!isPinned(dependency.range)) {
+        dependency.error(
+          `The dependency '${dependency.ident}' must use an exact version or ` +
+            `'workspace:*', not '${dependency.range}'`,
+        )
+      }
+    }
+
+    const peerDependenciesMeta = workspace.manifest.peerDependenciesMeta || {}
+
+    for (const dependency of Yarn.dependencies({
+      workspace,
+      type: 'peerDependencies',
+    })) {
+      if (peerDependenciesMeta[dependency.ident]?.optional) {
+        continue
+      }
+
+      if (!isPinned(dependency.range)) {
+        dependency.error(
+          `The peer dependency '${dependency.ident}' must use an exact ` +
+            `version or 'workspace:*', not '${dependency.range}'. Only ` +
+            `optional peer dependencies may use a range`,
+        )
+      }
+    }
+  }
+}
+
+/**
  * This rule will enforce that a dependency doesn't appear in both
  * `dependencies` and `devDependencies`.
  *
@@ -489,6 +558,7 @@ module.exports = defineConfig({
       enforceWorkspaceDependenciesWhenPossible(ctx)
     }
     enforceNotProdAndDevDependencies(ctx)
+    enforceExactVersionsInPublishedWorkspaces(ctx)
     enforceSingleGraphqlVersion()
     enforceSinglePrismaVersion(ctx)
     enforceFieldsOnAllWorkspaces(ctx, [
