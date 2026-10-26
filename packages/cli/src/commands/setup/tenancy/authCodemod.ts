@@ -57,14 +57,61 @@ const DEFAULT_REQUIRE_AUTH_STATEMENTS = [
 ]
 
 /**
+ * Every name Cedar's generated `hasRole` uses, across auth providers. One
+ * that uses any other, such as a `suspended` field, has checks of its own.
+ */
+const DEFAULT_HAS_ROLE_NAMES = new Set([
+  'AllowedRoles',
+  'Array',
+  'allowedRole',
+  'allowedRoles',
+  'context',
+  'currentUser',
+  'currentUserRoles',
+  'hasRole',
+  'includes',
+  'isArray',
+  'isAuthenticated',
+  'role',
+  'roles',
+  'some',
+  'undefined',
+])
+
+/** The value an `export const <name> = ...` statement exports */
+function exportedValue(declaration: j.Collection) {
+  const node = declaration.nodes()[0]
+
+  return j.VariableDeclaration.check(node?.declaration)
+    ? node.declaration.declarations[0]
+    : undefined
+}
+
+/**
+ * Whether `hasRole` (its `export const` statement) does only what Cedar's
+ * generated one does, so replacing it loses nothing
+ */
+function isDefaultHasRole(hasRole: j.Collection) {
+  return hasRole
+    .find(j.Identifier)
+    .nodes()
+    .every((identifier) => DEFAULT_HAS_ROLE_NAMES.has(identifier.name))
+}
+
+/**
  * Whether `requireAuth` (its `export const` statement) does only what
  * Cedar's generated one does, so replacing it loses nothing: an app's own
- * check in it, such as refusing suspended users, would silently go
+ * check in it, such as refusing suspended users, or a wrapper around it,
+ * would silently go
  */
 function isDefaultRequireAuth(requireAuth: j.Collection) {
-  const fn = requireAuth.find(j.ArrowFunctionExpression).nodes()[0]
+  const declarator = exportedValue(requireAuth)
+  const fn = j.VariableDeclarator.check(declarator) ? declarator.init : null
 
-  if (!fn || !j.BlockStatement.check(fn.body)) {
+  if (
+    !j.ArrowFunctionExpression.check(fn) ||
+    !j.BlockStatement.check(fn.body)
+  ) {
     return false
   }
 
@@ -271,8 +318,8 @@ function addPermissionsImport(source: string): string {
  * `select` object cannot be located,
  * `CEDAR_CODEMOD_ERR_AUTH_CHECKS_NOT_FOUND` when `hasRole` and
  * `requireAuth` aren't both there to replace, and
- * `CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED` when `requireAuth` does more than
- * Cedar's, so the caller can print the snippet to add by hand instead of
+ * `CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED` when `requireAuth` or `hasRole`
+ * does more than Cedar's, so the caller can print the snippet to add by hand instead of
  * guessing at an unfamiliar shape or dropping the app's own checks.
  */
 export default function transform(fileInfo: j.FileInfo) {
@@ -366,7 +413,7 @@ export default function transform(fileInfo: j.FileInfo) {
     throw new Error('CEDAR_CODEMOD_ERR_AUTH_CHECKS_NOT_FOUND')
   }
 
-  if (!isDefaultRequireAuth(requireAuth)) {
+  if (!isDefaultRequireAuth(requireAuth) || !isDefaultHasRole(hasRole)) {
     throw new Error('CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED')
   }
 

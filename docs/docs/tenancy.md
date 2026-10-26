@@ -406,9 +406,10 @@ When a model gets an `organizationId`, switch its fields to
 `@requireOrgAuth`. From then on `cedar generate sdl` and `cedar generate
 scaffold` pick the directive for you: `@requireOrgAuth` for a model with an
 `organizationId` (or the field you gave `--tenant-field`) or an
-`Organization` relation, `@requireUserAuth` for one without. Writing
-`@requireAuth` in a tenancy app is an unknown directive, so it fails when the
-schema is built rather than when the field is first called.
+`Organization` relation, `@requireUserAuth` for one without. Once
+`api/src/directives/requireAuth/` is gone, writing `@requireAuth` in a tenancy
+app is an unknown directive, so it fails when the schema is built rather than
+when the field is first called.
 
 ### Upgrading from `@requireMembership`
 
