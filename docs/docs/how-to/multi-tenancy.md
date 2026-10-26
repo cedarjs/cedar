@@ -261,7 +261,8 @@ than an organization, as the generated `myMemberships`, `createOrganization`
 and `acceptInvitation` are: it needs a signed-in user, and checks `roles`
 against `currentUser.roles`, as `requireAuth` did. `@requireOrgAuth` with no
 roles admits any member of the organization, as a bare `@requireAuth` admits
-any signed-in user. Guard anything narrower with `roles`.
+any signed-in user. Guard anything narrower with `roles` or
+[`@requirePermission`](#permissions).
 
 Before tenancy there are no organizations, so every field your app already has
 is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and

@@ -334,7 +334,8 @@ There's no `requireAuth`: each check says what it's about.
   user's role in it isn't one of them. With no `roles`, any member gets in,
   just as any signed-in user gets past a bare single-tenant `@requireAuth`:
   a role you add later can use every field that lists no roles. For anything
-  narrower, list `roles`.
+  narrower, list `roles` or use [`@requirePermission`](#permissions), which
+  gives a new role only what its permission list says.
 - `requireUserAuth({ roles })`: for fields about the signed-in user rather
   than an organization (their account, their memberships, accepting an
   invitation). Throws `AuthenticationError` when no one is signed in, and,
