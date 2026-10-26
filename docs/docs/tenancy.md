@@ -298,16 +298,12 @@ anywhere `@cedarjs/context` is imported once the package is installed.
 From `@cedarjs/tenancy`:
 
 ```ts
-export type AuthScope = 'ORGANIZATION' | 'USER'
-
 export function createTenancyAuth(options?: {
   defaultRoles?: readonly string[]
 }): {
   hasRole(roles: string | readonly string[]): boolean
-  requireAuth(options?: {
-    roles?: string | readonly string[]
-    scope?: AuthScope
-  }): void
+  requireOrgAuth(options?: { roles?: string | readonly string[] }): void
+  requireUserAuth(options?: { roles?: string | readonly string[] }): void
   hasOrgRole(
     roles?: string | readonly string[],
     organizationId?: string
@@ -328,28 +324,23 @@ The setup command replaces the single-tenant `hasRole` and `requireAuth` in
 `api/src/lib/auth.ts` with these:
 
 ```ts title="api/src/lib/auth.ts"
-export const { hasRole, requireAuth, hasOrgRole } = createTenancyAuth({
-  defaultRoles: ['owner', 'admin', 'member'],
-})
+export const { hasRole, hasOrgRole, requireOrgAuth, requireUserAuth } =
+  createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
 ```
 
-`requireAuth({ roles, scope })` has two scopes:
+There's no `requireAuth`: each check says what it's about.
 
-- `'ORGANIZATION'` (the default): throws `AuthenticationError` when no one is
-  signed in, and `ForbiddenError` when there's no `context.currentOrg` or the
-  user's role in it isn't one of `roles`. With no `roles` (or an empty list),
-  it checks `defaultRoles` instead, and with no `defaultRoles` any membership
-  is enough.
-- `'USER'`: for fields about the signed-in user rather than an organization
-  (their account, their memberships, accepting an invitation). Throws
-  `AuthenticationError` when no one is signed in, and, when `roles` are given,
-  `ForbiddenError` unless `currentUser.roles` has one of them. No organization
-  is needed, and `defaultRoles` don't apply.
-
-The default is the organization because most fields in a multi-tenant app are
-about one, and the safe default should be the one you get by not writing
-anything: a user-level field that forgets `scope: 'USER'` fails closed (it
-needs an organization) instead of open.
+- `requireOrgAuth({ roles })`: for fields about the current organization.
+  Throws `AuthenticationError` when no one is signed in, and `ForbiddenError`
+  when there's no `context.currentOrg` or the user's role in it isn't one of
+  `roles`. With no `roles` (or an empty list), it checks `defaultRoles`
+  instead, and with no `defaultRoles` any membership is enough.
+- `requireUserAuth({ roles })`: for fields about the signed-in user rather
+  than an organization (their account, their memberships, accepting an
+  invitation). Throws `AuthenticationError` when no one is signed in, and,
+  when `roles` are given, `ForbiddenError` unless `currentUser.roles` has one
+  of them. No organization is needed, and `defaultRoles` don't apply. It
+  checks what the single-tenant `requireAuth` did.
 
 `hasRole(roles)` checks `getCurrentRoles()`. `hasOrgRole(roles?,
 organizationId?)` is the standalone `hasOrgRole` below, with `defaultRoles`
@@ -386,33 +377,36 @@ matching role; without one, checks `context.currentOrg.role`. Returns `false`
 when unauthenticated, when there's no matching organization, or when
 `context.currentOrg` is unset. An empty `roles` array returns `true` as long as
 a membership exists. Use it for an organization other than the current one;
-for the current one, `requireAuth` and `hasRole` already check it.
+for the current one, `requireOrgAuth` and `hasRole` already check it.
 
-## The `@requireAuth` directive
+## The `@requireOrgAuth` and `@requireUserAuth` directives
 
-`setup tenancy` adds a `scope` argument to the app's
-`api/src/directives/requireAuth/requireAuth.ts`, passed on to `requireAuth()`:
-
-```graphql
-directive @requireAuth(
-  roles: [String]
-  scope: AuthScope = ORGANIZATION
-) on FIELD_DEFINITION
-
-enum AuthScope {
-  ORGANIZATION
-  USER
-}
-```
+`setup tenancy` replaces the app's `@requireAuth` directive with two, in
+`api/src/directives/requireOrgAuth/` and `api/src/directives/requireUserAuth/`,
+which pass their `roles` on to `requireOrgAuth()` and `requireUserAuth()`:
 
 ```graphql
 type Query {
-  projects: [Project!]! @requireAuth
+  projects: [Project!]! @requireOrgAuth
   inviteMember(input: InviteMemberInput!): Invitation!
-    @requireAuth(roles: ["owner", "admin"])
-  myMemberships: [Membership!]! @requireAuth(scope: USER)
+    @requireOrgAuth(roles: ["owner", "admin"])
+  myMemberships: [Membership!]! @requireUserAuth
 }
 ```
+
+Before tenancy there are no organizations, so every field the app already has
+is about the user: setup renames each `@requireAuth` to `@requireUserAuth`,
+and each `requireAuth` imported from `api/src/lib/auth` to `requireUserAuth`.
+They check what they did before. It deletes
+`api/src/directives/requireAuth/` when it's the one Cedar generates; a changed
+one is left for you to move your changes over.
+
+When a model gets an `organizationId`, switch its fields to
+`@requireOrgAuth`. From then on `cedar generate sdl` and `cedar generate
+scaffold` pick the directive for you: `@requireOrgAuth` for a model with an
+`organizationId` or an `Organization` relation, `@requireUserAuth` for one
+without. Writing `@requireAuth` in a tenancy app is an unknown directive, so
+it fails when the schema is built rather than when the field is first called.
 
 ### Upgrading from `@requireMembership`
 
@@ -420,15 +414,17 @@ Canary versions of `@cedarjs/tenancy` had a separate `@requireMembership`
 directive and `requireMembership()` function for organization fields, next to
 a user-level `@requireAuth`. They're gone. To upgrade an app set up with them:
 
-1. Replace `hasRole` and `requireAuth` in `api/src/lib/auth.ts` with
-   `createTenancyAuth` as above, and drop the
+1. Replace `hasRole` and `requireAuth` in `api/src/lib/auth.ts` with the
+   `createTenancyAuth` line above, and drop the
    `export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'` line.
-2. Add `scope` to `api/src/directives/requireAuth/requireAuth.ts` as above.
-3. Add `scope: USER` to every field that has a bare `@requireAuth` or a
-   `@requireAuth(roles: [...])` that checks `currentUser.roles`: in a tenancy
-   app, those are the user-level fields.
-4. Rename `@requireMembership` to `@requireAuth`, and `requireMembership()` to
-   `requireAuth()`, then delete `api/src/directives/requireMembership/`.
+2. Copy `api/src/directives/requireOrgAuth/` and
+   `api/src/directives/requireUserAuth/` from a fresh `setup tenancy` run, and
+   delete `api/src/directives/requireAuth/` and
+   `api/src/directives/requireMembership/`.
+3. Rename `@requireAuth` to `@requireUserAuth`, and `@requireMembership` to
+   `@requireOrgAuth`. They check what they did before.
+4. Rename the functions to match: `requireAuth()` to `requireUserAuth()`, and
+   `requireMembership()` to `requireOrgAuth()`.
 
 ## Permissions
 
@@ -687,7 +683,8 @@ const OwnersOnly = ({ children }: { children: React.ReactNode }) => (
 A member without one of `roles` is redirected to the `unauthorized` route,
 which gets the organization's `orgSlug` when its path has an `{orgSlug}`. With
 no `unauthorized`, they get `notAMember`. As with every check on the web, this
-only decides what to show: the api's `@requireAuth` is what protects the data.
+only decides what to show: the api's `@requireOrgAuth` is what protects the
+data.
 
 `permission` works the same way, against the membership's
 [permissions](#permissions-on-the-web):

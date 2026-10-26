@@ -42,9 +42,8 @@ function buildMembershipsSelectProperty() {
  * lists no roles admits only these, so a role an app adds later is refused
  * until a field lets it in.
  */
-export const TENANCY_AUTH_EXPORT = `export const { hasRole, requireAuth, hasOrgRole } = createTenancyAuth({
-  defaultRoles: ['owner', 'admin', 'member'],
-})
+export const TENANCY_AUTH_EXPORT = `export const { hasRole, hasOrgRole, requireOrgAuth, requireUserAuth } =
+  createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
 `
 
 /** The top-level `export const <name> = ...` statement, if there is one */
@@ -76,7 +75,7 @@ const USER_LOOKUP = {
  * global only came along with the `@cedarjs/graphql-server` import, which
  * goes once `AuthenticationError` and `ForbiddenError` are unused.
  */
-function addContextImport(root: j.Collection) {
+function addContextImport(root: j.Collection): boolean {
   const usesContext =
     root
       .find(j.Identifier, { name: 'context' })
@@ -101,7 +100,7 @@ function addContextImport(root: j.Collection) {
     root.find(j.VariableDeclarator, { id: { name: 'context' } }).length > 0
 
   if (!usesContext || declaresContext) {
-    return
+    return false
   }
 
   const contextImport = j
@@ -125,6 +124,8 @@ function addContextImport(root: j.Collection) {
       path.node.body.unshift(contextImport)
     })
   }
+
+  return true
 }
 
 /**
@@ -133,11 +134,13 @@ function addContextImport(root: j.Collection) {
  * its permissions (`useAuth().hasPermission()`). A lookup that's already wrapped is left
  * alone.
  */
-function addWithPermissions(root: j.Collection) {
+function addWithPermissions(root: j.Collection): boolean {
   const isWithPermissionsCall = (node: unknown) =>
     j.CallExpression.check(node) &&
     j.Identifier.check(node.callee) &&
     node.callee.name === 'withPermissions'
+
+  let wrapped = false
 
   root.find(j.CallExpression, USER_LOOKUP).forEach((path) => {
     const awaited = j.AwaitExpression.check(path.parent.node)
@@ -147,6 +150,8 @@ function addWithPermissions(root: j.Collection) {
     if (isWithPermissionsCall((awaited ?? path).parent.node)) {
       return
     }
+
+    wrapped = true
 
     if (awaited) {
       awaited.replace(
@@ -161,6 +166,8 @@ function addWithPermissions(root: j.Collection) {
       )
     }
   })
+
+  return wrapped
 }
 
 /**
@@ -195,8 +202,8 @@ function addPermissionsImport(source: string): string {
  *   the memberships `OrgScope`, `hasOrgRole` and `resolveCurrentOrg` need.
  * - Replaces the single-tenant `hasRole` and `requireAuth` with
  *   `@cedarjs/tenancy`'s `createTenancyAuth`, which also gives `hasOrgRole`:
- *   roles come from the membership in the current organization, and
- *   `requireAuth` needs one unless told `scope: 'USER'`. The `AllowedRoles`
+ *   `requireOrgAuth` checks the role in the current organization, and
+ *   `requireUserAuth` what `requireAuth` did. The `AllowedRoles`
  *   type and the error imports go too when nothing else uses them.
  * - Wraps the user lookup in `withPermissions`, so each membership carries
  *   its permissions from `api/src/lib/permissions`.
@@ -215,6 +222,9 @@ export default function transform(fileInfo: j.FileInfo) {
   const root = j.withParser('tsx')(fileInfo.source)
 
   let selectFound = false
+  // Whether this run adds anything. When it doesn't, the file is returned
+  // as it was, rather than reprinted (which, e.g., changes CRLF line endings)
+  let changed = false
 
   root
     .find(j.CallExpression, {
@@ -259,6 +269,7 @@ export default function transform(fileInfo: j.FileInfo) {
 
       if (!alreadyHasMemberships) {
         selectProperty.value.properties.push(buildMembershipsSelectProperty())
+        changed = true
       }
 
       selectFound = true
@@ -268,15 +279,20 @@ export default function transform(fileInfo: j.FileInfo) {
     throw new Error('CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
   }
 
-  addWithPermissions(root)
+  if (addWithPermissions(root)) {
+    changed = true
+  }
 
   const alreadyWired =
     root.find(j.ImportSpecifier, { imported: { name: 'createTenancyAuth' } })
       .length > 0
 
   if (alreadyWired) {
-    addContextImport(root)
-    return addPermissionsImport(root.toSource())
+    if (addContextImport(root)) {
+      changed = true
+    }
+
+    return addPermissionsImport(changed ? root.toSource() : fileInfo.source)
   }
 
   const hasRole = findExportedConst(root, 'hasRole')

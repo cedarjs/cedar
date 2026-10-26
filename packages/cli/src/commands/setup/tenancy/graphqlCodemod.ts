@@ -67,11 +67,20 @@ function addNamedImport(
   names: string[],
   source: string,
 ) {
+  // Only the ones that aren't imported yet
+  const missing = names.filter(
+    (name) => root.find(j.ImportSpecifier, { local: { name } }).length === 0,
+  )
+
+  if (missing.length === 0) {
+    return
+  }
+
   const imports = root.find(j.ImportDeclaration)
 
   imports.at(-1).insertAfter(
     j.importDeclaration(
-      names.map((name) => j.importSpecifier(j.identifier(name))),
+      missing.map((name) => j.importSpecifier(j.identifier(name))),
       j.literal(source),
     ),
   )
@@ -95,6 +104,15 @@ export default function transform(fileInfo: j.FileInfo) {
   // which the default (non-TS) babel parser bound to the top-level `j`
   // can't parse.
   const root = j.withParser('tsx')(fileInfo.source)
+
+  // Already wired, by an earlier run: the handler's context resolves the
+  // current organization
+  if (
+    root.find(j.CallExpression, { callee: { name: 'resolveCurrentOrg' } })
+      .length > 0
+  ) {
+    return fileInfo.source
+  }
 
   const handlerCalls = root.find(j.CallExpression, {
     callee: { name: 'createGraphQLHandler' },

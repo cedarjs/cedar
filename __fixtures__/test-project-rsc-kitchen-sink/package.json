@@ -9,7 +9,8 @@
   },
   "devDependencies": {
     "@cedarjs/core": "7.1.0",
-    "@cedarjs/project-config": "7.1.0"
+    "@cedarjs/project-config": "7.1.0",
+    "prisma": "7.10.1"
   },
   "eslintConfig": {
     "extends": "@cedarjs/eslint-config",

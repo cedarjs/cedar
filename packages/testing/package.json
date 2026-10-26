@@ -57,6 +57,7 @@
     "@cedarjs/context": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
+    "@prisma/internals": "7.10.1",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",

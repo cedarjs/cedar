@@ -27,7 +27,7 @@ describe('createGraphQLServer smoke-test', () => {
       loggerConfig: { logger: createLogger({}) },
       sdls: {},
       services: {},
-      realtime: { subscriptions: {} as any },
+      realtime: { subscriptions: {} },
     })
 
     expect(useCedarRealtime).toHaveBeenCalledWith({ subscriptions: {} })

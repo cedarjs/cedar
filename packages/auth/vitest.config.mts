@@ -5,5 +5,8 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, '**/fixtures'],
     environment: 'jsdom',
     setupFiles: ['vitest.setup.mts'],
+    typecheck: {
+      enabled: true,
+    },
   },
 })

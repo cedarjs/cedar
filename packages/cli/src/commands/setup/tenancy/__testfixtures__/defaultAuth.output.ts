@@ -35,6 +35,5 @@ export const isAuthenticated = (): boolean => {
   return !!context.currentUser
 }
 
-export const { hasRole, requireAuth, hasOrgRole } = createTenancyAuth({
-  defaultRoles: ['owner', 'admin', 'member'],
-})
+export const { hasRole, hasOrgRole, requireOrgAuth, requireUserAuth } =
+  createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })

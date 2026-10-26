@@ -98,6 +98,24 @@ const expireAuthProviderCookie = () => {
   document.cookie = authProviderCookieString
 }
 
+const hasAuthProviderCookie = () => {
+  return document.cookie
+    .split(';')
+    .some((cookie) => cookie.trim() === 'auth-provider=supabase')
+}
+
+/**
+ * The auth-provider cookie makes the api side read the session from cookies
+ * instead of the Bearer token. Outside of middleware mode there is no session
+ * cookie, so a leftover auth-provider cookie makes every authenticated request
+ * fail. This clears it.
+ */
+const expireStrayAuthProviderCookie = () => {
+  if (hasAuthProviderCookie()) {
+    expireAuthProviderCookie()
+  }
+}
+
 function createAuthImplementation({
   supabaseClient,
   middleware = false,
@@ -215,6 +233,8 @@ function createAuthImplementation({
 
       if (middleware) {
         expireAuthProviderCookie()
+      } else {
+        expireStrayAuthProviderCookie()
       }
 
       return
@@ -232,7 +252,7 @@ function createAuthImplementation({
       credentials: SignUpWithPasswordCredentials,
     ): Promise<AuthResponse> => {
       const result = await supabaseClient.auth.signUp(credentials)
-      if (result.data?.session) {
+      if (middleware && result.data?.session) {
         setAuthProviderCookie()
       }
       return result
@@ -271,6 +291,10 @@ function createAuthImplementation({
      * from an auth redirect (oauth, magiclink, password recovery, etc).
      */
     restoreAuthState: async () => {
+      if (!middleware) {
+        expireStrayAuthProviderCookie()
+      }
+
       try {
         const { data } = await supabaseClient.auth.refreshSession()
 
