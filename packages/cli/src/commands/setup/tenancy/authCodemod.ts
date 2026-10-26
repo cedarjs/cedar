@@ -46,6 +46,41 @@ export const TENANCY_AUTH_EXPORT = `export const { hasRole, hasOrgRole, requireO
   createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
 `
 
+/**
+ * The statements Cedar's generated `requireAuth` is made of, across auth
+ * providers, without comments and with whitespace collapsed
+ */
+const DEFAULT_REQUIRE_AUTH_STATEMENTS = [
+  /^if \(!isAuthenticated\(\)\) \{ throw new AuthenticationError\([^)]*\);? \}$/,
+  /^if \(roles && !hasRole\(roles\)\) \{ throw new ForbiddenError\([^)]*\);? \}$/,
+  /^return isAuthenticated\(\);?$/,
+]
+
+/**
+ * Whether `requireAuth` (its `export const` statement) does only what
+ * Cedar's generated one does, so replacing it loses nothing: an app's own
+ * check in it, such as refusing suspended users, would silently go
+ */
+function isDefaultRequireAuth(requireAuth: j.Collection) {
+  const fn = requireAuth.find(j.ArrowFunctionExpression).nodes()[0]
+
+  if (!fn || !j.BlockStatement.check(fn.body)) {
+    return false
+  }
+
+  return fn.body.body.every((statement) => {
+    const source = j(statement)
+      .toSource()
+      .replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    return DEFAULT_REQUIRE_AUTH_STATEMENTS.some((pattern) =>
+      pattern.test(source),
+    )
+  })
+}
+
 /** The top-level `export const <name> = ...` statement, if there is one */
 function findExportedConst(root: j.Collection, name: string) {
   return root.find(j.ExportNamedDeclaration, {
@@ -211,10 +246,12 @@ function addPermissionsImport(source: string): string {
  *   its permissions from `api/src/lib/permissions`.
  *
  * Throws `CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND` when `db.user.findUnique`'s
- * `select` object cannot be located, and
+ * `select` object cannot be located,
  * `CEDAR_CODEMOD_ERR_AUTH_CHECKS_NOT_FOUND` when `hasRole` and
- * `requireAuth` aren't both there to replace, so the caller can print the
- * snippet to add by hand instead of guessing at an unfamiliar shape.
+ * `requireAuth` aren't both there to replace, and
+ * `CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED` when `requireAuth` does more than
+ * Cedar's, so the caller can print the snippet to add by hand instead of
+ * guessing at an unfamiliar shape or dropping the app's own checks.
  */
 export default function transform(fileInfo: j.FileInfo) {
   // Parse with the TS-aware parser: real db.ts/auth.ts/graphql.ts files
@@ -302,6 +339,10 @@ export default function transform(fileInfo: j.FileInfo) {
 
   if (hasRole.length !== 1 || requireAuth.length !== 1) {
     throw new Error('CEDAR_CODEMOD_ERR_AUTH_CHECKS_NOT_FOUND')
+  }
+
+  if (!isDefaultRequireAuth(requireAuth)) {
+    throw new Error('CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED')
   }
 
   const tenancyAuth = j

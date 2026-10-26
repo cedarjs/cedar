@@ -94,7 +94,7 @@ export interface TenancyAuthOptions {
   /**
    * The roles an organization check admits when it lists none: a bare
    * `@requireOrgAuth`, `requireOrgAuth()`, and `hasOrgRole()` without roles.
-   * Unset, any membership is enough.
+   * Unset, any membership is enough. An empty list admits no one.
    *
    * Set it to the roles that may use everything (`cedar setup tenancy`
    * sets the roles it generates), and a role added later is refused
@@ -150,8 +150,12 @@ export interface TenancyAuth {
 export function createTenancyAuth(
   options: TenancyAuthOptions = {},
 ): TenancyAuth {
-  const defaultRoles = [...(options.defaultRoles ?? [])]
+  const defaultRoles = options.defaultRoles && [...options.defaultRoles]
 
+  /**
+   * The roles a check admits: the ones it lists, else `defaultRoles`.
+   * `undefined` when neither is set, which admits any membership.
+   */
   const orDefault = (roles: Roles | undefined) => {
     const roleList = toList(roles)
     return roleList.length > 0 ? roleList : defaultRoles
@@ -168,12 +172,9 @@ export function createTenancyAuth(
         throw new AuthenticationError("You don't have permission to do that.")
       }
 
-      const roleList = toList(roles)
-
-      if (
-        roleList.length > 0 &&
-        !userRoles().some((role) => roleList.includes(role))
-      ) {
+      // As the single-tenant `requireAuth`: `roles`, even an empty list,
+      // must match
+      if (roles && !userRoles().some((role) => toList(roles).includes(role))) {
         throw new ForbiddenError("You don't have access to do that.")
       }
     },
@@ -193,13 +194,20 @@ export function createTenancyAuth(
 
       const admitted = orDefault(roles)
 
-      if (admitted.length > 0 && !admitted.includes(currentOrg.role)) {
+      if (admitted && !admitted.includes(currentOrg.role)) {
         throw new ForbiddenError("You don't have access to do that.")
       }
     },
 
     hasOrgRole(roles, organizationId) {
-      return hasOrgRole(orDefault(roles), organizationId)
+      const admitted = orDefault(roles)
+
+      // The standalone `hasOrgRole` takes an empty list as any membership
+      if (admitted?.length === 0) {
+        return false
+      }
+
+      return hasOrgRole(admitted ?? [], organizationId)
     },
   }
 }
