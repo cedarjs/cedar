@@ -400,24 +400,6 @@ scaffold` pick the directive for you: `@requireOrgAuth` for a model with an
 app is an unknown directive, so it fails when the schema is built rather than
 when the field is first called.
 
-### Upgrading from `@requireMembership`
-
-Canary versions of `@cedarjs/tenancy` had a separate `@requireMembership`
-directive and `requireMembership()` function for organization fields, next to
-a user-level `@requireAuth`. They're gone. To upgrade an app set up with them:
-
-1. Replace `hasRole` and `requireAuth` in `api/src/lib/auth.ts` with the
-   `createTenancyAuth` line above, and drop the
-   `export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'` line.
-2. Copy `api/src/directives/requireOrgAuth/` and
-   `api/src/directives/requireUserAuth/` from a fresh `setup tenancy` run, and
-   delete `api/src/directives/requireAuth/` and
-   `api/src/directives/requireMembership/`.
-3. Rename `@requireAuth` to `@requireUserAuth`, and `@requireMembership` to
-   `@requireOrgAuth`. They check what they did before.
-4. Rename the functions to match: `requireAuth()` to `requireUserAuth()`, and
-   `requireMembership()` to `requireOrgAuth()`.
-
 ## Permissions
 
 Roles map to permissions in one place, and fields ask for a permission instead
@@ -653,10 +635,27 @@ organization's client alone is dropped the same way.
 
 #### Guarding routes by role
 
-A `<PrivateSet roles>` _around_ `OrgScope` is checked before `OrgScope` has
-resolved the organization, so it can't see the role there. Give `OrgScope`
-`roles` instead, from a small wrapper component (`Set` doesn't pass props on
-to `wrap` components):
+The simplest is a `<PrivateSet roles>` _inside_ the `OrgScope` set. Under
+`OrgScope`, `useAuth().hasRole` checks the role in that organization, so this
+lets only its owners in:
+
+```tsx title="web/src/Routes.tsx"
+<Set wrap={[OrgScope, OrgLayout]}>
+  <PrivateSet unauthenticated="login" roles="owner">
+    <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+  </PrivateSet>
+</Set>
+```
+
+A member without the role is sent to the `unauthenticated` route, just like
+someone who isn't signed in, and that route can't take route parameters, so it
+can't be a page in the same organization. A `<PrivateSet roles>` _around_
+`OrgScope` doesn't work at all: it's checked before `OrgScope` has resolved the
+organization, so it checks `currentUser.roles` instead.
+
+To send a member without the role somewhere in the organization, give
+`OrgScope` `roles` and `unauthorized` instead, from a small wrapper component
+(`Set` doesn't pass props on to `wrap` components):
 
 ```tsx title="web/src/Routes.tsx"
 const OwnersOnly = ({ children }: { children: React.ReactNode }) => (
