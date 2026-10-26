@@ -19,7 +19,8 @@ const USE_AUTH_DESTRUCTURING = /\{([^{}]*)\}(\s*=\s*useAuth\(\))/g
 /** `const auth = useAuth()`, capturing `auth` */
 const USE_AUTH_VARIABLE = /(?:const|let|var)\s+([\w$]+)\s*=\s*useAuth\(\)/g
 
-const escapeRegExp = (text: string) => text.replace(/[$]/g, '\\$&')
+/** `name.hasRole` or `name?.hasRole`, capturing `name` and what follows it */
+const HAS_ROLE_ON_VARIABLE = /(?<![\w$.])([\w$]+)(\s*\??\.\s*)hasRole(?![\w$])/g
 
 /**
  * `source` with `hasRole` from `useAuth()` renamed `hasUserRole`:
@@ -64,15 +65,17 @@ export function renameUseAuthHasRole(source: string): string {
     result = result.replace(/(?<![\w$.])hasRole(?![\w$])/g, 'hasUserRole')
   }
 
-  for (const [, name] of source.matchAll(USE_AUTH_VARIABLE)) {
-    result = result.replace(
-      new RegExp(
-        `(?<![\\w$.])(${escapeRegExp(name)}\\s*\\??\\.\\s*)hasRole(?![\\w$])`,
-        'g',
-      ),
-      '$1hasUserRole',
-    )
+  const authVariables = new Set(
+    Array.from(source.matchAll(USE_AUTH_VARIABLE), ([, name]) => name),
+  )
+
+  if (authVariables.size === 0) {
+    return result
   }
 
-  return result
+  return result.replace(
+    HAS_ROLE_ON_VARIABLE,
+    (match: string, name: string, access: string) =>
+      authVariables.has(name) ? `${name}${access}hasUserRole` : match,
+  )
 }
