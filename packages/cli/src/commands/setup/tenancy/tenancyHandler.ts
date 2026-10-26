@@ -28,7 +28,7 @@ import { TENANCY_AUTH_EXPORT } from './authCodemod.js'
 import {
   isDefaultRequireAuthDirective,
   renameRequireAuthDirective,
-  renameRequireAuthImport,
+  renameLibAuthImports,
 } from './authDirectives.js'
 import {
   addPermissionsPackageTasks,
@@ -49,6 +49,7 @@ import {
   requiredUserFields,
 } from './schemaPrisma.js'
 import type { EditSchemaResult, ModelsExistOutcome } from './schemaPrisma.js'
+import { renameUseAuthHasRole } from './webHasRole.js'
 
 const DEFAULT_TENANT_FIELD = 'organizationId'
 
@@ -382,7 +383,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title:
-          'Switching @requireAuth to @requireOrgAuth and @requireUserAuth...',
+          'Switching @requireAuth to @requireOrgAuth and @requireUserAuth, and hasRole to hasUserRole...',
         task: async (ctx) => {
           const oldDirectiveDir = path.join(paths.api.directives, 'requireAuth')
           const isInOldDirective = (file: string) =>
@@ -400,25 +401,37 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
               fs.readFileSync(oldDirectivePath, 'utf-8'),
             )
 
+          const sourceFilesIn = (dir: string) =>
+            fs
+              .readdirSync(dir, { recursive: true, withFileTypes: true })
+              .filter(
+                (entry) => entry.isFile() && /\.[jt]sx?$/.test(entry.name),
+              )
+              .map((entry) => path.join(entry.parentPath, entry.name))
+
           // Before tenancy there are no organizations, so every existing
           // field is about the user
-          const sourceFiles = fs
-            .readdirSync(paths.api.src, {
-              recursive: true,
-              withFileTypes: true,
-            })
-            .filter((entry) => entry.isFile() && /\.[jt]sx?$/.test(entry.name))
-            .map((entry) => path.join(entry.parentPath, entry.name))
-
-          for (const file of sourceFiles) {
+          for (const file of sourceFilesIn(paths.api.src)) {
             const source = fs.readFileSync(file, 'utf-8')
             // `lib/auth` exports no `requireAuth` any more, so imports of it
             // are renamed even in a kept directive
-            const renamed = renameRequireAuthImport(
+            const renamed = renameLibAuthImports(
               keepOldDirective || isInOldDirective(file)
                 ? source
                 : renameRequireAuthDirective(source),
             )
+
+            if (renamed !== source) {
+              fs.writeFileSync(file, renamed)
+              writtenFiles.push(file)
+            }
+          }
+
+          // And so is every existing role check on the web: `hasRole` isn't
+          // in a tenancy app's types, `hasUserRole` checks the same thing
+          for (const file of sourceFilesIn(paths.web.src)) {
+            const source = fs.readFileSync(file, 'utf-8')
+            const renamed = renameUseAuthHasRole(source)
 
             if (renamed !== source) {
               fs.writeFileSync(file, renamed)
@@ -722,6 +735,12 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              fields over, then delete it.`
                  : ''
              }
+          6. Every role check names its kind now. ${c.highlight('hasRole')} is
+             ${c.highlight('hasUserRole')} on both sides (your existing uses were renamed),
+             checking ${c.highlight('currentUser.roles')}; ${c.highlight('hasOrgRole')} checks the role in
+             the organization. ${c.highlight('<PrivateSet roles>')} isn't available with
+             tenancy: guard routes by role with ${c.highlight('OrgScope')}'s ${c.highlight('roles')} and
+             ${c.highlight('unauthorized')}, from a small wrapper component.
 
 ${
   keptFiles.length > 0

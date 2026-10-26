@@ -16,6 +16,7 @@ import {
   generateTypeDefGqlorm,
   generateTypeDefPermissions,
   generateTypeDefRealtime,
+  generateTypeDefTenancy,
   generateTypeDefRouterRoutes,
   generateTypeDefGlobImports,
   generateTypeDefGlobalContext,
@@ -327,6 +328,45 @@ test('generates realtime types when the api side uses @cedarjs/realtime', () => 
     fs.writeFileSync(apiPackageJsonPath, JSON.stringify({ dependencies: {} }))
 
     expect(generateTypeDefRealtime()).toEqual([])
+    expect(fs.existsSync(typeDefPath)).toBe(false)
+  } finally {
+    process.env.CEDAR_CWD = FIXTURE_PATH
+    fs.rmSync(projectDir, { recursive: true, force: true })
+  }
+})
+
+test('no tenancy types without @cedarjs/tenancy', () => {
+  expect(generateTypeDefTenancy()).toEqual([])
+})
+
+test('marks AuthTenancy enabled when the web side uses @cedarjs/tenancy', () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-tenancy-'))
+  const webPackageJsonPath = path.join(projectDir, 'web', 'package.json')
+  fs.writeFileSync(path.join(projectDir, 'cedar.toml'), '')
+  fs.mkdirSync(path.join(projectDir, 'web'))
+  fs.writeFileSync(
+    webPackageJsonPath,
+    JSON.stringify({ dependencies: { '@cedarjs/tenancy': '1.0.0' } }),
+  )
+
+  process.env.CEDAR_CWD = projectDir
+
+  try {
+    const [typeDefPath] = generateTypeDefTenancy()
+
+    expect(ensurePosixPath(path.relative(projectDir, typeDefPath))).toEqual(
+      '.cedar/types/includes/web-tenancy.d.ts',
+    )
+
+    const contents = fs.readFileSync(typeDefPath, 'utf-8')
+    expect(contents).toContain("declare module '@cedarjs/auth'")
+    expect(contents).toContain('interface AuthTenancy')
+    expect(contents).toContain('enabled: true')
+
+    // Without @cedarjs/tenancy the file goes
+    fs.writeFileSync(webPackageJsonPath, JSON.stringify({ dependencies: {} }))
+
+    expect(generateTypeDefTenancy()).toEqual([])
     expect(fs.existsSync(typeDefPath)).toBe(false)
   } finally {
     process.env.CEDAR_CWD = FIXTURE_PATH

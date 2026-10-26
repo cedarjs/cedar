@@ -299,7 +299,7 @@ From `@cedarjs/tenancy`:
 
 ```ts
 export function createTenancyAuth(): {
-  hasRole(roles: string | readonly string[]): boolean
+  hasUserRole(roles: string | readonly string[]): boolean
   hasOrgRole(
     roles?: string | readonly string[],
     organizationId?: string
@@ -320,13 +320,16 @@ The setup command replaces the single-tenant `hasRole` and `requireAuth` in
 `api/src/lib/auth.ts` with these:
 
 ```ts title="api/src/lib/auth.ts"
-export const { hasRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
+export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
   createTenancyAuth()
 ```
 
-`hasRole` and `requireUserAuth` are about the signed-in user
-(`currentUser.roles`); `hasOrgRole` and `requireOrgAuth` are about their role
-in an organization. There's no `requireAuth`: each guard says which it is.
+There's no `hasRole` or `requireAuth`: each check says what it's about.
+
+|                             | User-level (`currentUser.roles`)                     | Organization-level (membership role)               |
+| --------------------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| api (`createTenancyAuth()`) | `hasUserRole`, `requireUserAuth`, `@requireUserAuth` | `hasOrgRole`, `requireOrgAuth`, `@requireOrgAuth`  |
+| web                         | `useAuth().hasUserRole`                              | `useCurrentOrg().hasOrgRole`, `OrgScope`'s `roles` |
 
 - `requireOrgAuth({ roles })`: for fields about the current organization.
   Throws `AuthenticationError` when no one is signed in, and `ForbiddenError`
@@ -343,11 +346,12 @@ in an organization. There's no `requireAuth`: each guard says which it is.
   of them. No organization is needed. It checks what the single-tenant
   `requireAuth` did.
 
-`hasRole(roles)` checks `currentUser.roles`, as the single-tenant `hasRole`
-did. It never looks at the current organization. `hasOrgRole(roles?,
-organizationId?)` is the standalone `hasOrgRole` below: with no roles, it's
-whether the user is a member. Setup renames `requireAuth` imported from
-`api/src/lib/auth` to `requireUserAuth`; `hasRole` keeps its name.
+`hasUserRole(roles)` checks `currentUser.roles`, as the single-tenant
+`hasRole` did. `hasOrgRole(roles?, organizationId?)` is the standalone
+`hasOrgRole` below: with no roles, it's whether the user is a member. Setup
+renames `hasRole` and `requireAuth` imported from `api/src/lib/auth` to
+`hasUserRole` and `requireUserAuth`, and `hasRole` from `useAuth()` in
+`web/src` to `hasUserRole`.
 
 With tenancy, a role belongs to a membership, so don't copy one into
 `currentUser.roles` in `getCurrentUser`: a user who is `owner` in one
@@ -610,10 +614,12 @@ keyed by `${userId}:${organizationId}`), the organization for
 `useCurrentOrg()`, and a `useAuth().hasPermission` that checks the user's
 membership in that organization.
 
-On the web, `useAuth().hasRole` and `<PrivateSet roles>` check
-`currentUser.roles`, as in any Cedar app, inside `OrgScope` or not. The user's
-role in the organization is `useCurrentOrg().hasOrgRole`, and `OrgScope`'s
-`roles` prop for routes.
+On the web too, every role check names its kind: `useAuth().hasUserRole` checks
+`currentUser.roles`, and `useCurrentOrg().hasOrgRole` and `OrgScope`'s `roles`
+check the user's role in the organization. `useAuth().hasRole` and
+`<PrivateSet roles>` aren't available with tenancy: `cedar generate types`
+marks the app as having tenancy (`.cedar/types/includes/web-tenancy.d.ts`), and
+then using either is a type error.
 
 Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
 `currentUser.id` changes, every cached client is dropped after `clearStore()`.
@@ -622,9 +628,9 @@ organization's client alone is dropped the same way.
 
 #### Guarding routes by role
 
-To let only some roles in the organization open a page, give `OrgScope` `roles`
-and `unauthorized`, from a small wrapper component (`Set` doesn't pass props on
-to `wrap` components):
+`<PrivateSet roles>` isn't available with tenancy. To let only some roles in
+the organization open a page, give `OrgScope` `roles` and `unauthorized`, from a
+small wrapper component (`Set` doesn't pass props on to `wrap` components):
 
 ```tsx title="web/src/Routes.tsx"
 const OwnersOnly = ({ children }: { children: React.ReactNode }) => (
@@ -771,8 +777,8 @@ unauthorized paths.
 On the web, the mocked `useAuth` in tests behaves like the real one: inside an
 `OrgScope`, `hasPermission` checks the membership in that organization, so give
 the user from `mockCurrentUser()` the `memberships` your component's
-organization needs. Outside one, `hasPermission` is `false`. `hasRole` checks
-`currentUser.roles`, inside an `OrgScope` or not.
+organization needs. Outside one, `hasPermission` is `false`. `hasUserRole`
+checks `currentUser.roles`, inside an `OrgScope` or not.
 
 ## Limitations
 

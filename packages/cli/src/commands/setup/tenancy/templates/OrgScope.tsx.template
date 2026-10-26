@@ -34,10 +34,10 @@ export interface OrgScopeProps {
  *   </Set>
  *
  * Under it, `useAuth().hasPermission` and `useCurrentOrg().hasOrgRole`
- * check the user's membership in the organization; `useAuth().hasRole` and
- * `<PrivateSet roles>` check `currentUser.roles`, as anywhere else. For pages
- * only some members may open, wrap them in a component that passes
- * `permission` (or `roles`):
+ * check the user's membership in the organization, and
+ * `useAuth().hasUserRole` checks `currentUser.roles`. For pages only some
+ * members may open, wrap them in a component that passes `permission` (or
+ * `roles`; there's no `<PrivateSet roles>` with tenancy):
  *
  *   const MemberManagers = ({ children }: { children: ReactNode }) => (
  *     <OrgScope permission="members.manage" unauthorized="projects">
