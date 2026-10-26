@@ -26,10 +26,10 @@ export interface OrgScopeProps {
  *     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
  *   </Set>
  *
- * `useCurrentOrg().hasOrgRole` checks the user's role in the organization;
- * `useAuth().hasRole` and `<PrivateSet roles>` check `currentUser.roles`, as
- * anywhere else. For pages only some organization roles may open, wrap them
- * in a component that passes `roles`:
+ * `useCurrentOrg().hasOrgRole` checks the user's role in the organization,
+ * and `useAuth().hasUserRole` checks `currentUser.roles`. For pages only some
+ * roles may open, wrap them in a component that passes `roles` (there's no
+ * `<PrivateSet roles>` with tenancy):
  *
  *   const OwnersOnly = ({ children }: { children: ReactNode }) => (
  *     <OrgScope roles="owner" unauthorized="projects">

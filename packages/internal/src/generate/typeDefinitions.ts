@@ -63,6 +63,7 @@ export const generateTypeDefs = async () => {
       ...generateTypeDefCurrentUser(),
       ...generateTypeDefGqlorm(),
       ...generateTypeDefRealtime(),
+      ...generateTypeDefTenancy(),
       ...generateTypeDefRouterRoutes(),
       ...generateTypeDefGlobImports(),
       ...generateTypeDefGlobalContext(),
@@ -460,6 +461,44 @@ export const generateTypeDefRealtime = () => {
   }
 
   return writeTypeDefIncludeFile('api-realtime.d.ts.template')
+}
+
+/**
+ * Marks `@cedarjs/auth`'s `AuthTenancy` as enabled when the web side depends
+ * on `@cedarjs/tenancy` (`cedar setup tenancy` adds it), which takes
+ * `useAuth().hasRole` and `<PrivateSet roles>` away from the app's types.
+ * None otherwise, and a stale file goes.
+ */
+export const generateTypeDefTenancy = () => {
+  const paths = getPaths()
+  const typeDefPath = path.join(
+    paths.generated.types.includes,
+    'web-tenancy.d.ts',
+  )
+
+  let packageJson: {
+    dependencies?: Record<string, unknown>
+    devDependencies?: Record<string, unknown>
+  }
+
+  try {
+    packageJson = JSON.parse(
+      fs.readFileSync(path.join(paths.web.base, 'package.json'), 'utf-8'),
+    )
+  } catch {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  if (
+    !packageJson.dependencies?.['@cedarjs/tenancy'] &&
+    !packageJson.devDependencies?.['@cedarjs/tenancy']
+  ) {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  return writeTypeDefIncludeFile('web-tenancy.d.ts.template')
 }
 
 export const generateTypeDefScenarios = () => {

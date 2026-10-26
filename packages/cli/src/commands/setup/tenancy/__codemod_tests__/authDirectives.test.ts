@@ -8,7 +8,7 @@ import {
   DEFAULT_REQUIRE_AUTH_DIRECTIVES,
   isDefaultRequireAuthDirective,
   renameRequireAuthDirective,
-  renameRequireAuthImport,
+  renameLibAuthImports,
 } from '../authDirectives.js'
 
 const TEMPLATES = path.join(
@@ -58,8 +58,8 @@ describe('renameRequireAuthDirective', () => {
   })
 })
 
-describe('renameRequireAuthImport', () => {
-  it('renames the import and its uses, and leaves hasRole as it is', () => {
+describe('renameLibAuthImports', () => {
+  it('renames the import and its uses', () => {
     const source = dedent`
       import { hasRole, requireAuth } from 'src/lib/auth'
 
@@ -69,12 +69,12 @@ describe('renameRequireAuthImport', () => {
       }
     `
 
-    expect(renameRequireAuthImport(source)).toBe(dedent`
-      import { hasRole, requireUserAuth } from 'src/lib/auth'
+    expect(renameLibAuthImports(source)).toBe(dedent`
+      import { hasUserRole, requireUserAuth } from 'src/lib/auth'
 
       export const posts = () => {
         requireUserAuth({ roles: ['admin'] })
-        return hasRole('editor') ? db.post.findMany() : []
+        return hasUserRole('editor') ? db.post.findMany() : []
       }
     `)
   })
@@ -86,7 +86,7 @@ describe('renameRequireAuthImport', () => {
       applicationRequireAuth({ roles })
     `
 
-    expect(renameRequireAuthImport(source)).toBe(dedent`
+    expect(renameLibAuthImports(source)).toBe(dedent`
       import { requireUserAuth as applicationRequireAuth } from '../../lib/auth.js'
 
       applicationRequireAuth({ roles })
@@ -100,7 +100,7 @@ describe('renameRequireAuthImport', () => {
       requireAuth()
     `
 
-    expect(renameRequireAuthImport(source)).toBe(source)
+    expect(renameLibAuthImports(source)).toBe(source)
   })
 
   it("doesn't rename properties or the directive", () => {
@@ -112,7 +112,7 @@ describe('renameRequireAuthImport', () => {
       const sdl = 'field: String @requireAuth'
     `
 
-    expect(renameRequireAuthImport(source)).toBe(dedent`
+    expect(renameLibAuthImports(source)).toBe(dedent`
       import { requireUserAuth } from 'src/lib/auth'
 
       requireUserAuth()

@@ -93,6 +93,7 @@ export function useNoAuth(): AuthContextInterface<
     getToken: async () => null,
     getCurrentUser: async () => null,
     hasRole: () => false,
+    hasUserRole: () => false,
     reauthenticate: async () => {},
     forgotPassword: async () => {},
     resetPassword: async () => {},

@@ -1,6 +1,10 @@
 import type { ComponentType, ReactElement, ReactNode } from 'react'
 import React from 'react'
 
+import type { RolesToCheck } from '@cedarjs/auth' with {
+  'resolution-mode': 'import',
+}
+
 /**
  * The props `<Set>` gives each component in its `wrap` prop: the wrapped
  * routes as `children`, and nothing else
@@ -49,9 +53,12 @@ interface SetProps {
   unauthenticated?: string
   /**
    * Route is permitted when authenticated and user has any of the provided
-   * roles such as "admin" or ["admin", "editor"]
+   * roles such as "admin" or ["admin", "editor"], in `currentUser.roles`
+   *
+   * Not available in an app with tenancy: guard routes by the role in the
+   * organization with `OrgScope`'s `roles` and `unauthorized` instead.
    */
-  roles?: string | string[]
+  roles?: RolesToCheck
   /** Prerender all pages in the set */
   prerender?: boolean
   children: ReactNode

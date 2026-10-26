@@ -112,6 +112,7 @@ function createUseAuth(state: AuthState): UseAuth {
       getToken: async () => null,
       getCurrentUser: async () => null,
       hasRole: () => false,
+      hasUserRole: () => false,
       reauthenticate: async () => {},
       client: undefined,
       type: 'custom',
