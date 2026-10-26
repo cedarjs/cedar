@@ -518,10 +518,27 @@ organization's client alone is dropped the same way.
 
 #### Guarding routes by role
 
-A `<PrivateSet roles>` _around_ `OrgScope` is checked before `OrgScope` has
-resolved the organization, so it can't see the role there. Give `OrgScope`
-`roles` instead, from a small wrapper component (`Set` doesn't pass props on
-to `wrap` components):
+The simplest is a `<PrivateSet roles>` _inside_ the `OrgScope` set. Under
+`OrgScope`, `useAuth().hasRole` checks the role in that organization, so this
+lets only its owners in:
+
+```tsx title="web/src/Routes.tsx"
+<Set wrap={[OrgScope, OrgLayout]}>
+  <PrivateSet unauthenticated="login" roles="owner">
+    <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+  </PrivateSet>
+</Set>
+```
+
+A member without the role is sent to the `unauthenticated` route, just like
+someone who isn't signed in, and that route can't take route parameters, so it
+can't be a page in the same organization. A `<PrivateSet roles>` _around_
+`OrgScope` doesn't work at all: it's checked before `OrgScope` has resolved the
+organization, so it checks `currentUser.roles` instead.
+
+To send a member without the role somewhere in the organization, give
+`OrgScope` `roles` and `unauthorized` instead, from a small wrapper component
+(`Set` doesn't pass props on to `wrap` components):
 
 ```tsx title="web/src/Routes.tsx"
 const OwnersOnly = ({ children }: { children: React.ReactNode }) => (

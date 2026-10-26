@@ -785,9 +785,11 @@ then checks `currentUser.memberships` for a match, which is how you'd show a
 switcher entry as disabled for an organization the user isn't an admin of,
 without navigating there first.
 
-A page only some roles may open gets an `OrgScope` with `roles`, from a small
-wrapper component, as `<PrivateSet roles>` around `OrgScope` runs before the
-organization is known (see
+A page only some roles may open can use a `<PrivateSet roles>` inside the
+`OrgScope` set, which checks the role in the organization. It sends a member
+without the role to its `unauthenticated` route, like someone who isn't signed
+in. To send them to a page in the organization instead, give `OrgScope`
+`roles` and `unauthorized` from a small wrapper component (see
 [Guarding routes by role](../tenancy.md#guarding-routes-by-role)):
 
 ```tsx title="web/src/Routes.tsx"
