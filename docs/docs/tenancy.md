@@ -452,7 +452,6 @@ export const permissions = definePermissions({
     admin: ['organization.read', 'members.manage'],
     member: ['organization.read'],
   },
-  user: [],
 })
 
 export type Permission = PermissionName<typeof permissions>
@@ -465,10 +464,11 @@ export type Permission = PermissionName<typeof permissions>
 - `roles`: what each built-in role may do in an organization. A permission
   listed here needs a current organization, and the user's role there must
   have it. A role that isn't listed has no permissions.
-- `user`: what every signed-in user may do, in any organization or none (their
-  own account, say). These need no organization.
 
-A role or `user` listing a name that `permissions` doesn't define is a type
+Every permission is about an organization. Fields about the user rather than
+an organization use `@requireUserAuth`.
+
+A role listing a name that `permissions` doesn't define is a type
 error, and `definePermissions` throws for it at runtime too.
 `@cedarjs/tenancy/permissions` has no api code in it, so the web can import
 the package.
@@ -512,7 +512,7 @@ that isn't defined, so a typo in an SDL directive (which TypeScript can't see)
 is a loud error rather than a field nobody can use.
 
 `permissionsOf(membership)` is the one place a membership's permissions are
-worked out: its role's, plus the `user` ones. `hasPermission`,
+worked out: its role's. `hasPermission`,
 `requirePermission` and `withPermissions` all use it, and `hasPermission`
 passes it the membership as `getCurrentUser` returned it.
 
@@ -534,14 +534,14 @@ type Mutation {
 }
 ```
 
-It sits beside `@requireAuth`. Use whichever reads better per field; the
+It sits beside `@requireOrgAuth`. Use whichever reads better per field; the
 generated organizations SDL uses `@requirePermission` for organization fields
-and `@requireAuth(scope: USER)` for user-level ones.
+and `@requireUserAuth` for user-level ones.
 
 ### Permissions on the web
 
-`withPermissions(user)` adds each membership's permissions (its role's, plus
-the `user` ones) to the user `getCurrentUser` returns. `setup tenancy` wraps the
+`withPermissions(user)` adds each membership's permissions (its role's) to the
+user `getCurrentUser` returns. `setup tenancy` wraps the
 lookup in it:
 
 ```ts title="api/src/lib/auth.ts"
@@ -813,12 +813,6 @@ On the web, the mocked `useAuth` in tests behaves like the real one: inside an
 organization, so give the user from `mockCurrentUser()` the `memberships` your
 component's organization needs. Outside one, `hasRole` checks
 `currentUser.roles` and `hasPermission` is `false`.
-
-`setup tenancy` also updates the `requireAuth` directive's test, as a bare
-`@requireAuth` now needs a current organization: the case that let any
-signed-in user through becomes cases for a member, for no organization, and for
-`scope: USER`. A test that doesn't have that case is left as it is, with a note
-to check it.
 
 ## Limitations
 

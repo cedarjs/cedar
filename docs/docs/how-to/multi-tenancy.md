@@ -726,7 +726,6 @@ export const permissions = definePermissions({
     admin: ['organization.read', 'members.manage'],
     member: ['organization.read'],
   },
-  user: [],
 })
 ```
 
