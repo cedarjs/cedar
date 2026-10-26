@@ -611,8 +611,9 @@ switcher that doesn't navigate. `memberships` come from
 
 Below it, `OrgScope` provides a per-organization Apollo client (built or reused,
 keyed by `${userId}:${organizationId}`), the organization for
-`useCurrentOrg()`, and a `useAuth().hasRole` that checks the user's role in that
-organization rather than `currentUser.roles`. That includes a `<PrivateSet roles>` nested inside the
+`useCurrentOrg()`, and a `useAuth().hasRole` and `useAuth().hasPermission` that
+check the user's membership in that organization rather than
+`currentUser.roles`. That includes a `<PrivateSet roles>` nested inside the
 `OrgScope` set, as the router reads `hasRole` through the same `useAuth`.
 
 Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
