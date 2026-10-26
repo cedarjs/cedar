@@ -2996,6 +2996,7 @@ __metadata:
     lodash: "npm:4.18.1"
     memfs: "npm:4.80.0"
     node-ssh: "npm:13.2.1"
+    package-json: "npm:10.0.1"
     pascalcase: "npm:1.0.0"
     pluralize: "npm:8.0.0"
     portfinder: "npm:1.0.38"
@@ -23953,7 +23954,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-json@npm:^10.0.0":
+"package-json@npm:10.0.1, package-json@npm:^10.0.0":
   version: 10.0.1
   resolution: "package-json@npm:10.0.1"
   dependencies:

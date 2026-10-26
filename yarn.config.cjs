@@ -195,7 +195,11 @@ async function enforceEsbuildMatchesVite({ Yarn }) {
  */
 function enforceConsistentDependenciesAcrossTheProject({ Yarn }) {
   for (const dependency of Yarn.dependencies()) {
-    if (dependency.type === `peerDependencies`) {
+    // enforceSinglePrismaVersion sets the version for these
+    if (
+      dependency.type === `peerDependencies` ||
+      isPrismaReleasePackage(dependency.ident)
+    ) {
       continue
     }
 
