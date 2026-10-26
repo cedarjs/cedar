@@ -169,7 +169,10 @@ function addContextImport(root: j.Collection): boolean {
  * its permissions (`useAuth().hasPermission()`). A lookup that's already wrapped is left
  * alone.
  */
-function addWithPermissions(root: j.Collection): boolean {
+function addWithPermissions(
+  root: j.Collection,
+  lookups: ReadonlySet<unknown>,
+): boolean {
   const isWithPermissionsCall = (node: unknown) =>
     j.CallExpression.check(node) &&
     j.Identifier.check(node.callee) &&
@@ -178,6 +181,11 @@ function addWithPermissions(root: j.Collection): boolean {
   let wrapped = false
 
   root.find(j.CallExpression, USER_LOOKUP).forEach((path) => {
+    // Only lookups that select the memberships `withPermissions` reads
+    if (!lookups.has(path.node)) {
+      return
+    }
+
     const awaited = j.AwaitExpression.check(path.parent.node)
       ? path.parent
       : null
@@ -275,6 +283,8 @@ export default function transform(fileInfo: j.FileInfo) {
   const root = j.withParser('tsx')(fileInfo.source)
 
   let selectFound = false
+  // The `db.user.findUnique` calls whose `select` has `memberships`
+  const membershipLookups = new Set<unknown>()
   // Whether this run adds anything. When it doesn't, the file is returned
   // as it was, rather than reprinted (which, e.g., changes CRLF line endings)
   let changed = false
@@ -326,13 +336,14 @@ export default function transform(fileInfo: j.FileInfo) {
       }
 
       selectFound = true
+      membershipLookups.add(path.node)
     })
 
   if (!selectFound) {
     throw new Error('CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
   }
 
-  if (addWithPermissions(root)) {
+  if (addWithPermissions(root, membershipLookups)) {
     changed = true
   }
 
