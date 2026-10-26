@@ -9,8 +9,8 @@ import type { PermissionName } from '@cedarjs/tenancy/permissions'
  * field added later is closed to it unless its permission is on the list.
  *
  * `roles` are per organization: a membership's role decides what the user
- * may do in that organization. `user` permissions are for every signed-in
- * user, in any organization or none (their own account, say).
+ * may do in that organization. Fields about the user rather than an
+ * organization (their own account, say) use `@requireUserAuth` instead.
  *
  * This package is shared: the api checks these permissions
  * (api/src/lib/permissions), and the web can import the names. The web gets each
@@ -23,7 +23,6 @@ export const permissions = definePermissions({
     admin: ['organization.read', 'members.manage'],
     member: ['organization.read'],
   },
-  user: [],
 })
 
 export type Permission = PermissionName<typeof permissions>

@@ -16,11 +16,6 @@ export interface PermissionDefinitions<Name extends string = string> {
    * listed has no permissions.
    */
   roles: Readonly<Record<string, readonly Name[]>>
-  /**
-   * What every signed-in user may do, in any organization or none: things
-   * about their own account. No organization is needed for these.
-   */
-  user?: readonly Name[]
 }
 
 /** The permission names in `definitions` */
@@ -28,26 +23,18 @@ export type PermissionName<Definitions> =
   Definitions extends PermissionDefinitions<infer Name> ? Name : never
 
 /**
- * Throws when a role or `user` lists a permission that `permissions`
- * doesn't define. The types catch this in TypeScript; this is for
+ * Throws when a role lists a permission that `permissions` doesn't define. The types catch this in TypeScript; this is for
  * JavaScript, and for definitions built at runtime.
  */
 export function assertPermissionDefinitions(
   definitions: PermissionDefinitions,
 ) {
   const defined = new Set(definitions.permissions)
-  const listed = [
-    ...Object.entries(definitions.roles).map(
-      ([role, names]) => [`role "${role}"`, names] as const,
-    ),
-    ['user', definitions.user ?? []] as const,
-  ]
-
-  for (const [where, names] of listed) {
+  for (const [role, names] of Object.entries(definitions.roles)) {
     for (const name of names) {
       if (!defined.has(name)) {
         throw new Error(
-          `Unknown permission "${name}" in ${where}. Add it to ` +
+          `Unknown permission "${name}" in role "${role}". Add it to ` +
             '`permissions` in your permission definitions first.',
         )
       }
@@ -75,7 +62,6 @@ export function assertPermissionDefinitions(
 export function definePermissions<const Name extends string>(definitions: {
   permissions: readonly Name[]
   roles: Readonly<Record<string, readonly NoInfer<Name>[]>>
-  user?: readonly NoInfer<Name>[]
 }): PermissionDefinitions<Name> {
   assertPermissionDefinitions(definitions)
 

@@ -24,9 +24,9 @@ export type WithPermissions<
 
 export interface Permissions<Permission extends string> {
   /**
-   * Whether the signed-in user may do `permission` in this request: a user
-   * permission needs only a signed-in user; any other needs a current
-   * organization whose membership has it.
+   * Whether the signed-in user may do `permission` in this request: their
+   * membership in the current organization has it. False with no current
+   * organization.
    */
   hasPermission(permission: Permission): boolean
   /**
@@ -36,8 +36,7 @@ export interface Permissions<Permission extends string> {
    */
   requirePermission(options: { permission: Permission }): void
   /**
-   * What a membership may do: its role's permissions, and the user's. The
-   * one place a membership's permissions are worked out, which
+   * What a membership may do: its role's permissions. The one place a membership's permissions are worked out, which
    * `hasPermission`, `requirePermission` and `withPermissions` all use.
    */
   permissionsOf(membership: MembershipForPermissions): Permission[]
@@ -85,8 +84,6 @@ export function createPermissions<const Permission extends string>(
 ): Permissions<Permission> {
   assertPermissionDefinitions(definitions)
 
-  const userPermissions: readonly Permission[] = definitions.user ?? []
-
   const assertDefined = (permission: string) => {
     if (!(definitions.permissions as readonly string[]).includes(permission)) {
       throw new Error(
@@ -96,13 +93,10 @@ export function createPermissions<const Permission extends string>(
     }
   }
 
-  const permissionsOf = (membership: MembershipForPermissions) => {
-    const rolePermissions = Object.hasOwn(definitions.roles, membership.role)
-      ? definitions.roles[membership.role]
+  const permissionsOf = (membership: MembershipForPermissions) =>
+    Object.hasOwn(definitions.roles, membership.role)
+      ? [...definitions.roles[membership.role]]
       : []
-
-    return [...new Set([...rolePermissions, ...userPermissions])]
-  }
 
   /**
    * The signed-in user's membership in the current organization, as
@@ -130,10 +124,6 @@ export function createPermissions<const Permission extends string>(
 
     if (!context.currentUser) {
       return false
-    }
-
-    if (userPermissions.includes(permission)) {
-      return true
     }
 
     const membership = currentMembership()
@@ -168,7 +158,7 @@ export function createPermissions<const Permission extends string>(
         throw new AuthenticationError("You don't have permission to do that.")
       }
 
-      if (!userPermissions.includes(permission) && !getCurrentOrg()) {
+      if (!getCurrentOrg()) {
         throw new ForbiddenError(
           'You must be a member of an organization to do that.',
         )

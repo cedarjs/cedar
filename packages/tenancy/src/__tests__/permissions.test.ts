@@ -15,14 +15,12 @@ const definitions = definePermissions({
     'projects.edit',
     'members.manage',
     'reports.sign',
-    'account.manage',
   ],
   roles: {
     owner: ['projects.read', 'projects.edit', 'members.manage'],
     member: ['projects.read'],
     fieldWorker: ['reports.sign'],
   },
-  user: ['account.manage'],
 })
 
 const permissions = createPermissions(definitions)
@@ -52,17 +50,6 @@ describe('definePermissions', () => {
       }),
     ).toThrow('Unknown permission "projects.raed" in role "owner"')
   })
-
-  it('throws for a user permission that is not defined', () => {
-    expect(() =>
-      definePermissions({
-        permissions: ['projects.read'],
-        roles: {},
-        // @ts-expect-error - a typo is a type error too
-        user: ['account.manage'],
-      }),
-    ).toThrow('Unknown permission "account.manage" in user')
-  })
 })
 
 describe('createPermissions', () => {
@@ -85,25 +72,16 @@ describe('createPermissions', () => {
       })
     })
 
-    it('is false for an organization permission outside an organization', async () => {
+    it('is false outside an organization', async () => {
       await run(() => {
         setContext({ currentUser })
         expect(permissions.hasPermission('projects.read')).toBe(false)
       })
     })
 
-    it('gives user permissions to every signed-in user', async () => {
-      await run(() => {
-        setContext({ currentUser })
-        expect(permissions.hasPermission('account.manage')).toBe(true)
-        setContext({ currentUser, currentOrg: inOrg1 })
-        expect(permissions.hasPermission('account.manage')).toBe(true)
-      })
-    })
-
     it('is false with no current user', async () => {
       await run(() => {
-        expect(permissions.hasPermission('account.manage')).toBe(false)
+        expect(permissions.hasPermission('projects.read')).toBe(false)
       })
     })
 
@@ -132,12 +110,12 @@ describe('createPermissions', () => {
     it('throws AuthenticationError with no current user', async () => {
       await run(() => {
         expect(() =>
-          permissions.requirePermission({ permission: 'account.manage' }),
+          permissions.requirePermission({ permission: 'projects.read' }),
         ).toThrow(AuthenticationError)
       })
     })
 
-    it('throws ForbiddenError for an organization permission without one', async () => {
+    it('throws ForbiddenError without a current organization', async () => {
       await run(() => {
         setContext({ currentUser })
         expect(() =>
@@ -155,39 +133,32 @@ describe('createPermissions', () => {
       })
     })
 
-    it('passes when the role has it, or it is a user permission', async () => {
+    it('passes when the role has it', async () => {
       await run(() => {
         setContext({ currentUser, currentOrg: inOrg1 })
         expect(() =>
           permissions.requirePermission({ permission: 'projects.read' }),
-        ).not.toThrow()
-        setContext({ currentUser, currentOrg: undefined })
-        expect(() =>
-          permissions.requirePermission({ permission: 'account.manage' }),
         ).not.toThrow()
       })
     })
   })
 
   describe('permissionsOf', () => {
-    it("is the membership's role's permissions, with the user's", () => {
+    it("is the membership's role's permissions", () => {
       expect(permissions.permissionsOf({ role: 'member' })).toEqual([
         'projects.read',
-        'account.manage',
       ])
-      expect(permissions.permissionsOf({ role: 'constructor' })).toEqual([
-        'account.manage',
-      ])
+      expect(permissions.permissionsOf({ role: 'constructor' })).toEqual([])
     })
   })
 
   describe('withPermissions', () => {
-    it("adds each membership's permissions, with the user's", () => {
+    it("adds each membership's permissions", () => {
       const user = permissions.withPermissions(currentUser)
 
       expect(user.memberships.map((m) => m.permissions)).toEqual([
-        ['projects.read', 'account.manage'],
-        ['projects.read', 'projects.edit', 'members.manage', 'account.manage'],
+        ['projects.read'],
+        ['projects.read', 'projects.edit', 'members.manage'],
       ])
       expect(user.id).toBe('user1')
     })

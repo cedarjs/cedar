@@ -9,8 +9,7 @@ import { requirePermission as applicationRequirePermission } from 'src/lib/permi
 export const schema = gql`
   """
   Use to check that the signed-in user may do something: that their role in
-  the current organization has the permission (see packages/permissions),
-  or that it's a permission every signed-in user has.
+  the current organization has the permission (see packages/permissions).
   """
   directive @requirePermission(permission: String!) on FIELD_DEFINITION
 `
