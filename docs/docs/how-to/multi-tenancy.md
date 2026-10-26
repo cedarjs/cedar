@@ -744,10 +744,13 @@ export const {
 The generated organizations SDL uses it: `inviteMember` and `removeMember` are
 `@requirePermission(permission: "members.manage")`. Say you add a `viewer`
 role later that may only read: add `viewer: ['organization.read']` to `roles`, and
-it can read the organization and nothing else, including every field added
-after it, without touching the SDL. With role lists on each field you'd find
-and edit every field it should reach, and a field written later would be open
-or closed to it depending on whether its author remembered it.
+every field guarded by `@requirePermission` lets it do exactly that, including
+fields added after it, without touching the SDL. A field guarded only by a bare
+`@requireOrgAuth` is open to every member, `viewer` included, so guard anything
+a narrower role shouldn't reach with a permission. With role lists on each
+field you'd find and edit every field it should reach, and a field written
+later would be open or closed to it depending on whether its author remembered
+it.
 
 `getCurrentUser` returns each membership with its `permissions`
 (`withPermissions`), so the web asks the same question with
