@@ -79,26 +79,26 @@ import {
 // api/src/lib/auth.ts, in place of the single-tenant hasRole/requireAuth
 import { createTenancyAuth } from '@cedarjs/tenancy'
 
-export const { hasRole, requireAuth, hasOrgRole } = createTenancyAuth({
-  defaultRoles: ['owner', 'admin', 'member'],
-})
+export const { hasRole, requireOrgAuth, requireUserAuth, hasOrgRole } =
+  createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
 
 // In a service:
-requireAuth({ roles: ['owner', 'admin'] }) // in the current organization
-requireAuth({ scope: 'USER' }) // signed in, no organization needed
+requireOrgAuth({ roles: ['owner', 'admin'] }) // in the current organization
+requireUserAuth() // signed in, no organization needed
 
 // Anywhere:
 if (hasRole('owner')) { ... }
 ```
 
-`requireAuth` (and the `@requireAuth` directive, which `setup tenancy` gives a
-`scope` argument) is about the current organization by default: it throws
-`AuthenticationError` with no current user, and `ForbiddenError` with no
-current organization or when the user's role there isn't one of `roles`, or of
-`defaultRoles` when none are given. `scope: 'USER'` is for fields about the
-user rather than an organization. `hasRole` checks `getCurrentRoles()`: the
-membership's role in the current organization, or `currentUser.roles` outside
-one.
+`requireOrgAuth` (and the `@requireOrgAuth` directive `setup tenancy` adds) is
+about the current organization: it throws `AuthenticationError` with no
+current user, and `ForbiddenError` with no current organization or when the
+user's role there isn't one of `roles`, or of `defaultRoles` when none are
+given. `requireUserAuth` (and `@requireUserAuth`) is for fields about the user
+rather than an organization: it needs a signed-in user, and checks `roles`
+against `currentUser.roles`. There's no `requireAuth`. `hasRole` checks
+`getCurrentRoles()`: the membership's role in the current organization, or
+`currentUser.roles` outside one.
 
 ## Web
 

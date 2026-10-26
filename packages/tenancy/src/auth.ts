@@ -9,21 +9,6 @@ const toList = (roles: Roles | undefined): string[] =>
   roles === undefined ? [] : typeof roles === 'string' ? [roles] : [...roles]
 
 /**
- * What a `requireAuth` check is about.
- *
- * - `'ORGANIZATION'` (the default): the current organization. A current
- *   organization is required, and roles are the user's membership's role in
- *   it.
- * - `'USER'`: the signed-in user themselves, in whichever organization or
- *   none: their account, their memberships, accepting an invitation. Roles
- *   are `currentUser.roles`.
- *
- * Upper case so the `@requireAuth(scope: USER)` directive's enum value can
- * be passed straight through.
- */
-export type AuthScope = 'ORGANIZATION' | 'USER'
-
-/**
  * `currentUser.roles` as a list. With tenancy a role belongs to a
  * membership, so most apps leave it empty; it's for roles that hold in
  * every organization, if an app has any.
@@ -45,7 +30,7 @@ function userRoles(): string[] {
 /**
  * The current user's roles for this request: inside an organization (a
  * `currentOrg` is set), their membership's role there; outside one,
- * `currentUser.roles`. One resolver, so `hasRole()` and `requireAuth()`
+ * `currentUser.roles`. One resolver, so `hasRole()` and `requireOrgAuth()`
  * answer per organization.
  *
  * Empty when no one is signed in.
@@ -108,7 +93,7 @@ export function hasOrgRole(roles: Roles, organizationId?: string): boolean {
 export interface TenancyAuthOptions {
   /**
    * The roles an organization check admits when it lists none: a bare
-   * `@requireAuth`, `requireAuth()`, and `hasOrgRole()` without roles.
+   * `@requireOrgAuth`, `requireOrgAuth()`, and `hasOrgRole()` without roles.
    * Unset, any membership is enough.
    *
    * Set it to the roles that may use everything (`cedar setup tenancy`
@@ -128,16 +113,24 @@ export interface TenancyAuth {
    */
   hasRole(roles: Roles): boolean
   /**
-   * Guards a service or directive. By default (`scope: 'ORGANIZATION'`):
-   * signed in, a member of the current organization, and with one of
-   * `roles` there, or of `defaultRoles` when none are given. With
-   * `scope: 'USER'`: signed in, and, when `roles` are given, with one of
-   * them in `currentUser.roles`.
+   * Guards a service or directive on the current organization: signed in, a
+   * member of the current organization, and with one of `roles` there, or
+   * of `defaultRoles` when none are given.
    *
    * Throws `AuthenticationError` when no one is signed in, and
    * `ForbiddenError` otherwise.
    */
-  requireAuth(options?: { roles?: Roles; scope?: AuthScope }): void
+  requireOrgAuth(options?: { roles?: Roles }): void
+  /**
+   * Guards a service or directive on the signed-in user alone, in any
+   * organization or none: their account, their memberships, accepting an
+   * invitation. When `roles` are given, the user needs one of them in
+   * `currentUser.roles`.
+   *
+   * Throws `AuthenticationError` when no one is signed in, and
+   * `ForbiddenError` otherwise.
+   */
+  requireUserAuth(options?: { roles?: Roles }): void
   /** `hasOrgRole`, admitting `defaultRoles` when given no roles */
   hasOrgRole(roles?: Roles, organizationId?: string): boolean
 }
@@ -147,14 +140,12 @@ export interface TenancyAuth {
  * exports in place of its single-tenant `hasRole` and `requireAuth`:
  *
  * ```ts
- * export const { hasRole, requireAuth, hasOrgRole } = createTenancyAuth({
- *   defaultRoles: ['owner', 'admin', 'member'],
- * })
+ * export const { hasRole, requireOrgAuth, requireUserAuth, hasOrgRole } =
+ *   createTenancyAuth({ defaultRoles: ['owner', 'admin', 'member'] })
  * ```
  *
- * `requireAuth` is about the current organization unless told otherwise,
- * so forgetting `scope: 'USER'` on a user-level field fails closed (the
- * field needs an organization) rather than open.
+ * There's no `requireAuth`: every check says whether it's about the
+ * current organization or the signed-in user alone.
  */
 export function createTenancyAuth(
   options: TenancyAuthOptions = {},
@@ -172,22 +163,24 @@ export function createTenancyAuth(
       return getCurrentRoles().some((role) => roleList.includes(role))
     },
 
-    requireAuth({ roles, scope = 'ORGANIZATION' } = {}) {
+    requireUserAuth({ roles } = {}) {
       if (!context.currentUser) {
         throw new AuthenticationError("You don't have permission to do that.")
       }
 
-      if (scope === 'USER') {
-        const roleList = toList(roles)
+      const roleList = toList(roles)
 
-        if (
-          roleList.length > 0 &&
-          !userRoles().some((role) => roleList.includes(role))
-        ) {
-          throw new ForbiddenError("You don't have access to do that.")
-        }
+      if (
+        roleList.length > 0 &&
+        !userRoles().some((role) => roleList.includes(role))
+      ) {
+        throw new ForbiddenError("You don't have access to do that.")
+      }
+    },
 
-        return
+    requireOrgAuth({ roles } = {}) {
+      if (!context.currentUser) {
+        throw new AuthenticationError("You don't have permission to do that.")
       }
 
       const currentOrg = getCurrentOrg()
