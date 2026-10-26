@@ -128,3 +128,83 @@ describe('8.x: Sets with props for their wrappers', () => {
     }
   })
 })
+
+describe('8.x: Prisma packages the project declares', () => {
+  function createProject(
+    rootPkg: Record<string, unknown>,
+    apiPkg?: Record<string, unknown>,
+  ) {
+    const projectPath = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'cedar-8x-prisma-'),
+    )
+
+    fs.writeFileSync(path.join(projectPath, 'cedar.toml'), '')
+    fs.writeFileSync(
+      path.join(projectPath, 'package.json'),
+      JSON.stringify(rootPkg),
+    )
+
+    if (apiPkg) {
+      fs.mkdirSync(path.join(projectPath, 'api'))
+      fs.writeFileSync(
+        path.join(projectPath, 'api', 'package.json'),
+        JSON.stringify(apiPkg),
+      )
+    }
+
+    return projectPath
+  }
+
+  test('aborts and lists the Prisma packages the project is missing', () => {
+    const projectPath = createProject(
+      { devDependencies: { '@cedarjs/core': '7.1.0' } },
+      { dependencies: { '@cedarjs/api': '7.1.0' } },
+    )
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 1)
+      assert.match(stdout, /Prisma packages your project needs to declare/)
+      assert.match(stdout, / {2}prisma in the devDependencies of package\.json/)
+      assert.match(
+        stdout,
+        / {2}@prisma\/client in the dependencies of api\/package\.json/,
+      )
+      assert.match(stdout, /Use version \d+\.\d+\.\d+/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('accepts Prisma packages in either dependency section', () => {
+    const projectPath = createProject(
+      { dependencies: { prisma: '7.10.1' } },
+      { devDependencies: { '@prisma/client': '7.10.1' } },
+    )
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.doesNotMatch(stdout, /Prisma packages/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('skips projects without an api side', () => {
+    const projectPath = createProject({
+      devDependencies: { '@cedarjs/core': '7.1.0' },
+    })
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.doesNotMatch(stdout, /Prisma packages/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+})
