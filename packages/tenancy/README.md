@@ -100,6 +100,39 @@ rather than an organization: it needs a signed-in user, and checks `roles`
 against `currentUser.roles`. `hasOrgRole` and `hasUserRole` are the boolean
 checks to match. There's no `requireAuth` or `hasRole`.
 
+## Permissions
+
+```ts
+// packages/permissions/src/index.ts, shared by the api and web sides
+import { definePermissions } from '@cedarjs/tenancy/permissions'
+
+export const permissions = definePermissions({
+  permissions: ['projects.read', 'projects.edit', 'members.manage'],
+  roles: {
+    owner: ['projects.read', 'projects.edit', 'members.manage'],
+    member: ['projects.read'],
+  },
+})
+```
+
+```ts
+// api/src/lib/permissions.ts
+import { createPermissions } from '@cedarjs/tenancy'
+
+import { permissions } from '@my-app/permissions'
+
+export const { hasPermission, requirePermission, withPermissions } =
+  createPermissions(permissions)
+```
+
+Roles map to permissions in one place; fields ask for a permission with
+`@requirePermission(permission: "projects.edit")` or `requirePermission()`.
+A role only gets what its list says, so a new role is one entry. Permission
+names are typed from the definitions. `withPermissions` in `getCurrentUser` gives each
+membership its permissions, which `useAuth().hasPermission()` checks inside
+`OrgScope`. Every permission is about an organization: fields about the user
+rather than an organization use `@requireUserAuth`.
+
 ## Web
 
 `@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg` and

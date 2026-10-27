@@ -116,4 +116,29 @@ describe('running the tenancy codemods again', () => {
     expect(count(output, 'ensureDefaultOrganization(')).toBe(1)
     expect(count(output, 'import { ensureDefaultOrganization }')).toBe(1)
   })
+
+  it('authCodemod wraps a lookup that is not awaited only once', async () => {
+    const notAwaited = fixture('defaultAuth.input.ts').replace(
+      'return await db.user.findUnique(',
+      'return db.user.findUnique(',
+    )
+
+    const once = await runOn('authCodemod', notAwaited)
+    const twice = await runOn('authCodemod', once)
+
+    expect(count(once, '.then(withPermissions)')).toBe(1)
+    expect(twice).toBe(once)
+  })
+
+  it("authCodemod doesn't wrap a user lookup without memberships", async () => {
+    const output = await runOn(
+      'authCodemod',
+      fixture('defaultAuth.input.ts') +
+        '\nexport const findUser = (id: number) =>\n' +
+        '  db.user.findUnique({ where: { id } })\n',
+    )
+
+    expect(count(output, 'withPermissions(')).toBe(1)
+    expect(output).not.toContain('.then(withPermissions)')
+  })
 })

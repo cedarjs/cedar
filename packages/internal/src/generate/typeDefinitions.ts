@@ -62,6 +62,7 @@ export const generateTypeDefs = async () => {
       ...generateTypeDefRouterPages(),
       ...generateTypeDefCurrentUser(),
       ...generateTypeDefGqlorm(),
+      ...generateTypeDefPermissions(),
       ...generateTypeDefRealtime(),
       ...generateTypeDefTenancy(),
       ...generateTypeDefRouterRoutes(),
@@ -424,6 +425,46 @@ export const generateTypeDefCurrentUser = () => {
 
 export const generateTypeDefGqlorm = () => {
   return writeTypeDefIncludeFile('all-gqlorm.d.ts.template')
+}
+
+/**
+ * The permission names for `useAuth().hasPermission()`, from the app's
+ * permission definitions: `packages/permissions`, when it's the package
+ * `cedar setup tenancy` makes (it depends on `@cedarjs/tenancy`). None
+ * otherwise, and a stale file goes.
+ */
+export const generateTypeDefPermissions = () => {
+  const paths = getPaths()
+  const typeDefPath = path.join(
+    paths.generated.types.includes,
+    'all-permissions.d.ts',
+  )
+  const packageJsonPath = path.join(
+    paths.packages,
+    'permissions',
+    'package.json',
+  )
+
+  let packageJson: { name?: unknown; dependencies?: Record<string, unknown> }
+
+  try {
+    packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+  } catch {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  if (
+    typeof packageJson.name !== 'string' ||
+    !packageJson.dependencies?.['@cedarjs/tenancy']
+  ) {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  return writeTypeDefIncludeFile('all-permissions.d.ts.template', {
+    packageName: packageJson.name,
+  })
 }
 
 /**

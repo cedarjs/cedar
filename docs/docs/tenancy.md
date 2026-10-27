@@ -337,7 +337,8 @@ There's no `hasRole` or `requireAuth`: each check says what it's about.
   user's role in it isn't one of them. With no `roles`, any member gets in,
   just as any signed-in user gets past a bare single-tenant `@requireAuth`:
   a role you add later can use every field that lists no roles. For anything
-  narrower, list `roles`.
+  narrower, list `roles` or use [`@requirePermission`](#permissions), which
+  gives a new role only what its permission list says.
 - `requireUserAuth({ roles })`: for fields about the signed-in user rather
   than an organization (their account, their memberships, accepting an
   invitation). Throws `AuthenticationError` when no one is signed in, and,
@@ -399,6 +400,135 @@ scaffold` pick the directive for you: `@requireOrgAuth` for a model with an
 app is an unknown directive, so it fails when the schema is built rather than
 when the field is first called.
 
+## Permissions
+
+Roles map to permissions in one place, and fields ask for a permission instead
+of listing roles. Adding a role is then one entry in the definitions instead of an edit
+to every field it should reach, and the web reads the same answers instead of
+repeating role lists.
+
+### The definitions
+
+`setup tenancy` generates `packages/permissions`, a package that both sides
+share: the api checks the permissions, and the web can import their names. It
+turns on `experimental.packagesWorkspace` in `cedar.toml` for it, and names the
+package in the scope your other packages use (`@my-org/permissions`), or after
+your app's folder when there are none.
+
+```ts title="packages/permissions/src/index.ts"
+import { definePermissions } from '@cedarjs/tenancy/permissions'
+import type { PermissionName } from '@cedarjs/tenancy/permissions'
+
+export const permissions = definePermissions({
+  permissions: ['organization.read', 'members.manage'],
+  roles: {
+    owner: ['organization.read', 'members.manage'],
+    admin: ['organization.read', 'members.manage'],
+    member: ['organization.read'],
+  },
+})
+
+export type Permission = PermissionName<typeof permissions>
+```
+
+- `permissions`: every permission the app checks, by name. Fields, services
+  and the web ask for these names, so they're defined in code. A name is a
+  stable id, so it can also key what the app shows for it, such as a
+  translated label.
+- `roles`: what each built-in role may do in an organization. A permission
+  listed here needs a current organization, and the user's role there must
+  have it. A role that isn't listed has no permissions.
+
+Every permission is about an organization. Fields about the user rather than
+an organization use `@requireUserAuth`.
+
+A role listing a name that `permissions` doesn't define is a type
+error, and `definePermissions` throws for it at runtime too.
+`@cedarjs/tenancy/permissions` has no api code in it, so the web can import
+the package.
+
+### Checking permissions on the api
+
+```ts title="api/src/lib/permissions.ts"
+import { createPermissions } from '@cedarjs/tenancy'
+
+import { permissions } from '@my-app/permissions'
+
+export const {
+  hasPermission,
+  requirePermission,
+  permissionsOf,
+  withPermissions,
+} = createPermissions(permissions)
+```
+
+From `@cedarjs/tenancy`:
+
+```ts
+export function createPermissions(definitions: PermissionDefinitions): {
+  hasPermission(permission: Permission): boolean
+  requirePermission(options: { permission: Permission }): void
+  permissionsOf(membership: { role: string }): Permission[]
+  withPermissions<User extends { memberships: { role: string }[] }>(
+    user: User | null
+  ): (User & { memberships: { permissions: Permission[] }[] }) | null
+}
+```
+
+`Permission` is the union of the defined names, so a typo in a service is a
+type error.
+
+`hasPermission(permission)` answers for the current request.
+`requirePermission()` throws `AuthenticationError` when no one is signed in and
+`ForbiddenError` when `hasPermission()` is false, with a message saying an
+organization is needed when that's why. Both throw a plain `Error` for a name
+that isn't defined, so a typo in an SDL directive (which TypeScript can't see)
+is a loud error rather than a field nobody can use.
+
+`permissionsOf(membership)` is the one place a membership's permissions are
+worked out: its role's. `hasPermission`,
+`requirePermission` and `withPermissions` all use it, and `hasPermission`
+passes it the membership as `getCurrentUser` returned it.
+
+Permissions fail closed by construction: a field asks for one permission, and
+only the roles that list it get in. A new role starts with nothing.
+
+### `@requirePermission`
+
+Generated at `api/src/directives/requirePermission/requirePermission.ts`:
+
+```graphql
+directive @requirePermission(permission: String!) on FIELD_DEFINITION
+```
+
+```graphql
+type Mutation {
+  inviteMember(input: InviteMemberInput!): Invitation!
+    @requirePermission(permission: "members.manage")
+}
+```
+
+It sits beside `@requireOrgAuth`. Use whichever reads better per field; the
+generated organizations SDL uses `@requirePermission` for organization fields
+and `@requireUserAuth` for user-level ones.
+
+### Permissions on the web
+
+`withPermissions(user)` adds each membership's permissions (its role's) to the
+user `getCurrentUser` returns. `setup tenancy` wraps the
+lookup in it:
+
+```ts title="api/src/lib/auth.ts"
+return withPermissions(
+  await db.user.findUnique({ where: { id: session.id }, select: { ... } })
+)
+```
+
+So `currentUser.memberships[n].permissions` reaches the web with the rest of
+the memberships, and the web checks those rather than working them out from a
+role.
+Like roles, it's a snapshot refreshed by `reauthenticate()`.
+
 ## Web API
 
 From `@cedarjs/tenancy/web`:
@@ -408,6 +538,8 @@ export interface OrgMembership {
   id: string
   organizationId: string
   role: string
+  /** Added by `withPermissions`; missing when the app doesn't use it */
+  permissions?: string[]
   organization: { id: string; slug: string; name: string }
 }
 
@@ -417,6 +549,7 @@ export interface CurrentOrgSummary {
   name: string
   role: string
   membershipId: string
+  permissions: string[]
 }
 
 export function hasOrgRole(
@@ -434,7 +567,9 @@ export interface OrgScopeProps {
   notAMember?: React.ReactNode
   /** Only members with one of these roles in the organization get in. */
   roles?: string | string[]
-  /** The route a member without one of `roles` is redirected to. */
+  /** Only members whose membership has this permission get in. */
+  permission?: string
+  /** The route a member without one of `roles`, or `permission`, is redirected to. */
   unauthorized?: string
   children: React.ReactNode
 }
@@ -475,8 +610,9 @@ switcher that doesn't navigate. `memberships` come from
 `getMemberships(useAuth().currentUser)`.
 
 Below it, `OrgScope` provides a per-organization Apollo client (built or reused,
-keyed by `${userId}:${organizationId}`) and the organization for
-`useCurrentOrg()`.
+keyed by `${userId}:${organizationId}`), the organization for
+`useCurrentOrg()`, and a `useAuth().hasPermission` that checks the user's
+membership in that organization.
 
 On the web too, every role check names its kind: `useAuth().hasUserRole` and
 `<PrivateSet userRoles>` check `currentUser.roles`, and
@@ -523,12 +659,44 @@ the whole organization set inside a `<PrivateSet unauthenticated="login">`.
 both. As with every check on the web, this only decides what to show: the
 api's `@requireOrgAuth` is what protects the data.
 
+`permission` works the same way, against the membership's
+[permissions](#permissions-on-the-web):
+`<OrgScope permission="members.manage" unauthorized="projects">`.
+
 ### `useCurrentOrg()`
 
 Reads the organization `OrgScope` resolved. `setOrg(idOrSlug)` navigates to the
 current route with a new `orgSlug` param (using `navigate` and `routes` from
 `@cedarjs/router`) by default; when `OrgScope` is given an `onSetOrg` prop,
 `setOrg` calls that instead.
+
+### `useAuth().hasPermission(permission)`
+
+Under `OrgScope`, `useAuth().hasPermission(permission)` checks the
+`permissions` that `withPermissions` added to the user's membership in that
+organization. Outside one it's `false`, so a check in the wrong place hides
+rather than shows. `OrgScope` provides it through `HasPermissionContext` from
+`@cedarjs/auth`.
+
+```tsx
+const MembersPage = () => {
+  const { hasPermission } = useAuth()
+  const canManage = hasPermission('members.manage')
+
+  return <MemberList editable={canManage} />
+}
+```
+
+`hasPermission` only takes the names in `packages/permissions`, so a typo is a
+type error: `cedar generate types` writes them to
+`.cedar/types/includes/all-permissions.d.ts`, which fills in
+`AvailablePermissions` from `@cedarjs/auth`. In an app without permissions (no
+`packages/permissions`, as in a single-tenant app) it takes no names at all, so
+calling it is a type error rather than a check that's always `false`.
+
+Like every check on the web, this only decides what to show; the api's
+`@requirePermission` is the guard. For a page only some may open, give `OrgScope`
+a `permission` (see [Guarding routes by role](#guarding-routes-by-role)).
 
 ### `hasOrgRole` (web)
 
@@ -612,6 +780,12 @@ scenario('lists only the current organization's projects', async (scenario) => {
 
 Unset `context.currentOrg` (or don't set it) to test the `TenantScopeError` /
 unauthorized paths.
+
+On the web, the mocked `useAuth` in tests behaves like the real one: inside an
+`OrgScope`, `hasPermission` checks the membership in that organization, so give
+the user from `mockCurrentUser()` the `memberships` your component's
+organization needs. Outside one, `hasPermission` is `false`. `hasUserRole`
+checks `currentUser.roles`, inside an `OrgScope` or not.
 
 ## Limitations
 

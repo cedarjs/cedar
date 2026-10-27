@@ -1,6 +1,11 @@
 import { describe, expectTypeOf, test } from 'vitest'
 
-import type { CurrentUser, LoggedInUser } from '../AuthContext.js'
+import type {
+  AuthContextInterface,
+  CurrentUser,
+  LoggedInUser,
+  PermissionName,
+} from '../AuthContext.js'
 
 describe('LoggedInUser', () => {
   test('has no index signature when nothing augments it', () => {
@@ -31,5 +36,30 @@ describe('LoggedInUser', () => {
 
     expectTypeOf<MyCurrentUser>().toMatchTypeOf<CurrentUser>()
     expectTypeOf({ id: 1, email: 'a@example.com' }).toMatchTypeOf<CurrentUser>()
+  })
+})
+
+describe('PermissionName', () => {
+  test('is never in an app without permissions', () => {
+    expectTypeOf<PermissionName>().toBeNever()
+  })
+
+  test('so hasPermission takes no names there', () => {
+    type HasPermission = AuthContextInterface<
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown,
+      unknown
+    >['hasPermission']
+
+    expectTypeOf<HasPermission>().parameter(0).toBeNever()
   })
 })

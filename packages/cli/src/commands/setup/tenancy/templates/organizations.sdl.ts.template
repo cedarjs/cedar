@@ -46,7 +46,8 @@ export const schema = gql`
     myMemberships: [Membership!]! @requireUserAuth
 
     "The current organization, resolved by resolveCurrentOrg for this request."
-    organization(id: String!): Organization @requireOrgAuth
+    organization(id: String!): Organization
+      @requirePermission(permission: "organization.read")
   }
 
   type Mutation {
@@ -64,7 +65,7 @@ export const schema = gql`
     the invite shows up if the inviter is also the invitee.
     """
     inviteMember(input: InviteMemberInput!): Invitation!
-      @requireOrgAuth(roles: ["owner", "admin"])
+      @requirePermission(permission: "members.manage")
 
     """
     Attaches the pending membership matching token to the signed-in user, or
@@ -85,6 +86,6 @@ export const schema = gql`
     removing their own membership.
     """
     removeMember(membershipId: String!): Membership!
-      @requireOrgAuth(roles: ["owner", "admin"])
+      @requirePermission(permission: "members.manage")
   }
 `

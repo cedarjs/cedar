@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { HasOrgRoleContext } from '@cedarjs/auth'
 import type { AuthContextInterface, UseAuth } from '@cedarjs/auth'
+import { HasPermissionContext } from '@cedarjs/auth'
 import {
   LocationProvider,
   navigate,
@@ -115,6 +116,7 @@ function createUseAuth(state: AuthState): UseAuth {
       getCurrentUser: async () => null,
       hasRole: () => false,
       hasUserRole: () => false,
+      hasPermission: () => false,
       reauthenticate: async () => {},
       client: undefined,
       type: 'custom',
@@ -579,6 +581,89 @@ describe('OrgScope', () => {
 
       act(() => navigate('/org/org-b'))
       await waitFor(() => screen.getByText('projects: org_b-projects'))
+    })
+
+    describe('permissions', () => {
+      const withPermissions = (
+        m: OrgMembership,
+        permissions: string[],
+      ): OrgMembership => ({ ...m, permissions })
+
+      const useAuth = createUseAuth({
+        isAuthenticated: true,
+        currentUser: {
+          id: 'user_1',
+          memberships: [
+            withPermissions(membership('org_a', 'org-a', 'Org A', 'member'), [
+              'projects.read',
+            ]),
+            withPermissions(membership('org_b', 'org-b', 'Org B', 'owner'), [
+              'projects.read',
+              'settings.edit',
+            ]),
+          ],
+        },
+      })
+
+      test("makes useAuth().hasPermission check the organization's membership", async () => {
+        setupFetchMock()
+
+        const Can = () => {
+          const hasPermission = React.useContext(HasPermissionContext)
+          return (
+            <>
+              read: {String(hasPermission?.('projects.read'))}, edit:{' '}
+              {String(hasPermission?.('settings.edit'))}
+            </>
+          )
+        }
+
+        const Tree = ({ orgSlug }: { orgSlug: string }) => (
+          <LocationProvider>
+            <ParamsProvider allParams={{}}>
+              <CedarApolloProvider>
+                <OrgScope useAuth={useAuth} orgSlug={orgSlug}>
+                  <Can />
+                </OrgScope>
+              </CedarApolloProvider>
+            </ParamsProvider>
+          </LocationProvider>
+        )
+
+        const { rerender } = render(<Tree orgSlug="org-a" />)
+        await screen.findByText('read: true, edit: false')
+
+        rerender(<Tree orgSlug="org-b" />)
+        await screen.findByText('read: true, edit: true')
+      })
+
+      test('OrgScope with a permission lets in only memberships that have it', async () => {
+        const { fetchMock } = setupFetchMock()
+
+        const Tree = ({ orgSlug }: { orgSlug: string }) => (
+          <LocationProvider>
+            <ParamsProvider allParams={{}}>
+              <CedarApolloProvider>
+                <OrgScope
+                  useAuth={useAuth}
+                  orgSlug={orgSlug}
+                  permission="settings.edit"
+                  notAMember="not allowed"
+                >
+                  <ProjectsView />
+                </OrgScope>
+              </CedarApolloProvider>
+            </ParamsProvider>
+          </LocationProvider>
+        )
+
+        const { rerender } = render(<Tree orgSlug="org-a" />)
+        await screen.findByText('not allowed')
+        expect(fetchMock).not.toHaveBeenCalled()
+
+        rerender(<Tree orgSlug="org-b" />)
+        await screen.findByText('projects: org_b-projects')
+      })
     })
 
     describe('roles', () => {

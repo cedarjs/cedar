@@ -72,8 +72,8 @@ export const myMemberships: QueryResolvers['myMemberships'] = () => {
 /**
  * The current organization (the one `resolveCurrentOrg` resolved for this
  * request). `id` is required so callers state which organization they mean,
- * but it must match the current organization: `@requireOrgAuth` checks the
- * caller's membership in the current organization, not in `id`.
+ * but it must match the current organization: `@requirePermission` checks
+ * the caller's membership in the current organization, not in `id`.
  */
 export const organization: QueryResolvers['organization'] = async ({ id }) => {
   const currentOrg = requireCurrentOrg()
@@ -135,7 +135,7 @@ export const createOrganization: MutationResolvers['createOrganization'] =
  * Creates a pending membership (an invitation) in the current organization,
  * for a role the caller's own role may grant per `ROLE_GRANTS` -- an
  * `admin` can invite an `admin` or a `member`, but not an `owner`, even
- * though `@requireOrgAuth(roles: ["owner", "admin"])` lets an admin call
+ * though `@requirePermission(permission: "members.manage")` lets an admin call
  * this mutation at all. A role that isn't in `ROLE_GRANTS` is rejected
  * outright, so a typo in `input.role` can never create a membership nobody
  * can check against.

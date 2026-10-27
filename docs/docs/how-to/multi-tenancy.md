@@ -184,21 +184,22 @@ no-op, `--force` or not.
 
 ### What `setup tenancy` changes
 
-| File                                                                | Change                                                                                                                                             |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `api/db/schema.prisma`                                              | Adds `Organization` and `Membership`, adds `memberships Membership[]` to `User`, adds `RW_DataMigration` if `data-migrate install` has not run yet |
-| `api/src/lib/db.ts`                                                 | Wraps `db` in `createTenancyExtension`                                                                                                             |
-| `api/src/lib/auth.ts`                                               | Adds `memberships` to the `getCurrentUser()` select, replaces `hasRole` / `requireAuth` with `createTenancyAuth`                                   |
-| `api/src/functions/graphql.ts`                                      | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
-| `api/src/functions/auth.ts`                                         | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
-| `api/src/directives/`                                               | Replaces `@requireAuth` with `@requireOrgAuth` and `@requireUserAuth`                                                                              |
-| `api/src/graphql/`, other `api/src/` files                          | Renames `@requireAuth` and `requireAuth()` to `@requireUserAuth` and `requireUserAuth()`                                                           |
-| `api/src/services/organizations/`                                   | Generates the organizations service and SDL                                                                                                        |
-| `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts` | Backfills memberships for existing users                                                                                                           |
-| `web/src/` files                                                    | Renames `hasRole` from `useAuth()` to `hasUserRole`                                                                                                |
-| `web/src/components/OrgScope/OrgScope.tsx`                          | Generates the app-owned `OrgScope` wrapper                                                                                                         |
-| `web/src/pages/InvitePage/InvitePage.tsx`                           | Generates the invitation landing page                                                                                                              |
-| `api/package.json`, `web/package.json`                              | Adds `@cedarjs/tenancy`                                                                                                                            |
+| File                                                                  | Change                                                                                                                                             |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api/db/schema.prisma`                                                | Adds `Organization` and `Membership`, adds `memberships Membership[]` to `User`, adds `RW_DataMigration` if `data-migrate install` has not run yet |
+| `api/src/lib/db.ts`                                                   | Wraps `db` in `createTenancyExtension`                                                                                                             |
+| `api/src/lib/auth.ts`                                                 | Adds `memberships` to the `getCurrentUser()` select, replaces `hasRole` / `requireAuth` with `createTenancyAuth`                                   |
+| `api/src/functions/graphql.ts`                                        | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
+| `api/src/functions/auth.ts`                                           | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
+| `api/src/directives/`                                                 | Replaces `@requireAuth` with `@requireOrgAuth` and `@requireUserAuth`                                                                              |
+| `api/src/graphql/`, other `api/src/` files                            | Renames `@requireAuth` and `requireAuth()` to `@requireUserAuth` and `requireUserAuth()`                                                           |
+| `api/src/lib/permissions.ts`, `api/src/directives/requirePermission/` | Generates the permissions map and the `@requirePermission` directive                                                                               |
+| `api/src/services/organizations/`                                     | Generates the organizations service and SDL                                                                                                        |
+| `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts`   | Backfills memberships for existing users                                                                                                           |
+| `web/src/` files                                                      | Renames `hasRole` from `useAuth()` to `hasUserRole`                                                                                                |
+| `web/src/components/OrgScope/OrgScope.tsx`                            | Generates the app-owned `OrgScope` wrapper                                                                                                         |
+| `web/src/pages/InvitePage/InvitePage.tsx`                             | Generates the invitation landing page                                                                                                              |
+| `api/package.json`, `web/package.json`                                | Adds `@cedarjs/tenancy`                                                                                                                            |
 
 `db.ts` gains the tenancy extension, chained after any existing extensions (such
 as `@cedarjs/storage`'s):
@@ -261,7 +262,8 @@ than an organization, as the generated `myMemberships`, `createOrganization`
 and `acceptInvitation` are: it needs a signed-in user, and checks `roles`
 against `currentUser.roles`, as `requireAuth` did. `@requireOrgAuth` with no
 roles admits any member of the organization, as a bare `@requireAuth` admits
-any signed-in user. Guard anything narrower with `roles`.
+any signed-in user. Guard anything narrower with `roles` or
+[`@requirePermission`](#permissions).
 
 Before tenancy there are no organizations, so every field your app already has
 is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and
@@ -589,7 +591,8 @@ type Invitation {
 
 type Query {
   myMemberships: [Membership!]! @requireUserAuth
-  organization(id: String!): Organization @requireOrgAuth
+  organization(id: String!): Organization
+    @requirePermission(permission: "organization.read")
 }
 
 input CreateOrganizationInput {
@@ -610,14 +613,14 @@ type Mutation {
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   inviteMember(input: InviteMemberInput!): Invitation!
-    @requireOrgAuth(roles: ["owner", "admin"])
+    @requirePermission(permission: "members.manage")
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   acceptInvitation(token: String!): Organization! @requireUserAuth
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   removeMember(membershipId: String!): Membership!
-    @requireOrgAuth(roles: ["owner", "admin"])
+    @requirePermission(permission: "members.manage")
 }
 ```
 
@@ -653,8 +656,8 @@ export const organization = () => {
 export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
   const currentOrg = requireCurrentOrg()
 
-  // @requireOrgAuth(roles: ["owner", "admin"]) on the SDL only checks that the
-  // caller is an owner or admin of this organization; whether *this* role
+  // @requirePermission(permission: "members.manage") on the SDL only checks
+  // that the caller's role here may manage members; whether *this* role
   // may be granted is checked here, against the caller's own role, so an
   // admin can invite an admin or a member but never an owner.
   if (!canGrantRole(currentOrg.role, input.role)) {
@@ -711,6 +714,60 @@ or, when the field lists `roles`, the user's role in it isn't one of them.
 `currentUser.roles` has none of them. These are the error types `requireAuth`
 always threw, so any error handling you already have on the web side keeps
 working.
+
+### Permissions
+
+`setup tenancy` also generates `packages/permissions`, a package shared by the
+api and web sides that defines every permission and what
+each role may do, `api/src/lib/permissions.ts`, which checks them, and an
+`@requirePermission` directive that asks for one of those permissions:
+
+```ts title="packages/permissions/src/index.ts"
+export const permissions = definePermissions({
+  permissions: ['organization.read', 'members.manage'],
+  roles: {
+    owner: ['organization.read', 'members.manage'],
+    admin: ['organization.read', 'members.manage'],
+    member: ['organization.read'],
+  },
+})
+```
+
+```ts title="api/src/lib/permissions.ts"
+export const {
+  hasPermission,
+  requirePermission,
+  permissionsOf,
+  withPermissions,
+} = createPermissions(permissions)
+```
+
+The generated organizations SDL uses it: `inviteMember` and `removeMember` are
+`@requirePermission(permission: "members.manage")`. Say you add a `viewer`
+role later that may only read: add `viewer: ['organization.read']` to `roles`, and
+every field guarded by `@requirePermission` lets it do exactly that, including
+fields added after it, without touching the SDL. A field guarded only by a bare
+`@requireOrgAuth` is open to every member, `viewer` included, so guard anything
+a narrower role shouldn't reach with a permission. With role lists on each
+field you'd find and edit every field it should reach, and a field written
+later would be open or closed to it depending on whether its author remembered
+it.
+
+`getCurrentUser` returns each membership with its `permissions`
+(`withPermissions`), so the web asks the same question with
+`useAuth().hasPermission()`:
+
+```tsx
+import { useAuth } from 'src/auth'
+
+const MembersPage = () => {
+  const { hasPermission } = useAuth()
+  const canManage = hasPermission('members.manage')
+  // ...
+}
+```
+
+See [Permissions](../tenancy.md#permissions) in the reference.
 
 ### Web hooks: `OrgScope`, `useCurrentOrg`, `hasOrgRole`
 

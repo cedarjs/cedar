@@ -2,8 +2,12 @@ import React from 'react'
 
 import { ApolloProvider } from '@apollo/client/react'
 
-import type { UseAuth } from '@cedarjs/auth'
-import { HasOrgRoleContext, useNoAuth } from '@cedarjs/auth'
+import type { PermissionName, UseAuth } from '@cedarjs/auth'
+import {
+  HasOrgRoleContext,
+  HasPermissionContext,
+  useNoAuth,
+} from '@cedarjs/auth'
 import {
   navigate,
   Redirect,
@@ -35,9 +39,15 @@ export interface OrgScopeProps {
    */
   roles?: string | string[]
   /**
-   * The name of the route a member without one of `roles` is redirected to.
-   * It gets the `orgSlug` param when its path has one, so it can be a page
-   * of the same organization. Without it, they get `notAMember`.
+   * Only members whose membership has this permission get in (see
+   * `createPermissions` in `@cedarjs/tenancy`). Checked like `roles`.
+   */
+  permission?: PermissionName
+  /**
+   * The name of the route a member without one of `roles`, or without
+   * `permission`, is redirected to. It gets the `orgSlug` param when its
+   * path has one, so it can be a page of the same organization. Without
+   * it, they get `notAMember`.
    */
   unauthorized?: string
   /**
@@ -99,12 +109,14 @@ function membershipRoleMap(
  * otherwise wraps `children` in that organization's own `ApolloProvider`,
  * so every Cell, `useQuery` and `useMutation` under it carries the
  * `cedar-org` header and reads from that organization's cache. Under it,
- * `<PrivateSet orgRoles>` checks the user's role in that organization.
+ * `useAuth().hasPermission` checks the user's membership in that
+ * organization, and `<PrivateSet orgRoles>` checks their role in it.
  */
 export function OrgScope({
   orgSlug: orgSlugProp,
   notAMember = null,
   roles,
+  permission,
   unauthorized,
   useAuth = useNoAuth,
   onSetOrg,
@@ -212,12 +224,25 @@ export function OrgScope({
     ? memberships.find((m) => m.organization.slug === orgSlug)
     : undefined
 
+  // `useAuth().hasPermission` below this point: the membership's
+  // permissions here
+  const membershipPermissions = membership?.permissions
+  const hasPermission = React.useCallback(
+    (permissionToCheck: string) =>
+      membershipPermissions?.includes(permissionToCheck) ?? false,
+    [membershipPermissions],
+  )
+
   if (!membership || !userId || !orgSlug) {
     return <>{notAMember}</>
   }
 
   // The role in this organization, not `currentUser.roles`
-  if (roles !== undefined && !toList(roles).includes(membership.role)) {
+  const allowed =
+    (roles === undefined || toList(roles).includes(membership.role)) &&
+    (permission === undefined || hasPermission(permission))
+
+  if (!allowed) {
     if (!unauthorized) {
       return <>{notAMember}</>
     }
@@ -241,6 +266,7 @@ export function OrgScope({
     name: membership.organization.name,
     role: membership.role,
     membershipId: membership.id,
+    permissions: membership.permissions ?? [],
   }
 
   const orgClient = getOrgClient({
@@ -268,9 +294,11 @@ export function OrgScope({
   return (
     <ApolloProvider client={orgClient}>
       <OrgContext.Provider value={contextValue}>
-        <HasOrgRoleContext.Provider value={hasOrgRoleHere}>
-          {children}
-        </HasOrgRoleContext.Provider>
+        <HasPermissionContext.Provider value={hasPermission}>
+          <HasOrgRoleContext.Provider value={hasOrgRoleHere}>
+            {children}
+          </HasOrgRoleContext.Provider>
+        </HasPermissionContext.Provider>
       </OrgContext.Provider>
     </ApolloProvider>
   )

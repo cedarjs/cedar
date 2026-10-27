@@ -1,11 +1,14 @@
 export type {
   AuthContextInterface,
   AuthTenancy,
+  AvailablePermissions,
   CurrentUser,
   LoggedInUser,
+  PermissionName,
 } from './AuthContext.js'
 export type { AuthProviderProps } from './AuthProvider/AuthProvider.js'
 export { HasOrgRoleContext } from './HasOrgRoleContext.js'
+export { HasPermissionContext } from './HasPermissionContext.js'
 export { useNoAuth } from './useAuth.js'
 export type { UseAuth } from './useAuth.js'
 export { createAuthentication } from './authFactory.js'
