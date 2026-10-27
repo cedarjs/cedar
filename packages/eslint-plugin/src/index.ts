@@ -19,7 +19,7 @@ export const rules = {
   'service-type-annotations': serviceTypeAnnotations,
   'unsupported-route-components': unsupportedRouteComponents,
   'valid-permission-names': validPermissionNames,
-} satisfies Record<string, ESLintUtils.RuleModule<string, any>>
+} satisfies Record<string, ESLintUtils.RuleModule<string, readonly unknown[]>>
 
 const plugin = { meta, rules }
 
