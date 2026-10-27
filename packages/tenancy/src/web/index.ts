@@ -9,3 +9,4 @@ export type {
   OrgMembership,
 } from './types.js'
 export { useCurrentOrg } from './useCurrentOrg.js'
+export { useOrgRoles } from './useOrgRoles.js'

@@ -17,6 +17,7 @@ import {
 } from '@cedarjs/router'
 import { useCreateApolloClient } from '@cedarjs/web/apollo'
 
+import { findMembership } from './findMembership.js'
 import { getMemberships } from './getMemberships.js'
 import { hasOrgRole } from './hasOrgRole.js'
 import { clearOrgClients, dropOrgClient, getOrgClient } from './orgClients.js'
@@ -220,9 +221,7 @@ export function OrgScope({
     [onSetOrg, params, location.pathname, location.search, location.hash],
   )
 
-  const membership = orgSlug
-    ? memberships.find((m) => m.organization.slug === orgSlug)
-    : undefined
+  const membership = findMembership(memberships, orgSlug)
 
   // `useAuth().hasPermission` below this point: the membership's
   // permissions here
