@@ -154,7 +154,7 @@ Dana logs in once. Switching from `/org/acme-hardware/products` to
 or route resolves `context.currentOrg` independently from the `cedar-org` header
 or the `orgSlug` route param (see
 [section 4](#4-request-flow-url-to-header-to-context)). Nothing about
-`hasOrgRole()`, `requireMembership()` or the Prisma extension needs to know that
+`requireOrgAuth()`, `hasOrgRole()` or the Prisma extension needs to know that
 the same `userId` sits behind both memberships; each request only ever has one
 organization in scope.
 
@@ -188,12 +188,14 @@ no-op, `--force` or not.
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `api/db/schema.prisma`                                              | Adds `Organization` and `Membership`, adds `memberships Membership[]` to `User`, adds `RW_DataMigration` if `data-migrate install` has not run yet |
 | `api/src/lib/db.ts`                                                 | Wraps `db` in `createTenancyExtension`                                                                                                             |
-| `api/src/lib/auth.ts`                                               | Adds `memberships` to the `getCurrentUser()` select, re-exports `hasOrgRole` / `requireMembership`                                                 |
+| `api/src/lib/auth.ts`                                               | Adds `memberships` to the `getCurrentUser()` select, replaces `hasRole` / `requireAuth` with `createTenancyAuth`                                   |
 | `api/src/functions/graphql.ts`                                      | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
 | `api/src/functions/auth.ts`                                         | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
-| `api/src/directives/requireMembership/`                             | Generates the `@requireMembership` directive                                                                                                       |
+| `api/src/directives/`                                               | Replaces `@requireAuth` with `@requireOrgAuth` and `@requireUserAuth`                                                                              |
+| `api/src/graphql/`, other `api/src/` files                          | Renames `@requireAuth` and `requireAuth()` to `@requireUserAuth` and `requireUserAuth()`                                                           |
 | `api/src/services/organizations/`                                   | Generates the organizations service and SDL                                                                                                        |
 | `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts` | Backfills memberships for existing users                                                                                                           |
+| `web/src/` files                                                    | Renames `hasRole` from `useAuth()` to `hasUserRole`                                                                                                |
 | `web/src/components/OrgScope/OrgScope.tsx`                          | Generates the app-owned `OrgScope` wrapper                                                                                                         |
 | `web/src/pages/InvitePage/InvitePage.tsx`                           | Generates the invitation landing page                                                                                                              |
 | `api/package.json`, `web/package.json`                              | Adds `@cedarjs/tenancy`                                                                                                                            |
@@ -216,8 +218,9 @@ as `@cedarjs/storage`'s):
 +)
 ```
 
-`auth.ts` gains `memberships` in the `getCurrentUser()` select and re-exports
-the org-aware helpers:
+`auth.ts` gains `memberships` in the `getCurrentUser()` select, and its
+single-tenant `hasRole` and `requireAuth` are replaced with ones that check the
+user's role in the current organization:
 
 ```diff title="api/src/lib/auth.ts"
  export const getCurrentUser = async (session) => {
@@ -240,8 +243,39 @@ the org-aware helpers:
    })
  }
 
-+export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'
+-export const hasRole = (roles: AllowedRoles): boolean => {
+-  // ...checks currentUser.roles
+-}
+-
+-export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
+-  // ...
+-}
++export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
++  createTenancyAuth()
 ```
+
+There's no `requireAuth` any more. `requireOrgAuth` (and `@requireOrgAuth`) is
+about the current organization: it needs one, and checks the user's role in it.
+`requireUserAuth` (and `@requireUserAuth`) is about the signed-in user rather
+than an organization, as the generated `myMemberships`, `createOrganization`
+and `acceptInvitation` are: it needs a signed-in user, and checks `roles`
+against `currentUser.roles`, as `requireAuth` did. `@requireOrgAuth` with no
+roles admits any member of the organization, as a bare `@requireAuth` admits
+any signed-in user. Guard anything narrower with `roles`.
+
+Before tenancy there are no organizations, so every field your app already has
+is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and
+each `requireAuth()` and `hasRole()` from `src/lib/auth` to `requireUserAuth()`
+and `hasUserRole()`. On the web, it renames `hasRole` from `useAuth()` to
+`hasUserRole`. Your app works as it did. When you give a model an
+`organizationId`, switch its fields to `@requireOrgAuth`. `cedar generate sdl`
+and `cedar generate scaffold` pick the right one for new models, and a leftover
+`@requireAuth` is an unknown directive, so it fails when the schema is built.
+
+With tenancy, `getCurrentUser` shouldn't copy a membership's role into
+`currentUser.roles`: `requireOrgAuth` and `hasOrgRole` get the role from the
+membership in the current organization, and a copied role would leak one
+organization's role into checks made outside it.
 
 `graphql.ts` gains a `context` function that resolves the current organization
 before any resolver runs:
@@ -554,8 +588,8 @@ type Invitation {
 }
 
 type Query {
-  myMemberships: [Membership!]! @requireAuth
-  organization(id: String!): Organization @requireMembership
+  myMemberships: [Membership!]! @requireUserAuth
+  organization(id: String!): Organization @requireOrgAuth
 }
 
 input CreateOrganizationInput {
@@ -572,24 +606,24 @@ type Mutation {
   # Web callers must call `reauthenticate()` in `onCompleted`; this mutation
   # changes the memberships that the currentUser snapshot on the web holds.
   createOrganization(input: CreateOrganizationInput!): Organization!
-    @requireAuth
+    @requireUserAuth
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   inviteMember(input: InviteMemberInput!): Invitation!
-    @requireMembership(roles: ["owner", "admin"])
+    @requireOrgAuth(roles: ["owner", "admin"])
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
-  acceptInvitation(token: String!): Organization! @requireAuth
+  acceptInvitation(token: String!): Organization! @requireUserAuth
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   removeMember(membershipId: String!): Membership!
-    @requireMembership(roles: ["owner", "admin"])
+    @requireOrgAuth(roles: ["owner", "admin"])
 }
 ```
 
 ```ts title="api/src/services/organizations/organizations.ts"
 import { db } from 'src/lib/db'
-import { hasOrgRole, requireMembership, requireCurrentOrg } from 'src/lib/auth'
+import { requireCurrentOrg } from '@cedarjs/tenancy'
 
 // Which role a membership with a given role may grant (inviteMember) or
 // revoke (removeMember). An app adds a role here when it adds one to its
@@ -619,10 +653,10 @@ export const organization = () => {
 export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
   const currentOrg = requireCurrentOrg()
 
-  // @requireMembership(roles: ["owner", "admin"]) on the SDL only checks
-  // that the caller is an owner or admin of *some* organization; whether
-  // *this* role may be granted is checked here, against the caller's own
-  // role, so an admin can invite an admin or a member but never an owner.
+  // @requireOrgAuth(roles: ["owner", "admin"]) on the SDL only checks that the
+  // caller is an owner or admin of this organization; whether *this* role
+  // may be granted is checked here, against the caller's own role, so an
+  // admin can invite an admin or a member but never an owner.
   if (!canGrantRole(currentOrg.role, input.role)) {
     throw new ForbiddenError(
       `A "${currentOrg.role}" cannot invite a "${input.role}".`
@@ -654,37 +688,29 @@ two concurrent accepts of the same token can never both win, and it spends the
 token in that same write so it can't be replayed by anyone who observed it
 beforehand.
 
-### `@requireMembership`
+### `@requireOrgAuth` and `@requireUserAuth`
 
-The generated directive works like `@requireAuth`, but checks organization
-membership and (optionally) role:
+The setup command replaces your app's `@requireAuth` directive with two, each
+passing its `roles` on to the function of the same name in `src/lib/auth`:
 
-```ts title="api/src/directives/requireMembership/requireMembership.ts"
-import { createValidatorDirective } from '@cedarjs/graphql-server'
-import { requireMembership } from 'src/lib/auth'
-
-const schema = /* GraphQL */ `
-  directive @requireMembership(roles: [String]) on FIELD_DEFINITION
+```ts title="api/src/directives/requireOrgAuth/requireOrgAuth.ts"
+export const schema = gql`
+  directive @requireOrgAuth(roles: [String]) on FIELD_DEFINITION
 `
 
-const requireMembershipValidate = ({ directiveArgs }) => {
+const validate = ({ directiveArgs }) => {
   const { roles } = directiveArgs
-  requireMembership({ roles })
+  applicationRequireOrgAuth({ roles })
 }
-
-const requireMembershipDirective = createValidatorDirective(
-  schema,
-  requireMembershipValidate
-)
-
-export default requireMembershipDirective
 ```
 
-`requireMembership()` throws `AuthenticationError` when there's no
-`context.currentUser`, and `ForbiddenError` when there's no `context.currentOrg`
-or the current org's role doesn't match `roles`. These are the same error types
-`requireAuth` throws, so any error handling you already have on the web side
-keeps working.
+Both throw `AuthenticationError` when there's no `context.currentUser`.
+`requireOrgAuth()` throws `ForbiddenError` when there's no `context.currentOrg`
+or, when the field lists `roles`, the user's role in it isn't one of them.
+`requireUserAuth()` throws `ForbiddenError` when `roles` are given and
+`currentUser.roles` has none of them. These are the error types `requireAuth`
+always threw, so any error handling you already have on the web side keeps
+working.
 
 ### Web hooks: `OrgScope`, `useCurrentOrg`, `hasOrgRole`
 
@@ -755,12 +781,31 @@ const ProjectList = () => {
 }
 ```
 
-`hasOrgRole(roles, organizationId?)` behaves like `useAuth().hasRole()`, but
-scoped to an organization: with no `organizationId` argument it checks the
-current organization's role from `useCurrentOrg()`; passed an `organizationId`,
-it checks `currentUser.memberships` for a match, which is how you'd show a
-switcher entry as disabled for an organization the user isn't an admin of,
-without navigating there first.
+`hasOrgRole(roles, organizationId?)` also takes an `organizationId`, and then
+checks `currentUser.memberships` for a match, which is how you'd show a switcher
+entry as disabled for an organization the user isn't an admin of, without
+navigating there first. For `currentUser.roles`, use `useAuth().hasUserRole`.
+With tenancy there's no `useAuth().hasRole`: setup renames your existing uses
+to `hasUserRole`, and using it is a type error.
+
+`<PrivateSet roles>` isn't available with tenancy either. For a page only some
+roles in the organization may open, give `OrgScope` `roles` and `unauthorized`
+from a small wrapper component (see
+[Guarding routes by role](../tenancy.md#guarding-routes-by-role)):
+
+```tsx title="web/src/Routes.tsx"
+const OwnersOnly = ({ children }: { children: React.ReactNode }) => (
+  <OrgScope roles="owner" unauthorized="projects">
+    {children}
+  </OrgScope>
+)
+
+// ...
+
+<Set wrap={[OwnersOnly, OrgLayout]}>
+  <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
+</Set>
+```
 
 ### `reauthenticate()` after membership-changing mutations
 
@@ -1003,7 +1048,9 @@ for the agency's staff:
 
 ```ts title="api/src/services/organizations/organizations.ts"
 import { db } from 'src/lib/db'
-import { requireMembership, requireCurrentOrg } from 'src/lib/auth'
+import { requireCurrentOrg } from '@cedarjs/tenancy'
+
+import { requireOrgAuth } from 'src/lib/auth'
 
 export const createClientOrganization = async ({
   name,
@@ -1014,7 +1061,7 @@ export const createClientOrganization = async ({
   slug: string
   staffMemberships: Array<{ agencyMembershipId: string; role: string }>
 }) => {
-  requireMembership({ roles: ['owner', 'admin'] })
+  requireOrgAuth({ roles: ['owner', 'admin'] })
   const agencyOrg = requireCurrentOrg()
 
   return db.organization.create({

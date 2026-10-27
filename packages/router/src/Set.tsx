@@ -1,6 +1,10 @@
 import type { ComponentType, ReactElement, ReactNode } from 'react'
 import React from 'react'
 
+import type { AuthTenancy } from '@cedarjs/auth' with {
+  'resolution-mode': 'import',
+}
+
 /**
  * The props `<Set>` gives each component in its `wrap` prop: the wrapped
  * routes as `children`, and nothing else
@@ -25,7 +29,22 @@ export interface WrapperProps {
  */
 export type WrapperType = ComponentType<WrapperProps>
 
-interface SetProps {
+/**
+ * The `roles` prop, which an app with tenancy doesn't have (see
+ * `AuthTenancy`): there, every role check says which kind it is.
+ */
+type SetRoles = AuthTenancy extends { enabled: true }
+  ? Record<never, never>
+  : {
+      /**
+       * Route is permitted when authenticated and user has any of the
+       * provided roles such as "admin" or ["admin", "editor"], in
+       * `currentUser.roles`
+       */
+      roles?: string | string[]
+    }
+
+interface SetProps extends SetRoles {
   /**
    * Components to wrap all routes in this set with, like layouts. The first
    * one in an array is the outermost one.
@@ -47,11 +66,6 @@ interface SetProps {
    * @deprecated Please use `<PrivateSet>` instead and specify this prop there
    */
   unauthenticated?: string
-  /**
-   * Route is permitted when authenticated and user has any of the provided
-   * roles such as "admin" or ["admin", "editor"]
-   */
-  roles?: string | string[]
   /** Prerender all pages in the set */
   prerender?: boolean
   children: ReactNode

@@ -17,6 +17,7 @@ import { addEnvVar } from '@cedarjs/cli-helpers/project'
 import { getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+import { withAuthDirective } from '../../../lib/authDirective.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { generateSecret } from '../../generate/secret/secret.js'
@@ -140,6 +141,11 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
     for (const [token, value] of Object.entries(replacements)) {
       templateContent = templateContent.replaceAll(token, value)
     }
+
+    // Uploads belong to a user, not an organization
+    templateContent = withAuthDirective(templateContent, {
+      belongsToOrg: false,
+    })
 
     const content = projectIsTypescript
       ? templateContent

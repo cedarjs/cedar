@@ -76,23 +76,38 @@ import {
 ## Auth helpers
 
 ```ts
-import { hasOrgRole, requireMembership } from '@cedarjs/tenancy'
+// api/src/lib/auth.ts, in place of the single-tenant hasRole/requireAuth
+import { createTenancyAuth } from '@cedarjs/tenancy'
+
+export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
+  createTenancyAuth()
 
 // In a service:
-requireMembership({ roles: ['owner', 'admin'] })
+requireOrgAuth({ roles: ['owner', 'admin'] }) // in the current organization
+requireUserAuth() // signed in, no organization needed
 
 // Anywhere:
-if (hasOrgRole('owner')) { ... }
+if (hasOrgRole('owner')) { ... } // in the current organization
+if (hasUserRole('superuser')) { ... } // currentUser.roles
 ```
 
-`requireMembership` throws `AuthenticationError` with no current user and
-`ForbiddenError` with no current organization or a role mismatch — the same
-error types `requireAuth` uses.
+`requireOrgAuth` (and the `@requireOrgAuth` directive `setup tenancy` adds) is
+about the current organization: it throws `AuthenticationError` with no
+current user, and `ForbiddenError` with no current organization or when the
+user's role there isn't one of `roles` when they're given. With no `roles`,
+any member gets in. `requireUserAuth` (and `@requireUserAuth`) is for fields about the user
+rather than an organization: it needs a signed-in user, and checks `roles`
+against `currentUser.roles`. `hasOrgRole` and `hasUserRole` are the boolean
+checks to match. There's no `requireAuth` or `hasRole`.
 
 ## Web
 
-`@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg`, `OrgContext` and
+`@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg` and
 `getMemberships`/`hasOrgRole` for the client side: a per-organization Apollo
 client provided under organization routes, keyed by the immutable organization
-id so switching organizations never mixes caches. See the how-to for the full
+id so switching organizations never mixes caches. `useCurrentOrg().hasOrgRole`
+checks the user's role in the organization, and `OrgScope`'s `roles` and
+`unauthorized` props guard routes by it. `useAuth().hasUserRole` checks
+`currentUser.roles`; there's no `useAuth().hasRole` or `<PrivateSet roles>` in
+an app with tenancy. See the how-to for the full
 `<Set wrap={OrgScope}>` setup `yarn cedar setup tenancy` generates.

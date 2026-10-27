@@ -24,6 +24,12 @@ import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
 
+import { TENANCY_AUTH_EXPORT } from './authCodemod.js'
+import {
+  isDefaultRequireAuthDirective,
+  renameRequireAuthDirective,
+  renameLibAuthImports,
+} from './authDirectives.js'
 import {
   authNotSetUpMessage,
   hasWebAuthFile,
@@ -38,10 +44,13 @@ import {
   requiredUserFields,
 } from './schemaPrisma.js'
 import type { EditSchemaResult, ModelsExistOutcome } from './schemaPrisma.js'
+import { renameUseAuthHasRole } from './webHasRole.js'
 
 const DEFAULT_TENANT_FIELD = 'organizationId'
 
 const AUTH_SNIPPET = `
+  import { createTenancyAuth } from '@cedarjs/tenancy'
+
   export const getCurrentUser = async (session) => {
     return await db.user.findUnique({
       where: { id: session.id },
@@ -59,8 +68,8 @@ const AUTH_SNIPPET = `
     })
   }
 
-  export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'
-`
+  // In place of your hasRole and requireAuth
+  ${TENANCY_AUTH_EXPORT}`
 
 const SIGNUP_SNIPPET = `
   handler: async ({ username, hashedPassword, salt, userAttributes }) => {
@@ -85,6 +94,11 @@ interface TenancyOptions {
 interface TenancyCtx {
   /** Set once the schema-editing task runs; read by the "Next steps" task. */
   modelsExistOutcome?: ModelsExistOutcome
+  /**
+   * Set when the app's `requireAuth` directive was changed from Cedar's, so
+   * was left for the app to move its changes over
+   */
+  keptRequireAuthDirective?: boolean
 }
 
 export const handler = async ({ tenantField, force }: TenancyOptions) => {
@@ -298,7 +312,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title:
-          'Adding memberships to getCurrentUser and re-exporting tenancy helpers...',
+          'Adding memberships to getCurrentUser and the tenancy auth checks to api/src/lib/auth...',
         task: async (_ctx, task) => {
           if (!fs.existsSync(authPath)) {
             task.skip('No api/src/lib/auth file found; skipping.')
@@ -310,7 +324,9 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             targetPaths: [authPath],
           })
 
-          if (transformResult.error) {
+          if (transformResult.error?.includes('AUTH_CHECKS_CHANGED')) {
+            task.output = `api/src/lib/auth's requireAuth or hasRole has checks of its own, so it was left as it is. Please add this by hand, keeping your checks:\n${AUTH_SNIPPET}`
+          } else if (transformResult.error) {
             task.output = `Could not update api/src/lib/auth automatically. Please add this by hand:\n${AUTH_SNIPPET}`
           }
         },
@@ -359,21 +375,82 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           isDbAuthProject ? false : 'Not a dbAuth project; skipping.',
       },
       {
-        title: 'Adding the requireMembership directive...',
-        task: async () => {
-          const directiveDir = path.join(
-            paths.api.directives,
-            'requireMembership',
-          )
+        title:
+          'Switching @requireAuth to @requireOrgAuth and @requireUserAuth, and hasRole to hasUserRole...',
+        task: async (ctx) => {
+          const oldDirectiveDir = path.join(paths.api.directives, 'requireAuth')
+          const isInOldDirective = (file: string) =>
+            file.startsWith(oldDirectiveDir + path.sep)
 
-          await writeTemplateFile(
-            'requireMembership.ts.template',
-            path.join(directiveDir, `requireMembership.${ext}`),
+          const oldDirectivePath = path.join(
+            oldDirectiveDir,
+            `requireAuth.${ext}`,
           )
-          await writeTemplateFile(
-            'requireMembership.test.ts.template',
-            path.join(directiveDir, `requireMembership.test.${ext}`),
-          )
+          // An app's own `@requireAuth` stays, and so do its fields, so its
+          // checks keep running until the app moves them over
+          const keepOldDirective =
+            fs.existsSync(oldDirectivePath) &&
+            !isDefaultRequireAuthDirective(
+              fs.readFileSync(oldDirectivePath, 'utf-8'),
+            )
+
+          const sourceFilesIn = (dir: string) =>
+            fs
+              .readdirSync(dir, { recursive: true, withFileTypes: true })
+              .filter(
+                (entry) => entry.isFile() && /\.[jt]sx?$/.test(entry.name),
+              )
+              .map((entry) => path.join(entry.parentPath, entry.name))
+
+          // Before tenancy there are no organizations, so every existing
+          // field is about the user
+          for (const file of sourceFilesIn(paths.api.src)) {
+            const source = fs.readFileSync(file, 'utf-8')
+            // `lib/auth` exports no `requireAuth` any more, so imports of it
+            // are renamed even in a kept directive
+            const renamed = renameLibAuthImports(
+              keepOldDirective || isInOldDirective(file)
+                ? source
+                : renameRequireAuthDirective(source),
+            )
+
+            if (renamed !== source) {
+              fs.writeFileSync(file, renamed)
+              writtenFiles.push(file)
+            }
+          }
+
+          // And so is every existing role check on the web: `hasRole` isn't
+          // in a tenancy app's types, `hasUserRole` checks the same thing
+          for (const file of sourceFilesIn(paths.web.src)) {
+            const source = fs.readFileSync(file, 'utf-8')
+            const renamed = renameUseAuthHasRole(source)
+
+            if (renamed !== source) {
+              fs.writeFileSync(file, renamed)
+              writtenFiles.push(file)
+            }
+          }
+
+          if (keepOldDirective) {
+            ctx.keptRequireAuthDirective = true
+          } else if (fs.existsSync(oldDirectivePath)) {
+            // `@requireUserAuth` checks the same thing
+            fs.rmSync(oldDirectiveDir, { recursive: true, force: true })
+          }
+
+          for (const name of ['requireOrgAuth', 'requireUserAuth']) {
+            const directiveDir = path.join(paths.api.directives, name)
+
+            await writeTemplateFile(
+              `${name}.ts.template`,
+              path.join(directiveDir, `${name}.${ext}`),
+            )
+            await writeTemplateFile(
+              `${name}.test.ts.template`,
+              path.join(directiveDir, `${name}.test.${ext}`),
+            )
+          }
         },
       },
       {
@@ -565,7 +642,8 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              User/Organization/Membership. For each existing model (e.g.
              Contact) whose rows belong to one organization, add
              ${c.highlight('organizationId String')} plus ${c.highlight('@@index([organizationId])')} to it in
-             schema.prisma; for each one that stays global, add it
+             schema.prisma, and switch its fields from ${c.highlight('@requireUserAuth')}
+             to ${c.highlight('@requireOrgAuth')}. For each one that stays global, add it
              to the ${c.highlight('allExcept')} list in api/src/lib/db instead.
           3. Wrap your organization routes with the generated OrgScope in
              web/src/Routes.tsx:
@@ -582,6 +660,24 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              tenant-owned models with ${c.highlight('withTenancy')} from ${c.highlight(
                '@cedarjs/tenancy',
              )}.
+          5. ${c.highlight('@requireAuth')} is gone. Your fields use ${c.highlight('@requireUserAuth')} now,
+             which checks what ${c.highlight('@requireAuth')} did: there were no organizations
+             before. ${c.highlight('@requireOrgAuth')} needs a current organization, and checks
+             the user's role in it.${
+               ctx.keptRequireAuthDirective
+                 ? `
+             api/src/directives/requireAuth was changed from Cedar's, so
+             it and your @requireAuth fields were left as they are: move
+             its checks to requireUserAuth or requireOrgAuth, switch the
+             fields over, then delete it.`
+                 : ''
+             }
+          6. Every role check names its kind now. ${c.highlight('hasRole')} is
+             ${c.highlight('hasUserRole')} on both sides (your existing uses were renamed),
+             checking ${c.highlight('currentUser.roles')}; ${c.highlight('hasOrgRole')} checks the role in
+             the organization. ${c.highlight('<PrivateSet roles>')} isn't available with
+             tenancy: guard routes by role with ${c.highlight('OrgScope')}'s ${c.highlight('roles')} and
+             ${c.highlight('unauthorized')}, from a small wrapper component.
 
 ${
   keptFiles.length > 0

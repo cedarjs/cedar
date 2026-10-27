@@ -116,19 +116,4 @@ describe('running the tenancy codemods again', () => {
     expect(count(output, 'ensureDefaultOrganization(')).toBe(1)
     expect(count(output, 'import { ensureDefaultOrganization }')).toBe(1)
   })
-
-  it('authCodemod re-exports only the names that are missing', async () => {
-    const output = await runOn(
-      'authCodemod',
-      fixture('defaultAuth.output.ts').replace(
-        "export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'",
-        "export { hasOrgRole } from '@cedarjs/tenancy'",
-      ),
-    )
-
-    expect(output).toContain("export { hasOrgRole } from '@cedarjs/tenancy'")
-    expect(output).toContain(
-      "export { requireMembership } from '@cedarjs/tenancy'",
-    )
-  })
 })

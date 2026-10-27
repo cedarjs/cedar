@@ -1,5 +1,6 @@
 export type {
   AuthContextInterface,
+  AuthTenancy,
   CurrentUser,
   LoggedInUser,
 } from './AuthContext.js'

@@ -3,6 +3,30 @@ import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
 import { getCurrentOrg, isUserWithMemberships } from './context.js'
 
+type Roles = string | readonly string[]
+
+const toList = (roles: Roles | undefined): string[] =>
+  roles === undefined ? [] : typeof roles === 'string' ? [roles] : [...roles]
+
+/**
+ * `currentUser.roles` as a list. With tenancy a role belongs to a
+ * membership, so most apps leave it empty; it's for roles that hold in
+ * every organization, if an app has any.
+ */
+function userRoles(): string[] {
+  const roles = (context.currentUser as { roles?: unknown } | undefined)?.roles
+
+  if (typeof roles === 'string') {
+    return [roles]
+  }
+
+  if (Array.isArray(roles)) {
+    return roles.filter((role): role is string => typeof role === 'string')
+  }
+
+  return []
+}
+
 /**
  * Whether the current request holds one of `roles` in an organization.
  *
@@ -14,14 +38,10 @@ import { getCurrentOrg, isUserWithMemberships } from './context.js'
  *
  * Returns `false` when there's no authenticated user, no matching
  * organization, or no matching membership. An empty `roles` array returns
- * `true` as long as a matching membership exists, mirroring `hasRole()`'s
- * behavior for global roles.
+ * `true` as long as a matching membership exists.
  */
-export function hasOrgRole(
-  roles: string | string[],
-  organizationId?: string,
-): boolean {
-  const roleList = Array.isArray(roles) ? roles : [roles]
+export function hasOrgRole(roles: Roles, organizationId?: string): boolean {
+  const roleList = toList(roles)
 
   if (organizationId) {
     const currentUser = context.currentUser
@@ -50,39 +70,94 @@ export function hasOrgRole(
   return roleList.length === 0 || roleList.includes(currentOrg.role)
 }
 
+export interface TenancyAuth {
+  /**
+   * Whether the signed-in user holds one of `roles` in `currentUser.roles`,
+   * in any organization or none. What the single-tenant `hasRole()` checked;
+   * `hasOrgRole()` checks the role in an organization.
+   */
+  hasUserRole(roles: Roles): boolean
+  /**
+   * Guards a service or directive on the current organization: signed in,
+   * a member of the current organization and, when `roles` are given, with
+   * one of them there. With no `roles`, any member gets in, as any
+   * signed-in user gets past the single-tenant `requireAuth()`: use `roles`
+   * or `requirePermission()` for anything narrower.
+   *
+   * Throws `AuthenticationError` when no one is signed in, and
+   * `ForbiddenError` otherwise.
+   */
+  requireOrgAuth(options?: { roles?: Roles }): void
+  /**
+   * Guards a service or directive on the signed-in user alone, in any
+   * organization or none: their account, their memberships, accepting an
+   * invitation. When `roles` are given, the user needs one of them in
+   * `currentUser.roles`.
+   *
+   * Throws `AuthenticationError` when no one is signed in, and
+   * `ForbiddenError` otherwise.
+   */
+  requireUserAuth(options?: { roles?: Roles }): void
+  /** The standalone `hasOrgRole`: with no roles, any membership */
+  hasOrgRole(roles?: Roles, organizationId?: string): boolean
+}
+
 /**
- * Guards a service or directive on the current request having a membership
- * in the current organization, optionally with one of `roles`.
+ * The auth checks for an app with tenancy, which `api/src/lib/auth.ts`
+ * exports in place of its single-tenant `hasRole` and `requireAuth`:
  *
- * Throws `AuthenticationError` when there's no authenticated user, and
- * `ForbiddenError` when there's no current organization or the membership's
- * role doesn't match — the same error types `requireAuth` uses, so existing
- * error handling on the web side applies unchanged.
+ * ```ts
+ * export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
+ *   createTenancyAuth()
+ * ```
+ *
+ * There's no `hasRole` or `requireAuth`: every check says whether it's
+ * about the signed-in user alone or the current organization.
  */
-export function requireMembership(
-  options: { roles?: string | string[] } = {},
-): void {
-  if (!context.currentUser) {
-    throw new AuthenticationError('You must be logged in to do that.')
-  }
+export function createTenancyAuth(): TenancyAuth {
+  return {
+    hasUserRole(roles) {
+      const roleList = toList(roles)
 
-  const currentOrg = getCurrentOrg()
+      return (
+        !!context.currentUser &&
+        userRoles().some((role) => roleList.includes(role))
+      )
+    },
 
-  if (!currentOrg) {
-    throw new ForbiddenError(
-      'You must be a member of an organization to do that.',
-    )
-  }
+    requireUserAuth({ roles } = {}) {
+      if (!context.currentUser) {
+        throw new AuthenticationError("You don't have permission to do that.")
+      }
 
-  const { roles } = options
+      // As the single-tenant `requireAuth`: `roles`, even an empty list,
+      // must match
+      if (roles && !userRoles().some((role) => toList(roles).includes(role))) {
+        throw new ForbiddenError("You don't have access to do that.")
+      }
+    },
 
-  if (roles === undefined) {
-    return
-  }
+    requireOrgAuth({ roles } = {}) {
+      if (!context.currentUser) {
+        throw new AuthenticationError("You don't have permission to do that.")
+      }
 
-  const roleList = Array.isArray(roles) ? roles : [roles]
+      const currentOrg = getCurrentOrg()
 
-  if (roleList.length > 0 && !roleList.includes(currentOrg.role)) {
-    throw new ForbiddenError('You do not have permission to do that.')
+      if (!currentOrg) {
+        throw new ForbiddenError(
+          'You must be a member of an organization to do that.',
+        )
+      }
+
+      // As `requireUserAuth`: `roles`, even an empty list, must match
+      if (roles && !toList(roles).includes(currentOrg.role)) {
+        throw new ForbiddenError("You don't have access to do that.")
+      }
+    },
+
+    hasOrgRole(roles = [], organizationId) {
+      return hasOrgRole(roles, organizationId)
+    },
   }
 }

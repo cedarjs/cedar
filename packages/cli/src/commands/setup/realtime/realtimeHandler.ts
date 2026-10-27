@@ -10,6 +10,7 @@ import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
 import { generate as generateTypes } from '@cedarjs/internal/dist/generate/generate'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
+import { withAuthDirective } from '../../../lib/authDirective.js'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject, serverFileExists } from '../../../lib/project.js'
 import { setupServerFileTasks } from '../server-file/serverFileHandler.js'
@@ -127,10 +128,16 @@ export async function handler(args: {
                 exampleSubscriptionTemplateContent,
               )
 
+          // The examples keep their data in memory, not in an organization,
+          // so in an app with tenancy they're for any signed-in user
           return [
-            writeFile(exampleFile, setupScriptContent, {
-              overwriteExisting: force,
-            }),
+            writeFile(
+              exampleFile,
+              withAuthDirective(setupScriptContent, { belongsToOrg: false }),
+              {
+                overwriteExisting: force,
+              },
+            ),
           ]
         },
       },
@@ -210,15 +217,23 @@ export async function handler(args: {
 
           // write all files
           return [
-            writeFile(sdlFile, sdlContent, {
-              overwriteExisting: force,
-            }),
+            writeFile(
+              sdlFile,
+              withAuthDirective(sdlContent, { belongsToOrg: false }),
+              {
+                overwriteExisting: force,
+              },
+            ),
             writeFile(serviceFile, serviceContent, {
               overwriteExisting: force,
             }),
-            writeFile(exampleFile, setupScriptContent, {
-              overwriteExisting: force,
-            }),
+            writeFile(
+              exampleFile,
+              withAuthDirective(setupScriptContent, { belongsToOrg: false }),
+              {
+                overwriteExisting: force,
+              },
+            ),
           ]
         },
       },
@@ -272,9 +287,13 @@ export async function handler(args: {
 
           // write all files
           return [
-            writeFile(sdlFile, sdlContent, {
-              overwriteExisting: force,
-            }),
+            writeFile(
+              sdlFile,
+              withAuthDirective(sdlContent, { belongsToOrg: false }),
+              {
+                overwriteExisting: force,
+              },
+            ),
             writeFile(serviceFile, serviceContent, {
               overwriteExisting: force,
             }),
@@ -332,9 +351,13 @@ export async function handler(args: {
 
           // write all files
           return [
-            writeFile(sdlFile, sdlContent, {
-              overwriteExisting: force,
-            }),
+            writeFile(
+              sdlFile,
+              withAuthDirective(sdlContent, { belongsToOrg: false }),
+              {
+                overwriteExisting: force,
+              },
+            ),
             writeFile(serviceFile, serviceContent, {
               overwriteExisting: force,
             }),
@@ -392,9 +415,13 @@ export async function handler(args: {
 
           // write all files
           return [
-            writeFile(sdlFile, sdlContent, {
-              overwriteExisting: force,
-            }),
+            writeFile(
+              sdlFile,
+              withAuthDirective(sdlContent, { belongsToOrg: false }),
+              {
+                overwriteExisting: force,
+              },
+            ),
             writeFile(serviceFile, serviceContent, {
               overwriteExisting: force,
             }),

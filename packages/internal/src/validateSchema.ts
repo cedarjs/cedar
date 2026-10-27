@@ -16,6 +16,12 @@ export const DIRECTIVE_INVALID_ROLE_TYPES_ERROR_MESSAGE =
   'Please check that the requireAuth roles is a string or an array of strings.'
 
 /**
+ * Auth directives that take `roles`: Cedar's, and the two that replace it
+ * once `cedar setup tenancy` has run
+ */
+const ROLES_DIRECTIVES = ['requireAuth', 'requireOrgAuth', 'requireUserAuth']
+
+/**
  * These are names that are commonly used in GraphQL schemas as scalars
  * and would cause a conflict if used as a type name.
  *
@@ -101,7 +107,7 @@ export function validateSchema(
             // we want to check that the requireAuth directive roles argument value
             // is a string or an array of strings
             field.directives?.forEach((directive) => {
-              if (directive.name.value === 'requireAuth') {
+              if (ROLES_DIRECTIVES.includes(directive.name.value)) {
                 directive.arguments?.forEach((arg) => {
                   if (arg.name.value === 'roles') {
                     if (

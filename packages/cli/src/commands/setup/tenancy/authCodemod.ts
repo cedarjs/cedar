@@ -36,6 +36,103 @@ function buildMembershipsSelectProperty() {
   return property
 }
 
+/** What replaces the app's `hasRole` and `requireAuth` */
+export const TENANCY_AUTH_EXPORT = `export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
+  createTenancyAuth()
+`
+
+/**
+ * The statements Cedar's generated `requireAuth` is made of, across auth
+ * providers, without comments and with whitespace collapsed
+ */
+const DEFAULT_REQUIRE_AUTH_STATEMENTS = [
+  /^if \(!isAuthenticated\(\)\) \{ throw new AuthenticationError\([^)]*\);? \}$/,
+  /^if \(roles && !hasRole\(roles\)\) \{ throw new ForbiddenError\([^)]*\);? \}$/,
+  /^return isAuthenticated\(\);?$/,
+]
+
+/**
+ * Every name Cedar's generated `hasRole` uses, across auth providers. One
+ * that uses any other, such as a `suspended` field, has checks of its own.
+ */
+const DEFAULT_HAS_ROLE_NAMES = new Set([
+  'AllowedRoles',
+  'Array',
+  'allowedRole',
+  'allowedRoles',
+  'context',
+  'currentUser',
+  'currentUserRoles',
+  'hasRole',
+  'includes',
+  'isArray',
+  'isAuthenticated',
+  'role',
+  'roles',
+  'some',
+  'undefined',
+])
+
+/** The value an `export const <name> = ...` statement exports */
+function exportedValue(declaration: j.Collection) {
+  const node = declaration.nodes()[0]
+
+  return j.VariableDeclaration.check(node?.declaration)
+    ? node.declaration.declarations[0]
+    : undefined
+}
+
+/**
+ * Whether `hasRole` (its `export const` statement) does only what Cedar's
+ * generated one does, so replacing it loses nothing
+ */
+function isDefaultHasRole(hasRole: j.Collection) {
+  return hasRole
+    .find(j.Identifier)
+    .nodes()
+    .every((identifier) => DEFAULT_HAS_ROLE_NAMES.has(identifier.name))
+}
+
+/**
+ * Whether `requireAuth` (its `export const` statement) does only what
+ * Cedar's generated one does, so replacing it loses nothing: an app's own
+ * check in it, such as refusing suspended users, or a wrapper around it,
+ * would silently go
+ */
+function isDefaultRequireAuth(requireAuth: j.Collection) {
+  const declarator = exportedValue(requireAuth)
+  const fn = j.VariableDeclarator.check(declarator) ? declarator.init : null
+
+  if (
+    !j.ArrowFunctionExpression.check(fn) ||
+    !j.BlockStatement.check(fn.body)
+  ) {
+    return false
+  }
+
+  return fn.body.body.every((statement) => {
+    const source = j(statement)
+      .toSource()
+      .replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    return DEFAULT_REQUIRE_AUTH_STATEMENTS.some((pattern) =>
+      pattern.test(source),
+    )
+  })
+}
+
+/** The top-level `export const <name> = ...` statement, if there is one */
+function findExportedConst(root: j.Collection, name: string) {
+  return root.find(j.ExportNamedDeclaration, {
+    declaration: {
+      type: 'VariableDeclaration',
+      declarations: [{ id: { type: 'Identifier', name } }],
+    },
+  })
+}
+
 /**
  * Wires `api/src/lib/auth.ts` for tenancy:
  *
@@ -43,13 +140,19 @@ function buildMembershipsSelectProperty() {
  *   `db.user.findUnique({ ..., select: {...} })` call, so `currentUser`
  *   (both `context.currentUser` and the value sent to the web client) carries
  *   the memberships `OrgScope`, `hasOrgRole` and `resolveCurrentOrg` need.
- * - Re-exports `hasOrgRole` and `requireMembership` from `@cedarjs/tenancy`,
- *   so app code can `import { hasOrgRole, requireMembership } from
- *   'src/lib/auth'` the same way it already imports `requireAuth`.
+ * - Replaces the single-tenant `hasRole` and `requireAuth` with
+ *   `@cedarjs/tenancy`'s `createTenancyAuth`, which also gives `hasOrgRole`:
+ *   `requireOrgAuth` checks the role in the current organization, and
+ *   `requireUserAuth` what `requireAuth` did. The `AllowedRoles`
+ *   type and the error imports go too when nothing else uses them.
  *
  * Throws `CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND` when `db.user.findUnique`'s
- * `select` object cannot be located, so the caller can print the snippet to
- * add by hand instead of guessing at an unfamiliar shape.
+ * `select` object cannot be located,
+ * `CEDAR_CODEMOD_ERR_AUTH_CHECKS_NOT_FOUND` when `hasRole` and
+ * `requireAuth` aren't both there to replace, and
+ * `CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED` when `requireAuth` or `hasRole`
+ * does more than Cedar's, so the caller can print the snippet to add by hand instead of
+ * guessing at an unfamiliar shape or dropping the app's own checks.
  */
 export default function transform(fileInfo: j.FileInfo) {
   // Parse with the TS-aware parser: real db.ts/auth.ts/graphql.ts files
@@ -116,37 +219,96 @@ export default function transform(fileInfo: j.FileInfo) {
     throw new Error('CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
   }
 
-  // The names this file already re-exports from @cedarjs/tenancy, so a
-  // re-run adds nothing and an app's own re-exports stay as they are
-  const exported = new Set<string>()
+  const alreadyWired =
+    root.find(j.ImportSpecifier, { imported: { name: 'createTenancyAuth' } })
+      .length > 0
 
-  root
-    .find(j.ExportNamedDeclaration, { source: { value: '@cedarjs/tenancy' } })
-    .forEach((path) => {
-      for (const specifier of path.node.specifiers ?? []) {
-        if (j.Identifier.check(specifier.exported)) {
-          exported.add(specifier.exported.name)
-        }
-      }
-    })
-
-  const missing = ['hasOrgRole', 'requireMembership'].filter(
-    (name) => !exported.has(name),
-  )
-
-  if (missing.length > 0) {
-    const tenancyExport = j
-      .withParser('ts')(
-        `export { ${missing.join(', ')} } from '@cedarjs/tenancy'\n`,
-      )
-      .find(j.ExportNamedDeclaration)
-      .nodes()[0]
-
-    root.find(j.Program).forEach((path) => {
-      path.node.body.push(tenancyExport)
-    })
-    changed = true
+  if (alreadyWired) {
+    return changed ? root.toSource() : fileInfo.source
   }
 
-  return changed ? root.toSource() : fileInfo.source
+  const hasRole = findExportedConst(root, 'hasRole')
+  const requireAuth = findExportedConst(root, 'requireAuth')
+
+  if (hasRole.length !== 1 || requireAuth.length !== 1) {
+    throw new Error('CEDAR_CODEMOD_ERR_AUTH_CHECKS_NOT_FOUND')
+  }
+
+  if (!isDefaultRequireAuth(requireAuth) || !isDefaultHasRole(hasRole)) {
+    throw new Error('CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED')
+  }
+
+  const tenancyAuth = j
+    .withParser('ts')(TENANCY_AUTH_EXPORT)
+    .find(j.ExportNamedDeclaration)
+    .nodes()[0]
+
+  // In place of `requireAuth`, so it stays where the app's other code
+  // expects it; `hasRole` just goes
+  requireAuth.replaceWith(tenancyAuth)
+  hasRole.remove()
+
+  // Anything else in the file that used `hasRole` gets `hasUserRole`, which
+  // checks the same thing
+  root
+    .find(j.Identifier, { name: 'hasRole' })
+    .filter(
+      (path) =>
+        !(
+          j.MemberExpression.check(path.parent.node) &&
+          path.parent.node.property === path.node
+        ),
+    )
+    .forEach((path) => {
+      path.node.name = 'hasUserRole'
+    })
+
+  // Used anywhere but in its own declaration (an import, or a type alias)
+  const isUnused = (name: string) =>
+    root
+      .find(j.Identifier, { name })
+      .filter(
+        (path) =>
+          !j.ImportSpecifier.check(path.parent.node) &&
+          !j.TSTypeAliasDeclaration.check(path.parent.node),
+      ).length === 0
+
+  root
+    .find(j.TSTypeAliasDeclaration, { id: { name: 'AllowedRoles' } })
+    .filter(() => isUnused('AllowedRoles'))
+    .remove()
+
+  root
+    .find(j.ImportDeclaration, { source: { value: '@cedarjs/graphql-server' } })
+    .forEach((path) => {
+      path.node.specifiers = (path.node.specifiers ?? []).filter(
+        (specifier) =>
+          !j.ImportSpecifier.check(specifier) ||
+          !j.Identifier.check(specifier.local) ||
+          !isUnused(specifier.local.name),
+      )
+    })
+    .filter((path) => (path.node.specifiers ?? []).length === 0)
+    .remove()
+
+  const tenancyImport = j
+    .withParser('ts')(`import { createTenancyAuth } from '@cedarjs/tenancy'\n`)
+    .find(j.ImportDeclaration)
+    .nodes()[0]
+
+  const imports = root.find(j.ImportDeclaration)
+  const cedarImports = imports.filter((path) =>
+    String(path.node.source.value).startsWith('@cedarjs/'),
+  )
+  const anchor = cedarImports.length > 0 ? cedarImports : imports
+
+  if (anchor.length > 0) {
+    anchor.at(anchor.length - 1).insertAfter(tenancyImport)
+  } else {
+    root.find(j.Program).forEach((path) => {
+      path.node.body.unshift(tenancyImport)
+    })
+  }
+
+  return root.toSource()
 }

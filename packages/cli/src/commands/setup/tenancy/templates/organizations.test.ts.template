@@ -1,5 +1,3 @@
-import { setContext } from '@cedarjs/context'
-
 import { db } from 'src/lib/db'
 
 import {
@@ -18,39 +16,37 @@ import type { StandardScenario } from './organizations.scenarios.js'
 // CedarJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
 
-/**
- * `context.currentUser` is typed from this app's `getCurrentUser`, which
- * selects more fields than these tests need.
- */
-const asCurrentUser = (user: { id: string; memberships?: unknown[] }) =>
-  user as unknown as typeof context.currentUser
+/** The id of the user a scenario membership belongs to */
+const userIdOf = (membership: { userId: string | null }) => {
+  if (!membership.userId) {
+    throw new Error('Expected the scenario membership to have a user')
+  }
+
+  return membership.userId
+}
 
 /**
- * Sets `context.currentUser` and `context.currentOrg` the way the GraphQL
- * `context` function does for an authenticated, in-organization request.
+ * Signs in as `membership`'s user, in its organization, the way the GraphQL
+ * `context` function does for an in-organization request
  */
 const asMember = (
   scenario: StandardScenario,
   membership: { id: string; userId: string | null; role: string },
 ) => {
-  setContext({
-    currentUser: asCurrentUser({ id: membership.userId! }),
-    currentOrg: {
-      id: scenario.organization.acme.id,
-      slug: scenario.organization.acme.slug,
-      role: membership.role,
-      membershipId: membership.id,
-    },
-  })
+  mockCurrentUser({ id: userIdOf(membership) })
+  context.currentOrg = {
+    id: scenario.organization.acme.id,
+    slug: scenario.organization.acme.slug,
+    role: membership.role,
+    membershipId: membership.id,
+  }
 }
 
 describe('organizations service', () => {
   scenario(
     "myMemberships returns the signed-in user's memberships",
     async (scenario: StandardScenario) => {
-      setContext({
-        currentUser: asCurrentUser({ id: scenario.membership.owner.userId! }),
-      })
+      mockCurrentUser({ id: userIdOf(scenario.membership.owner) })
 
       const result = await myMemberships()
 
@@ -235,7 +231,7 @@ describe('organizations service', () => {
           },
         })
 
-        setContext({ currentUser: asCurrentUser({ id: invitee.id }) })
+        mockCurrentUser({ id: invitee.id })
 
         const result = await acceptInvitation({
           token: scenario.membership.pending.invitationToken!,
@@ -256,7 +252,7 @@ describe('organizations service', () => {
           },
         })
 
-        setContext({ currentUser: asCurrentUser({ id: invitee.id }) })
+        mockCurrentUser({ id: invitee.id })
 
         const token = scenario.membership.pending.invitationToken!
 
@@ -287,10 +283,10 @@ describe('organizations service', () => {
 
         const token = scenario.membership.pending.invitationToken!
 
-        setContext({ currentUser: asCurrentUser({ id: firstUser.id }) })
+        mockCurrentUser({ id: firstUser.id })
         await acceptInvitation({ token })
 
-        setContext({ currentUser: asCurrentUser({ id: secondUser.id }) })
+        mockCurrentUser({ id: secondUser.id })
         await expect(acceptInvitation({ token })).rejects.toThrow()
       },
     )
@@ -308,7 +304,7 @@ describe('organizations service', () => {
 
         const token = scenario.membership.pending.invitationToken!
 
-        setContext({ currentUser: asCurrentUser({ id: invitee.id }) })
+        mockCurrentUser({ id: invitee.id })
         await acceptInvitation({ token })
 
         const claimed = await db.membership.findUnique({
@@ -321,7 +317,7 @@ describe('organizations service', () => {
     )
 
     it('rejects a token that never matched a pending invitation', async () => {
-      setContext({ currentUser: asCurrentUser({ id: 'some-user-id' }) })
+      mockCurrentUser({ id: 'some-user-id' })
 
       await expect(
         acceptInvitation({ token: 'not-a-real-token' }),

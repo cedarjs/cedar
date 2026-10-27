@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { roleChecks } from './AuthContext.js'
 import type { AuthContextInterface } from './AuthContext.js'
 
 export function createUseAuth<
@@ -92,7 +93,7 @@ export function useNoAuth(): AuthContextInterface<
     userMetadata: null,
     getToken: async () => null,
     getCurrentUser: async () => null,
-    hasRole: () => false,
+    ...roleChecks(() => false),
     reauthenticate: async () => {},
     forgotPassword: async () => {},
     resetPassword: async () => {},

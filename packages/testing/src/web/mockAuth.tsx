@@ -19,6 +19,9 @@ const AuthProvider: React.FC<Props> = ({ children }) => {
 // When running tests, this is what they'll get when they import `useAuth`
 // thanks to the router import transform in the Vitest setup
 export function useAuth() {
+  const hasRole = (roles: string | string[]) =>
+    currentUserHasRole(mockedUserMeta.currentUser, roles)
+
   return {
     loading: false,
     isAuthenticated: !!mockedUserMeta.currentUser,
@@ -29,8 +32,8 @@ export function useAuth() {
     userMetadata: mockedUserMeta.currentUser,
     getToken: async () => null,
     getCurrentUser: async () => mockedUserMeta.currentUser,
-    hasRole: (roles: string | string[]) =>
-      currentUserHasRole(mockedUserMeta.currentUser, roles),
+    hasRole,
+    hasUserRole: hasRole,
     reauthenticate: async () => {},
     forgotPassword: async () => {},
     resetPassword: async () => {},

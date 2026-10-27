@@ -104,6 +104,7 @@ describe('Custom auth provider', () => {
   const { AuthProvider, useAuth } = createCustomTestAuth(mockedTestAuthClient)
 
   const AuthConsumer = () => {
+    const auth = useAuth()
     const {
       loading,
       isAuthenticated,
@@ -116,7 +117,14 @@ describe('Custom auth provider', () => {
       hasError,
       hasRole,
       error,
-    } = useAuth()
+    } = auth
+
+    // Provided for an app with tenancy, whose types show it instead of
+    // hasRole (see RoleCheck)
+    const hasUserRole = (roles: string) =>
+      'hasUserRole' in auth &&
+      typeof auth.hasUserRole === 'function' &&
+      auth.hasUserRole(roles)
 
     const [authToken, setAuthToken] = useState<string | null>(null)
 
@@ -161,6 +169,10 @@ describe('Custom auth provider', () => {
             </p>
             <p>Has Admin: {hasRole('admin') ? 'yes' : 'no'}</p>
             <p>Has Super User: {hasRole('superuser') ? 'yes' : 'no'}</p>
+            <p>User Has Admin: {hasUserRole('admin') ? 'yes' : 'no'}</p>
+            <p>
+              User Has Super User: {hasUserRole('superuser') ? 'yes' : 'no'}
+            </p>
             <p>Has Admin as Array: {hasRole(['admin']) ? 'yes' : 'no'}</p>
             <p>Has Editor: {hasRole(['editor', 'publisher']) ? 'yes' : 'no'}</p>
             <p>
@@ -293,6 +305,8 @@ describe('Custom auth provider', () => {
 
     expect(screen.getByText('Has Admin: no')).toBeInTheDocument()
     expect(screen.getByText('Has Super User: no')).toBeInTheDocument()
+    expect(screen.getByText('User Has Admin: no')).toBeInTheDocument()
+    expect(screen.getByText('User Has Super User: no')).toBeInTheDocument()
 
     // Log out
     fireEvent.click(screen.getByText('Log Out'))
@@ -332,6 +346,8 @@ describe('Custom auth provider', () => {
 
     expect(screen.getByText('Has Admin: yes')).toBeInTheDocument()
     expect(screen.getByText('Has Super User: yes')).toBeInTheDocument()
+    expect(screen.getByText('User Has Admin: yes')).toBeInTheDocument()
+    expect(screen.getByText('User Has Super User: yes')).toBeInTheDocument()
 
     // Log out
     fireEvent.click(screen.getByText('Log Out'))
@@ -371,6 +387,8 @@ describe('Custom auth provider', () => {
 
     expect(screen.getByText('Has Admin: yes')).toBeInTheDocument()
     expect(screen.getByText('Has Super User: no')).toBeInTheDocument()
+    expect(screen.getByText('User Has Admin: yes')).toBeInTheDocument()
+    expect(screen.getByText('User Has Super User: no')).toBeInTheDocument()
 
     // Log out
     fireEvent.click(screen.getByText('Log Out'))

@@ -112,6 +112,7 @@ function createUseAuth(state: AuthState): UseAuth {
       getToken: async () => null,
       getCurrentUser: async () => null,
       hasRole: () => false,
+      hasUserRole: () => false,
       reauthenticate: async () => {},
       client: undefined,
       type: 'custom',
@@ -576,6 +577,84 @@ describe('OrgScope', () => {
 
       act(() => navigate('/org/org-b'))
       await waitFor(() => screen.getByText('projects: org_b-projects'))
+    })
+
+    describe('roles', () => {
+      const useAuth = createUseAuth({
+        isAuthenticated: true,
+        currentUser: {
+          id: 'user_1',
+          memberships: [
+            membership('org_a', 'org-a', 'Org A', 'member'),
+            membership('org_b', 'org-b', 'Org B', 'owner'),
+          ],
+        },
+      })
+
+      const OrgPage = () => <ProjectsView />
+      const OrgHomePage = () => <>org home</>
+
+      test("checks the role in the URL's organization, and redirects to unauthorized with its orgSlug", async () => {
+        setupFetchMock()
+
+        const OwnersOnly = ({ children }: { children: React.ReactNode }) => (
+          <OrgScope useAuth={useAuth} roles="owner" unauthorized="orgHome">
+            {children}
+          </OrgScope>
+        )
+        const AnyMember = ({ children }: { children: React.ReactNode }) => (
+          <OrgScope useAuth={useAuth}>{children}</OrgScope>
+        )
+
+        render(
+          <CedarApolloProvider>
+            <Router>
+              <Set wrap={OwnersOnly}>
+                <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
+              </Set>
+              <Set wrap={AnyMember}>
+                <Route
+                  path="/org/{orgSlug}/home"
+                  page={OrgHomePage}
+                  name="orgHome"
+                />
+              </Set>
+            </Router>
+          </CedarApolloProvider>,
+        )
+
+        // An owner of org B, but only a member of org A
+        act(() => navigate('/org/org-b'))
+        await waitFor(() => screen.getByText('projects: org_b-projects'))
+
+        act(() => navigate('/org/org-a'))
+        await waitFor(() => screen.getByText('org home'))
+        expect(window.location.pathname).toBe('/org/org-a/home')
+      })
+
+      test('renders notAMember without unauthorized', async () => {
+        const { fetchMock } = setupFetchMock()
+
+        render(
+          <LocationProvider>
+            <ParamsProvider allParams={{}}>
+              <CedarApolloProvider>
+                <OrgScope
+                  useAuth={useAuth}
+                  orgSlug="org-a"
+                  roles={['owner', 'admin']}
+                  notAMember="not allowed"
+                >
+                  <ProjectsView />
+                </OrgScope>
+              </CedarApolloProvider>
+            </ParamsProvider>
+          </LocationProvider>,
+        )
+
+        await screen.findByText('not allowed')
+        expect(fetchMock).not.toHaveBeenCalled()
+      })
     })
   })
 })
