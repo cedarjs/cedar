@@ -106,6 +106,11 @@ interface TenancyCtx extends PermissionsPackageCtx {
    * was left for the app to move its changes over
    */
   keptRequireAuthDirective?: boolean
+  /**
+   * Set when `useOrgRoles` couldn't be passed to the app's `<Router>`, so
+   * the next steps say to do it by hand
+   */
+  routerNeedsUseOrgRoles?: boolean
 }
 
 export const handler = async ({ tenantField, force }: TenancyOptions) => {
@@ -617,6 +622,34 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
       },
       {
+        title: 'Passing useOrgRoles to the Router in web/src/Routes...',
+        task: async (ctx, task) => {
+          const routesPath = paths.web.routes
+
+          if (!routesPath || !fs.existsSync(routesPath)) {
+            ctx.routerNeedsUseOrgRoles = true
+            task.skip('No web/src/Routes file found; skipping.')
+            return
+          }
+
+          const source = fs.readFileSync(routesPath, 'utf-8')
+
+          const transformResult = await runTransform({
+            transformPath: path.join(import.meta.dirname, 'routerCodemod.js'),
+            targetPaths: [routesPath],
+          })
+
+          if (transformResult.error) {
+            ctx.routerNeedsUseOrgRoles = true
+            task.output =
+              "Could not find the app's <Router> in web/src/Routes, so left " +
+              'it as it is. See the next steps for what to add.'
+          } else if (fs.readFileSync(routesPath, 'utf-8') !== source) {
+            writtenFiles.push(routesPath)
+          }
+        },
+      },
+      {
         title: 'Formatting and linting changed files...',
         task: async (_ctx, task) => {
           const changedFiles = [
@@ -699,16 +732,28 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              to ${c.highlight('@requireOrgAuth')}. For each one that stays global, add it
              to the ${c.highlight('allExcept')} list in api/src/lib/db instead.
           3. Wrap your organization routes with the generated OrgScope in
-             web/src/Routes.tsx:
+             web/src/Routes.tsx, in a PrivateSet, so a user who isn't signed
+             in is sent to log in:
 
-               <Set wrap={OrgScope}>
+               <PrivateSet wrap={OrgScope} unauthenticated="login">
                  <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
-               </Set>
+               </PrivateSet>
 
              and add the invitation route outside it:
 
                <Route path="/invite/{token}" page={InvitePage} name="invite" />
+${
+  ctx.routerNeedsUseOrgRoles
+    ? `
+             Your ${c.highlight('<Router>')} couldn't be found, so pass it ${c.highlight('useOrgRoles')} by
+             hand, for ${c.highlight('<PrivateSet orgRoles>')} below:
 
+               import { useOrgRoles } from '@cedarjs/tenancy/web'
+
+               <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+`
+    : ''
+}
           4. Wrap any plain api/src/functions/* handler that touches
              tenant-owned models with ${c.highlight('withTenancy')} from ${c.highlight(
                '@cedarjs/tenancy',
@@ -735,20 +780,19 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              fields over, then delete it.`
                  : ''
              }
-          6. Every role check names its kind now. ${c.highlight('hasRole')} is
+          7. Every role check names its kind now. ${c.highlight('hasRole')} is
              ${c.highlight('hasUserRole')} on both sides (your existing uses were renamed),
              checking ${c.highlight('currentUser.roles')}; ${c.highlight('hasOrgRole')} checks the role in
              the organization. ${c.highlight('<PrivateSet roles>')} isn't available with
              tenancy: guard routes with ${c.highlight('<PrivateSet userRoles>')} for
              ${c.highlight('currentUser.roles')}, and with ${c.highlight('<PrivateSet orgRoles>')} for the
-             role in the organization, nested inside the Set that wraps
-             OrgScope:
+             role in the route's organization, which the router checks with
+             the ${c.highlight('useOrgRoles')} passed to it:
 
-               <Set wrap={OrgScope}>
-                 <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+               <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+                 <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
                    <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
                  </PrivateSet>
-               </Set>
 
 ${
   keptFiles.length > 0

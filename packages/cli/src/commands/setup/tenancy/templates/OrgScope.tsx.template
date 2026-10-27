@@ -27,24 +27,23 @@ export interface OrgScopeProps {
 /**
  * Wraps organization routes with a per-organization Apollo client and a
  * membership check, using this app's `useAuth`. Use with the router's
- * `Set wrap`:
+ * `PrivateSet wrap`, so a user who isn't signed in is sent to log in:
  *
- *   <Set wrap={OrgScope}>
+ *   <PrivateSet wrap={OrgScope} unauthenticated="login">
  *     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
- *   </Set>
+ *   </PrivateSet>
  *
  * Under it, `useAuth().hasPermission` and `useCurrentOrg().hasOrgRole`
  * check the user's membership in the organization, and
  * `useAuth().hasUserRole` checks `currentUser.roles`. For pages only some
- * roles in the organization may open, nest a `PrivateSet` with `orgRoles`
- * inside the `Set` that wraps `OrgScope` (not in the `PrivateSet`'s own
- * `wrap`, where there's no organization yet to check the role in):
+ * roles in the organization may open, give the `PrivateSet` `orgRoles`. The
+ * router checks the role in the route's organization with the
+ * `useOrgRoles` passed to it, `<Router useAuth={useAuth}
+ * useOrgRoles={useOrgRoles}>`:
  *
- *   <Set wrap={OrgScope}>
- *     <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
- *       <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
- *     </PrivateSet>
- *   </Set>
+ *   <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
+ *     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+ *   </PrivateSet>
  *
  * For pages only members with a permission may open, wrap them in a
  * component that passes `permission`:
