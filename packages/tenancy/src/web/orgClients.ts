@@ -32,6 +32,20 @@ export interface GetOrgClientOptions {
 }
 
 /**
+ * Drops, after clearing their caches, the clients of every user but
+ * `userId`, so another user's data doesn't outlive their session, also when
+ * nothing saw them sign out.
+ */
+export function dropOtherUsersClients(userId: string): void {
+  for (const [key, entry] of clients) {
+    if (entry.userId !== userId) {
+      clients.delete(key)
+      void entry.client.clearStore()
+    }
+  }
+}
+
+/**
  * Returns the Apollo client for one user's membership in one organization,
  * creating and caching it on first use so returning to an organization
  * reuses its client and cache.
@@ -42,14 +56,7 @@ export function getOrgClient({
   role,
   createClient,
 }: GetOrgClientOptions): ApolloClient {
-  // Another user's clients don't outlive their session, also when nothing
-  // saw them sign out
-  for (const [otherKey, other] of clients) {
-    if (other.userId !== userId) {
-      clients.delete(otherKey)
-      void other.client.clearStore()
-    }
-  }
+  dropOtherUsersClients(userId)
 
   const key = clientKey(userId, organizationId)
   const existing = clients.get(key)

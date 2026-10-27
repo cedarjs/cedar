@@ -408,6 +408,57 @@ describe('createTenancy', () => {
     )
   })
 
+  test('switching straight to another user keeps the new user client across later renders', async () => {
+    setupFetchMock()
+    const authState: AuthState = {
+      isAuthenticated: true,
+      currentUser: {
+        id: 'user_1',
+        memberships: [membership('org_1', 'acme', 'Acme', 'owner')],
+      },
+    }
+    const useAuth = createUseAuth(authState)
+
+    const clients: ApolloClient[] = []
+
+    renderApp({
+      useAuth,
+      children: (
+        <>
+          <ClientCapture onCapture={(client) => clients.push(client)} />
+          <ProjectsView />
+        </>
+      ),
+    })
+
+    act(() => navigate('/org/acme'))
+    await waitFor(() => screen.getByText('projects: org_1-projects'))
+    const firstUserClient = clients[clients.length - 1]
+
+    // Like `reauthenticate()` returning another user, with no sign-out between
+    authState.currentUser = {
+      id: 'user_2',
+      memberships: [membership('org_9', 'acme', 'Acme (user 2)', 'owner')],
+    }
+    act(() => navigate('/org/acme?switched'))
+    await waitFor(() => screen.getByText('projects: org_9-projects'))
+    const secondUserClient = clients[clients.length - 1]
+
+    expect(secondUserClient).not.toBe(firstUserClient)
+    expect(cachedProjects(firstUserClient)).toBeUndefined()
+
+    // Later renders in the same organization reuse the new user's client
+    act(() => navigate('/org/acme?later'))
+    await waitFor(() => expect(window.location.search).toBe('?later'))
+    await screen.findByText('projects: org_9-projects')
+
+    expect(new Set(clients)).toEqual(
+      new Set([firstUserClient, secondUserClient]),
+    )
+    expect(clients[clients.length - 1]).toBe(secondUserClient)
+    expect(cachedProjects(secondUserClient)).toBeDefined()
+  })
+
   test('a role change while no provider is mounted still gives a fresh client', async () => {
     setupFetchMock()
     const authState: AuthState = {

@@ -3,7 +3,11 @@ import React from 'react'
 import type { UseOrg } from '@cedarjs/router'
 
 import { getMemberships } from './getMemberships.js'
-import { clearOrgClients, dropOrgClient } from './orgClients.js'
+import {
+  clearOrgClients,
+  dropOrgClient,
+  dropOtherUsersClients,
+} from './orgClients.js'
 
 /**
  * Builds `{ organizationId: role }` for every membership, to detect when a
@@ -61,10 +65,19 @@ export function useOrgClientTeardown(useAuth: Parameters<UseOrg>[0]) {
     const userChanged =
       previousUserId !== undefined && previousUserId !== userId
 
-    if (!isAuthenticated || userChanged) {
+    if (!isAuthenticated) {
       lastUserIdRef.current = userId
       lastMembershipsRef.current = new Map()
       void clearOrgClients()
+      return
+    }
+
+    // Straight from one user to another: the new user's client may already
+    // exist, so only the others' go
+    if (userChanged && userId) {
+      lastUserIdRef.current = userId
+      lastMembershipsRef.current = membershipRoleMap(memberships)
+      dropOtherUsersClients(userId)
       return
     }
 
