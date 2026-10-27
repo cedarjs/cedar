@@ -26,9 +26,8 @@ declare const authImplementation: AuthImplementation<
 
 const { useAuth } = createAuthentication(authImplementation)
 
-test('useAuth().hasRole takes no roles', () => {
-  expect(useAuth().hasRole).type.not.toBeCallableWith('admin')
-  expect(useAuth().hasRole).type.not.toBeCallableWith(['admin'])
+test('useAuth() has no hasRole', () => {
+  expect(useAuth()).type.not.toHaveProperty('hasRole')
 })
 
 test('useAuth().hasUserRole checks currentUser.roles', () => {
