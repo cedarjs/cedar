@@ -15,6 +15,14 @@ describe('tenancy routerCodemod', () => {
     await matchTransformSnapshot('routerCodemod', 'tenancyImportRoutes')
   })
 
+  it('replaces useOrgRoles with tenancy, removing its import', async () => {
+    await matchTransformSnapshot('routerCodemod', 'canaryRoutes')
+  })
+
+  it('keeps other @cedarjs/tenancy/web imports when removing useOrgRoles', async () => {
+    await matchTransformSnapshot('routerCodemod', 'canaryImportRoutes')
+  })
+
   it('throws CEDAR_CODEMOD_ERR_ROUTER_NOT_FOUND without a <Router>', async () => {
     const transformResult = await runTransform({
       transformPath: path.join(__dirname, '../routerCodemod.ts'), // Use TS here!
