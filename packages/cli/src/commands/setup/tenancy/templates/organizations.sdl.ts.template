@@ -30,6 +30,8 @@ export const schema = gql`
   type Invitation {
     membership: Membership!
     invitationToken: String!
+    "When the invitation stops being claimable."
+    invitationExpiresAt: DateTime!
   }
 
   input CreateOrganizationInput {
@@ -61,6 +63,7 @@ export const schema = gql`
     organizations.ts) -- an admin can invite an admin or a member, but not an
     owner. The app is responsible for emailing input.email a link built from
     the returned invitationToken; Membership has no email column of its own.
+    The invitation can be claimed until the returned invitationExpiresAt.
     Web callers must call reauthenticate() from useAuth() in onCompleted so
     the invite shows up if the inviter is also the invitee.
     """
@@ -70,7 +73,7 @@ export const schema = gql`
     """
     Attaches the pending membership matching token to the signed-in user, or
     is a no-op if it is already attached to them. Throws if the token is
-    invalid or was already claimed by someone else.
+    invalid, expired or was already claimed by someone else.
     Web callers must call reauthenticate() from useAuth() in onCompleted so
     the new membership is reflected in currentUser.memberships.
     """
