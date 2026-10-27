@@ -3,11 +3,7 @@ import React from 'react'
 import { ApolloProvider } from '@apollo/client/react'
 
 import type { PermissionName, UseAuth } from '@cedarjs/auth'
-import {
-  HasOrgRoleContext,
-  HasPermissionContext,
-  useNoAuth,
-} from '@cedarjs/auth'
+import { HasPermissionContext, useNoAuth } from '@cedarjs/auth'
 import {
   navigate,
   Redirect,
@@ -36,7 +32,7 @@ export interface OrgScopeProps {
   /**
    * Only members with one of these roles in the organization get in.
    * Checked after the organization is resolved. For routes, prefer
-   * `<PrivateSet orgRoles>` nested inside the set that wraps `OrgScope`.
+   * `<PrivateSet orgRoles>`.
    */
   roles?: string | string[]
   /**
@@ -111,7 +107,7 @@ function membershipRoleMap(
  * so every Cell, `useQuery` and `useMutation` under it carries the
  * `cedar-org` header and reads from that organization's cache. Under it,
  * `useAuth().hasPermission` checks the user's membership in that
- * organization, and `<PrivateSet orgRoles>` checks their role in it.
+ * organization.
  */
 export function OrgScope({
   orgSlug: orgSlugProp,
@@ -285,18 +281,11 @@ export function OrgScope({
     setOrg,
   }
 
-  // For `<PrivateSet orgRoles>` below this point: the role in this
-  // organization
-  const hasOrgRoleHere = (roles: string | string[]) =>
-    hasOrgRole(memberships, roles, org.id)
-
   return (
     <ApolloProvider client={orgClient}>
       <OrgContext.Provider value={contextValue}>
         <HasPermissionContext.Provider value={hasPermission}>
-          <HasOrgRoleContext.Provider value={hasOrgRoleHere}>
-            {children}
-          </HasOrgRoleContext.Provider>
+          {children}
         </HasPermissionContext.Provider>
       </OrgContext.Provider>
     </ApolloProvider>
