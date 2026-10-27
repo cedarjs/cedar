@@ -375,6 +375,13 @@ describe('OrgScope', () => {
     const clientAfterRoleChange = clients[clients.length - 1]
 
     expect(clientAfterRoleChange.cache).not.toBe(clientBeforeRoleChange.cache)
+
+    // One new client for the new role, not a second one after a teardown
+    await waitFor(() => screen.getByText('projects: org_1-projects'))
+    const distinctClients = clients.filter(
+      (client, index) => clients.indexOf(client) === index,
+    )
+    expect(distinctClients).toHaveLength(2)
   })
 
   test('a role change while no OrgScope is mounted still gives a fresh client', async () => {

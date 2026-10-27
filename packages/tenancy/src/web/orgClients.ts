@@ -58,8 +58,8 @@ export function getOrgClient({
 
 /**
  * Drops one organization's client, clearing its cache first. Called when a
- * memberships refresh shows the membership gone or its role changed, so
- * data cached under the previous authorization does not outlive it.
+ * memberships refresh shows the membership gone, so data cached under it
+ * does not outlive it. (A role change is handled by `getOrgClient`.)
  */
 export async function dropOrgClient(
   userId: string,

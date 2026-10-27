@@ -146,10 +146,11 @@ export function OrgScope({
 
   // Bumped whenever the effect below drops a client from the module-level
   // map, so the component re-renders and `getOrgClient` picks up the drop:
-  // the render that first observes a role change or a removed membership
-  // has already read the (still cached) old client from the map before
-  // this effect runs, so dropping it only takes effect from the next
-  // render on.
+  // the render that first observes a removed membership has already read
+  // the (still cached) old client from the map before this effect runs, so
+  // dropping it only takes effect from the next render on. A role change
+  // needs no drop here: `getOrgClient` replaces a client cached for another
+  // role during that same render.
   const [, forceRenderAfterTeardown] = React.useReducer((c) => c + 1, 0)
 
   React.useEffect(() => {
@@ -171,10 +172,8 @@ export function OrgScope({
     let dropped = false
 
     if (userId) {
-      for (const [organizationId, role] of lastMembershipsRef.current) {
-        const currentRole = nextMemberships.get(organizationId)
-
-        if (currentRole === undefined || currentRole !== role) {
+      for (const organizationId of lastMembershipsRef.current.keys()) {
+        if (!nextMemberships.has(organizationId)) {
           void dropOrgClient(userId, organizationId)
           dropped = true
         }
@@ -186,8 +185,8 @@ export function OrgScope({
     if (dropped) {
       forceRenderAfterTeardown()
     }
-    // `membershipSignature` is `memberships` reduced to the values this
-    // effect cares about (organization id + role), so it is the only
+    // `membershipSignature` is `memberships` reduced to organization ids and
+    // roles, which covers the ids this effect cares about, so it is the only
     // membership-derived dependency needed here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, userId, membershipSignature])
