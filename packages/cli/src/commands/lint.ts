@@ -108,19 +108,28 @@ async function generateMissingGraphQLSchema() {
     return
   }
 
-  const { generateGraphQLSchema } =
-    await import('@cedarjs/internal/dist/generate/graphqlSchema')
+  let messages: string[]
 
-  fs.mkdirSync(path.dirname(paths.generated.schema), { recursive: true })
-  const { errors } = await generateGraphQLSchema()
+  try {
+    const { generateGraphQLSchema } =
+      await import('@cedarjs/internal/dist/generate/graphqlSchema')
 
-  if (errors.length > 0) {
+    fs.mkdirSync(path.dirname(paths.generated.schema), { recursive: true })
+    const { errors } = await generateGraphQLSchema()
+    messages = errors.map(({ message }) => message)
+  } catch (error) {
+    // It can throw too, e.g. on a Prisma schema it can't read while
+    // explaining an SDL error. Linting the rest still goes ahead
+    messages = [error instanceof Error ? error.message : String(error)]
+  }
+
+  if (messages.length > 0) {
     console.warn(
       'Could not generate the GraphQL schema, so the GraphQL documents in ' +
         'web/src are not linted against it:',
     )
 
-    for (const { message } of errors) {
+    for (const message of messages) {
       console.warn(message)
     }
   }

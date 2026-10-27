@@ -92,3 +92,16 @@ test('still lints when the schema fails to generate', async () => {
   expect(runBin).toHaveBeenCalledOnce()
   expect(process.exitCode).toBe(0)
 })
+
+test('still lints when generating the schema throws', async () => {
+  vi.mocked(generateGraphQLSchema).mockRejectedValueOnce(
+    new Error('Could not read the Prisma schema'),
+  )
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+  await handler({})
+
+  expect(warn).toHaveBeenCalledWith('Could not read the Prisma schema')
+  expect(runBin).toHaveBeenCalledOnce()
+  expect(process.exitCode).toBe(0)
+})
