@@ -326,10 +326,10 @@ export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
 
 There's no `hasRole` or `requireAuth`: each check says what it's about.
 
-|                             | User-level (`currentUser.roles`)                     | Organization-level (membership role)               |
-| --------------------------- | ---------------------------------------------------- | -------------------------------------------------- |
-| api (`createTenancyAuth()`) | `hasUserRole`, `requireUserAuth`, `@requireUserAuth` | `hasOrgRole`, `requireOrgAuth`, `@requireOrgAuth`  |
-| web                         | `useAuth().hasUserRole`                              | `useCurrentOrg().hasOrgRole`, `OrgScope`'s `roles` |
+|                             | User-level (`currentUser.roles`)                     | Organization-level (membership role)                  |
+| --------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
+| api (`createTenancyAuth()`) | `hasUserRole`, `requireUserAuth`, `@requireUserAuth` | `hasOrgRole`, `requireOrgAuth`, `@requireOrgAuth`     |
+| web                         | `useAuth().hasUserRole`                              | `useCurrentOrg().hasOrgRole`, `<PrivateSet orgRoles>` |
 
 - `requireOrgAuth({ roles })`: for fields about the current organization.
   Throws `AuthenticationError` when no one is signed in, and `ForbiddenError`
@@ -560,21 +560,29 @@ export function hasOrgRole(
 
 export function getMemberships(currentUser: unknown): OrgMembership[]
 
-export interface OrgScopeProps {
-  /** Overrides the `orgSlug` route param. */
-  orgSlug?: string
-  /** Rendered when the user has no membership matching the slug. Default: null. */
+export interface CreateTenancyOptions {
+  /**
+   * Finds the organization of a route. By default, the one with the route's
+   * `orgSlug` param.
+   */
+  useOrg?: UseOrg
+  /** Rendered for a signed-in user who isn't a member of the organization. Default: null. */
   notAMember?: React.ReactNode
-  /** Only members with one of these roles in the organization get in. */
-  roles?: string | string[]
-  /** Only members whose membership has this permission get in. */
-  permission?: string
-  /** The route a member without one of `roles`, or `permission`, is redirected to. */
-  unauthorized?: string
-  children: React.ReactNode
+  /** Called by `useCurrentOrg().setOrg` instead of navigating. */
+  onSetOrg?: (idOrSlug: string) => void
 }
 
-export function OrgScope(props: OrgScopeProps): JSX.Element
+/** For `<Router tenancy>` */
+export function createTenancy(options?: CreateTenancyOptions): Tenancy
+
+/** `createTenancy()`, for an app that needs no options */
+export const tenancy: Tenancy
+
+/** The organization with this slug in the user's memberships, for a `useOrg` */
+export function useOrgBySlug(
+  useAuth: UseAuth,
+  orgSlug: string | undefined
+): { membership: OrgMembership | null; memberships: OrgMembership[] } | null
 
 export function useCurrentOrg(): {
   org: CurrentOrgSummary | undefined
@@ -584,153 +592,215 @@ export function useCurrentOrg(): {
 }
 
 export function clearOrgClients(): Promise<void>
-
-/** For `<Router useOrgRoles>`: `null` when `params` has no `orgSlug`. */
-export function useOrgRoles(
-  useAuth: UseAuth,
-  params: Record<string, string>
-): ((roles: string | string[]) => boolean) | null
 ```
 
-### `OrgScope`
+### `tenancy` on the Router
 
-Used with the router's `PrivateSet wrap`, so a user who isn't signed in is sent
-to log in rather than shown `notAMember`:
-
-```tsx title="web/src/Routes.tsx"
-<PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
-  <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
-</PrivateSet>
-```
-
-The generated `web/src/components/OrgScope/OrgScope.tsx` wraps the core
-`OrgScope` from `@cedarjs/tenancy/web`, passing your app's `useAuth` (`OrgScope`
-can't import your app's auth directly, so it takes `useAuth` as a prop,
-defaulting to `useNoAuth` from `@cedarjs/auth`) and a not-a-member message.
-
-`orgSlug` resolves from `useParams().orgSlug` by default as the organization
-lives in the URL (see the
-[multi-tenancy how-to](./how-to/multi-tenancy.md#4-request-flow-url-to-header-to-context)
-for why). Pass the `orgSlug` prop only when it genuinely can't come from the
-route: a subdomain- or custom-domain-derived organization, or an in-page
-switcher that doesn't navigate. `memberships` come from
-`getMemberships(useAuth().currentUser)`.
-
-Below it, `OrgScope` provides a per-organization Apollo client (built or reused,
-keyed by `${userId}:${organizationId}`), the organization for
-`useCurrentOrg()`, and a `useAuth().hasPermission` that checks the user's
-membership in that organization.
-
-On the web too, every role check names its kind: `useAuth().hasUserRole` and
-`<PrivateSet userRoles>` check `currentUser.roles`, and
-`useCurrentOrg().hasOrgRole`, `<PrivateSet orgRoles>` and `OrgScope`'s `roles`
-check the user's role in the organization. `useAuth().hasRole` and
-`<PrivateSet roles>` aren't available with tenancy: `cedar generate types`
-marks the app as having tenancy (`.cedar/types/includes/web-tenancy.d.ts`), and
-then using either is a type error.
-
-Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
-`currentUser.id` changes, every cached client is dropped after `clearStore()`.
-When a memberships refresh shows a membership gone or its role changed, that
-organization's client alone is dropped the same way.
-
-#### Guarding routes by role
-
-To let only some roles in the organization open a page, give its `PrivateSet`
-`orgRoles` and `unauthorized`, and pass `useOrgRoles` from
-`@cedarjs/tenancy/web` to the router, next to `useAuth` (`yarn cedar setup
-tenancy` adds it):
+The `Router` renders the organization for you. Pass it the `tenancy` from
+`createTenancy`, next to `useAuth`, and put the organization's routes in a
+`PrivateSet`:
 
 <!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
-<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
-  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
+import { tenancy } from 'src/tenancy'
+
+<Router useAuth={useAuth} tenancy={tenancy}>
+  <Route path="/login" page={LoginPage} name="login" />
+  <PrivateSet wrap={OrgLayout} unauthenticated="login">
     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
-  </PrivateSet>
-  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
-    <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
   </PrivateSet>
 </Router>
 ```
 
-The router checks the user's role in the organization whose slug is in the
-route's `orgSlug` param, from `currentUser.memberships`, the same membership
-`OrgScope` finds. A member without one of `orgRoles` is redirected to the
-`unauthorized` route, which gets the `orgSlug` of the page they tried to open
-when its path has an `{orgSlug}`. With no `unauthorized`, they're redirected to
-`unauthenticated`. Neither `OrgScope` nor the rest of the set's `wrap` renders
-for them.
+```ts title="web/src/tenancy.tsx"
+import { createTenancy } from '@cedarjs/tenancy/web'
 
-A `PrivateSet` with `orgRoles` throws an error rather than let anyone in when
-the router has no `useOrgRoles`, or when there's no organization to check the
-role in: with Cedar's `useOrgRoles`, a route with no `{orgSlug}` param.
+export const tenancy = createTenancy({
+  notAMember: <p>You don't have access to this organization.</p>,
+})
+```
 
-`userRoles` checks `currentUser.roles` the same way. Given both, a user needs
-both. As with every check on the web, this only decides what to show: the
-api's `@requireOrgAuth` is what protects the data.
+`yarn cedar setup tenancy` generates `web/src/tenancy.tsx` and passes it to your
+`Router`. It's the one place to customize how the router handles organizations
+(see [An organization from the host](#an-organization-from-the-host)). Create
+it once, at the top level of a module: a new tenancy on every render would
+remount the provider.
 
-`permission` works the same way, against the membership's
-[permissions](#permissions-on-the-web):
-`<OrgScope permission="members.manage" unauthorized="projects">`.
+For a `PrivateSet` whose route is in an organization (by default, one with
+`{orgSlug}` in its path), the router renders the organization's provider around
+the set's `wrap` and the page, so a layout like `OrgLayout` can use
+`useCurrentOrg()`. A user who isn't signed in is sent to `unauthenticated`
+first, and one who isn't a member of the organization sees `notAMember` instead
+of the layout and the page.
 
-#### An organization from the host
+The organization is found from `currentUser.memberships`: the one whose slug is
+in the route's `orgSlug` param. The provider gives everything below it:
 
-Cedar's `useOrgRoles` reads the organization from the route's `orgSlug` param.
-For an organization that doesn't come from the path, such as one taken from a
-subdomain (`acme.example.com`), give both `OrgScope` and the router the slug
-from the host. A hook that wraps `useOrgRoles` keeps Cedar's membership lookup
-and role check:
+- a per-organization Apollo client (built or reused, keyed by
+  `${userId}:${organizationId}`) that sends the organization in the `cedar-org`
+  header, so every Cell, `useQuery` and `useMutation` under it reads from that
+  organization's cache,
+- the organization for `useCurrentOrg()`,
+- a `useAuth().hasPermission` that checks the user's membership in that
+  organization.
+
+There's one provider per organization, however many `PrivateSet`s are nested
+inside each other, and it stays mounted while the user moves between the
+organization's pages. Going to another organization's page mounts a new one.
+
+A route that has `{orgSlug}` in its path but isn't in a `PrivateSet` is a
+public page with no organization context: no provider, so no `useCurrentOrg()`
+and no `cedar-org` header on its queries (see
+[Prerendering](#prerendering-organization-pages)). A `PrivateSet` whose routes
+have no `{orgSlug}`, such as `/dashboard`, is an ordinary private set.
+
+On the web too, every role check names its kind: `useAuth().hasUserRole` and
+`<PrivateSet userRoles>` check `currentUser.roles`, and
+`useCurrentOrg().hasOrgRole` and `<PrivateSet orgRoles>` check the user's role
+in the organization. `useAuth().hasRole` and `<PrivateSet roles>` aren't
+available with tenancy: `cedar generate types` marks the app as having tenancy
+(`.cedar/types/includes/web-tenancy.d.ts`), and then using either is a type
+error. For the same reason `tenancy` on the `Router`, `orgRoles` and
+`orgPermission` only exist in an app with tenancy.
+
+Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
+`currentUser.id` changes, every cached client is dropped after `clearStore()`.
+When a memberships refresh shows a membership gone, that organization's client
+alone is dropped the same way, and one cached for another role is replaced.
+
+#### Guarding routes by role and permission
+
+To let only some members open a page, give its `PrivateSet` `orgRoles` or
+`orgPermission`, and `unauthorized`:
 
 <!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
-import { useOrgRoles } from '@cedarjs/tenancy/web'
+<Router useAuth={useAuth} tenancy={tenancy}>
+  <PrivateSet wrap={OrgLayout} unauthenticated="login">
+    <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+  </PrivateSet>
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgRoles="owner">
+    <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+  </PrivateSet>
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="members.manage">
+    <Route path="/org/{orgSlug}/members" page={MembersPage} name="members" />
+  </PrivateSet>
+</Router>
+```
 
-import { OrgScope } from 'src/components/OrgScope'
+The router checks the membership it found for the organization: `orgRoles`
+against its role, and `orgPermission` against its
+[permissions](#permissions-on-the-web), the same ones `useAuth().hasPermission`
+checks. A member without one of `orgRoles`, or without the permission, is
+redirected to the `unauthorized` route, which gets the `orgSlug` of the page
+they tried to open when its path has an `{orgSlug}`. With no `unauthorized`,
+they're redirected to `unauthenticated`. Neither the provider nor the rest of
+the set's `wrap` renders for them. A user who isn't a member of the
+organization at all sees `notAMember` rather than being redirected.
+
+A `PrivateSet` inside another one in the same organization checks its own
+`orgRoles` and `orgPermission` and renders no second provider.
+
+A `PrivateSet` with `orgRoles` or `orgPermission` throws an error rather than
+let anyone in when the router has no `tenancy`, or when there's no organization
+to check in: with Cedar's `tenancy`, a route with no `{orgSlug}` param.
+
+`userRoles` checks `currentUser.roles` the same way. Given more than one of
+them, a user needs all. As with every check on the web, this only decides what
+to show: the api's `@requireOrgAuth` and `@requirePermission` are what protect
+the data.
+
+#### An organization from the host
+
+By default the organization is the one in the route's `orgSlug` param. For an
+organization that doesn't come from the path, such as one taken from a
+subdomain (`acme.example.com`), give `createTenancy` a `useOrg` that finds it.
+`useOrgBySlug` keeps Cedar's membership lookup. This one place covers the
+router's `orgRoles` and `orgPermission` checks, the provider and
+`useCurrentOrg()`:
+
+<!-- prettier-ignore -->
+```tsx title="web/src/tenancy.tsx"
+import { createTenancy, useOrgBySlug } from '@cedarjs/tenancy/web'
 
 // There's no `window` when prerendering
 const slugFromHost = () => (typeof window === 'undefined' ? undefined : window.location.hostname.split('.')[0])
 
-const useHostOrgRoles: typeof useOrgRoles = (useAuth, params) => {
-  const orgSlug = slugFromHost()
+export const tenancy = createTenancy({
+  useOrg: (useAuth) => useOrgBySlug(useAuth, slugFromHost()),
+  notAMember: <p>You don't have access to this organization.</p>,
+})
+```
 
-  return useOrgRoles(useAuth, orgSlug ? { ...params, orgSlug } : params)
-}
-
-const HostOrgScope = ({ children }: { children: React.ReactNode }) => <OrgScope orgSlug={slugFromHost()}>{children}</OrgScope>
-
+<!-- prettier-ignore -->
+```tsx title="web/src/Routes.tsx"
 const Routes = () => (
-  <Router useAuth={useAuth} useOrgRoles={useHostOrgRoles}>
+  <Router useAuth={useAuth} tenancy={tenancy}>
     <Route path="/login" page={LoginPage} name="login" />
-    <PrivateSet wrap={[HostOrgScope, OrgLayout]} unauthenticated="login">
+    <PrivateSet wrap={OrgLayout} unauthenticated="login">
       <Route path="/projects" page={ProjectsPage} name="projects" />
     </PrivateSet>
-    <PrivateSet wrap={[HostOrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
+    <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgRoles="owner">
       <Route path="/settings" page={SettingsPage} name="settings" />
     </PrivateSet>
   </Router>
 )
 ```
 
-Your hook can also throw an error, such as for an organization that's been
-suspended. It reaches your app's error boundary like
-any error thrown while rendering. Returning `null` means there's no
-organization, and a `PrivateSet` with `orgRoles` then throws the router's own
-error.
+Your `useOrg` is a hook the router calls on every render of a private set, with
+the router's `useAuth` and the route's path params. It can answer in three ways:
+
+- An organization: `{ membership, memberships }`, where `membership` is `null`
+  when the user isn't a member of it. `useOrgBySlug` returns that.
+- `null`, for no organization. A `PrivateSet` with `orgRoles` or
+  `orgPermission` then throws the router's own error, and any other
+  `PrivateSet` is an ordinary private one.
+- An error of its own, such as for an organization that's been suspended. It
+  reaches your app's error boundary like any error thrown while rendering.
+
+With no `{orgSlug}` in the path, `setOrg` can't swap a segment of the URL, so
+give `createTenancy` an `onSetOrg` too: `useCurrentOrg().setOrg(idOrSlug)` then
+calls it instead of navigating.
+
+### Prerendering organization pages
+
+Organization routes prerender like any private route: while prerendering, auth
+is loading, so the router renders the set's `whileLoadingAuth` shell and the
+provider never mounts. Routes in a set with `prerender` are fine.
+
+A public page about an organization, with `{orgSlug}` in a plain `Set`,
+prerenders like any other dynamic route. Return the slugs from a
+[route hook](./prerender.md#dynamic-routes--route-hooks), use `@skipAuth` on
+the fields the page reads, and have the page query the organization by the slug
+from `useParams()`: the page has no provider, so its queries carry no
+`cedar-org` header.
+
+```ts title="web/src/pages/OrgPublicPage/OrgPublicPage.routeHooks.ts"
+import { db } from '$api/src/lib/db'
+
+export async function routeParameters() {
+  const organizations = await db.organization.findMany()
+
+  return organizations.map(({ slug }) => ({ orgSlug: slug }))
+}
+```
 
 ### `useCurrentOrg()`
 
-Reads the organization `OrgScope` resolved. `setOrg(idOrSlug)` navigates to the
-current route with a new `orgSlug` param (using `navigate` and `routes` from
-`@cedarjs/router`) by default; when `OrgScope` is given an `onSetOrg` prop,
-`setOrg` calls that instead.
+Reads the organization the router resolved for the current route. It works in
+the layouts and pages of a `PrivateSet` whose route is in an organization, and
+throws anywhere else. `setOrg(idOrSlug)` navigates to the current route with a
+new `orgSlug` param (using `navigate` and `routes` from `@cedarjs/router`) by
+default; when `createTenancy` is given an `onSetOrg` option, `setOrg` calls that
+instead.
 
 ### `useAuth().hasPermission(permission)`
 
-Under `OrgScope`, `useAuth().hasPermission(permission)` checks the
+Under an organization route, `useAuth().hasPermission(permission)` checks the
 `permissions` that `withPermissions` added to the user's membership in that
 organization. Outside one it's `false`, so a check in the wrong place hides
-rather than shows. `OrgScope` provides it through `HasPermissionContext` from
-`@cedarjs/auth`.
+rather than shows. The organization's provider supplies it through
+`HasPermissionContext` from `@cedarjs/auth`.
 
 ```tsx
 const MembersPage = () => {
@@ -749,8 +819,9 @@ type error: `cedar generate types` writes them to
 calling it is a type error rather than a check that's always `false`.
 
 Like every check on the web, this only decides what to show; the api's
-`@requirePermission` is the guard. For a page only some may open, give `OrgScope`
-a `permission` (see [Guarding routes by role](#guarding-routes-by-role)).
+`@requirePermission` is the guard. For a page only some may open, give its
+`PrivateSet` an `orgPermission` (see
+[Guarding routes by role and permission](#guarding-routes-by-role-and-permission)).
 
 ### `hasOrgRole` (web)
 
@@ -767,8 +838,8 @@ hooks that want a clean slate outside the normal
 
 ### `useCreateApolloClient()`
 
-From `@cedarjs/web/apollo`, added for `OrgScope` to build its per-organization
-client, and usable directly by any code that needs a second Apollo client
+From `@cedarjs/web/apollo`, added for the organization provider to build its
+per-organization client, and usable directly by any code that needs a second Apollo client
 sharing the app client's link chain and cache configuration:
 
 ```ts
@@ -796,9 +867,9 @@ const orgClient = createClient({ headers: { 'cedar-org': organizationId } })
 
 ## Request headers
 
-| Header      | Set by                                                 | Read by             | Purpose                                                                                                                          |
-| ----------- | ------------------------------------------------------ | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `cedar-org` | The per-organization Apollo client `OrgScope` provides | `resolveCurrentOrg` | Names the organization id or slug a request targets. No `X-` prefix, per RFC 6648, matching the existing `auth-provider` header. |
+| Header      | Set by                                                | Read by             | Purpose                                                                                                                          |
+| ----------- | ----------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `cedar-org` | The per-organization Apollo client the provider gives | `resolveCurrentOrg` | Names the organization id or slug a request targets. No `X-` prefix, per RFC 6648, matching the existing `auth-provider` header. |
 
 It is exported as a constant from `@cedarjs/tenancy`:
 
@@ -836,10 +907,10 @@ Unset `context.currentOrg` (or don't set it) to test the `TenantScopeError` /
 unauthorized paths.
 
 On the web, the mocked `useAuth` in tests behaves like the real one: inside an
-`OrgScope`, `hasPermission` checks the membership in that organization, so give
+organization route, `hasPermission` checks the membership in that organization, so give
 the user from `mockCurrentUser()` the `memberships` your component's
 organization needs. Outside one, `hasPermission` is `false`. `hasUserRole`
-checks `currentUser.roles`, inside an `OrgScope` or not.
+checks `currentUser.roles`, inside an organization route or not.
 
 ## Limitations
 
@@ -852,9 +923,6 @@ checks `currentUser.roles`, inside an `OrgScope` or not.
   Prisma 7's `_runtimeDataModel`. Prisma 8 uses a different client with no
   `$extends`; the extension will need reimplementing when a Cedar app moves to
   Prisma 8.
-- **No prerendering under `OrgScope`.** `OrgScope`'s nested `ApolloProvider`
-  shadows the per-route client the prerenderer injects above `App`, so a `Route`
-  or set under `OrgScope` must not carry the `prerender` prop.
 - **Raw SQL only on `db.$withoutTenant()`.** `$queryRaw`, `$executeRaw`,
   `$queryRawUnsafe` and `$executeRawUnsafe` throw `TenantScopeError` on a scoped
   client, on `db.$forOrg(id)`, and on the default `db` outside a request

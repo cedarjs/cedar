@@ -68,6 +68,8 @@ For Private Routes, Cedar prerenders your Private Routes' `whileLoadingAuth` pro
 </PrivateSet>
 ```
 
+In an app with [multi-tenancy](./tenancy.md), the routes of an organization (`{orgSlug}` in their path) are in a `PrivateSet` too, and prerender the same way: auth is loading while prerendering, so the `whileLoadingAuth` shell renders and the organization's provider never mounts.
+
 ### Rendering skeletons while authenticating
 
 Sometimes you want to render the shell of the page, while you wait for your authentication checks to happen. This can make the experience feel a lot snappier to the user, since they don't wait on a blank screen while their credentials are checked.
@@ -150,6 +152,8 @@ export async function routeParameters() {
 ```
 
 Take note of the special syntax for the import, with a dollar-sign in front of api. This lets our tooling (typescript and babel) know that you want to break out of the web side the page is in to access code on the api side. This only works in the routeHook scripts (and scripts in the root /scripts directory).
+
+A public page about an organization, such as `/orgs/{orgSlug}` in a plain `<Set>` rather than a `PrivateSet`, is a dynamic route like any other. Return the slugs from `routeParameters`, mark the fields the page reads `@skipAuth`, and query the organization by the slug from `useParams()`. There is no organization context on a public page, so its queries carry no `cedar-org` header. See [Prerendering organization pages](./tenancy.md#prerendering-organization-pages).
 
 :::warning `$api` imports are server-side only
 
