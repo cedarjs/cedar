@@ -104,9 +104,10 @@ function createWebGraphQLConfigs() {
           graphQLConfig: {
             schema: toPosixRelative(cwd, paths.generated.schema),
             // Needed to resolve fragment spreads, so a spread of a fragment
-            // defined in another file (a fragment Cell's FRAGMENT, or a
-            // .graphql file, say) is checked too
-            documents: `${toPosixRelative(cwd, paths.web.src)}/**/*.{js,jsx,ts,tsx,graphql}`,
+            // defined in another file (a fragment Cell's FRAGMENT, say) is
+            // checked too. Only JS and TS: like the build and type
+            // generation, Cedar has no .graphql documents on the web side
+            documents: `${toPosixRelative(cwd, paths.web.src)}/**/*.{js,jsx,ts,tsx}`,
           },
         },
       },
