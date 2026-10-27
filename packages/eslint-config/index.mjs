@@ -4,6 +4,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import process from 'node:process'
 
 import * as graphqlPlugin from '@graphql-eslint/eslint-plugin'
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
@@ -47,6 +48,10 @@ const cedarFormsControlComponents = [
   'WeekField',
 ]
 
+function toPosixRelative(from, to) {
+  return path.relative(from, to).split(path.sep).join(path.posix.sep)
+}
+
 /**
  * Lints the GraphQL documents (`gql` tagged templates) on the web side
  * against the app's schema.
@@ -75,10 +80,13 @@ function createWebGraphQLConfigs() {
 
   // Flat config `files` globs are matched relative to the project root,
   // with forward slashes on every platform
-  const webSrc = path
-    .relative(paths.base, paths.web.src)
-    .split(path.sep)
-    .join(path.posix.sep)
+  const webSrc = toPosixRelative(paths.base, paths.web.src)
+
+  // The parser resolves its schema and documents pointers relative to the
+  // working directory. They're given relative, not absolute: graphql-tools
+  // tries to parse a pointer with a space in it as a GraphQL document, and
+  // fails, when the project's path has one
+  const cwd = process.cwd()
 
   return [
     {
@@ -94,11 +102,11 @@ function createWebGraphQLConfigs() {
         parser: graphqlPlugin.parser,
         parserOptions: {
           graphQLConfig: {
-            schema: paths.generated.schema,
+            schema: toPosixRelative(cwd, paths.generated.schema),
             // Needed to resolve fragment spreads, so a spread of a fragment
             // defined in another file (a fragment Cell's FRAGMENT, or a
             // .graphql file, say) is checked too
-            documents: path.join(paths.web.src, '**/*.{js,jsx,ts,tsx,graphql}'),
+            documents: `${toPosixRelative(cwd, paths.web.src)}/**/*.{js,jsx,ts,tsx,graphql}`,
           },
         },
       },
