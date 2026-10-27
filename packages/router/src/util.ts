@@ -14,8 +14,9 @@
  * Only exported to be able to test it
  */
 export function paramsForRoute(route: string) {
-  // Match the strings between `{` and `}`.
-  const params = [...route.matchAll(/\{([^}]+)\}/g)]
+  // Match the strings between `{` and `}`. Not across a `{`, so a run of
+  // `{`s without a `}` can't make it backtrack.
+  const params = [...route.matchAll(/\{([^{}]+)\}/g)]
 
   return params
     .map((match) => match[1])
