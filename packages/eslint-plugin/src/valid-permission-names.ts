@@ -15,10 +15,52 @@ const PERMISSIONS_FILE = path.join('packages', 'permissions', 'src', 'index.ts')
 
 const SDL_FILE = /\.sdl\.(?:ts|js)$/
 
-// `@requirePermission(permission: "members.manage")`. A directive with an
-// interpolation in it is split over two of the template's quasis, so it
-// never matches here and is left alone
-const DIRECTIVE = /@requirePermission\s*\(\s*permission\s*:\s*"([^"\n]*)"\s*\)/g
+// `@requirePermission(permission: "members.manage")`, with GraphQL's
+// optional commas between arguments. A directive with an interpolation in
+// it is split over two of the template's quasis, so it never matches here
+// and is left alone
+const DIRECTIVE =
+  /@requirePermission\s*\(\s*permission\s*:\s*"([^"\n]*)"[\s,]*\)/g
+
+/**
+ * `text` with every GraphQL comment and block string blanked out, so a
+ * directive mentioned in a description or a comment isn't taken for a real
+ * one. Same length as `text`, so indexes into it still point at the source.
+ * Plain strings are kept: the directive's own argument is one.
+ */
+function blankCommentsAndBlockStrings(text: string): string {
+  let out = ''
+  let i = 0
+
+  while (i < text.length) {
+    if (text.startsWith('"""', i)) {
+      const end = text.indexOf('"""', i + 3)
+      const stop = end === -1 ? text.length : end + 3
+      out += text.slice(i, stop).replace(/[^\n]/g, ' ')
+      i = stop
+    } else if (text[i] === '"') {
+      let j = i + 1
+
+      while (j < text.length && text[j] !== '"' && text[j] !== '\n') {
+        j += text[j] === '\\' ? 2 : 1
+      }
+
+      const stop = Math.min(j + 1, text.length)
+      out += text.slice(i, stop)
+      i = stop
+    } else if (text[i] === '#') {
+      const end = text.indexOf('\n', i)
+      const stop = end === -1 ? text.length : end
+      out += ' '.repeat(stop - i)
+      i = stop
+    } else {
+      out += text[i]
+      i += 1
+    }
+  }
+
+  return out
+}
 
 type CachedNames = { mtimeMs: number; names: ReadonlySet<string> | null }
 
@@ -260,18 +302,11 @@ export const validPermissionNames = createRule<
         }
 
         for (const quasi of node.quasi.quasis) {
-          const text = quasi.value.raw
+          const text = blankCommentsAndBlockStrings(quasi.value.raw)
           // The quasi's range includes the backtick or `}` before it
           const textStart = quasi.range[0] + 1
 
           for (const match of text.matchAll(DIRECTIVE)) {
-            const lineStart = text.lastIndexOf('\n', match.index) + 1
-
-            // A GraphQL comment
-            if (text.slice(lineStart, match.index).includes('#')) {
-              continue
-            }
-
             const name = match[1]
 
             if (names.has(name)) {

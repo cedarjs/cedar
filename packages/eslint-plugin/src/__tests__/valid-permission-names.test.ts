@@ -118,6 +118,28 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
       code: sdl('# @requirePermission(permission: "nope")'),
     },
     {
+      // An example in a description is not a directive
+      filename: sdlFile(sdlDir),
+      code: `export const schema = gql\`
+  type Query {
+    """
+    Guarded with @requirePermission(permission: "example.read") in the
+    "real" SDL.
+    """
+    a: String @requirePermission(permission: "members.manage")
+    "Mentions # and @requirePermission(permission: \\"nope\\") too"
+    b: String
+  }
+\``,
+    },
+    {
+      // GraphQL allows commas and comments between the arguments
+      filename: sdlFile(sdlDir),
+      code: sdl(`@requirePermission(
+        permission: "members.manage", # the comma and this comment are fine
+      )`),
+    },
+    {
       // Not a gql template
       filename: sdlFile(sdlDir),
       code: 'export const schema = sql`@requirePermission(permission: "nope")`',
@@ -142,6 +164,14 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
           endColumn: 68,
         },
       ],
+    },
+    {
+      // Commas and comments don't hide a typo
+      filename: sdlFile(sdlDir),
+      code: sdl(`@requirePermission(
+        permission: "members.manag", # comment
+      )`),
+      errors: [{ messageId: 'unknownPermissionWithSuggestion' }],
     },
     {
       filename: sdlFile(sdlDir),
