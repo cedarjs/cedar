@@ -512,6 +512,10 @@ It sits beside `@requireOrgAuth`. Use whichever reads better per field; the
 generated organizations SDL uses `@requirePermission` for organization fields
 and `@requireUserAuth` for user-level ones.
 
+`yarn cedar lint` checks the permission names in the SDL against the ones
+`definePermissions` lists, so an unknown name is caught before it throws at
+runtime.
+
 ### Permissions on the web
 
 `withPermissions(user)` adds each membership's permissions (its role's) to the
