@@ -11,7 +11,6 @@ import {
   vi,
 } from 'vitest'
 
-import { HasOrgRoleContext } from '@cedarjs/auth'
 import type { AuthContextInterface, UseAuth } from '@cedarjs/auth'
 
 import type { GeneratedRoutesMap } from '../analyzeRoutes.js'
@@ -27,6 +26,7 @@ import {
   Router,
 } from '../index.js'
 import { useParams } from '../params.js'
+import type { UseOrgRoles } from '../router-context.js'
 import { Set } from '../Set.js'
 import type { WrapperProps } from '../Set.js'
 
@@ -1240,17 +1240,25 @@ describe('PrivateSet role checks', () => {
       })
     }
 
-  /** Provides the org role check, as `OrgScope` does, for an org's `role` */
-  const orgScopeWithRole = (role: string) => {
-    const OrgScope = ({ children }: WrapperProps) => (
-      <HasOrgRoleContext.Provider
-        value={(roles) => toList(roles).includes(role)}
-      >
-        {children}
-      </HasOrgRoleContext.Provider>
-    )
+  /**
+   * A `useOrgRoles` for a user with `roleBySlug[orgSlug]` in each
+   * organization, like the one from `@cedarjs/tenancy/web`: `null` without an
+   * `orgSlug` param, and no role when not signed in
+   */
+  const orgRolesFor = (roleBySlug: Record<string, string>) => {
+    const useOrgRoles: UseOrgRoles = (useAuth, params) => {
+      const { isAuthenticated } = useAuth()
 
-    return OrgScope
+      if (!Object.hasOwn(params, 'orgSlug')) {
+        return null
+      }
+
+      const role = isAuthenticated ? roleBySlug[params.orgSlug] : undefined
+
+      return (roles) => role !== undefined && toList(roles).includes(role)
+    }
+
+    return useOrgRoles
   }
 
   // The router's own tests are an app without tenancy, where sets have
@@ -1258,6 +1266,7 @@ describe('PrivateSet role checks', () => {
   // than writing them out, lets them through the type check.
   const userRoles = (roles: string | string[]) => ({ userRoles: roles })
   const orgRoles = (roles: string | string[]) => ({ orgRoles: roles })
+  const routerOrgRoles = (useOrgRoles: UseOrgRoles) => ({ useOrgRoles })
 
   describe('unauthorized', () => {
     const TestRouter = ({ useAuth }: { useAuth: UseAuth }) => (
@@ -1466,17 +1475,25 @@ describe('PrivateSet role checks', () => {
   })
 
   describe('orgRoles', () => {
+    /** An organization's layout, to see whether a set's wrap renders */
+    const OrgLayout = ({ children }: WrapperProps) => (
+      <>
+        <p>Org Layout</p>
+        {children}
+      </>
+    )
+
     const TestRouter = ({
       useAuth,
-      orgRole,
+      roleBySlug,
     }: {
       useAuth: UseAuth
-      orgRole: string
+      roleBySlug: Record<string, string>
     }) => (
-      <Router useAuth={useAuth}>
+      <Router useAuth={useAuth} {...routerOrgRoles(orgRolesFor(roleBySlug))}>
         <Route path="/" page={HomePage} name="home" />
         <Route path="/login" page={LoginPage} name="login" />
-        <Set wrap={orgScopeWithRole(orgRole)}>
+        <Set wrap={OrgLayout}>
           <Route
             path="/org/{orgSlug}/projects"
             page={ProjectsPage}
@@ -1506,12 +1523,27 @@ describe('PrivateSet role checks', () => {
             />
           </PrivateSet>
         </Set>
+        <PrivateSet
+          wrap={OrgLayout}
+          unauthenticated="login"
+          unauthorized="projects"
+          {...orgRoles('owner')}
+        >
+          <Route
+            path="/org/{orgSlug}/members"
+            page={AboutPage}
+            name="members"
+          />
+        </PrivateSet>
       </Router>
     )
 
     test('lets a member with the role in the organization in', async () => {
       const screen = render(
-        <TestRouter useAuth={useAuthWithRoles({})} orgRole="admin" />,
+        <TestRouter
+          useAuth={useAuthWithRoles({})}
+          roleBySlug={{ acme: 'admin' }}
+        />,
       )
 
       act(() => navigate('/org/acme/settings'))
@@ -1521,7 +1553,10 @@ describe('PrivateSet role checks', () => {
 
     test('redirects a member without it to unauthorized', async () => {
       const screen = render(
-        <TestRouter useAuth={useAuthWithRoles({})} orgRole="member" />,
+        <TestRouter
+          useAuth={useAuthWithRoles({})}
+          roleBySlug={{ acme: 'member', other: 'owner' }}
+        />,
       )
 
       act(() => navigate('/org/acme/settings'))
@@ -1533,9 +1568,29 @@ describe('PrivateSet role checks', () => {
       expect(screen.queryByText(/Settings Page/i)).not.toBeInTheDocument()
     })
 
+    test('redirects a user who is not signed in to unauthenticated', async () => {
+      const screen = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({ isAuthenticated: false })}
+          roleBySlug={{ acme: 'owner' }}
+        />,
+      )
+
+      act(() => navigate('/org/acme/settings'))
+
+      await waitFor(() => {
+        screen.getByText(/Login Page/i)
+        expect(window.location.pathname).toBe('/login')
+        expect(window.location.search).toBe('?redirectTo=/org/acme/settings')
+      })
+    })
+
     test('with userRoles too, needs both', async () => {
       const ownerOnly = render(
-        <TestRouter useAuth={useAuthWithRoles({})} orgRole="owner" />,
+        <TestRouter
+          useAuth={useAuthWithRoles({})}
+          roleBySlug={{ acme: 'owner' }}
+        />,
       )
 
       act(() => navigate('/org/acme/billing'))
@@ -1546,7 +1601,7 @@ describe('PrivateSet role checks', () => {
       const staffOnly = render(
         <TestRouter
           useAuth={useAuthWithRoles({ roles: ['staff'] })}
-          orgRole="member"
+          roleBySlug={{ acme: 'member' }}
         />,
       )
 
@@ -1558,7 +1613,7 @@ describe('PrivateSet role checks', () => {
       const both = render(
         <TestRouter
           useAuth={useAuthWithRoles({ roles: ['staff'] })}
-          orgRole="owner"
+          roleBySlug={{ acme: 'owner' }}
         />,
       )
 
@@ -1567,7 +1622,42 @@ describe('PrivateSet role checks', () => {
       await waitFor(() => both.getByText(/Private Page/i))
     })
 
-    describe('without an organization role check above it', () => {
+    describe('with the organization in its own wrap', () => {
+      test('lets a member with the role in', async () => {
+        const screen = render(
+          <TestRouter
+            useAuth={useAuthWithRoles({})}
+            roleBySlug={{ acme: 'owner' }}
+          />,
+        )
+
+        act(() => navigate('/org/acme/members'))
+
+        await waitFor(() => {
+          screen.getByText(/Org Layout/i)
+          screen.getByText(/About Page/i)
+        })
+      })
+
+      test('redirects a member without it, without rendering its wrap', async () => {
+        const screen = render(
+          <TestRouter
+            useAuth={useAuthWithRoles({})}
+            roleBySlug={{ acme: 'member' }}
+          />,
+        )
+
+        act(() => navigate('/org/acme/members'))
+
+        await waitFor(() => {
+          screen.getByText(/Projects Page/i)
+          expect(window.location.pathname).toBe('/org/acme/projects')
+        })
+        expect(screen.queryByText(/About Page/i)).not.toBeInTheDocument()
+      })
+    })
+
+    describe('without an organization to check the role in', () => {
       let err: typeof console.error
 
       beforeAll(() => {
@@ -1579,18 +1669,11 @@ describe('PrivateSet role checks', () => {
         console.error = err
       })
 
-      const expectedError =
-        'A PrivateSet with `orgRoles` needs the organization from OrgScope'
-
-      test("throws when OrgScope is in the PrivateSet's own wrap", async () => {
+      test('throws without useOrgRoles on the Router, even when not signed in', async () => {
         const TestRouter = () => (
-          <Router useAuth={useAuthWithRoles({})}>
+          <Router useAuth={useAuthWithRoles({ isAuthenticated: false })}>
             <Route path="/login" page={LoginPage} name="login" />
-            <PrivateSet
-              unauthenticated="login"
-              wrap={orgScopeWithRole('owner')}
-              {...orgRoles('owner')}
-            >
+            <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
               <Route
                 path="/org/{orgSlug}/settings"
                 page={SettingsPage}
@@ -1601,12 +1684,17 @@ describe('PrivateSet role checks', () => {
         )
 
         act(() => navigate('/org/acme/settings'))
-        expect(() => render(<TestRouter />)).toThrow(expectedError)
+        expect(() => render(<TestRouter />)).toThrow(
+          'A PrivateSet with `orgRoles` needs `useOrgRoles` on the Router',
+        )
       })
 
-      test('throws with no OrgScope at all, even when not signed in', async () => {
+      test('throws on a route without an orgSlug param', async () => {
         const TestRouter = () => (
-          <Router useAuth={useAuthWithRoles({ isAuthenticated: false })}>
+          <Router
+            useAuth={useAuthWithRoles({})}
+            {...routerOrgRoles(orgRolesFor({ acme: 'owner' }))}
+          >
             <Route path="/login" page={LoginPage} name="login" />
             <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
               <Route path="/settings" page={SettingsPage} name="settings" />
@@ -1615,7 +1703,9 @@ describe('PrivateSet role checks', () => {
         )
 
         act(() => navigate('/settings'))
-        expect(() => render(<TestRouter />)).toThrow(expectedError)
+        expect(() => render(<TestRouter />)).toThrow(
+          'and the route has no `orgSlug` param',
+        )
       })
     })
   })

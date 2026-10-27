@@ -23,9 +23,23 @@ type UseAuth = () => AuthContextInterface<
   unknown
 >
 
+/**
+ * Checks the user's role in the organization of the current route, for
+ * `<PrivateSet orgRoles>`, given the router's `useAuth` and the route's path
+ * params: `null` when the route isn't in an organization. In apps with
+ * tenancy, `useOrgRoles` from `@cedarjs/tenancy/web` is one. The router
+ * calls it like a hook, on every render of a private set.
+ */
+export type UseOrgRoles = (
+  useAuth: UseAuth,
+  params: Record<string, string>,
+) => ((roles: string | string[]) => boolean) | null
+
 export interface RouterState {
   paramTypes?: Record<string, ParamType>
   useAuth: UseAuth
+  /** Unset in apps that don't pass one to the router */
+  useOrgRoles?: UseOrgRoles
   routes: ReturnType<typeof analyzeRoutes>
   activeRouteName?: string | undefined | null
 }
@@ -44,6 +58,7 @@ export interface RouterContextProviderProps extends Omit<
 
 export const RouterContextProvider: React.FC<RouterContextProviderProps> = ({
   useAuth,
+  useOrgRoles,
   paramTypes,
   routes,
   activeRouteName,
@@ -52,11 +67,12 @@ export const RouterContextProvider: React.FC<RouterContextProviderProps> = ({
   const state = useMemo(
     () => ({
       useAuth: useAuth || useNoAuth,
+      useOrgRoles,
       paramTypes,
       routes,
       activeRouteName,
     }),
-    [useAuth, paramTypes, routes, activeRouteName],
+    [useAuth, useOrgRoles, paramTypes, routes, activeRouteName],
   )
 
   return (

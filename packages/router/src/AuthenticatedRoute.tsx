@@ -1,10 +1,8 @@
-import React, { useContext } from 'react'
-
-import { HasOrgRoleContext } from '@cedarjs/auth'
+import React from 'react'
 
 import { Redirect } from './redirect.js'
 import { useRouterState } from './router-context.js'
-import type { RouterState } from './router-context.js'
+import type { RouterState, UseOrgRoles } from './router-context.js'
 import { paramsForRoute, pathParamsText } from './util.js'
 
 interface AuthenticatedRouteProps {
@@ -18,6 +16,9 @@ interface AuthenticatedRouteProps {
 }
 
 const REPLACE = { replace: true }
+
+/** For a router without `useOrgRoles`: no organization to check a role in */
+const useNoOrgRoles: UseOrgRoles = () => null
 
 /**
  * The current route's path params, as the text in the URL's path, so they go
@@ -104,16 +105,27 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
     isAuthenticated,
     hasRole,
   } = routerState.useAuth()
-  const hasOrgRole = useContext(HasOrgRoleContext)
+  const pathParams = currentPathParams(routerState)
+  // Called on every render, with or without `orgRoles`, as hooks must be
+  const useOrgRoles = routerState.useOrgRoles ?? useNoOrgRoles
+  const hasOrgRole = useOrgRoles(routerState.useAuth, pathParams)
 
   // Fail closed: with no organization to check `orgRoles` in, it's a mistake
   // in the routes, not a user without the role
   if (orgRoles !== undefined && !hasOrgRole) {
+    if (!routerState.useOrgRoles) {
+      throw new Error(
+        'A PrivateSet with `orgRoles` needs `useOrgRoles` on the Router to ' +
+          'check the role with. Please pass `useOrgRoles` from ' +
+          '`@cedarjs/tenancy/web`: ' +
+          '<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>',
+      )
+    }
+
     throw new Error(
-      'A PrivateSet with `orgRoles` needs the organization from OrgScope, ' +
-        'and found none. Please nest the PrivateSet inside the Set that ' +
-        'wraps OrgScope, rather than giving it OrgScope in its own `wrap`: ' +
-        "a PrivateSet's checks run outside its own wrappers",
+      'A PrivateSet with `orgRoles` needs an organization to check the role ' +
+        'in, and the route has no `orgSlug` param. Please only use ' +
+        '`orgRoles` on routes with `{orgSlug}` in their path',
     )
   }
 
@@ -134,11 +146,7 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   if (isAuthenticated && unauthorized) {
     return (
       <Redirect
-        to={redirectPath(
-          routerState.routes,
-          unauthorized,
-          currentPathParams(routerState),
-        )}
+        to={redirectPath(routerState.routes, unauthorized, pathParams)}
         options={REPLACE}
       />
     )
@@ -151,7 +159,7 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   const unauthenticatedPath = redirectPath(
     routerState.routes,
     unauthenticated,
-    currentPathParams(routerState),
+    pathParams,
   )
 
   return (

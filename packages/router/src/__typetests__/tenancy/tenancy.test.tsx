@@ -3,7 +3,7 @@
 import { expect, test } from 'tstyche'
 
 import { createAuthentication } from '@cedarjs/auth'
-import type { AuthImplementation } from '@cedarjs/auth'
+import type { AuthImplementation, UseAuth } from '@cedarjs/auth'
 import { PrivateSet, Router, Set } from '@cedarjs/router'
 
 declare module '@cedarjs/auth' {
@@ -37,6 +37,20 @@ test('useAuth().hasUserRole checks currentUser.roles', () => {
 
 test("Router takes the app's useAuth", () => {
   expect(<Router useAuth={useAuth}>{null}</Router>).type.not.toRaiseError()
+})
+
+// `useOrgRoles` from `@cedarjs/tenancy/web`, which the router doesn't depend on
+declare function useOrgRoles(
+  useAuth: UseAuth,
+  params: Record<string, string>,
+): ((roles: string | string[]) => boolean) | null
+
+test("Router takes tenancy's useOrgRoles", () => {
+  expect(
+    <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+      {null}
+    </Router>,
+  ).type.not.toRaiseError()
 })
 
 test('PrivateSet and Set have no roles', () => {

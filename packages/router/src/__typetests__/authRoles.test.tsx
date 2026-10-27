@@ -22,6 +22,16 @@ test("Router takes the app's useAuth", () => {
   expect(<Router useAuth={useAuth}>{null}</Router>).type.not.toRaiseError()
 })
 
+test('Router has no useOrgRoles', () => {
+  const useOrgRoles = () => null
+
+  expect(
+    <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+      {null}
+    </Router>,
+  ).type.toRaiseError("Property 'useOrgRoles' does not exist")
+})
+
 test('PrivateSet takes roles', () => {
   expect(
     <PrivateSet unauthenticated="login" roles={['admin', 'editor']}>

@@ -48,13 +48,13 @@ type SetRoles = AuthTenancy extends { enabled: true }
        * provided roles such as "owner" or ["owner", "admin"] in the current
        * organization. With `userRoles` as well, they need both.
        *
-       * The organization is the one `OrgScope` resolves, so the `PrivateSet`
-       * has to be nested inside the set that wraps `OrgScope`:
+       * The organization is the one with the route's `orgSlug` param, and
+       * the router checks the role with the `useOrgRoles` passed to it:
        *
-       *   <Set wrap={OrgScope}>
-       *     <PrivateSet unauthenticated="login" orgRoles="owner">
+       *   <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
        *
-       * A `PrivateSet` with `orgRoles` and no `OrgScope` around it throws.
+       * A `PrivateSet` with `orgRoles` throws without `useOrgRoles` on the
+       * router, or on a route without `{orgSlug}` in its path.
        */
       orgRoles?: string | string[]
     }

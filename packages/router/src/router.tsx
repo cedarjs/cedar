@@ -1,6 +1,10 @@
 import type { ReactElement, ReactNode } from 'react'
 import React, { useMemo, memo } from 'react'
 
+import type { AuthTenancy } from '@cedarjs/auth' with {
+  'resolution-mode': 'import',
+}
+
 import { ActiveRouteLoader } from './active-route-loader.js'
 import { analyzeRoutes } from './analyzeRoutes.js'
 import type { Wrappers } from './analyzeRoutes.js'
@@ -11,24 +15,57 @@ import { normalizePage } from './page.js'
 import { PageLoadingContextProvider } from './PageLoadingContext.js'
 import { ParamsProvider } from './params.js'
 import { Redirect } from './redirect.js'
-import type { RouterContextProviderProps } from './router-context.js'
+import type {
+  RouterContextProviderProps,
+  UseOrgRoles,
+} from './router-context.js'
 import { RouterContextProvider } from './router-context.js'
 import { wrapWithSetWrappers } from './Set.js'
 import { SplashPage } from './splash-page.js'
 import { matchPath, parseSearch, replaceParams, validatePath } from './util.js'
 import type { TrailingSlashesTypes } from './util.js'
 
-export interface RouterProps extends Omit<
-  RouterContextProviderProps,
-  'routes' | 'activeRouteName'
-> {
+/**
+ * `useOrgRoles`, only in an app with tenancy (see `AuthTenancy`), where sets
+ * have `orgRoles`
+ */
+type RouterOrgRoles = AuthTenancy extends { enabled: true }
+  ? {
+      /**
+       * Checks the user's role in the organization of the current route, for
+       * `<PrivateSet orgRoles>`. Pass `useOrgRoles` from
+       * `@cedarjs/tenancy/web`:
+       *
+       *   <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+       */
+      useOrgRoles?: UseOrgRoles
+    }
+  : Record<never, never>
+
+export interface RouterProps
+  extends
+    Omit<
+      RouterContextProviderProps,
+      'routes' | 'activeRouteName' | 'useOrgRoles'
+    >,
+    RouterOrgRoles {
   trailingSlashes?: TrailingSlashesTypes
   pageLoadingDelay?: number
   children: ReactNode
 }
 
-export const Router: React.FC<RouterProps> = ({
+/**
+ * The props the router reads. In an app without tenancy `RouterProps` has no
+ * `useOrgRoles`, but the router's own code is compiled as one, so it reads it
+ * through this type, which `RouterProps` always fits.
+ */
+interface RouterImplementationProps extends RouterProps {
+  useOrgRoles?: UseOrgRoles
+}
+
+const RouterImplementation: React.FC<RouterImplementationProps> = ({
   useAuth,
+  useOrgRoles,
   paramTypes,
   pageLoadingDelay,
   trailingSlashes = 'never',
@@ -40,6 +77,7 @@ export const Router: React.FC<RouterProps> = ({
     <LocationProvider trailingSlashes={trailingSlashes}>
       <LocationAwareRouter
         useAuth={useAuth}
+        useOrgRoles={useOrgRoles}
         paramTypes={paramTypes}
         pageLoadingDelay={pageLoadingDelay}
       >
@@ -49,8 +87,11 @@ export const Router: React.FC<RouterProps> = ({
   )
 }
 
-const LocationAwareRouter: React.FC<RouterProps> = ({
+export const Router: React.FC<RouterProps> = RouterImplementation
+
+const LocationAwareRouter: React.FC<RouterImplementationProps> = ({
   useAuth,
+  useOrgRoles,
   paramTypes,
   pageLoadingDelay,
   children,
@@ -104,6 +145,7 @@ const LocationAwareRouter: React.FC<RouterProps> = ({
       return (
         <RouterContextProvider
           useAuth={useAuth}
+          useOrgRoles={useOrgRoles}
           paramTypes={paramTypes}
           routes={analyzeRoutesResult}
         >
@@ -163,6 +205,7 @@ const LocationAwareRouter: React.FC<RouterProps> = ({
   return (
     <RouterContextProvider
       useAuth={useAuth}
+      useOrgRoles={useOrgRoles}
       paramTypes={paramTypes}
       routes={analyzeRoutesResult}
       activeRouteName={name}

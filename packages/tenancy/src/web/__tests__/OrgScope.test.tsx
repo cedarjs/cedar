@@ -8,7 +8,7 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { AuthContextInterface, UseAuth } from '@cedarjs/auth'
-import { HasOrgRoleContext, HasPermissionContext } from '@cedarjs/auth'
+import { HasPermissionContext } from '@cedarjs/auth'
 import {
   LocationProvider,
   navigate,
@@ -23,6 +23,7 @@ import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 import { clearOrgClients } from '../orgClients.js'
 import { OrgScope } from '../OrgScope.js'
 import type { OrgMembership } from '../types.js'
+import { useOrgRoles } from '../useOrgRoles.js'
 
 globalThis.RWJS_API_GRAPHQL_URL = 'https://example.com/graphql'
 
@@ -742,47 +743,57 @@ describe('OrgScope', () => {
         expect(fetchMock).not.toHaveBeenCalled()
       })
 
-      test('provides the role check in the organization, for <PrivateSet orgRoles>', async () => {
+      // These tests are an app without tenancy, where sets have no
+      // `orgRoles` prop and the router no `useOrgRoles`. Spreading them lets
+      // them through the type check.
+      const ownersOnly = { orgRoles: 'owner' }
+      const routerOrgRoles = { useOrgRoles }
+      const LoginPage = () => <>login</>
+      const AnyMember = ({ children }: { children: React.ReactNode }) => (
+        <OrgScope useAuth={useAuth}>{children}</OrgScope>
+      )
+
+      test('<PrivateSet orgRoles> with OrgScope in its own wrap checks the role in the organization', async () => {
         setupFetchMock()
 
-        const IsOwner = () => {
-          const hasOrgRole = React.useContext(HasOrgRoleContext)
-          return <>owner: {String(hasOrgRole?.('owner'))}</>
-        }
-
-        const Tree = ({ orgSlug }: { orgSlug: string }) => (
-          <LocationProvider>
-            <ParamsProvider allParams={{}}>
-              <CedarApolloProvider>
-                <OrgScope useAuth={useAuth} orgSlug={orgSlug}>
-                  <IsOwner />
-                </OrgScope>
-              </CedarApolloProvider>
-            </ParamsProvider>
-          </LocationProvider>
+        render(
+          <CedarApolloProvider>
+            <Router useAuth={useAuth} {...routerOrgRoles}>
+              <Route path="/login" page={LoginPage} name="login" />
+              <Set wrap={AnyMember}>
+                <Route
+                  path="/org/{orgSlug}/home"
+                  page={OrgHomePage}
+                  name="orgHome"
+                />
+              </Set>
+              <PrivateSet
+                wrap={AnyMember}
+                unauthenticated="login"
+                unauthorized="orgHome"
+                {...ownersOnly}
+              >
+                <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
+              </PrivateSet>
+            </Router>
+          </CedarApolloProvider>,
         )
 
-        const { rerender } = render(<Tree orgSlug="org-a" />)
-        await screen.findByText('owner: false')
+        // An owner of org B, but only a member of org A
+        act(() => navigate('/org/org-b'))
+        await waitFor(() => screen.getByText('projects: org_b-projects'))
 
-        rerender(<Tree orgSlug="org-b" />)
-        await screen.findByText('owner: true')
+        act(() => navigate('/org/org-a'))
+        await waitFor(() => screen.getByText('org home'))
+        expect(window.location.pathname).toBe('/org/org-a/home')
       })
 
       test('<PrivateSet orgRoles> nested inside it checks the role in the organization', async () => {
         setupFetchMock()
 
-        const AnyMember = ({ children }: { children: React.ReactNode }) => (
-          <OrgScope useAuth={useAuth}>{children}</OrgScope>
-        )
-        const LoginPage = () => <>login</>
-        // These tests are an app without tenancy, where sets have no
-        // `orgRoles` prop. Spreading it lets it through the type check.
-        const ownersOnly = { orgRoles: 'owner' }
-
         render(
           <CedarApolloProvider>
-            <Router useAuth={useAuth}>
+            <Router useAuth={useAuth} {...routerOrgRoles}>
               <Route path="/login" page={LoginPage} name="login" />
               <Set wrap={AnyMember}>
                 <Route
