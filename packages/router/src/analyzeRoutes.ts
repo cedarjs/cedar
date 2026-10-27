@@ -36,7 +36,11 @@ export type Wrappers = readonly WrapperType[]
 interface SetRenderProps {
   private?: boolean
   unauthenticated?: string
+  unauthorized?: string
   roles?: string | string[]
+  // An app with tenancy has these instead of `roles` (see `SetRoles`)
+  userRoles?: string | string[]
+  orgRoles?: string | string[]
   whileLoadingAuth?: () => ReactElement | null
 }
 
@@ -59,8 +63,20 @@ function pickSetRenderProps(props: SetRenderProps) {
     picked.unauthenticated = props.unauthenticated
   }
 
+  if (props.unauthorized !== undefined) {
+    picked.unauthorized = props.unauthorized
+  }
+
   if (props.roles !== undefined) {
     picked.roles = props.roles
+  }
+
+  if (props.userRoles !== undefined) {
+    picked.userRoles = props.userRoles
+  }
+
+  if (props.orgRoles !== undefined) {
+    picked.orgRoles = props.orgRoles
   }
 
   if (props.whileLoadingAuth !== undefined) {

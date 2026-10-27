@@ -196,7 +196,10 @@ interface WrappedPageProps {
     props: {
       private?: boolean
       unauthenticated?: string
+      unauthorized?: string
       roles?: string | string[]
+      userRoles?: string | string[]
+      orgRoles?: string | string[]
       whileLoadingAuth?: () => ReactElement | null
     }
   }[]
@@ -244,7 +247,10 @@ const WrappedPage = memo(({ sets, children }: WrappedPageProps) => {
       wrapped = (
         <AuthenticatedRoute
           unauthenticated={unauthenticated}
+          unauthorized={set.props.unauthorized}
           roles={set.props.roles}
+          userRoles={set.props.userRoles}
+          orgRoles={set.props.orgRoles}
           whileLoadingAuth={set.props.whileLoadingAuth}
         >
           {wrapped}

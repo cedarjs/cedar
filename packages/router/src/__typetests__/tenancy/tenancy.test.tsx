@@ -56,3 +56,27 @@ test('PrivateSet and Set have no roles', () => {
     <PrivateSet unauthenticated="login">{null}</PrivateSet>,
   ).type.not.toRaiseError()
 })
+
+test('PrivateSet takes userRoles and orgRoles instead', () => {
+  expect(
+    <PrivateSet unauthenticated="login" userRoles={['admin', 'editor']}>
+      {null}
+    </PrivateSet>,
+  ).type.not.toRaiseError()
+
+  expect(
+    <PrivateSet
+      unauthenticated="login"
+      unauthorized="projects"
+      orgRoles="owner"
+    >
+      {null}
+    </PrivateSet>,
+  ).type.not.toRaiseError()
+
+  expect(
+    <PrivateSet unauthenticated="login" userRoles="staff" orgRoles={['owner']}>
+      {null}
+    </PrivateSet>,
+  ).type.not.toRaiseError()
+})

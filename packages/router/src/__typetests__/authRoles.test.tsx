@@ -29,3 +29,25 @@ test('PrivateSet takes roles', () => {
     </PrivateSet>,
   ).type.not.toRaiseError()
 })
+
+test('PrivateSet takes unauthorized', () => {
+  expect(
+    <PrivateSet unauthenticated="login" unauthorized="forbidden" roles="admin">
+      {null}
+    </PrivateSet>,
+  ).type.not.toRaiseError()
+})
+
+test('PrivateSet has no userRoles or orgRoles', () => {
+  expect(
+    <PrivateSet unauthenticated="login" userRoles="admin">
+      {null}
+    </PrivateSet>,
+  ).type.toRaiseError("Property 'userRoles' does not exist")
+
+  expect(
+    <PrivateSet unauthenticated="login" orgRoles="owner">
+      {null}
+    </PrivateSet>,
+  ).type.toRaiseError("Property 'orgRoles' does not exist")
+})
