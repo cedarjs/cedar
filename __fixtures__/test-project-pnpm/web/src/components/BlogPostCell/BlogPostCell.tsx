@@ -21,6 +21,7 @@ export const QUERY: TypedDocumentNode<
       title
       body
       author {
+        id
         email
         fullName
       }

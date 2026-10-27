@@ -14,6 +14,7 @@ export const QUERY: TypedDocumentNode<
 > = gql`
   query FindAuthorQuery($id: String!) {
     author: user(id: $id) {
+      id
       email
       fullName
     }
