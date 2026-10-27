@@ -54,9 +54,6 @@ interface SetProps {
   /**
    * Route is permitted when authenticated and user has any of the provided
    * roles such as "admin" or ["admin", "editor"], in `currentUser.roles`
-   *
-   * Not available in an app with tenancy: guard routes by the role in the
-   * organization with `OrgScope`'s `roles` and `unauthorized` instead.
    */
   roles?: RolesToCheck
   /** Prerender all pages in the set */
