@@ -106,8 +106,21 @@ checks to match. There's no `requireAuth` or `hasRole`.
 `getMemberships`/`hasOrgRole` for the client side: a per-organization Apollo
 client provided under organization routes, keyed by the immutable organization
 id so switching organizations never mixes caches. `useCurrentOrg().hasOrgRole`
-checks the user's role in the organization, and `OrgScope`'s `roles` and
-`unauthorized` props guard routes by it. `useAuth().hasUserRole` checks
-`currentUser.roles`; there's no `useAuth().hasRole` or `<PrivateSet roles>` in
-an app with tenancy. See the how-to for the full
-`<Set wrap={OrgScope}>` setup `yarn cedar setup tenancy` generates.
+checks the user's role in the organization. To guard routes by it, nest a
+`<PrivateSet orgRoles unauthorized>` inside the set that wraps `OrgScope`:
+
+```tsx
+<Set wrap={OrgScope}>
+  <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+  <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+    <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+  </PrivateSet>
+</Set>
+```
+
+`OrgScope` provides the organization the role is checked in, so a `PrivateSet`
+with `orgRoles` and no `OrgScope` around it throws. `useAuth().hasUserRole` and
+`<PrivateSet userRoles>` check `currentUser.roles`; there's no
+`useAuth().hasRole` or `<PrivateSet roles>` in an app with tenancy. See the
+how-to for the full `<Set wrap={OrgScope}>` setup `yarn cedar setup tenancy`
+generates.

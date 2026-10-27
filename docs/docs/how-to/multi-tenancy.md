@@ -789,23 +789,27 @@ With tenancy there's no `useAuth().hasRole`: setup renames your existing uses
 to `hasUserRole`, and using it is a type error.
 
 `<PrivateSet roles>` isn't available with tenancy either. For a page only some
-roles in the organization may open, give `OrgScope` `roles` and `unauthorized`
-from a small wrapper component (see
+roles in the organization may open, nest a `PrivateSet` with `orgRoles` and
+`unauthorized` inside the set that wraps `OrgScope` (see
 [Guarding routes by role](../tenancy.md#guarding-routes-by-role)):
 
 ```tsx title="web/src/Routes.tsx"
-const OwnersOnly = ({ children }: { children: React.ReactNode }) => (
-  <OrgScope roles="owner" unauthorized="projects">
-    {children}
-  </OrgScope>
-)
-
-// ...
-
-<Set wrap={[OwnersOnly, OrgLayout]}>
-  <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
+<Set wrap={[OrgScope, OrgLayout]}>
+  <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+  <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+    <Route
+      path="/org/{orgSlug}/settings"
+      page={OrgSettingsPage}
+      name="orgSettings"
+    />
+  </PrivateSet>
 </Set>
 ```
+
+A member who isn't an owner is redirected to the same organization's
+`projects` page. `<PrivateSet wrap={OrgScope} orgRoles>` doesn't work: the
+router checks a `PrivateSet`'s roles outside its own `wrap` components, where
+there's no organization yet, so it throws an error instead.
 
 ### `reauthenticate()` after membership-changing mutations
 

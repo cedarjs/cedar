@@ -478,8 +478,9 @@ Below it, `OrgScope` provides a per-organization Apollo client (built or reused,
 keyed by `${userId}:${organizationId}`) and the organization for
 `useCurrentOrg()`.
 
-On the web too, every role check names its kind: `useAuth().hasUserRole` checks
-`currentUser.roles`, and `useCurrentOrg().hasOrgRole` and `OrgScope`'s `roles`
+On the web too, every role check names its kind: `useAuth().hasUserRole` and
+`<PrivateSet userRoles>` check `currentUser.roles`, and
+`useCurrentOrg().hasOrgRole`, `<PrivateSet orgRoles>` and `OrgScope`'s `roles`
 check the user's role in the organization. `useAuth().hasRole` and
 `<PrivateSet roles>` aren't available with tenancy: `cedar generate types`
 marks the app as having tenancy (`.cedar/types/includes/web-tenancy.d.ts`), and
@@ -492,29 +493,35 @@ organization's client alone is dropped the same way.
 
 #### Guarding routes by role
 
-`<PrivateSet roles>` isn't available with tenancy. To let only some roles in
-the organization open a page, give `OrgScope` `roles` and `unauthorized`, from a
-small wrapper component (`Set` doesn't pass props on to `wrap` components):
+To let only some roles in the organization open a page, put a `PrivateSet` with
+`orgRoles` and `unauthorized` inside the set that wraps `OrgScope`:
 
 ```tsx title="web/src/Routes.tsx"
-const OwnersOnly = ({ children }: { children: React.ReactNode }) => (
-  <OrgScope roles="owner" unauthorized="projects">
-    {children}
-  </OrgScope>
-)
-
-// ...
-
-<Set wrap={[OwnersOnly, OrgLayout]}>
-  <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+<Set wrap={[OrgScope, OrgLayout]}>
+  <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+  <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+    <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+  </PrivateSet>
 </Set>
 ```
 
-A member without one of `roles` is redirected to the `unauthorized` route,
-which gets the organization's `orgSlug` when its path has an `{orgSlug}`. With
-no `unauthorized`, they get `notAMember`. As with every check on the web, this
-only decides what to show: the api's `@requireOrgAuth` is what protects the
-data.
+A member without one of `orgRoles` is redirected to the `unauthorized` route,
+which gets the `orgSlug` of the page they tried to open when its path has an
+`{orgSlug}`. With no `unauthorized`, they're redirected to `unauthenticated`.
+
+It has to be nested. The router checks a `PrivateSet`'s roles before it renders
+the set's own `wrap` components, so in `<PrivateSet wrap={OrgScope} orgRoles>`
+there's no organization yet to check the role in. A `PrivateSet` with
+`orgRoles` and no `OrgScope` around it throws an error rather than let anyone
+in.
+
+`OrgScope` renders `notAMember` for a user who isn't signed in, so the nested
+`PrivateSet` only sees signed-in users. To send everyone else to log in, put
+the whole organization set inside a `<PrivateSet unauthenticated="login">`.
+
+`userRoles` checks `currentUser.roles` the same way. Given both, a user needs
+both. As with every check on the web, this only decides what to show: the
+api's `@requireOrgAuth` is what protects the data.
 
 ### `useCurrentOrg()`
 
