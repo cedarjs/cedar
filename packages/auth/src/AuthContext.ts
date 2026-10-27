@@ -69,10 +69,9 @@ type HasRole = AuthTenancy extends { enabled: true }
   ? Record<never, never>
   : {
       /**
-       * Checks if the "currentUser" from the api side
-       * is assigned a role or one of a list of roles.
-       * If the user is assigned any of the provided list of roles,
-       * the hasRole is considered to be true.
+       * Checks if the "currentUser" from the api side is assigned a role or one
+       * of a list of roles. If the user is assigned any of the provided list of
+       * roles, then hasRole is considered to be true.
        */
       hasRole(rolesToCheck: string | string[]): boolean
     }
