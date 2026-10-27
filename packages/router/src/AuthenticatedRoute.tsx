@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { useLocation } from './location.js'
 import { Redirect } from './redirect.js'
 import { useRouterState } from './router-context.js'
 import type { RouterState, UseOrgRoles } from './router-context.js'
@@ -24,7 +25,7 @@ const useNoOrgRoles: UseOrgRoles = () => null
  * The current route's path params, as the text in the URL's path, so they go
  * into another route's path unchanged
  */
-function currentPathParams(routerState: RouterState) {
+function currentPathParams(routerState: RouterState, pathname: string) {
   const route = Object.values(routerState.routes.pathRouteMap).find(
     (candidate) => candidate.name === routerState.activeRouteName,
   )
@@ -33,11 +34,7 @@ function currentPathParams(routerState: RouterState) {
     return {}
   }
 
-  return pathParamsText(
-    route.path,
-    globalThis.location.pathname,
-    routerState.paramTypes,
-  )
+  return pathParamsText(route.path, pathname, routerState.paramTypes)
 }
 
 /**
@@ -105,8 +102,12 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
     isAuthenticated,
     hasRole,
   } = routerState.useAuth()
-  const pathParams = currentPathParams(routerState)
+  // The router's location, not `globalThis.location`, which there isn't when
+  // prerendering
+  const { pathname } = useLocation()
+  const pathParams = currentPathParams(routerState, pathname)
   // Called on every render, with or without `orgRoles`, as hooks must be
+  // called the same way every time
   const useOrgRoles = routerState.useOrgRoles ?? useNoOrgRoles
   const hasOrgRole = useOrgRoles(routerState.useAuth, pathParams)
 
