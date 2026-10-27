@@ -563,9 +563,10 @@ export function getMemberships(currentUser: unknown): OrgMembership[]
 export interface CreateTenancyOptions {
   /**
    * Finds the organization of a route. By default, the one with the route's
-   * `orgSlug` param.
+   * `orgSlug` param. Returns what `useOrgBySlug` does: full memberships from
+   * `currentUser.memberships`.
    */
-  useOrg?: UseOrg
+  useOrg?: UseTenancyOrg
   /** Rendered for a signed-in user who isn't a member of the organization. Default: null. */
   notAMember?: React.ReactNode
   /** Called by `useCurrentOrg().setOrg` instead of navigating. */

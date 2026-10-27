@@ -13,11 +13,21 @@ import { getOrgClient } from './orgClients.js'
 import { OrgContext } from './OrgContext.js'
 import type { CurrentOrgSummary, OrgContextValue } from './types.js'
 import { useOrgBySlug } from './useOrgBySlug.js'
+import type { OrgBySlug } from './useOrgBySlug.js'
 import { getUserId, useOrgClientTeardown } from './useOrgClientTeardown.js'
 
 // Header the API's `resolveCurrentOrg` (from `@cedarjs/tenancy`) reads to
 // determine the request's organization.
 const CEDAR_ORG_HEADER = 'cedar-org'
+
+/**
+ * A `useOrg` for `createTenancy`: the router's `UseOrg`, but returning full
+ * memberships (see `OrgBySlug`)
+ */
+export type UseTenancyOrg = (
+  useAuth: Parameters<UseOrg>[0],
+  params: Record<string, string>,
+) => OrgBySlug | null
 
 export interface CreateTenancyOptions {
   /**
@@ -31,9 +41,12 @@ export interface CreateTenancyOptions {
    *     useOrg: (useAuth) => useOrgBySlug(useAuth, subdomain()),
    *   })
    *
-   * It's a hook: the router calls it on every render of a private set.
+   * It's a hook: the router calls it on every render of a private set. It
+   * returns the full memberships from `currentUser.memberships`, as
+   * `useOrgBySlug` does, since the provider needs the organization's id,
+   * slug and name.
    */
-  useOrg?: UseOrg
+  useOrg?: UseTenancyOrg
   /** Rendered for a signed-in user who isn't a member of the organization */
   notAMember?: React.ReactNode
   /**
@@ -90,14 +103,40 @@ function OrgProviderImplementation({
         )
       }
 
+      // An id or a slug; an unknown one navigates too, to `notAMember`
+      const target = routerMemberships
+        .filter(isOrgMembership)
+        .find(
+          (m) =>
+            m.organizationId === idOrSlug || m.organization.slug === idOrSlug,
+        )
+      const nextSlug = target?.organization.slug ?? idOrSlug
+
+      // Only the first segment equal to the current slug, which is the
+      // route's `orgSlug` in the usual `/org/{orgSlug}/...` shape
+      let replaced = false
       const nextPathname = location.pathname
         .split('/')
-        .map((segment) => (segment === currentSlug ? idOrSlug : segment))
+        .map((segment) => {
+          if (!replaced && segment === currentSlug) {
+            replaced = true
+            return nextSlug
+          }
+
+          return segment
+        })
         .join('/')
 
       navigate(nextPathname + location.search + location.hash)
     },
-    [onSetOrg, params, location.pathname, location.search, location.hash],
+    [
+      onSetOrg,
+      params,
+      routerMemberships,
+      location.pathname,
+      location.search,
+      location.hash,
+    ],
   )
 
   // `useAuth().hasPermission` below this point: the membership's
@@ -154,7 +193,7 @@ function OrgProviderImplementation({
 }
 
 /** The organization with the route's `orgSlug` param */
-const useOrgFromParams: UseOrg = (useAuth, params) =>
+const useOrgFromParams: UseTenancyOrg = (useAuth, params) =>
   useOrgBySlug(
     useAuth,
     Object.hasOwn(params, 'orgSlug') ? params['orgSlug'] : undefined,

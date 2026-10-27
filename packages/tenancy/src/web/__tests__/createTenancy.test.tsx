@@ -698,6 +698,23 @@ describe('createTenancy', () => {
       expect(window.location.search).toBe('?tab=1')
     })
 
+    test('setOrg takes an organization id too, and navigates to its slug', async () => {
+      setupFetchMock()
+      const SwitchById = () => {
+        const { setOrg } = useCurrentOrg()
+
+        return <button onClick={() => setOrg('org_b')}>switch by id</button>
+      }
+      renderApp({ useAuth, children: <SwitchById /> })
+
+      act(() => navigate('/org/org-a'))
+      await screen.findByText('switch by id')
+
+      act(() => screen.getByText('switch by id').click())
+
+      await waitFor(() => expect(window.location.pathname).toBe('/org/org-b'))
+    })
+
     test('setOrg calls onSetOrg instead of navigating', async () => {
       setupFetchMock()
       const onSetOrg = vi.fn()
