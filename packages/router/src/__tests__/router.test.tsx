@@ -2005,6 +2005,44 @@ describe('PrivateSet role checks', () => {
         },
       )
 
+      test('waits for auth to load when useOrg finds no organization', async () => {
+        const noOrgTenancy = { ...tenancyFor({}), useOrg: () => null }
+        const App = ({ loading }: { loading: boolean }) => (
+          <Router
+            useAuth={() =>
+              createDummyAuthContextValues({
+                loading,
+                isAuthenticated: !loading,
+              })
+            }
+            {...routerTenancy(noOrgTenancy)}
+          >
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet
+              unauthenticated="login"
+              whileLoadingAuth={() => <p>Loading auth</p>}
+              {...orgRoles('owner')}
+            >
+              <Route
+                path="/org/{orgSlug}/settings"
+                page={SettingsPage}
+                name="settings"
+              />
+            </PrivateSet>
+          </Router>
+        )
+
+        act(() => navigate('/org/acme/settings'))
+
+        const loading = render(<App loading />)
+        await waitFor(() => loading.getByText('Loading auth'))
+        loading.unmount()
+
+        expect(() => render(<App loading={false} />)).toThrow(
+          "got no organization from the Router's `tenancy`",
+        )
+      })
+
       test('throws on a route without an orgSlug param', async () => {
         const TestRouter = () => (
           <Router

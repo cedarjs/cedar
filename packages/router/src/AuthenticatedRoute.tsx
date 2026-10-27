@@ -127,7 +127,11 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   const needsOrg = orgRoles !== undefined || orgPermission !== undefined
 
   // Fail closed: with no organization to check `orgRoles` or `orgPermission`
-  // in, it's a mistake in the routes, not a user without access
+  // in, it's a mistake in the routes, not a user without access. A router
+  // without `tenancy` is a mistake whatever the auth state. A `useOrg` that
+  // finds no organization may only be because auth is still loading, such as
+  // when prerendering with an organization from the host, so that waits for
+  // auth to load.
   if (needsOrg && !org) {
     const prop = orgRoles !== undefined ? 'orgRoles' : 'orgPermission'
 
@@ -138,6 +142,10 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
           '`@cedarjs/tenancy/web`: ' +
           '<Router useAuth={useAuth} tenancy={tenancy}>',
       )
+    }
+
+    if (authLoading) {
+      return whileLoadingAuth?.() || null
     }
 
     if (pathParams['orgSlug'] === undefined) {
