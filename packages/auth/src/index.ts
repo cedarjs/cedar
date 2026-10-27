@@ -3,7 +3,6 @@ export type {
   AuthTenancy,
   CurrentUser,
   LoggedInUser,
-  RolesToCheck,
 } from './AuthContext.js'
 export type { AuthProviderProps } from './AuthProvider/AuthProvider.js'
 export { useNoAuth } from './useAuth.js'

@@ -39,18 +39,18 @@ test("Router takes the app's useAuth", () => {
   expect(<Router useAuth={useAuth}>{null}</Router>).type.not.toRaiseError()
 })
 
-test('PrivateSet and Set take no roles', () => {
+test('PrivateSet and Set have no roles', () => {
   expect(
     <PrivateSet unauthenticated="login" roles="admin">
       {null}
     </PrivateSet>,
-  ).type.toRaiseError("Type 'string' is not assignable to type 'undefined'")
+  ).type.toRaiseError("Property 'roles' does not exist")
 
   expect(
     <Set private unauthenticated="login" roles={['admin']}>
       {null}
     </Set>,
-  ).type.toRaiseError("Type 'string[]' is not assignable to type 'undefined'")
+  ).type.toRaiseError("Property 'roles' does not exist")
 
   expect(
     <PrivateSet unauthenticated="login">{null}</PrivateSet>,

@@ -32,19 +32,6 @@ export type CurrentUser = (LoggedInUser & object) | null
 export interface AuthTenancy {}
 
 /**
- * The roles `<PrivateSet roles>` takes: a role, or a list of roles, in
- * `currentUser.roles`.
- *
- * `never` in an app with tenancy (see `AuthTenancy`), so passing any is a type
- * error: there, every role check says which kind it is. Use
- * `useAuth().hasUserRole` for `currentUser.roles`, or
- * `useCurrentOrg().hasOrgRole` for the role in the current organization.
- */
-export type RolesToCheck = AuthTenancy extends { enabled: true }
-  ? never
-  : string | string[]
-
-/**
  * `useAuth().hasRole`, which an app with tenancy doesn't have (see
  * `AuthTenancy`): there, every role check says which kind it is.
  */
