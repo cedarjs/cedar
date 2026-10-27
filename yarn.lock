@@ -3170,6 +3170,7 @@ __metadata:
     "@types/estree": "npm:1.0.9"
     "@typescript-eslint/parser": "npm:8.72.0"
     "@typescript-eslint/rule-tester": "npm:8.72.0"
+    "@typescript-eslint/typescript-estree": "npm:8.72.0"
     "@typescript-eslint/utils": "npm:8.72.0"
     eslint: "npm:8.57.1"
     typescript: "npm:5.9.3"
