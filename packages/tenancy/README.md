@@ -170,8 +170,9 @@ export const tenancy = createTenancy({
 ```
 
 The router checks the role and permission in the organization of the route's
-`orgSlug` param, so a `PrivateSet` with `orgRoles` or `orgPermission` throws
-without `tenancy` on the router or an `{orgSlug}` in the route's path. A route
+`orgSlug` param. A `PrivateSet` with `orgRoles` or `orgPermission` throws when
+the router has no `tenancy` or its `useOrg` finds no organization for the
+route; with the default lookup, that's a route without `{orgSlug}`. A route
 with `{orgSlug}` outside a `PrivateSet` is a public page with no organization
 context. `useAuth().hasUserRole` and `<PrivateSet userRoles>` check
 `currentUser.roles`; there's no `useAuth().hasRole` or `<PrivateSet roles>` in
