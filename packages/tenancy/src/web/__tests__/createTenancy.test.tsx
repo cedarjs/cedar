@@ -4,26 +4,27 @@ import React from 'react'
 import type { ApolloClient } from '@apollo/client'
 import { gql } from '@apollo/client'
 import { useApolloClient, useQuery } from '@apollo/client/react'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { AuthContextInterface, UseAuth } from '@cedarjs/auth'
 import { HasPermissionContext } from '@cedarjs/auth'
 import {
-  LocationProvider,
   navigate,
-  ParamsProvider,
   PrivateSet,
   Route,
   Router,
   Set,
+  useParams,
 } from '@cedarjs/router'
+import type { Tenancy } from '@cedarjs/router'
 import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
+import { createTenancy } from '../createTenancy.js'
 import { clearOrgClients } from '../orgClients.js'
-import { OrgScope } from '../OrgScope.js'
 import type { OrgMembership } from '../types.js'
-import { useOrgRoles } from '../useOrgRoles.js'
+import { useCurrentOrg } from '../useCurrentOrg.js'
+import { useOrgBySlug } from '../useOrgBySlug.js'
 
 globalThis.RWJS_API_GRAPHQL_URL = 'https://example.com/graphql'
 
@@ -153,12 +154,59 @@ function setupFetchMock() {
   return { fetchMock, requests }
 }
 
-describe('OrgScope', () => {
+const LoginPage = () => <>login</>
+
+/** What a client's cache holds of the \`projects\` query */
+function cachedProjects(client: ApolloClient) {
+  return client.cache.extract()['ROOT_QUERY']?.['projects']
+}
+
+describe('createTenancy', () => {
+  beforeEach(() => {
+    window.history.pushState({}, '', '/')
+  })
+
   afterEach(async () => {
+    cleanup()
     vi.unstubAllGlobals()
     // The client map is module-level, shared across tests.
     await clearOrgClients()
   })
+
+  /**
+   * An app with the tenancy on its router, and `children` in a private set
+   * at `/org/{orgSlug}`. The router is an app without tenancy, where it has
+   * no `tenancy` prop, so it is spread to get through the type check.
+   */
+  function renderApp({
+    useAuth,
+    tenancy = createTenancy({ notAMember: 'not a member' }),
+    children = (
+      <>
+        <ClientCapture onCapture={() => {}} />
+        <ProjectsView />
+      </>
+    ),
+  }: {
+    useAuth: UseAuth
+    tenancy?: Tenancy
+    children?: React.ReactNode
+  }) {
+    const OrgPage = () => <>{children}</>
+
+    const App = () => (
+      <CedarApolloProvider>
+        <Router useAuth={useAuth} {...{ tenancy }}>
+          <Route path="/login" page={LoginPage} name="login" />
+          <PrivateSet unauthenticated="login">
+            <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
+          </PrivateSet>
+        </Router>
+      </CedarApolloProvider>
+    )
+
+    return render(<App />)
+  }
 
   test('two organizations visited in sequence get separate clients and caches; returning to the first reuses it', async () => {
     const { fetchMock } = setupFetchMock()
@@ -174,30 +222,25 @@ describe('OrgScope', () => {
     })
 
     const clients: ApolloClient[] = []
-    const captureClient = (client: ApolloClient) => clients.push(client)
 
-    const Tree = ({ orgSlug }: { orgSlug: string }) => (
-      <LocationProvider>
-        <ParamsProvider allParams={{}}>
-          <CedarApolloProvider>
-            <OrgScope useAuth={useAuth} orgSlug={orgSlug}>
-              <ClientCapture onCapture={captureClient} />
-              <ProjectsView />
-            </OrgScope>
-          </CedarApolloProvider>
-        </ParamsProvider>
-      </LocationProvider>
-    )
+    renderApp({
+      useAuth,
+      children: (
+        <>
+          <ClientCapture onCapture={(client) => clients.push(client)} />
+          <ProjectsView />
+        </>
+      ),
+    })
 
-    const { rerender } = render(<Tree orgSlug="org-a" />)
+    act(() => navigate('/org/org-a'))
     await waitFor(() => screen.getByText('projects: org_a-projects'))
 
-    rerender(<Tree orgSlug="org-b" />)
+    act(() => navigate('/org/org-b'))
     await waitFor(() => screen.getByText('projects: org_b-projects'))
 
-    rerender(<Tree orgSlug="org-a" />)
+    act(() => navigate('/org/org-a'))
     await waitFor(() => screen.getByText('projects: org_a-projects'))
-
     expect(fetchMock).toHaveBeenCalled()
 
     const clientA = clients[0]
@@ -209,7 +252,7 @@ describe('OrgScope', () => {
     expect(clients[clients.length - 1]).toBe(clientA)
   })
 
-  test('a slug with no membership renders the not-a-member state and issues no request', async () => {
+  test('a slug with no membership renders notAMember and issues no request', async () => {
     const { fetchMock } = setupFetchMock()
     const useAuth = createUseAuth({
       isAuthenticated: true,
@@ -219,27 +262,17 @@ describe('OrgScope', () => {
       },
     })
 
-    render(
-      <LocationProvider>
-        <ParamsProvider allParams={{}}>
-          <CedarApolloProvider>
-            <OrgScope
-              useAuth={useAuth}
-              orgSlug="does-not-exist"
-              notAMember="not a member"
-            >
-              <ProjectsView />
-            </OrgScope>
-          </CedarApolloProvider>
-        </ParamsProvider>
-      </LocationProvider>,
-    )
+    renderApp({ useAuth })
+
+    act(() => navigate('/org/does-not-exist'))
 
     await screen.findByText('not a member')
-    expect(fetchMock).not.toHaveBeenCalled()
+
+    const queries = fetchMock.mock.calls.map(([, init]) => String(init?.body))
+    expect(queries.filter((body) => body.includes('ProjectsQuery'))).toEqual([])
   })
 
-  test('a query issued above OrgScope carries no cedar-org header', async () => {
+  test('a query issued above the provider carries no cedar-org header', async () => {
     const { requests } = setupFetchMock()
     const useAuth = createUseAuth({
       isAuthenticated: true,
@@ -249,17 +282,22 @@ describe('OrgScope', () => {
       },
     })
 
+    window.history.pushState({}, '', '/org/org-a')
+
+    // The app's own client, above the Router
     render(
-      <LocationProvider>
-        <ParamsProvider allParams={{}}>
-          <CedarApolloProvider>
-            <ProjectsView />
-            <OrgScope useAuth={useAuth} orgSlug="org-a">
-              <ProjectsView />
-            </OrgScope>
-          </CedarApolloProvider>
-        </ParamsProvider>
-      </LocationProvider>,
+      <CedarApolloProvider>
+        <ProjectsView />
+        <Router
+          useAuth={useAuth}
+          {...{ tenancy: createTenancy({ notAMember: 'not a member' }) }}
+        >
+          <Route path="/login" page={LoginPage} name="login" />
+          <PrivateSet unauthenticated="login">
+            <Route path="/org/{orgSlug}" page={ProjectsView} name="org" />
+          </PrivateSet>
+        </Router>
+      </CedarApolloProvider>,
     )
 
     await waitFor(() => expect(requests).toHaveLength(2))
@@ -275,7 +313,7 @@ describe('OrgScope', () => {
     expect(orgRequest?.headers.get('cedar-org')).toBe('org_a')
   })
 
-  test('logging out then in as another user gives a fresh client for the same slug, with an empty cache', async () => {
+  test('signing out clears the organization clients, and another user gets a fresh client for the same slug', async () => {
     setupFetchMock()
     const authState: AuthState = {
       isAuthenticated: true,
@@ -287,34 +325,29 @@ describe('OrgScope', () => {
     const useAuth = createUseAuth(authState)
 
     const clients: ApolloClient[] = []
-    const captureClient = (client: ApolloClient) => clients.push(client)
 
-    const Tree = () => (
-      <LocationProvider>
-        <ParamsProvider allParams={{}}>
-          <CedarApolloProvider>
-            <OrgScope
-              useAuth={useAuth}
-              orgSlug="acme"
-              notAMember="not a member"
-            >
-              <ClientCapture onCapture={captureClient} />
-              <ProjectsView />
-            </OrgScope>
-          </CedarApolloProvider>
-        </ParamsProvider>
-      </LocationProvider>
-    )
+    renderApp({
+      useAuth,
+      children: (
+        <>
+          <ClientCapture onCapture={(client) => clients.push(client)} />
+          <ProjectsView />
+        </>
+      ),
+    })
 
-    const { rerender } = render(<Tree />)
+    act(() => navigate('/org/acme'))
     await waitFor(() => screen.getByText('projects: org_1-projects'))
     const firstUserClient = clients[clients.length - 1]
+    expect(cachedProjects(firstUserClient)).toBeDefined()
 
-    // Log out.
+    // Log out. The router redirects to the login page, so the provider is
+    // gone, and the tenancy still clears the client.
     authState.isAuthenticated = false
     authState.currentUser = null
-    rerender(<Tree />)
-    await screen.findByText('not a member')
+    act(() => navigate('/org/acme?signedOut'))
+    await screen.findByText('login')
+    await waitFor(() => expect(cachedProjects(firstUserClient)).toBeUndefined())
 
     // Log in as a different user, whose organization happens to reuse the
     // same slug under a different id.
@@ -323,7 +356,7 @@ describe('OrgScope', () => {
       id: 'user_2',
       memberships: [membership('org_9', 'acme', 'Acme (user 2)', 'owner')],
     }
-    rerender(<Tree />)
+    act(() => navigate('/org/acme'))
     await waitFor(() => screen.getByText('projects: org_9-projects'))
 
     const secondUserClient = clients[clients.length - 1]
@@ -332,7 +365,7 @@ describe('OrgScope', () => {
     expect(secondUserClient.cache).not.toBe(firstUserClient.cache)
   })
 
-  test('a role change surfaced by a memberships refresh drops that org client', async () => {
+  test('a role change surfaced by a memberships refresh gives a fresh client', async () => {
     setupFetchMock()
     const authState: AuthState = {
       isAuthenticated: true,
@@ -344,22 +377,18 @@ describe('OrgScope', () => {
     const useAuth = createUseAuth(authState)
 
     const clients: ApolloClient[] = []
-    const captureClient = (client: ApolloClient) => clients.push(client)
 
-    const Tree = () => (
-      <LocationProvider>
-        <ParamsProvider allParams={{}}>
-          <CedarApolloProvider>
-            <OrgScope useAuth={useAuth} orgSlug="acme">
-              <ClientCapture onCapture={captureClient} />
-              <ProjectsView />
-            </OrgScope>
-          </CedarApolloProvider>
-        </ParamsProvider>
-      </LocationProvider>
-    )
+    renderApp({
+      useAuth,
+      children: (
+        <>
+          <ClientCapture onCapture={(client) => clients.push(client)} />
+          <ProjectsView />
+        </>
+      ),
+    })
 
-    const { rerender } = render(<Tree />)
+    act(() => navigate('/org/acme'))
     await waitFor(() => screen.getByText('projects: org_1-projects'))
     const clientBeforeRoleChange = clients[clients.length - 1]
 
@@ -367,24 +396,19 @@ describe('OrgScope', () => {
       id: 'user_1',
       memberships: [membership('org_1', 'acme', 'Acme', 'admin')],
     }
-    rerender(<Tree />)
+    // A new location re-renders the router, like `reauthenticate()` does
+    act(() => navigate('/org/acme?refreshed'))
+
     await waitFor(() =>
       expect(clients[clients.length - 1]).not.toBe(clientBeforeRoleChange),
     )
 
-    const clientAfterRoleChange = clients[clients.length - 1]
-
-    expect(clientAfterRoleChange.cache).not.toBe(clientBeforeRoleChange.cache)
-
-    // One new client for the new role, not a second one after a teardown
-    await waitFor(() => screen.getByText('projects: org_1-projects'))
-    const distinctClients = clients.filter(
-      (client, index) => clients.indexOf(client) === index,
+    expect(clients[clients.length - 1].cache).not.toBe(
+      clientBeforeRoleChange.cache,
     )
-    expect(distinctClients).toHaveLength(2)
   })
 
-  test('a role change while no OrgScope is mounted still gives a fresh client', async () => {
+  test('a role change while no provider is mounted still gives a fresh client', async () => {
     setupFetchMock()
     const authState: AuthState = {
       isAuthenticated: true,
@@ -396,35 +420,30 @@ describe('OrgScope', () => {
     const useAuth = createUseAuth(authState)
 
     const clients: ApolloClient[] = []
-    const captureClient = (client: ApolloClient) => clients.push(client)
 
-    const Tree = ({ mounted }: { mounted: boolean }) => (
-      <LocationProvider>
-        <ParamsProvider allParams={{}}>
-          <CedarApolloProvider>
-            {mounted && (
-              <OrgScope useAuth={useAuth} orgSlug="acme">
-                <ClientCapture onCapture={captureClient} />
-                <ProjectsView />
-              </OrgScope>
-            )}
-          </CedarApolloProvider>
-        </ParamsProvider>
-      </LocationProvider>
-    )
+    renderApp({
+      useAuth,
+      children: (
+        <>
+          <ClientCapture onCapture={(client) => clients.push(client)} />
+          <ProjectsView />
+        </>
+      ),
+    })
 
-    const { rerender } = render(<Tree mounted />)
+    act(() => navigate('/org/acme'))
     await waitFor(() => screen.getByText('projects: org_1-projects'))
     const ownerClient = clients[clients.length - 1]
 
-    // Like a route the router denies: the scope unmounts, the role changes
-    // while it's gone, and a new scope mounts with the new role
-    rerender(<Tree mounted={false} />)
+    // Away from the organization, the role changes while the provider is
+    // gone, and a new provider mounts with the new role
+    act(() => navigate('/login'))
+    await screen.findByText('login')
     authState.currentUser = {
       id: 'user_1',
       memberships: [membership('org_1', 'acme', 'Acme', 'member')],
     }
-    rerender(<Tree mounted />)
+    act(() => navigate('/org/acme'))
     await waitFor(() => screen.getByText('projects: org_1-projects'))
 
     const memberClient = clients[clients.length - 1]
@@ -433,7 +452,7 @@ describe('OrgScope', () => {
     expect(memberClient.cache).not.toBe(ownerClient.cache)
   })
 
-  test('a removed membership drops that org client; re-adding it later gets a fresh one', async () => {
+  test('a removed membership renders notAMember and drops that org client; re-adding it later gets a fresh one', async () => {
     setupFetchMock()
     const authState: AuthState = {
       isAuthenticated: true,
@@ -445,40 +464,33 @@ describe('OrgScope', () => {
     const useAuth = createUseAuth(authState)
 
     const clients: ApolloClient[] = []
-    const captureClient = (client: ApolloClient) => clients.push(client)
 
-    const Tree = () => (
-      <LocationProvider>
-        <ParamsProvider allParams={{}}>
-          <CedarApolloProvider>
-            <OrgScope
-              useAuth={useAuth}
-              orgSlug="acme"
-              notAMember="not a member"
-            >
-              <ClientCapture onCapture={captureClient} />
-              <ProjectsView />
-            </OrgScope>
-          </CedarApolloProvider>
-        </ParamsProvider>
-      </LocationProvider>
-    )
+    renderApp({
+      useAuth,
+      children: (
+        <>
+          <ClientCapture onCapture={(client) => clients.push(client)} />
+          <ProjectsView />
+        </>
+      ),
+    })
 
-    const { rerender } = render(<Tree />)
+    act(() => navigate('/org/acme'))
     await waitFor(() => screen.getByText('projects: org_1-projects'))
     const originalClient = clients[clients.length - 1]
 
     // The membership is removed (e.g. the member was kicked out).
     authState.currentUser = { id: 'user_1', memberships: [] }
-    rerender(<Tree />)
+    act(() => navigate('/org/acme?refreshed'))
     await screen.findByText('not a member')
+    await waitFor(() => expect(cachedProjects(originalClient)).toBeUndefined())
 
     // The user is re-invited and re-joins the same organization.
     authState.currentUser = {
       id: 'user_1',
       memberships: [membership('org_1', 'acme', 'Acme', 'owner')],
     }
-    rerender(<Tree />)
+    act(() => navigate('/org/acme'))
     await waitFor(() => screen.getByText('projects: org_1-projects'))
 
     const newClient = clients[clients.length - 1]
@@ -499,32 +511,24 @@ describe('OrgScope', () => {
     const useAuth = createUseAuth(authState)
 
     const clients: ApolloClient[] = []
-    const captureClient = (client: ApolloClient) => clients.push(client)
 
-    const Tree = ({ orgSlug }: { orgSlug: string }) => (
-      <LocationProvider>
-        <ParamsProvider allParams={{}}>
-          <CedarApolloProvider>
-            <OrgScope
-              useAuth={useAuth}
-              orgSlug={orgSlug}
-              notAMember="not a member"
-            >
-              <ClientCapture onCapture={captureClient} />
-              <ProjectsView />
-            </OrgScope>
-          </CedarApolloProvider>
-        </ParamsProvider>
-      </LocationProvider>
-    )
+    renderApp({
+      useAuth,
+      children: (
+        <>
+          <ClientCapture onCapture={(client) => clients.push(client)} />
+          <ProjectsView />
+        </>
+      ),
+    })
 
     // Before the rename is reflected in the memberships snapshot, the new
     // slug does not match anything.
-    const { rerender } = render(<Tree orgSlug="acme-renamed" />)
+    act(() => navigate('/org/acme-renamed'))
     await screen.findByText('not a member')
 
     // The old slug still matches, and gets a client.
-    rerender(<Tree orgSlug="acme" />)
+    act(() => navigate('/org/acme'))
     await waitFor(() => screen.getByText('projects: org_1-projects'))
     const clientBeforeRename = clients[clients.length - 1]
 
@@ -537,7 +541,7 @@ describe('OrgScope', () => {
         membership('org_1', 'acme-renamed', 'Acme Renamed', 'owner'),
       ],
     }
-    rerender(<Tree orgSlug="acme-renamed" />)
+    act(() => navigate('/org/acme-renamed'))
     await waitFor(() => screen.getByText('projects: org_1-projects'))
 
     // Same organization id, so the client (and its cache) survived the
@@ -545,7 +549,7 @@ describe('OrgScope', () => {
     expect(clients[clients.length - 1]).toBe(clientBeforeRename)
 
     // The old slug no longer matches once the rename has been refreshed.
-    rerender(<Tree orgSlug="acme" />)
+    act(() => navigate('/org/acme'))
     await screen.findByText('not a member')
   })
 
@@ -561,22 +565,18 @@ describe('OrgScope', () => {
     const useAuth = createUseAuth(authState)
 
     const clients: ApolloClient[] = []
-    const captureClient = (client: ApolloClient) => clients.push(client)
 
-    const Tree = () => (
-      <LocationProvider>
-        <ParamsProvider allParams={{}}>
-          <CedarApolloProvider>
-            <OrgScope useAuth={useAuth} orgSlug="acme">
-              <ClientCapture onCapture={captureClient} />
-              <ProjectsView />
-            </OrgScope>
-          </CedarApolloProvider>
-        </ParamsProvider>
-      </LocationProvider>
-    )
+    renderApp({
+      useAuth,
+      children: (
+        <>
+          <ClientCapture onCapture={(client) => clients.push(client)} />
+          <ProjectsView />
+        </>
+      ),
+    })
 
-    const { rerender } = render(<Tree />)
+    act(() => navigate('/org/acme'))
     await waitFor(() => screen.getByText('projects: org_1-projects'))
     const originalClient = clients[clients.length - 1]
 
@@ -586,7 +586,7 @@ describe('OrgScope', () => {
       id: 'user_1',
       memberships: [membership('org_2', 'acme', 'New Acme', 'owner')],
     }
-    rerender(<Tree />)
+    act(() => navigate('/org/acme?refreshed'))
     await waitFor(() => screen.getByText('projects: org_2-projects'))
 
     const newClient = clients[clients.length - 1]
@@ -595,134 +595,93 @@ describe('OrgScope', () => {
     expect(newClient.cache).not.toBe(originalClient.cache)
   })
 
-  describe('route param path', () => {
-    beforeEach(() => {
-      window.history.pushState({}, '', '/')
+  describe('useCurrentOrg', () => {
+    const useAuth = createUseAuth({
+      isAuthenticated: true,
+      currentUser: {
+        id: 'user_1',
+        memberships: [
+          membership('org_a', 'org-a', 'Org A', 'member'),
+          membership('org_b', 'org-b', 'Org B', 'owner'),
+        ],
+      },
     })
 
-    test('OrgScope resolves orgSlug from the route param, wired through Set wrap', async () => {
+    const CurrentOrg = () => {
+      const { org, memberships, hasOrgRole, setOrg } = useCurrentOrg()
+
+      return (
+        <>
+          <p>
+            org: {org?.slug} ({org?.role}), {memberships.length} memberships
+          </p>
+          <p>owner here: {String(hasOrgRole('owner'))}</p>
+          <p>owner in b: {String(hasOrgRole('owner', 'org_b'))}</p>
+          <button onClick={() => setOrg('org-b')}>switch</button>
+        </>
+      )
+    }
+
+    test('gives the organization, the memberships and the role checks', async () => {
       setupFetchMock()
-      const useAuth = createUseAuth({
-        isAuthenticated: true,
-        currentUser: {
-          id: 'user_1',
-          memberships: [
-            membership('org_a', 'org-a', 'Org A', 'owner'),
-            membership('org_b', 'org-b', 'Org B', 'owner'),
-          ],
-        },
-      })
-
-      const OrgPage = () => <ProjectsView />
-
-      // Like the OrgScope `yarn cedar setup tenancy` generates in apps
-      const AppOrgScope = ({ children }: { children: React.ReactNode }) => (
-        <OrgScope useAuth={useAuth} notAMember="not a member">
-          {children}
-        </OrgScope>
-      )
-
-      render(
-        <CedarApolloProvider>
-          <Router>
-            <Set wrap={AppOrgScope}>
-              <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
-            </Set>
-          </Router>
-        </CedarApolloProvider>,
-      )
+      renderApp({ useAuth, children: <CurrentOrg /> })
 
       act(() => navigate('/org/org-a'))
-      await waitFor(() => screen.getByText('projects: org_a-projects'))
 
-      act(() => navigate('/org/org-b'))
-      await waitFor(() => screen.getByText('projects: org_b-projects'))
+      await screen.findByText('org: org-a (member), 2 memberships')
+      screen.getByText('owner here: false')
+      screen.getByText('owner in b: true')
     })
 
-    describe('permissions', () => {
-      const withPermissions = (
-        m: OrgMembership,
-        permissions: string[],
-      ): OrgMembership => ({ ...m, permissions })
+    test('setOrg navigates to the same page of another organization', async () => {
+      setupFetchMock()
+      renderApp({ useAuth, children: <CurrentOrg /> })
 
-      const useAuth = createUseAuth({
-        isAuthenticated: true,
-        currentUser: {
-          id: 'user_1',
-          memberships: [
-            withPermissions(membership('org_a', 'org-a', 'Org A', 'member'), [
-              'projects.read',
-            ]),
-            withPermissions(membership('org_b', 'org-b', 'Org B', 'owner'), [
-              'projects.read',
-              'settings.edit',
-            ]),
-          ],
-        },
-      })
+      act(() => navigate('/org/org-a?tab=1'))
+      await screen.findByText('org: org-a (member), 2 memberships')
 
-      test("makes useAuth().hasPermission check the organization's membership", async () => {
-        setupFetchMock()
+      act(() => screen.getByText('switch').click())
 
-        const Can = () => {
-          const hasPermission = React.useContext(HasPermissionContext)
-          return (
-            <>
-              read: {String(hasPermission?.('projects.read'))}, edit:{' '}
-              {String(hasPermission?.('settings.edit'))}
-            </>
-          )
-        }
-
-        const Tree = ({ orgSlug }: { orgSlug: string }) => (
-          <LocationProvider>
-            <ParamsProvider allParams={{}}>
-              <CedarApolloProvider>
-                <OrgScope useAuth={useAuth} orgSlug={orgSlug}>
-                  <Can />
-                </OrgScope>
-              </CedarApolloProvider>
-            </ParamsProvider>
-          </LocationProvider>
-        )
-
-        const { rerender } = render(<Tree orgSlug="org-a" />)
-        await screen.findByText('read: true, edit: false')
-
-        rerender(<Tree orgSlug="org-b" />)
-        await screen.findByText('read: true, edit: true')
-      })
-
-      test('OrgScope with a permission lets in only memberships that have it', async () => {
-        const { fetchMock } = setupFetchMock()
-
-        const Tree = ({ orgSlug }: { orgSlug: string }) => (
-          <LocationProvider>
-            <ParamsProvider allParams={{}}>
-              <CedarApolloProvider>
-                <OrgScope
-                  useAuth={useAuth}
-                  orgSlug={orgSlug}
-                  permission="settings.edit"
-                  notAMember="not allowed"
-                >
-                  <ProjectsView />
-                </OrgScope>
-              </CedarApolloProvider>
-            </ParamsProvider>
-          </LocationProvider>
-        )
-
-        const { rerender } = render(<Tree orgSlug="org-a" />)
-        await screen.findByText('not allowed')
-        expect(fetchMock).not.toHaveBeenCalled()
-
-        rerender(<Tree orgSlug="org-b" />)
-        await screen.findByText('projects: org_b-projects')
-      })
+      await screen.findByText('org: org-b (owner), 2 memberships')
+      expect(window.location.pathname).toBe('/org/org-b')
+      expect(window.location.search).toBe('?tab=1')
     })
 
-    describe('roles', () => {
+    test('setOrg calls onSetOrg instead of navigating', async () => {
+      setupFetchMock()
+      const onSetOrg = vi.fn()
+      renderApp({
+        useAuth,
+        tenancy: createTenancy({ onSetOrg }),
+        children: <CurrentOrg />,
+      })
+
+      act(() => navigate('/org/org-a'))
+      await screen.findByText('org: org-a (member), 2 memberships')
+
+      act(() => screen.getByText('switch').click())
+
+      expect(onSetOrg).toHaveBeenCalledWith('org-b')
+      expect(window.location.pathname).toBe('/org/org-a')
+    })
+
+    test('throws outside an organization route', async () => {
+      const err = console.error
+      console.error = vi.fn()
+
+      try {
+        expect(() => render(<CurrentOrg />)).toThrow(
+          'useCurrentOrg must be used under an organization route',
+        )
+      } finally {
+        console.error = err
+      }
+    })
+  })
+
+  describe('useOrg', () => {
+    test('an organization from somewhere other than the path', async () => {
+      setupFetchMock()
       const useAuth = createUseAuth({
         isAuthenticated: true,
         currentUser: {
@@ -734,149 +693,224 @@ describe('OrgScope', () => {
         },
       })
 
-      const OrgPage = () => <ProjectsView />
-      const OrgHomePage = () => <>org home</>
-
-      test("checks the role in the URL's organization, and redirects to unauthorized with its orgSlug", async () => {
-        setupFetchMock()
-
-        const OwnersOnly = ({ children }: { children: React.ReactNode }) => (
-          <OrgScope useAuth={useAuth} roles="owner" unauthorized="orgHome">
-            {children}
-          </OrgScope>
-        )
-        const AnyMember = ({ children }: { children: React.ReactNode }) => (
-          <OrgScope useAuth={useAuth}>{children}</OrgScope>
-        )
-
-        render(
-          <CedarApolloProvider>
-            <Router>
-              <Set wrap={OwnersOnly}>
-                <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
-              </Set>
-              <Set wrap={AnyMember}>
-                <Route
-                  path="/org/{orgSlug}/home"
-                  page={OrgHomePage}
-                  name="orgHome"
-                />
-              </Set>
-            </Router>
-          </CedarApolloProvider>,
-        )
-
-        // An owner of org B, but only a member of org A
-        act(() => navigate('/org/org-b'))
-        await waitFor(() => screen.getByText('projects: org_b-projects'))
-
-        act(() => navigate('/org/org-a'))
-        await waitFor(() => screen.getByText('org home'))
-        expect(window.location.pathname).toBe('/org/org-a/home')
+      const tenancy = createTenancy({
+        // Like an organization from the subdomain
+        useOrg: (useAuth) => useOrgBySlug(useAuth, 'org-b'),
+        notAMember: 'not a member',
       })
 
-      test('renders notAMember without unauthorized', async () => {
-        const { fetchMock } = setupFetchMock()
-
-        render(
-          <LocationProvider>
-            <ParamsProvider allParams={{}}>
-              <CedarApolloProvider>
-                <OrgScope
-                  useAuth={useAuth}
-                  orgSlug="org-a"
-                  roles={['owner', 'admin']}
-                  notAMember="not allowed"
-                >
-                  <ProjectsView />
-                </OrgScope>
-              </CedarApolloProvider>
-            </ParamsProvider>
-          </LocationProvider>,
-        )
-
-        await screen.findByText('not allowed')
-        expect(fetchMock).not.toHaveBeenCalled()
-      })
-
-      // These tests are an app without tenancy, where sets have no
-      // `orgRoles` prop and the router no `useOrgRoles`. Spreading them lets
-      // them through the type check.
-      const ownersOnly = { orgRoles: 'owner' }
-      const routerOrgRoles = { useOrgRoles }
-      const LoginPage = () => <>login</>
-      const AnyMember = ({ children }: { children: React.ReactNode }) => (
-        <OrgScope useAuth={useAuth}>{children}</OrgScope>
+      const Org = () => <>{useCurrentOrg().org?.slug}</>
+      const App = () => (
+        <CedarApolloProvider>
+          <Router useAuth={useAuth} {...{ tenancy }}>
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet unauthenticated="login">
+              <Route path="/projects" page={Org} name="projects" />
+            </PrivateSet>
+          </Router>
+        </CedarApolloProvider>
       )
 
-      test('<PrivateSet orgRoles> with OrgScope in its own wrap checks the role in the organization', async () => {
-        setupFetchMock()
+      render(<App />)
+      act(() => navigate('/projects'))
 
-        render(
-          <CedarApolloProvider>
-            <Router useAuth={useAuth} {...routerOrgRoles}>
-              <Route path="/login" page={LoginPage} name="login" />
-              <Set wrap={AnyMember}>
-                <Route
-                  path="/org/{orgSlug}/home"
-                  page={OrgHomePage}
-                  name="orgHome"
-                />
-              </Set>
+      await screen.findByText('org-b')
+    })
+
+    test('is still the teardown when the app has its own', async () => {
+      setupFetchMock()
+      const authState: AuthState = {
+        isAuthenticated: true,
+        currentUser: {
+          id: 'user_1',
+          memberships: [membership('org_1', 'acme', 'Acme', 'owner')],
+        },
+      }
+      const useAuth = createUseAuth(authState)
+      const clients: ApolloClient[] = []
+
+      renderApp({
+        useAuth,
+        tenancy: createTenancy({
+          useOrg: (useAuth, params) => useOrgBySlug(useAuth, params['orgSlug']),
+        }),
+        children: (
+          <>
+            <ClientCapture onCapture={(client) => clients.push(client)} />
+            <ProjectsView />
+          </>
+        ),
+      })
+
+      act(() => navigate('/org/acme'))
+      await waitFor(() => screen.getByText('projects: org_1-projects'))
+      const client = clients[clients.length - 1]
+
+      authState.isAuthenticated = false
+      authState.currentUser = null
+      act(() => navigate('/org/acme?signedOut'))
+      await screen.findByText('login')
+      await waitFor(() => expect(cachedProjects(client)).toBeUndefined())
+    })
+  })
+
+  describe('permissions', () => {
+    const withPermissions = (
+      m: OrgMembership,
+      permissions: string[],
+    ): OrgMembership => ({ ...m, permissions })
+
+    const useAuth = createUseAuth({
+      isAuthenticated: true,
+      currentUser: {
+        id: 'user_1',
+        memberships: [
+          withPermissions(membership('org_a', 'org-a', 'Org A', 'member'), [
+            'projects.read',
+          ]),
+          withPermissions(membership('org_b', 'org-b', 'Org B', 'owner'), [
+            'projects.read',
+            'settings.edit',
+          ]),
+        ],
+      },
+    })
+
+    test("makes useAuth().hasPermission check the organization's membership", async () => {
+      setupFetchMock()
+
+      const Can = () => {
+        const hasPermission = React.useContext(HasPermissionContext)
+        return (
+          <>
+            read: {String(hasPermission?.('projects.read'))}, edit:{' '}
+            {String(hasPermission?.('settings.edit'))}
+          </>
+        )
+      }
+
+      renderApp({ useAuth, children: <Can /> })
+
+      act(() => navigate('/org/org-a'))
+      await screen.findByText('read: true, edit: false')
+
+      act(() => navigate('/org/org-b'))
+      await screen.findByText('read: true, edit: true')
+    })
+  })
+
+  describe('guarding routes', () => {
+    const useAuth = createUseAuth({
+      isAuthenticated: true,
+      currentUser: {
+        id: 'user_1',
+        memberships: [
+          { ...membership('org_a', 'org-a', 'Org A', 'member') },
+          {
+            ...membership('org_b', 'org-b', 'Org B', 'owner'),
+            permissions: ['members.manage'],
+          },
+        ],
+      },
+    })
+
+    const OrgPage = () => <ProjectsView />
+    const OrgHomePage = () => <>org home</>
+
+    // These tests are an app without tenancy, where sets have no `orgRoles`
+    // or `orgPermission` prop and the router no `tenancy`. Spreading them
+    // lets them through the type check.
+    const ownersOnly = { orgRoles: 'owner' }
+    const canManageMembers = { orgPermission: 'members.manage' }
+    const tenancy = createTenancy({ notAMember: 'not a member' })
+
+    test('<PrivateSet orgRoles> checks the role in the URL’s organization, and redirects to unauthorized with its orgSlug', async () => {
+      setupFetchMock()
+
+      render(
+        <CedarApolloProvider>
+          <Router useAuth={useAuth} {...{ tenancy }}>
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet unauthenticated="login">
+              <Route
+                path="/org/{orgSlug}/home"
+                page={OrgHomePage}
+                name="orgHome"
+              />
               <PrivateSet
-                wrap={AnyMember}
                 unauthenticated="login"
                 unauthorized="orgHome"
                 {...ownersOnly}
               >
                 <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
               </PrivateSet>
-            </Router>
-          </CedarApolloProvider>,
-        )
+            </PrivateSet>
+          </Router>
+        </CedarApolloProvider>,
+      )
 
-        // An owner of org B, but only a member of org A
-        act(() => navigate('/org/org-b'))
-        await waitFor(() => screen.getByText('projects: org_b-projects'))
+      // An owner of org B, but only a member of org A
+      act(() => navigate('/org/org-b'))
+      await waitFor(() => screen.getByText('projects: org_b-projects'))
 
-        act(() => navigate('/org/org-a'))
-        await waitFor(() => screen.getByText('org home'))
-        expect(window.location.pathname).toBe('/org/org-a/home')
-      })
+      act(() => navigate('/org/org-a'))
+      await waitFor(() => screen.getByText('org home'))
+      expect(window.location.pathname).toBe('/org/org-a/home')
+    })
 
-      test('<PrivateSet orgRoles> nested inside it checks the role in the organization', async () => {
-        setupFetchMock()
+    test('<PrivateSet orgPermission> checks the permission in the URL’s organization', async () => {
+      setupFetchMock()
 
-        render(
-          <CedarApolloProvider>
-            <Router useAuth={useAuth} {...routerOrgRoles}>
-              <Route path="/login" page={LoginPage} name="login" />
-              <Set wrap={AnyMember}>
-                <Route
-                  path="/org/{orgSlug}/home"
-                  page={OrgHomePage}
-                  name="orgHome"
-                />
-                <PrivateSet
-                  unauthenticated="login"
-                  unauthorized="orgHome"
-                  {...ownersOnly}
-                >
-                  <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
-                </PrivateSet>
-              </Set>
-            </Router>
-          </CedarApolloProvider>,
-        )
+      render(
+        <CedarApolloProvider>
+          <Router useAuth={useAuth} {...{ tenancy }}>
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet unauthenticated="login">
+              <Route
+                path="/org/{orgSlug}/home"
+                page={OrgHomePage}
+                name="orgHome"
+              />
+            </PrivateSet>
+            <PrivateSet
+              unauthenticated="login"
+              unauthorized="orgHome"
+              {...canManageMembers}
+            >
+              <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
+            </PrivateSet>
+          </Router>
+        </CedarApolloProvider>,
+      )
 
-        // An owner of org B, but only a member of org A
-        act(() => navigate('/org/org-b'))
-        await waitFor(() => screen.getByText('projects: org_b-projects'))
+      act(() => navigate('/org/org-b'))
+      await waitFor(() => screen.getByText('projects: org_b-projects'))
 
-        act(() => navigate('/org/org-a'))
-        await waitFor(() => screen.getByText('org home'))
-        expect(window.location.pathname).toBe('/org/org-a/home')
-      })
+      act(() => navigate('/org/org-a'))
+      await waitFor(() => screen.getByText('org home'))
+      expect(window.location.pathname).toBe('/org/org-a/home')
+    })
+
+    test('an organization page in a plain Set is public, with no provider', async () => {
+      setupFetchMock()
+      const Public = () => {
+        const { orgSlug } = useParams()
+
+        return <>public page of {orgSlug}</>
+      }
+
+      render(
+        <CedarApolloProvider>
+          <Router useAuth={useAuth} {...{ tenancy }}>
+            <Set>
+              <Route path="/orgs/{orgSlug}" page={Public} name="public" />
+            </Set>
+          </Router>
+        </CedarApolloProvider>,
+      )
+
+      act(() => navigate('/orgs/anything'))
+      await screen.findByText('public page of anything')
     })
   })
 })

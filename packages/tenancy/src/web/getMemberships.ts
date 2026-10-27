@@ -5,7 +5,7 @@ import type { OrgMembership } from './types.js'
  * comes from the app's own `useAuth()` and is typed as `unknown` shape at
  * this boundary.
  */
-function isOrgMembership(value: unknown): value is OrgMembership {
+export function isOrgMembership(value: unknown): value is OrgMembership {
   if (!value || typeof value !== 'object') {
     return false
   }

@@ -1,7 +1,7 @@
+export type { CreateTenancyOptions } from './createTenancy.js'
+export { createTenancy, tenancy } from './createTenancy.js'
 export { getMemberships } from './getMemberships.js'
 export { hasOrgRole } from './hasOrgRole.js'
-export type { OrgScopeProps } from './OrgScope.js'
-export { OrgScope } from './OrgScope.js'
 export { clearOrgClients } from './orgClients.js'
 export type {
   CurrentOrgSummary,
@@ -9,4 +9,5 @@ export type {
   OrgMembership,
 } from './types.js'
 export { useCurrentOrg } from './useCurrentOrg.js'
-export { useOrgRoles } from './useOrgRoles.js'
+export type { OrgBySlug } from './useOrgBySlug.js'
+export { useOrgBySlug } from './useOrgBySlug.js'

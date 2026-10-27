@@ -373,7 +373,7 @@ function tenantScopeError(model: string): TenantScopeError {
   return new TenantScopeError(
     `"${model}" is tenant-owned, and the signed-in user has no organization ` +
       'in scope for this request. Either the request carried no `cedar-org` ' +
-      'header, which queries made outside `OrgScope` and functions not ' +
+      'header, which queries made outside an organization route and functions not ' +
       'wrapped in `withTenancy` do not, or the user has no membership yet ' +
       'and needs one before they can read tenant-owned data.',
   )

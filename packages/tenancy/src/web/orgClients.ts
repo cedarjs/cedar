@@ -9,7 +9,10 @@ import type { ApolloClient } from '@apollo/client'
  * giving each organization its own cache. Each client is stored with the role
  * it was created for.
  */
-const clients = new Map<string, { client: ApolloClient; role: string }>()
+const clients = new Map<
+  string,
+  { userId: string; client: ApolloClient; role: string }
+>()
 
 function clientKey(userId: string, organizationId: string): string {
   return `${userId}:${organizationId}`
@@ -21,7 +24,7 @@ export interface GetOrgClientOptions {
   /**
    * The user's role in the organization. A client cached for another role is
    * replaced, so data cached under that role doesn't outlive it, whether or
-   * not an `OrgScope` was mounted to see the role change.
+   * not a provider was mounted to see the role change.
    */
   role: string
   /** Builds a new client. Only called on a cache miss. */
@@ -39,6 +42,15 @@ export function getOrgClient({
   role,
   createClient,
 }: GetOrgClientOptions): ApolloClient {
+  // Another user's clients don't outlive their session, also when nothing
+  // saw them sign out
+  for (const [otherKey, other] of clients) {
+    if (other.userId !== userId) {
+      clients.delete(otherKey)
+      void other.client.clearStore()
+    }
+  }
+
   const key = clientKey(userId, organizationId)
   const existing = clients.get(key)
 
@@ -51,7 +63,7 @@ export function getOrgClient({
   }
 
   const client = createClient()
-  clients.set(key, { client, role })
+  clients.set(key, { userId, client, role })
 
   return client
 }

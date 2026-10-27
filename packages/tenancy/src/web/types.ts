@@ -21,7 +21,7 @@ export interface OrgMembership {
 }
 
 /**
- * The organization `OrgScope` has resolved for the current route, combining
+ * The organization the router has resolved for the current route, combining
  * the matching membership with the organization it belongs to.
  */
 export interface CurrentOrgSummary {
@@ -35,7 +35,7 @@ export interface CurrentOrgSummary {
 }
 
 /**
- * What `OrgScope` provides below it, read through `useCurrentOrg()`.
+ * What the organization provider provides below it, read through `useCurrentOrg()`.
  */
 export interface OrgContextValue {
   org: CurrentOrgSummary | undefined

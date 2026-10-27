@@ -140,8 +140,9 @@ export interface AuthContextInterface<
   getCurrentUser(): Promise<CurrentUser>
   /**
    * Whether the user has `permission` where they are in the app. Always
-   * `false` outside a scope that provides permissions, such as `OrgScope`
-   * from `@cedarjs/tenancy/web`.
+   * `false` outside a scope that provides permissions, such as an
+   * organization route with `tenancy` from `@cedarjs/tenancy/web` on the
+   * `Router`.
    */
   hasPermission(permission: PermissionName): boolean
   /**
