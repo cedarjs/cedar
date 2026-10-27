@@ -15,10 +15,7 @@ import { normalizePage } from './page.js'
 import { PageLoadingContextProvider } from './PageLoadingContext.js'
 import { ParamsProvider } from './params.js'
 import { Redirect } from './redirect.js'
-import type {
-  RouterContextProviderProps,
-  Tenancy,
-} from './router-context.js'
+import type { RouterContextProviderProps, Tenancy } from './router-context.js'
 import { RouterContextProvider } from './router-context.js'
 import { wrapWithSetWrappers } from './Set.js'
 import { SplashPage } from './splash-page.js'
@@ -45,10 +42,7 @@ type RouterTenancy = AuthTenancy extends { enabled: true }
 
 export interface RouterProps
   extends
-    Omit<
-      RouterContextProviderProps,
-      'routes' | 'activeRouteName' | 'tenancy'
-    >,
+    Omit<RouterContextProviderProps, 'routes' | 'activeRouteName' | 'tenancy'>,
     RouterTenancy {
   trailingSlashes?: TrailingSlashesTypes
   pageLoadingDelay?: number

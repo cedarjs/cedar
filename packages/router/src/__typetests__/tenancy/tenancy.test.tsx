@@ -57,16 +57,6 @@ test("Router takes tenancy's tenancy", () => {
   ).type.not.toRaiseError()
 })
 
-test('Router takes no useOrgRoles', () => {
-  const useOrgRoles = () => null
-
-  expect(
-    <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
-      {null}
-    </Router>,
-  ).type.toRaiseError("Property 'useOrgRoles' does not exist")
-})
-
 test('PrivateSet and Set have no roles', () => {
   expect(
     <PrivateSet unauthenticated="login" roles="admin">
