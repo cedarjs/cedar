@@ -87,6 +87,9 @@ const RouterImplementation: React.FC<RouterImplementationProps> = ({
   )
 }
 
+// So React DevTools and error messages show the name apps use
+RouterImplementation.displayName = 'Router'
+
 export const Router: React.FC<RouterProps> = RouterImplementation
 
 const LocationAwareRouter: React.FC<RouterImplementationProps> = ({
