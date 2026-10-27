@@ -267,6 +267,26 @@ export default PostsScaffoldLayout
 `WrapperProps` is available in Cedar v7.x too, so you can make this change
 before upgrading.
 
+## `<PrivateSet>` redirects: `unauthorized` and route params
+
+`<PrivateSet>` takes an `unauthorized` route, for users who are signed in but
+don't have the set's `roles`. Without it, they're redirected to
+`unauthenticated` as before.
+
+```tsx
+<PrivateSet unauthenticated="login" unauthorized="forbidden" roles="admin">
+```
+
+The `unauthenticated` and `unauthorized` routes can have path params, as long
+as the route the user tried to visit has params with the same names: the
+router fills them in from it. Before, a redirect to a route with params threw
+"would require route parameters, which currently is not supported". It still
+throws, with a clearer message, if a param is missing.
+
+Also, `$&`, `$1` and similar in a route param value, such as
+`routes.post({ slug: 'a$&b' })`, stay as they are. They used to be expanded
+like replacement patterns.
+
 ## `removeNulls` is typed and only changes top-level fields
 
 `removeNulls` from `@cedarjs/api` returns a copy of its input where every
