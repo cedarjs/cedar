@@ -708,6 +708,10 @@ const HostOrgScope = ({ children }: { children: React.ReactNode }) => (
 
 const Routes = () => (
   <Router useAuth={useAuth} useOrgRoles={useHostOrgRoles}>
+    <Route path="/login" page={LoginPage} name="login" />
+    <PrivateSet wrap={[HostOrgScope, OrgLayout]} unauthenticated="login">
+      <Route path="/projects" page={ProjectsPage} name="projects" />
+    </PrivateSet>
     <PrivateSet
       wrap={[HostOrgScope, OrgLayout]}
       unauthenticated="login"
