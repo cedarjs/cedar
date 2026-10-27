@@ -149,6 +149,36 @@ export function matchPath(
   return { match: true }
 }
 
+/**
+ * The path params of `pathname` for the route `routeDefinition`, as the text
+ * in the path, without parsing them with their param types. For putting into
+ * another route's path, where a parsed value (whatever a custom type's `parse`
+ * returns, say) wouldn't be the same text.
+ *
+ *  pathParamsText('/post/{id:Int}', '/post/7')
+ *  => { id: '7' }
+ */
+export function pathParamsText(
+  routeDefinition: string,
+  pathname: string,
+  userParamTypes: Record<string, ParamType> = {},
+) {
+  const { matchRegex, routeParams } = getRouteRegexAndParams(routeDefinition, {
+    allParamTypes: { ...coreParamTypes, ...userParamTypes },
+  })
+
+  const match = matchRegex.exec(pathname)
+  const params: Record<string, string> = {}
+
+  if (match) {
+    routeParams.forEach(([name], index) => {
+      params[name] = match[index + 1]
+    })
+  }
+
+  return params
+}
+
 interface GetRouteRegexOptions {
   matchSubPaths?: boolean
   allParamTypes?: Record<string, ParamType> // Pass in paramTypes to match, if user has custom param types

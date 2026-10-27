@@ -2,11 +2,10 @@ import React, { useContext } from 'react'
 
 import { HasOrgRoleContext } from '@cedarjs/auth'
 
-import { ParamsContext } from './params.js'
 import { Redirect } from './redirect.js'
 import { useRouterState } from './router-context.js'
 import type { RouterState } from './router-context.js'
-import { paramsForRoute } from './util.js'
+import { paramsForRoute, pathParamsText } from './util.js'
 
 interface AuthenticatedRouteProps {
   children: React.ReactNode | Thenable<React.ReactNode>
@@ -21,22 +20,47 @@ interface AuthenticatedRouteProps {
 const REPLACE = { replace: true }
 
 /**
+ * The current route's path params, as the text in the URL's path, so they go
+ * into another route's path unchanged
+ */
+function currentPathParams(routerState: RouterState) {
+  const route = Object.values(routerState.routes.pathRouteMap).find(
+    (candidate) => candidate.name === routerState.activeRouteName,
+  )
+
+  if (!route?.path) {
+    return {}
+  }
+
+  return pathParamsText(
+    route.path,
+    globalThis.location.pathname,
+    routerState.paramTypes,
+  )
+}
+
+/**
  * The path of the route named `name`, with the path params it needs taken
- * from `params`, the current route's params. So it can be a page that, say,
- * has the same `orgSlug` as the current one.
+ * from `params`, the current route's path params. So it can be a page that,
+ * say, has the same `orgSlug` as the current one.
  */
 function redirectPath(
   routes: RouterState['routes'],
   name: string,
   params: Record<string, string>,
 ) {
+  // Own properties only, so a name like `toString` isn't a route
+  if (!Object.hasOwn(routes.namedRoutesMap, name)) {
+    throw new Error(`We could not find a route named ${name}`)
+  }
+
   const route = Object.values(routes.pathRouteMap).find(
     (candidate) => candidate.name === name,
   )
 
-  // Own properties only, so a name like `toString` isn't a route
-  if (!route || !Object.hasOwn(routes.namedRoutesMap, name)) {
-    throw new Error(`We could not find a route named ${name}`)
+  // A route without a path of its own, like the splash page's `home`
+  if (!route) {
+    return routes.namedRoutesMap[name]()
   }
 
   const routeParams: Record<string, string> = {}
@@ -81,8 +105,6 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
     hasRole,
   } = routerState.useAuth()
   const hasOrgRole = useContext(HasOrgRoleContext)
-  // Not every router renders this inside a ParamsProvider
-  const params = useContext(ParamsContext)?.params ?? {}
 
   // Fail closed: with no organization to check `orgRoles` in, it's a mistake
   // in the routes, not a user without the role
@@ -112,7 +134,11 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   if (isAuthenticated && unauthorized) {
     return (
       <Redirect
-        to={redirectPath(routerState.routes, unauthorized, params)}
+        to={redirectPath(
+          routerState.routes,
+          unauthorized,
+          currentPathParams(routerState),
+        )}
         options={REPLACE}
       />
     )
@@ -125,7 +151,7 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   const unauthenticatedPath = redirectPath(
     routerState.routes,
     unauthenticated,
-    params,
+    currentPathParams(routerState),
   )
 
   return (

@@ -7,6 +7,7 @@ import {
   validatePath,
   flattenSearchParams,
   replaceParams,
+  pathParamsText,
 } from '../util.js'
 
 describe('paramsForRoute', () => {
@@ -363,6 +364,30 @@ describe('flattenSearchParams', () => {
 
   it('returns an empty array', () => {
     expect(flattenSearchParams('')).toEqual([])
+  })
+})
+
+describe('pathParamsText', () => {
+  it('returns the params as the text in the path, without parsing them', () => {
+    expect(pathParamsText('/post/{id:Int}', '/post/7')).toEqual({ id: '7' })
+    expect(
+      pathParamsText('/blog/{year}/{filePath...}', '/blog/2026/a/b.md'),
+    ).toEqual({ year: '2026', filePath: 'a/b.md' })
+  })
+
+  it('matches custom param types without parsing them', () => {
+    const slug = {
+      match: /\w+-\w+/,
+      parse: (value: string) => value.split('-'),
+    }
+
+    expect(
+      pathParamsText('/post/{name:slug}', '/post/cedar-router', { slug }),
+    ).toEqual({ name: 'cedar-router' })
+  })
+
+  it("returns no params for a path that doesn't match", () => {
+    expect(pathParamsText('/post/{id:Int}', '/about')).toEqual({})
   })
 })
 

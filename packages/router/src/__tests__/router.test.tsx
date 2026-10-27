@@ -1385,6 +1385,45 @@ describe('PrivateSet role checks', () => {
         expect(window.location.search).toBe('?redirectTo=/org/acme/settings')
       })
     })
+
+    test('fills params of a custom type as the text in the path', async () => {
+      const PostPage = () => <h1>Post Page</h1>
+      const EditPostPage = () => <h1>Edit Post Page</h1>
+      // `parse` returns an array, which isn't the text in the path
+      const slug = {
+        match: /\w+-\w+/,
+        parse: (value: string) => value.split('-'),
+      }
+
+      const screen = render(
+        <Router
+          useAuth={useAuthWithRoles({ roles: ['member'] })}
+          paramTypes={{ slug }}
+        >
+          <Route path="/" page={HomePage} name="home" />
+          <Route path="/login" page={LoginPage} name="login" />
+          <Route path="/post/{name:slug}" page={PostPage} name="post" />
+          <PrivateSet
+            unauthenticated="login"
+            unauthorized="post"
+            roles="editor"
+          >
+            <Route
+              path="/post/{name:slug}/edit"
+              page={EditPostPage}
+              name="editPost"
+            />
+          </PrivateSet>
+        </Router>,
+      )
+
+      act(() => navigate('/post/cedar-router/edit'))
+
+      await waitFor(() => {
+        screen.getByText(/Post Page/i)
+        expect(window.location.pathname).toBe('/post/cedar-router')
+      })
+    })
   })
 
   describe('userRoles', () => {
