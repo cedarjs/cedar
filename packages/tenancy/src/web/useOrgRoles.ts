@@ -16,6 +16,12 @@ import { hasOrgRole } from './hasOrgRole.js'
  * the user's role in the organization with that slug is one of `roles` (a
  * role, or a list of roles): `false` when they aren't signed in or aren't a
  * member of it.
+ *
+ * An app can pass the router a hook of its own instead, such as one that
+ * wraps this one with the organization from somewhere other than the path.
+ * Besides returning a check or `null`, it can throw an error of its own,
+ * which reaches the app's error boundary like any error thrown while
+ * rendering. See `UseOrgRoles` in `@cedarjs/router`.
  */
 export function useOrgRoles(
   useAuth: UseAuth,

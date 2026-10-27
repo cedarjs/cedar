@@ -29,6 +29,15 @@ type UseAuth = () => AuthContextInterface<
  * params: `null` when the route isn't in an organization. In apps with
  * tenancy, `useOrgRoles` from `@cedarjs/tenancy/web` is one. The router
  * calls it like a hook, on every render of a private set.
+ *
+ * One of the app's own can answer in three ways:
+ * - a check, which the router uses for `orgRoles`. One that always returns
+ *   `false` denies access and redirects to `unauthorized`.
+ * - `null`, for no organization: a set with `orgRoles` then throws the
+ *   router's own error.
+ * - throw an error of its own, such as for an organization that's been
+ *   suspended. It reaches the app's error boundary like any error thrown
+ *   while rendering.
  */
 export type UseOrgRoles = (
   useAuth: UseAuth,

@@ -1707,6 +1707,54 @@ describe('PrivateSet role checks', () => {
           'and the route has no `orgSlug` param',
         )
       })
+
+      test("throws when the app's own useOrgRoles finds no organization", async () => {
+        const TestRouter = () => (
+          <Router
+            useAuth={useAuthWithRoles({})}
+            {...routerOrgRoles(() => null)}
+          >
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
+              <Route
+                path="/org/{orgSlug}/settings"
+                page={SettingsPage}
+                name="settings"
+              />
+            </PrivateSet>
+          </Router>
+        )
+
+        act(() => navigate('/org/acme/settings'))
+        expect(() => render(<TestRouter />)).toThrow(
+          "got no role check from the Router's `useOrgRoles` for this route",
+        )
+      })
+
+      test("passes on an error the app's own useOrgRoles throws", async () => {
+        const TestRouter = () => (
+          <Router
+            useAuth={useAuthWithRoles({})}
+            {...routerOrgRoles(() => {
+              throw new Error('This organization is suspended')
+            })}
+          >
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
+              <Route
+                path="/org/{orgSlug}/settings"
+                page={SettingsPage}
+                name="settings"
+              />
+            </PrivateSet>
+          </Router>
+        )
+
+        act(() => navigate('/org/acme/settings'))
+        expect(() => render(<TestRouter />)).toThrow(
+          'This organization is suspended',
+        )
+      })
     })
   })
 })

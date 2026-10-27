@@ -123,10 +123,20 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
       )
     }
 
+    if (pathParams['orgSlug'] === undefined) {
+      throw new Error(
+        'A PrivateSet with `orgRoles` needs an organization to check the ' +
+          'role in, and the route has no `orgSlug` param. Please only use ' +
+          '`orgRoles` on routes with `{orgSlug}` in their path, or pass the ' +
+          'Router a `useOrgRoles` that finds the organization another way',
+      )
+    }
+
+    // A `useOrgRoles` of the app's own found no organization for this route
     throw new Error(
-      'A PrivateSet with `orgRoles` needs an organization to check the role ' +
-        'in, and the route has no `orgSlug` param. Please only use ' +
-        '`orgRoles` on routes with `{orgSlug}` in their path',
+      "A PrivateSet with `orgRoles` got no role check from the Router's " +
+        '`useOrgRoles` for this route, so there is no organization to check ' +
+        'the role in',
     )
   }
 
