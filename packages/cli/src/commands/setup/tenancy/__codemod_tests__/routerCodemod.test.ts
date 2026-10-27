@@ -7,11 +7,11 @@ import { describe, it, expect } from 'vitest'
 import { runTransform } from '../../../../lib/runTransform.js'
 
 describe('tenancy routerCodemod', () => {
-  it('passes useOrgRoles to the Router', async () => {
+  it('passes tenancy to the Router', async () => {
     await matchTransformSnapshot('routerCodemod', 'defaultRoutes')
   })
 
-  it('adds to an existing @cedarjs/tenancy/web import', async () => {
+  it('leaves other @cedarjs/tenancy/web imports alone', async () => {
     await matchTransformSnapshot('routerCodemod', 'tenancyImportRoutes')
   })
 

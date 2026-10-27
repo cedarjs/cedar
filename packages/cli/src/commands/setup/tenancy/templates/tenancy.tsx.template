@@ -1,0 +1,42 @@
+import { createTenancy } from '@cedarjs/tenancy/web'
+
+/**
+ * How the Router handles organizations, passed to it in Routes.tsx:
+ *
+ *   <Router useAuth={useAuth} tenancy={tenancy}>
+ *
+ * The Router renders the organization's provider (its Apollo client with the
+ * `cedar-org` header, `useCurrentOrg()`, and `useAuth().hasPermission`)
+ * around the layouts and page of every `PrivateSet` whose routes have
+ * `{orgSlug}` in their path, so there is nothing to wrap them with:
+ *
+ *   <PrivateSet wrap={OrgLayout} unauthenticated="login">
+ *     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+ *   </PrivateSet>
+ *
+ * A user who isn't signed in is sent to log in, and one who isn't a member
+ * of the organization sees `notAMember`. Pages only some members may open
+ * take `orgRoles` or `orgPermission` (see api/src/lib/permissions), and the
+ * ones a member without them is sent to is `unauthorized`:
+ *
+ *   <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+ *     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+ *   </PrivateSet>
+ *
+ *   <PrivateSet unauthenticated="login" unauthorized="projects" orgPermission="members.manage">
+ *     <Route path="/org/{orgSlug}/members" page={MembersPage} name="members" />
+ *   </PrivateSet>
+ *
+ * Routes with `{orgSlug}` outside a `PrivateSet` are public pages with no
+ * organization context: they can't use `useCurrentOrg()` and their queries
+ * carry no `cedar-org` header.
+ *
+ * Customize the tenancy here, with the options of `createTenancy`:
+ * - `useOrg` finds the organization of a route, for one that doesn't come
+ *   from the `orgSlug` path param, such as from the host
+ * - `onSetOrg` is called by `useCurrentOrg().setOrg` instead of navigating,
+ *   for an organization selected from state rather than the URL
+ */
+export const tenancy = createTenancy({
+  notAMember: <p>You don&apos;t have access to this organization.</p>,
+})

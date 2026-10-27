@@ -300,7 +300,8 @@ function addPermissionsImport(source: string): string {
  * - Adds a `memberships` selection to `getCurrentUser`'s
  *   `db.user.findUnique({ ..., select: {...} })` call, so `currentUser`
  *   (both `context.currentUser` and the value sent to the web client) carries
- *   the memberships `OrgScope`, `hasOrgRole` and `resolveCurrentOrg` need.
+ *   the memberships the web side's tenancy, `hasOrgRole` and
+ *   `resolveCurrentOrg` need.
  * - Replaces the single-tenant `hasRole` and `requireAuth` with
  *   `@cedarjs/tenancy`'s `createTenancyAuth`, which also gives `hasOrgRole`:
  *   `requireOrgAuth` checks the role in the current organization, and

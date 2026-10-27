@@ -25,8 +25,9 @@ const ACCEPT_INVITATION_MUTATION: TypedDocumentNode<
 `
 
 /**
- * Landing page for an invitation link (`/invite/{token}`). Outside
- * `OrgScope`, since the visitor is not a member of the organization yet.
+ * Landing page for an invitation link (`/invite/{token}`). Outside any
+ * `PrivateSet` with `{orgSlug}` routes, since the visitor is not a member of
+ * the organization yet.
  */
 const InvitePage = () => {
   const { token } = useParams()

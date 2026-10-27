@@ -122,12 +122,12 @@ describe('running the tenancy codemods again', () => {
   it('routerCodemod adds the prop when only the import is there', async () => {
     const output = await runOn(
       'routerCodemod',
-      "import { useOrgRoles } from '@cedarjs/tenancy/web'\n" +
+      "import { tenancy } from 'src/tenancy'\n" +
         fixture('defaultRoutes.input.tsx'),
     )
 
-    expect(count(output, 'useOrgRoles={useOrgRoles}')).toBe(1)
-    expect(count(output, 'import { useOrgRoles }')).toBe(1)
+    expect(count(output, 'tenancy={tenancy}')).toBe(1)
+    expect(count(output, 'import { tenancy }')).toBe(1)
   })
 
   it('routerCodemod adds the import when only the prop is there', async () => {
@@ -135,12 +135,12 @@ describe('running the tenancy codemods again', () => {
       'routerCodemod',
       fixture('defaultRoutes.input.tsx').replace(
         '<Router useAuth={useAuth}>',
-        '<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>',
+        '<Router useAuth={useAuth} tenancy={tenancy}>',
       ),
     )
 
-    expect(count(output, 'useOrgRoles={useOrgRoles}')).toBe(1)
-    expect(count(output, 'import { useOrgRoles }')).toBe(1)
+    expect(count(output, 'tenancy={tenancy}')).toBe(1)
+    expect(count(output, 'import { tenancy }')).toBe(1)
   })
 
   it('authCodemod wraps a lookup that is not awaited only once', async () => {
