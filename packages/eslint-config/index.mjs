@@ -96,9 +96,9 @@ function createWebGraphQLConfigs() {
           graphQLConfig: {
             schema: paths.generated.schema,
             // Needed to resolve fragment spreads, so a spread of a fragment
-            // defined in another file (a fragment Cell's FRAGMENT, say) is
-            // checked too
-            documents: path.join(paths.web.src, '**/*.{js,jsx,ts,tsx}'),
+            // defined in another file (a fragment Cell's FRAGMENT, or a
+            // .graphql file, say) is checked too
+            documents: path.join(paths.web.src, '**/*.{js,jsx,ts,tsx,graphql}'),
           },
         },
       },
