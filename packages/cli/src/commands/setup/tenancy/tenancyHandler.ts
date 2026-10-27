@@ -676,8 +676,16 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              ${c.highlight('hasUserRole')} on both sides (your existing uses were renamed),
              checking ${c.highlight('currentUser.roles')}; ${c.highlight('hasOrgRole')} checks the role in
              the organization. ${c.highlight('<PrivateSet roles>')} isn't available with
-             tenancy: guard routes by role with ${c.highlight('OrgScope')}'s ${c.highlight('roles')} and
-             ${c.highlight('unauthorized')}, from a small wrapper component.
+             tenancy: guard routes with ${c.highlight('<PrivateSet userRoles>')} for
+             ${c.highlight('currentUser.roles')}, and with ${c.highlight('<PrivateSet orgRoles>')} for the
+             role in the organization, nested inside the Set that wraps
+             OrgScope:
+
+               <Set wrap={OrgScope}>
+                 <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+                   <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+                 </PrivateSet>
+               </Set>
 
 ${
   keptFiles.length > 0

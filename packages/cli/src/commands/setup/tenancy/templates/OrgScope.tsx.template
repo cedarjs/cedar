@@ -28,17 +28,14 @@ export interface OrgScopeProps {
  *
  * `useCurrentOrg().hasOrgRole` checks the user's role in the organization,
  * and `useAuth().hasUserRole` checks `currentUser.roles`. For pages only some
- * roles may open, wrap them in a component that passes `roles` (there's no
- * `<PrivateSet roles>` with tenancy):
+ * roles in the organization may open, nest a `PrivateSet` with `orgRoles`
+ * inside the `Set` that wraps `OrgScope` (not in the `PrivateSet`'s own
+ * `wrap`, where there's no organization yet to check the role in):
  *
- *   const OwnersOnly = ({ children }: { children: ReactNode }) => (
- *     <OrgScope roles="owner" unauthorized="projects">
- *       {children}
- *     </OrgScope>
- *   )
- *
- *   <Set wrap={OwnersOnly}>
- *     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+ *   <Set wrap={OrgScope}>
+ *     <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+ *       <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+ *     </PrivateSet>
  *   </Set>
  *
  * Routes under `OrgScope` must not carry `prerender`: `OrgScope`'s nested
