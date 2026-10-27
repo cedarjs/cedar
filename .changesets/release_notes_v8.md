@@ -340,14 +340,13 @@ Fragment spreads are checked too: a spread of a fragment that doesn't select
 spread.
 
 The schema the rule reads is `.cedar/schema.graphql`, which
-`yarn cedar generate types` and `yarn cedar dev` write. The rule is skipped
-until that file exists, so in CI, run `yarn cedar generate types` before
-`yarn cedar lint`.
+`yarn cedar generate types` and `yarn cedar dev` write. `yarn cedar lint`
+generates it when it's missing, so the rule runs in CI too. ESLint on its
+own (an editor, or `yarn eslint`) skips the rule until the file exists.
 
 ### Upgrading
 
-Run `yarn cedar generate types`, then `yarn cedar lint`, and add `id` where
-it's reported. The Cells Cedar generates already select `id`, so most of
+Run `yarn cedar lint` and add `id` where it's reported. The Cells Cedar generates already select `id`, so most of
 what's reported is in hand-written or since-extended queries. After adding
 the ids:
 

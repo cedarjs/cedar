@@ -82,6 +82,12 @@
         "default": "./dist/generate/generate.js"
       }
     },
+    "./dist/generate/graphqlSchema": {
+      "default": {
+        "types": "./dist/generate/graphqlSchema.d.ts",
+        "default": "./dist/generate/graphqlSchema.js"
+      }
+    },
     "./dist/generate/gqlormSchema": {
       "default": {
         "types": "./dist/generate/gqlormSchema.d.ts",

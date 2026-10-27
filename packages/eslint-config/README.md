@@ -58,8 +58,9 @@ A spread of a fragment that doesn't select `id` (a fragment Cell's
 `FRAGMENT`, say) is reported where it's spread, as well as in the fragment.
 
 The schema is `.cedar/schema.graphql`, which `yarn cedar generate types` and
-`yarn cedar dev` write. The rule is skipped until that file exists, so in CI,
-run `yarn cedar generate types` before `yarn cedar lint`.
+`yarn cedar dev` write, and `yarn cedar lint` generates when it's missing.
+ESLint on its own (an editor, or `yarn eslint`) skips the rule until that
+file exists.
 
 To make the rule a warning, or turn it off, override it for the extracted
 documents:

@@ -59,9 +59,10 @@ const cedarFormsControlComponents = [
  * type generation, tests) reports.
  *
  * The schema is `.cedar/schema.graphql`, which `yarn cedar generate types`
- * and `yarn cedar dev` write. It's a generated, git-ignored file, so it's
- * missing on a fresh clone. The rule can't run without a schema, so these
- * configs are left out until the schema has been generated.
+ * and `yarn cedar dev` write, and `yarn cedar lint` when it's missing. It's
+ * a generated, git-ignored file, so it's missing on a fresh clone. The rule
+ * can't run without a schema, so when ESLint runs on its own (in an editor,
+ * say) these configs are left out until the schema has been generated.
  *
  * @returns {import('eslint').Linter.FlatConfig[]}
  */
