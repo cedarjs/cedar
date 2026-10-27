@@ -7,9 +7,8 @@ import { useApolloClient, useQuery } from '@apollo/client/react'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { HasOrgRoleContext } from '@cedarjs/auth'
 import type { AuthContextInterface, UseAuth } from '@cedarjs/auth'
-import { HasPermissionContext } from '@cedarjs/auth'
+import { HasOrgRoleContext, HasPermissionContext } from '@cedarjs/auth'
 import {
   LocationProvider,
   navigate,
