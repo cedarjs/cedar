@@ -9,10 +9,13 @@ declare const authImplementation: AuthImplementation<{ sub: string }>
 
 const { useAuth } = createAuthentication(authImplementation)
 
-test('useAuth().hasRole and hasUserRole both check currentUser.roles', () => {
+test('useAuth().hasRole checks currentUser.roles', () => {
   expect(useAuth().hasRole).type.toBeCallableWith('admin')
   expect(useAuth().hasRole).type.toBeCallableWith(['admin', 'editor'])
-  expect(useAuth().hasUserRole).type.toBeCallableWith('admin')
+})
+
+test('useAuth() has no hasUserRole', () => {
+  expect(useAuth()).type.not.toHaveProperty('hasUserRole')
 })
 
 test("Router takes the app's useAuth", () => {

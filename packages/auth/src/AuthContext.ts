@@ -32,11 +32,19 @@ export type CurrentUser = (LoggedInUser & object) | null
 export interface AuthTenancy {}
 
 /**
- * `useAuth().hasRole`, which an app with tenancy doesn't have (see
- * `AuthTenancy`): there, every role check says which kind it is.
+ * `useAuth()`'s role check: `hasUserRole` in an app with tenancy (see
+ * `AuthTenancy`), where every role check says which kind it is, and `hasRole`
+ * otherwise
  */
-type HasRole = AuthTenancy extends { enabled: true }
-  ? Record<never, never>
+type RoleCheck = AuthTenancy extends { enabled: true }
+  ? {
+      /**
+       * Whether the "currentUser" from the api side has one of `rolesToCheck`
+       * (a role, or a list of roles) in `currentUser.roles`, as opposed to a
+       * role in the organization they're in
+       */
+      hasUserRole(rolesToCheck: string | string[]): boolean
+    }
   : {
       /**
        * Checks if the "currentUser" from the api side is assigned a role or one
@@ -45,6 +53,18 @@ type HasRole = AuthTenancy extends { enabled: true }
        */
       hasRole(rolesToCheck: string | string[]): boolean
     }
+
+/**
+ * Both of `useAuth()`'s role checks, for an auth provider to spread into the
+ * value it provides. It can't know whether the app has tenancy, so it
+ * provides both, and the app's types show the one that fits (see
+ * `RoleCheck`).
+ */
+export function roleChecks(
+  check: (rolesToCheck: string | string[]) => boolean,
+) {
+  return { hasRole: check, hasUserRole: check }
+}
 
 export interface AuthContextInterface<
   TUser,
@@ -61,7 +81,7 @@ export interface AuthContextInterface<
   TClient,
   TChangePasswordOptions = unknown,
   TChangePassword = unknown,
-> extends HasRole {
+> extends RoleCheck {
   /** Determining your current authentication state */
   loading: boolean
   isAuthenticated: boolean
@@ -101,13 +121,6 @@ export interface AuthContextInterface<
    * but does not update the current user state.
    */
   getCurrentUser(): Promise<CurrentUser>
-  /**
-   * Whether the "currentUser" from the api side has one of `rolesToCheck`
-   * (a role, or a list of roles) in `currentUser.roles`. The same check as
-   * `hasRole`, under a name that says it's about the user, not the
-   * organization they're in.
-   */
-  hasUserRole(rolesToCheck: string | string[]): boolean
   /**
    * Redetermine authentication state and update the state.
    */
