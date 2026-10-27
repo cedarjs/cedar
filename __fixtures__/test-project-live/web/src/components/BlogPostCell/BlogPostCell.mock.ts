@@ -10,6 +10,7 @@ export const standard = (/* vars, { ctx, req } */) => ({
 
     author: {
       __typename: 'User' as const,
+      id: '005d3e8e-2b1a-4f5c-8c7d-000000000005',
       email: 'five@5.com',
       fullName: 'Five Lastname',
     },

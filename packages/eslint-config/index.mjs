@@ -2,11 +2,16 @@
 // Shared eslint config (projects and framework) is located in ./shared.mjs
 // Framework main config is in monorepo root ./eslint.config.js
 
+import fs from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
+
+import * as graphqlPlugin from '@graphql-eslint/eslint-plugin'
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
 import globals from 'globals'
 
 import cedarjsPlugin from '@cedarjs/eslint-plugin'
-import { getConfig } from '@cedarjs/project-config'
+import { getConfig, getPaths } from '@cedarjs/project-config'
 
 import sharedConfigs from './shared.mjs'
 
@@ -42,6 +47,79 @@ const cedarFormsControlComponents = [
   'UrlField',
   'WeekField',
 ]
+
+function toPosixRelative(from, to) {
+  return path.relative(from, to).split(path.sep).join(path.posix.sep)
+}
+
+/**
+ * Lints the GraphQL documents (`gql` tagged templates) on the web side
+ * against the app's schema.
+ *
+ * `@graphql-eslint/require-selections` requires every selection of an object
+ * type that has an `id` to select that `id`. Apollo's InMemoryCache can only
+ * normalize objects it knows the `id` of. Two queries that select the same
+ * object, one with its `id` and one without, overwrite each other's copy in
+ * the cache and refetch each other, which nothing else (GraphQL validation,
+ * type generation, tests) reports.
+ *
+ * The schema is `.cedar/schema.graphql`, which `yarn cedar generate types`
+ * and `yarn cedar dev` write, and `yarn cedar lint` when it's missing. It's
+ * a generated, git-ignored file, so it's missing on a fresh clone. The rule
+ * can't run without a schema, so when ESLint runs on its own (in an editor,
+ * say) these configs are left out until the schema has been generated.
+ *
+ * @returns {import('eslint').Linter.FlatConfig[]}
+ */
+function createWebGraphQLConfigs() {
+  const paths = getPaths()
+
+  if (!fs.existsSync(paths.generated.schema)) {
+    return []
+  }
+
+  // Flat config `files` globs are matched relative to the project root,
+  // with forward slashes on every platform
+  const webSrc = toPosixRelative(paths.base, paths.web.src)
+
+  // The parser resolves its schema and documents pointers relative to the
+  // working directory. They're given relative, not absolute: graphql-tools
+  // tries to parse a pointer with a space in it as a GraphQL document, and
+  // fails, when the project's path has one
+  const cwd = process.cwd()
+
+  return [
+    {
+      // Extracts every gql`` document into a virtual
+      // `<file>/<n>_document.graphql` file, linted by the config below. The
+      // file itself is linted as usual
+      files: [`${webSrc}/**/*.{js,jsx,ts,tsx}`],
+      processor: graphqlPlugin.processors.graphql,
+    },
+    {
+      files: [`${webSrc}/**/*.graphql`],
+      languageOptions: {
+        parser: graphqlPlugin.parser,
+        parserOptions: {
+          graphQLConfig: {
+            schema: toPosixRelative(cwd, paths.generated.schema),
+            // Needed to resolve fragment spreads, so a spread of a fragment
+            // defined in another file (a fragment Cell's FRAGMENT, say) is
+            // checked too. Only JS and TS: like the build and type
+            // generation, Cedar has no .graphql documents on the web side
+            documents: `${toPosixRelative(cwd, paths.web.src)}/**/*.{js,jsx,ts,tsx}`,
+          },
+        },
+      },
+      plugins: {
+        '@graphql-eslint': graphqlPlugin,
+      },
+      rules: {
+        '@graphql-eslint/require-selections': 'error',
+      },
+    },
+  ]
+}
 
 // Note: This config is async to support getConfig()
 /** @returns {Promise<import('eslint').Linter.FlatConfig[]>} */
@@ -174,6 +252,8 @@ export default async function createConfig() {
       '@cedarjs/cell-type-annotations': 'off',
     },
   })
+
+  configs.push(...createWebGraphQLConfigs())
 
   // Test, stories, scenarios, and mock files
   configs.push({

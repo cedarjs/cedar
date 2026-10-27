@@ -1,6 +1,7 @@
 const query = `
   query FindAuthorQuery($id: String!) {
     author: user(id: $id) {
+      id
       email
       fullName
     }
