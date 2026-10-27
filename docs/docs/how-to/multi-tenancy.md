@@ -268,9 +268,9 @@ is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and
 each `requireAuth()` and `hasRole()` from `src/lib/auth` to `requireUserAuth()`
 and `hasUserRole()`. On the web, it renames `hasRole` from `useAuth()` to
 `hasUserRole`. Your app works as it did. When you give a model an
-`organizationId`, switch its fields to `@requireOrgAuth`. `cedar generate sdl` and `cedar generate scaffold` pick the
-right one for new models, and a leftover `@requireAuth` is an unknown directive,
-so it fails when the schema is built.
+`organizationId`, switch its fields to `@requireOrgAuth`. `cedar generate sdl`
+and `cedar generate scaffold` pick the right one for new models, and a leftover
+`@requireAuth` is an unknown directive, so it fails when the schema is built.
 
 With tenancy, `getCurrentUser` shouldn't copy a membership's role into
 `currentUser.roles`: `requireOrgAuth` and `hasOrgRole` get the role from the
@@ -706,10 +706,11 @@ const validate = ({ directiveArgs }) => {
 
 Both throw `AuthenticationError` when there's no `context.currentUser`.
 `requireOrgAuth()` throws `ForbiddenError` when there's no `context.currentOrg`
-or, when the field lists `roles`, the user's role in it isn't one of them. `requireUserAuth()` throws `ForbiddenError` when `roles` are
-given and `currentUser.roles` has none of them. These are the error types
-`requireAuth` always threw, so any error handling you already have on the web
-side keeps working.
+or, when the field lists `roles`, the user's role in it isn't one of them.
+`requireUserAuth()` throws `ForbiddenError` when `roles` are given and
+`currentUser.roles` has none of them. These are the error types `requireAuth`
+always threw, so any error handling you already have on the web side keeps
+working.
 
 ### Web hooks: `OrgScope`, `useCurrentOrg`, `hasOrgRole`
 
