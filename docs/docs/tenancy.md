@@ -658,10 +658,10 @@ data.
 
 ### `useCurrentOrg()`
 
-Reads the organization `OrgScope` resolved. `setOrg(idOrSlug)` navigates to the current route with a new
-`orgSlug` param (using `navigate` and `routes` from `@cedarjs/router`) by
-default; when `OrgScope` is given an `onSetOrg` prop, `setOrg` calls that
-instead.
+Reads the organization `OrgScope` resolved. `setOrg(idOrSlug)` navigates to the
+current route with a new `orgSlug` param (using `navigate` and `routes` from
+`@cedarjs/router`) by default; when `OrgScope` is given an `onSetOrg` prop,
+`setOrg` calls that instead.
 
 ### `useAuth().hasPermission(permission)`
 
