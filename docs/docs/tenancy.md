@@ -584,16 +584,23 @@ export function useCurrentOrg(): {
 }
 
 export function clearOrgClients(): Promise<void>
+
+/** For `<Router useOrgRoles>`: `null` when `params` has no `orgSlug`. */
+export function useOrgRoles(
+  useAuth: UseAuth,
+  params: Record<string, string>
+): ((roles: string | string[]) => boolean) | null
 ```
 
 ### `OrgScope`
 
-Used with the router's `Set wrap`:
+Used with the router's `PrivateSet wrap`, so a user who isn't signed in is sent
+to log in rather than shown `notAMember`:
 
 ```tsx title="web/src/Routes.tsx"
-<Set wrap={[OrgScope, OrgLayout]}>
+<PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
   <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
-</Set>
+</PrivateSet>
 ```
 
 The generated `web/src/components/OrgScope/OrgScope.tsx` wraps the core
@@ -629,31 +636,40 @@ organization's client alone is dropped the same way.
 
 #### Guarding routes by role
 
-To let only some roles in the organization open a page, put a `PrivateSet` with
-`orgRoles` and `unauthorized` inside the set that wraps `OrgScope`:
+To let only some roles in the organization open a page, give its `PrivateSet`
+`orgRoles` and `unauthorized`, and pass `useOrgRoles` from
+`@cedarjs/tenancy/web` to the router, next to `useAuth` (`yarn cedar setup
+tenancy` adds it):
 
 ```tsx title="web/src/Routes.tsx"
-<Set wrap={[OrgScope, OrgLayout]}>
-  <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
-  <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
+    <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+  </PrivateSet>
+  <PrivateSet
+    wrap={[OrgScope, OrgLayout]}
+    unauthenticated="login"
+    unauthorized="projects"
+    orgRoles="owner"
+  >
     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
   </PrivateSet>
-</Set>
+</Router>
 ```
 
-A member without one of `orgRoles` is redirected to the `unauthorized` route,
-which gets the `orgSlug` of the page they tried to open when its path has an
-`{orgSlug}`. With no `unauthorized`, they're redirected to `unauthenticated`.
+The router checks the user's role in the organization whose slug is in the
+route's `orgSlug` param, from `currentUser.memberships`, the same membership
+`OrgScope` finds. A member without one of `orgRoles` is redirected to the
+`unauthorized` route, which gets the `orgSlug` of the page they tried to open
+when its path has an `{orgSlug}`. With no `unauthorized`, they're redirected to
+`unauthenticated`. Neither `OrgScope` nor the rest of the set's `wrap` renders
+for them.
 
-It has to be nested. The router checks a `PrivateSet`'s roles before it renders
-the set's own `wrap` components, so in `<PrivateSet wrap={OrgScope} orgRoles>`
-there's no organization yet to check the role in. A `PrivateSet` with
-`orgRoles` and no `OrgScope` around it throws an error rather than let anyone
-in.
-
-`OrgScope` renders `notAMember` for a user who isn't signed in, so the nested
-`PrivateSet` only sees signed-in users. To send everyone else to log in, put
-the whole organization set inside a `<PrivateSet unauthenticated="login">`.
+A `PrivateSet` with `orgRoles` throws an error rather than let anyone in when
+the router has no `useOrgRoles`, or when the route has no `{orgSlug}` param, so
+there's no organization to check the role in. The router only reads the route
+param, not `OrgScope`'s `orgSlug` prop, so for an organization that doesn't come
+from the URL, use `OrgScope`'s `roles` and `unauthorized` instead.
 
 `userRoles` checks `currentUser.roles` the same way. Given both, a user needs
 both. As with every check on the web, this only decides what to show: the
@@ -800,8 +816,7 @@ checks `currentUser.roles`, inside an `OrgScope` or not.
   Prisma 8.
 - **No prerendering under `OrgScope`.** `OrgScope`'s nested `ApolloProvider`
   shadows the per-route client the prerenderer injects above `App`, so a `Route`
-  or `Set` inside `<Set wrap={[OrgScope, ...]}>` must not carry the `prerender`
-  prop.
+  or set under `OrgScope` must not carry the `prerender` prop.
 - **Raw SQL only on `db.$withoutTenant()`.** `$queryRaw`, `$executeRaw`,
   `$queryRawUnsafe` and `$executeRawUnsafe` throw `TenantScopeError` on a scoped
   client, on `db.$forOrg(id)`, and on the default `db` outside a request
