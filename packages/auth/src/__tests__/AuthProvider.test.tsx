@@ -104,6 +104,7 @@ describe('Custom auth provider', () => {
   const { AuthProvider, useAuth } = createCustomTestAuth(mockedTestAuthClient)
 
   const AuthConsumer = () => {
+    const auth = useAuth()
     const {
       loading,
       isAuthenticated,
@@ -115,9 +116,15 @@ describe('Custom auth provider', () => {
       reauthenticate,
       hasError,
       hasRole,
-      hasUserRole,
       error,
-    } = useAuth()
+    } = auth
+
+    // Provided for an app with tenancy, whose types show it instead of
+    // hasRole (see RoleCheck)
+    const hasUserRole = (roles: string) =>
+      'hasUserRole' in auth &&
+      typeof auth.hasUserRole === 'function' &&
+      auth.hasUserRole(roles)
 
     const [authToken, setAuthToken] = useState<string | null>(null)
 
