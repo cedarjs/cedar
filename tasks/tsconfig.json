@@ -8,5 +8,5 @@
     "noEmit": true,
     "rootDir": "."
   },
-  "exclude": ["test-project/templates"]
+  "exclude": ["test-project/templates", "e2e-tenancy/fixtures"]
 }
