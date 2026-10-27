@@ -12,6 +12,7 @@ describe('running the tenancy codemods again', () => {
     ['dbCodemod', 'defaultDb.output.ts'],
     ['graphqlCodemod', 'defaultGraphql.output.ts'],
     ['signupCodemod', 'defaultSignupAuth.output.ts'],
+    ['routerCodemod', 'defaultRoutes.output.tsx'],
   ])('%s leaves an already wired file as it is', async (codemod, fixture) => {
     const tempDir = fs.mkdtempSync(
       path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
@@ -71,6 +72,7 @@ describe('running the tenancy codemods again', () => {
     ['dbCodemod', 'defaultDb.output.ts'],
     ['graphqlCodemod', 'defaultGraphql.output.ts'],
     ['signupCodemod', 'defaultSignupAuth.output.ts'],
+    ['routerCodemod', 'defaultRoutes.output.tsx'],
   ])(
     '%s leaves an already wired file with CRLF line endings as it is',
     async (codemod, name) => {
@@ -115,6 +117,30 @@ describe('running the tenancy codemods again', () => {
 
     expect(count(output, 'ensureDefaultOrganization(')).toBe(1)
     expect(count(output, 'import { ensureDefaultOrganization }')).toBe(1)
+  })
+
+  it('routerCodemod adds the prop when only the import is there', async () => {
+    const output = await runOn(
+      'routerCodemod',
+      "import { useOrgRoles } from '@cedarjs/tenancy/web'\n" +
+        fixture('defaultRoutes.input.tsx'),
+    )
+
+    expect(count(output, 'useOrgRoles={useOrgRoles}')).toBe(1)
+    expect(count(output, 'import { useOrgRoles }')).toBe(1)
+  })
+
+  it('routerCodemod adds the import when only the prop is there', async () => {
+    const output = await runOn(
+      'routerCodemod',
+      fixture('defaultRoutes.input.tsx').replace(
+        '<Router useAuth={useAuth}>',
+        '<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>',
+      ),
+    )
+
+    expect(count(output, 'useOrgRoles={useOrgRoles}')).toBe(1)
+    expect(count(output, 'import { useOrgRoles }')).toBe(1)
   })
 
   it('authCodemod wraps a lookup that is not awaited only once', async () => {

@@ -197,6 +197,7 @@ no-op, `--force` or not.
 | `api/src/services/organizations/`                                     | Generates the organizations service and SDL                                                                                                        |
 | `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts`   | Backfills memberships for existing users                                                                                                           |
 | `web/src/` files                                                      | Renames `hasRole` from `useAuth()` to `hasUserRole`                                                                                                |
+| `web/src/Routes.tsx`                                                  | Passes `useOrgRoles` to the `<Router>`                                                                                                             |
 | `web/src/components/OrgScope/OrgScope.tsx`                            | Generates the app-owned `OrgScope` wrapper                                                                                                         |
 | `web/src/pages/InvitePage/InvitePage.tsx`                             | Generates the invitation landing page                                                                                                              |
 | `api/package.json`, `web/package.json`                                | Adds `@cedarjs/tenancy`                                                                                                                            |
@@ -427,10 +428,11 @@ the new models; the data migration backfills a default
 organization and membership for every existing user, so nobody is left without a
 `currentOrg` to resolve into.
 
-The setup command does not touch `web/src/Routes.tsx` or `web/src/App.tsx`, and
-it does not decide which of your existing models are tenant-owned &mdash; it
-prints the next steps instead: scope or exempt every existing model as described
-above, wire up section 5's `<Set wrap={[OrgScope, OrgLayout]}>` shape and the
+In `web/src/Routes.tsx` the setup command only passes `useOrgRoles` to your
+`<Router>`, it doesn't touch `web/src/App.tsx`, and it does not decide which of
+your existing models are tenant-owned &mdash; it prints the next steps instead:
+scope or exempt every existing model as described above, wire up section 5's
+`<PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">` shape and the
 `/invite/{token}` route, and use `withTenancy` from `@cedarjs/tenancy` on any
 plain `api/src/functions/*` handler that touches tenant-owned models.
 
@@ -771,32 +773,29 @@ See [Permissions](../tenancy.md#permissions) in the reference.
 
 ### Web hooks: `OrgScope`, `useCurrentOrg`, `hasOrgRole`
 
-`OrgScope` wraps organization routes with `Set`'s `wrap` prop, next to your
-layout:
+`OrgScope` wraps organization routes with `PrivateSet`'s `wrap` prop, next to
+your layout. The `PrivateSet` sends a user who isn't signed in to log in, rather
+than to `OrgScope`'s not-a-member state:
 
+<!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
-import { Set, Route, Router } from '@cedarjs/router'
+import { PrivateSet, Route, Router } from '@cedarjs/router'
+import { useOrgRoles } from '@cedarjs/tenancy/web'
 
-import OrgScope from 'src/components/OrgScope/OrgScope'
-import OrgLayout from 'src/layouts/OrgLayout/OrgLayout'
+import { useAuth } from 'src/auth'
+import { OrgScope } from 'src/components/OrgScope'
+import OrgLayout from 'src/layouts/OrgLayout'
 
 const Routes = () => {
   return (
-    <Router>
+    <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+      <Route path="/login" page={LoginPage} name="login" />
       <Route path="/invite/{token}" page={InvitePage} name="invite" />
       {/* highlight-next-line */}
-      <Set wrap={[OrgScope, OrgLayout]}>
-        <Route
-          path="/org/{orgSlug}/projects"
-          page={ProjectsPage}
-          name="projects"
-        />
-        <Route
-          path="/org/{orgSlug}/settings"
-          page={OrgSettingsPage}
-          name="orgSettings"
-        />
-      </Set>
+      <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
+        <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+        <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
+      </PrivateSet>
     </Router>
   )
 }
@@ -807,7 +806,7 @@ export default Routes
 `OrgScope` reads the `orgSlug` route param, matches it against
 `useAuth().currentUser.memberships`, and renders a nested `<ApolloProvider>`
 with an organization-scoped client under it, so every Cell, `useQuery` and
-`useMutation` inside the `Set` carries the `cedar-org` header automatically.
+`useMutation` inside the set carries the `cedar-org` header automatically.
 When the slug doesn't match a membership it renders the app's not-a-member state
 instead of its children.
 
@@ -816,12 +815,12 @@ instead of its children.
 `OrgScope`'s nested `ApolloProvider` shadows the per-route client that
 prerendering injects above `App`, so a prerendered page's queries wouldn't go
 through the in-process GraphQL link the prerenderer expects. Organization routes
-are per-user by nature anyway &mdash; don't add `prerender` to a `Route` or
-`Set` that lives inside `<Set wrap={[OrgScope, ...]}>`.
+are per-user by nature anyway &mdash; don't add `prerender` to a `Route` or set
+under `OrgScope`.
 
 :::
 
-Inside the `Set`, read the current organization with `useCurrentOrg()`:
+Inside the set, read the current organization with `useCurrentOrg()`:
 
 ```tsx title="web/src/components/ProjectList/ProjectList.tsx"
 import { useCurrentOrg } from '@cedarjs/tenancy/web'
@@ -846,23 +845,26 @@ With tenancy there's no `useAuth().hasRole`: setup renames your existing uses
 to `hasUserRole`, and using it is a type error.
 
 `<PrivateSet roles>` isn't available with tenancy either. For a page only some
-roles in the organization may open, give `OrgScope` `roles` and `unauthorized`
-from a small wrapper component (see
+roles in the organization may open, give its `PrivateSet` `orgRoles` and
+`unauthorized` (see
 [Guarding routes by role](../tenancy.md#guarding-routes-by-role)):
 
+<!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
-const OwnersOnly = ({ children }: { children: React.ReactNode }) => (
-  <OrgScope roles="owner" unauthorized="projects">
-    {children}
-  </OrgScope>
-)
-
-// ...
-
-<Set wrap={[OwnersOnly, OrgLayout]}>
-  <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
-</Set>
+<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
+    <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+  </PrivateSet>
+  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
+    <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
+  </PrivateSet>
+</Router>
 ```
+
+A member who isn't an owner is redirected to the same organization's
+`projects` page. The router checks the role with the `useOrgRoles` passed to it,
+in the organization whose slug is the route's `orgSlug` param, so `orgRoles`
+needs both: without either, it throws an error rather than let anyone in.
 
 ### `reauthenticate()` after membership-changing mutations
 

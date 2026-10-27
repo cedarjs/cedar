@@ -26,6 +26,7 @@ import {
   Router,
 } from '../index.js'
 import { useParams } from '../params.js'
+import type { UseOrgRoles } from '../router-context.js'
 import { Set } from '../Set.js'
 import type { WrapperProps } from '../Set.js'
 
@@ -1203,9 +1204,558 @@ describe('Unauthorized redirect error messages', () => {
 
     act(() => navigate('/private'))
     expect(() => render(<TestRouter authenticated={false} />)).toThrow(
-      'Redirecting to route "params" would require route parameters, which ' +
-        'currently is not supported. Please choose a different route',
+      'Redirecting to route "params" requires the route parameter "value", ' +
+        "which the current route doesn't have. Please choose a different route",
     )
+  })
+})
+
+describe('PrivateSet role checks', () => {
+  const ForbiddenPage = () => <h1>Forbidden Page</h1>
+  const OrgLoginPage = () => <h1>Org Login Page</h1>
+  const ProjectsPage = () => <h1>Projects Page</h1>
+  const SettingsPage = () => <h1>Settings Page</h1>
+
+  const toList = (roles: string | string[]) =>
+    Array.isArray(roles) ? roles : [roles]
+
+  /** An auth provider's `useAuth`, for a user with `roles` in `currentUser` */
+  const useAuthWithRoles =
+    ({
+      isAuthenticated = true,
+      roles = [],
+    }: {
+      isAuthenticated?: boolean
+      roles?: string[]
+    }) =>
+    () => {
+      const hasRole = (rolesToCheck: string | string[]) =>
+        toList(rolesToCheck).some((role) => roles.includes(role))
+
+      return createDummyAuthContextValues({
+        loading: false,
+        isAuthenticated,
+        hasRole,
+        hasUserRole: hasRole,
+      })
+    }
+
+  /**
+   * A `useOrgRoles` for a user with `roleBySlug[orgSlug]` in each
+   * organization, like the one from `@cedarjs/tenancy/web`: `null` without an
+   * `orgSlug` param, and no role when not signed in
+   */
+  const orgRolesFor = (roleBySlug: Record<string, string>) => {
+    const useOrgRoles: UseOrgRoles = (useAuth, params) => {
+      const { isAuthenticated } = useAuth()
+
+      if (!Object.hasOwn(params, 'orgSlug')) {
+        return null
+      }
+
+      const role = isAuthenticated ? roleBySlug[params.orgSlug] : undefined
+
+      return (roles) => role !== undefined && toList(roles).includes(role)
+    }
+
+    return useOrgRoles
+  }
+
+  // The router's own tests are an app without tenancy, where sets have
+  // `roles` but no `userRoles` or `orgRoles`. Spreading the props, rather
+  // than writing them out, lets them through the type check.
+  const userRoles = (roles: string | string[]) => ({ userRoles: roles })
+  const orgRoles = (roles: string | string[]) => ({ orgRoles: roles })
+  const routerOrgRoles = (useOrgRoles: UseOrgRoles) => ({ useOrgRoles })
+
+  describe('unauthorized', () => {
+    const TestRouter = ({ useAuth }: { useAuth: UseAuth }) => (
+      <Router useAuth={useAuth}>
+        <Route path="/" page={HomePage} name="home" />
+        <Route path="/login" page={LoginPage} name="login" />
+        <Route path="/forbidden" page={ForbiddenPage} name="forbidden" />
+        <PrivateSet
+          unauthenticated="login"
+          unauthorized="forbidden"
+          roles="admin"
+        >
+          <Route path="/admin" page={PrivatePage} name="admin" />
+        </PrivateSet>
+        <PrivateSet unauthenticated="login" roles="admin">
+          <Route path="/no-unauthorized" page={AboutPage} name="noUnauth" />
+        </PrivateSet>
+      </Router>
+    )
+
+    test('redirects a user without the role to unauthorized', async () => {
+      const screen = render(
+        <TestRouter useAuth={useAuthWithRoles({ roles: ['editor'] })} />,
+      )
+
+      act(() => navigate('/admin'))
+
+      await waitFor(() => {
+        screen.getByText(/Forbidden Page/i)
+        expect(window.location.pathname).toBe('/forbidden')
+        expect(window.location.search).toBe('')
+      })
+      expect(screen.queryByText(/Private Page/i)).not.toBeInTheDocument()
+    })
+
+    test('redirects a user who is not signed in to unauthenticated', async () => {
+      const screen = render(
+        <TestRouter useAuth={useAuthWithRoles({ isAuthenticated: false })} />,
+      )
+
+      act(() => navigate('/admin'))
+
+      await waitFor(() => {
+        screen.getByText(/Login Page/i)
+        expect(window.location.pathname).toBe('/login')
+        expect(window.location.search).toBe('?redirectTo=/admin')
+      })
+    })
+
+    test('lets a user with the role in', async () => {
+      const screen = render(
+        <TestRouter useAuth={useAuthWithRoles({ roles: ['admin'] })} />,
+      )
+
+      act(() => navigate('/admin'))
+
+      await waitFor(() => screen.getByText(/Private Page/i))
+    })
+
+    test('without it, a user without the role goes to unauthenticated', async () => {
+      const screen = render(
+        <TestRouter useAuth={useAuthWithRoles({ roles: ['editor'] })} />,
+      )
+
+      act(() => navigate('/no-unauthorized'))
+
+      await waitFor(() => {
+        screen.getByText(/Login Page/i)
+        expect(window.location.pathname).toBe('/login')
+        expect(window.location.search).toBe('?redirectTo=/no-unauthorized')
+      })
+    })
+  })
+
+  describe('route params in redirects', () => {
+    const TestRouter = ({ useAuth }: { useAuth: UseAuth }) => (
+      <Router useAuth={useAuth}>
+        <Route path="/" page={HomePage} name="home" />
+        <Route
+          path="/org/{orgSlug}/login"
+          page={OrgLoginPage}
+          name="orgLogin"
+        />
+        <Route
+          path="/org/{orgSlug}/projects"
+          page={ProjectsPage}
+          name="projects"
+        />
+        <PrivateSet
+          unauthenticated="orgLogin"
+          unauthorized="projects"
+          roles="owner"
+        >
+          <Route
+            path="/org/{orgSlug}/settings"
+            page={SettingsPage}
+            name="settings"
+          />
+        </PrivateSet>
+      </Router>
+    )
+
+    test('fills unauthorized params from the current route', async () => {
+      const screen = render(
+        <TestRouter useAuth={useAuthWithRoles({ roles: ['member'] })} />,
+      )
+
+      act(() => navigate('/org/acme/settings'))
+
+      await waitFor(() => {
+        screen.getByText(/Projects Page/i)
+        expect(window.location.pathname).toBe('/org/acme/projects')
+      })
+    })
+
+    test('fills unauthenticated params from the current route', async () => {
+      const screen = render(
+        <TestRouter useAuth={useAuthWithRoles({ isAuthenticated: false })} />,
+      )
+
+      act(() => navigate('/org/acme/settings'))
+
+      await waitFor(() => {
+        screen.getByText(/Org Login Page/i)
+        expect(window.location.pathname).toBe('/org/acme/login')
+        expect(window.location.search).toBe('?redirectTo=/org/acme/settings')
+      })
+    })
+
+    test('fills params of a custom type as the text in the path', async () => {
+      const PostPage = () => <h1>Post Page</h1>
+      const EditPostPage = () => <h1>Edit Post Page</h1>
+      // `parse` returns an array, which isn't the text in the path
+      const slug = {
+        match: /\w+-\w+/,
+        parse: (value: string) => value.split('-'),
+      }
+
+      const screen = render(
+        <Router
+          useAuth={useAuthWithRoles({ roles: ['member'] })}
+          paramTypes={{ slug }}
+        >
+          <Route path="/" page={HomePage} name="home" />
+          <Route path="/login" page={LoginPage} name="login" />
+          <Route path="/post/{name:slug}" page={PostPage} name="post" />
+          <PrivateSet
+            unauthenticated="login"
+            unauthorized="post"
+            roles="editor"
+          >
+            <Route
+              path="/post/{name:slug}/edit"
+              page={EditPostPage}
+              name="editPost"
+            />
+          </PrivateSet>
+        </Router>,
+      )
+
+      act(() => navigate('/post/cedar-router/edit'))
+
+      await waitFor(() => {
+        screen.getByText(/Post Page/i)
+        expect(window.location.pathname).toBe('/post/cedar-router')
+      })
+    })
+  })
+
+  describe('userRoles', () => {
+    const TestRouter = ({ useAuth }: { useAuth: UseAuth }) => (
+      <Router useAuth={useAuth}>
+        <Route path="/" page={HomePage} name="home" />
+        <Route path="/login" page={LoginPage} name="login" />
+        <Route path="/forbidden" page={ForbiddenPage} name="forbidden" />
+        <PrivateSet
+          unauthenticated="login"
+          unauthorized="forbidden"
+          {...userRoles('admin')}
+        >
+          <Route path="/admin" page={PrivatePage} name="admin" />
+        </PrivateSet>
+      </Router>
+    )
+
+    test('lets a user with the role in currentUser.roles in', async () => {
+      const screen = render(
+        <TestRouter useAuth={useAuthWithRoles({ roles: ['admin'] })} />,
+      )
+
+      act(() => navigate('/admin'))
+
+      await waitFor(() => screen.getByText(/Private Page/i))
+    })
+
+    test('redirects a user without it', async () => {
+      const screen = render(
+        <TestRouter useAuth={useAuthWithRoles({ roles: ['editor'] })} />,
+      )
+
+      act(() => navigate('/admin'))
+
+      await waitFor(() => screen.getByText(/Forbidden Page/i))
+      expect(screen.queryByText(/Private Page/i)).not.toBeInTheDocument()
+    })
+  })
+
+  describe('orgRoles', () => {
+    /** An organization's layout, to see whether a set's wrap renders */
+    const OrgLayout = ({ children }: WrapperProps) => (
+      <>
+        <p>Org Layout</p>
+        {children}
+      </>
+    )
+
+    const TestRouter = ({
+      useAuth,
+      roleBySlug,
+    }: {
+      useAuth: UseAuth
+      roleBySlug: Record<string, string>
+    }) => (
+      <Router useAuth={useAuth} {...routerOrgRoles(orgRolesFor(roleBySlug))}>
+        <Route path="/" page={HomePage} name="home" />
+        <Route path="/login" page={LoginPage} name="login" />
+        <Set wrap={OrgLayout}>
+          <Route
+            path="/org/{orgSlug}/projects"
+            page={ProjectsPage}
+            name="projects"
+          />
+          <PrivateSet
+            unauthenticated="login"
+            unauthorized="projects"
+            {...orgRoles(['owner', 'admin'])}
+          >
+            <Route
+              path="/org/{orgSlug}/settings"
+              page={SettingsPage}
+              name="settings"
+            />
+          </PrivateSet>
+          <PrivateSet
+            unauthenticated="login"
+            unauthorized="projects"
+            {...userRoles('staff')}
+            {...orgRoles('owner')}
+          >
+            <Route
+              path="/org/{orgSlug}/billing"
+              page={PrivatePage}
+              name="billing"
+            />
+          </PrivateSet>
+        </Set>
+        <PrivateSet
+          wrap={OrgLayout}
+          unauthenticated="login"
+          unauthorized="projects"
+          {...orgRoles('owner')}
+        >
+          <Route
+            path="/org/{orgSlug}/members"
+            page={AboutPage}
+            name="members"
+          />
+        </PrivateSet>
+      </Router>
+    )
+
+    test('lets a member with the role in the organization in', async () => {
+      const screen = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({})}
+          roleBySlug={{ acme: 'admin' }}
+        />,
+      )
+
+      act(() => navigate('/org/acme/settings'))
+
+      await waitFor(() => screen.getByText(/Settings Page/i))
+    })
+
+    test('redirects a member without it to unauthorized', async () => {
+      const screen = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({})}
+          roleBySlug={{ acme: 'member', other: 'owner' }}
+        />,
+      )
+
+      act(() => navigate('/org/acme/settings'))
+
+      await waitFor(() => {
+        screen.getByText(/Projects Page/i)
+        expect(window.location.pathname).toBe('/org/acme/projects')
+      })
+      expect(screen.queryByText(/Settings Page/i)).not.toBeInTheDocument()
+    })
+
+    test('redirects a user who is not signed in to unauthenticated', async () => {
+      const screen = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({ isAuthenticated: false })}
+          roleBySlug={{ acme: 'owner' }}
+        />,
+      )
+
+      act(() => navigate('/org/acme/settings'))
+
+      await waitFor(() => {
+        screen.getByText(/Login Page/i)
+        expect(window.location.pathname).toBe('/login')
+        expect(window.location.search).toBe('?redirectTo=/org/acme/settings')
+      })
+    })
+
+    test('with userRoles too, needs both', async () => {
+      const ownerOnly = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({})}
+          roleBySlug={{ acme: 'owner' }}
+        />,
+      )
+
+      act(() => navigate('/org/acme/billing'))
+
+      await waitFor(() => ownerOnly.getByText(/Projects Page/i))
+      ownerOnly.unmount()
+
+      const staffOnly = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({ roles: ['staff'] })}
+          roleBySlug={{ acme: 'member' }}
+        />,
+      )
+
+      act(() => navigate('/org/acme/billing'))
+
+      await waitFor(() => staffOnly.getByText(/Projects Page/i))
+      staffOnly.unmount()
+
+      const both = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({ roles: ['staff'] })}
+          roleBySlug={{ acme: 'owner' }}
+        />,
+      )
+
+      act(() => navigate('/org/acme/billing'))
+
+      await waitFor(() => both.getByText(/Private Page/i))
+    })
+
+    describe('with the organization in its own wrap', () => {
+      test('lets a member with the role in', async () => {
+        const screen = render(
+          <TestRouter
+            useAuth={useAuthWithRoles({})}
+            roleBySlug={{ acme: 'owner' }}
+          />,
+        )
+
+        act(() => navigate('/org/acme/members'))
+
+        await waitFor(() => {
+          screen.getByText(/Org Layout/i)
+          screen.getByText(/About Page/i)
+        })
+      })
+
+      test('redirects a member without it, without rendering its wrap', async () => {
+        const screen = render(
+          <TestRouter
+            useAuth={useAuthWithRoles({})}
+            roleBySlug={{ acme: 'member' }}
+          />,
+        )
+
+        act(() => navigate('/org/acme/members'))
+
+        await waitFor(() => {
+          screen.getByText(/Projects Page/i)
+          expect(window.location.pathname).toBe('/org/acme/projects')
+        })
+        expect(screen.queryByText(/About Page/i)).not.toBeInTheDocument()
+      })
+    })
+
+    describe('without an organization to check the role in', () => {
+      let err: typeof console.error
+
+      beforeAll(() => {
+        err = console.error
+        console.error = vi.fn()
+      })
+
+      afterAll(() => {
+        console.error = err
+      })
+
+      test('throws without useOrgRoles on the Router, even when not signed in', async () => {
+        const TestRouter = () => (
+          <Router useAuth={useAuthWithRoles({ isAuthenticated: false })}>
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
+              <Route
+                path="/org/{orgSlug}/settings"
+                page={SettingsPage}
+                name="settings"
+              />
+            </PrivateSet>
+          </Router>
+        )
+
+        act(() => navigate('/org/acme/settings'))
+        expect(() => render(<TestRouter />)).toThrow(
+          'A PrivateSet with `orgRoles` needs `useOrgRoles` on the Router',
+        )
+      })
+
+      test('throws on a route without an orgSlug param', async () => {
+        const TestRouter = () => (
+          <Router
+            useAuth={useAuthWithRoles({})}
+            {...routerOrgRoles(orgRolesFor({ acme: 'owner' }))}
+          >
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
+              <Route path="/settings" page={SettingsPage} name="settings" />
+            </PrivateSet>
+          </Router>
+        )
+
+        act(() => navigate('/settings'))
+        expect(() => render(<TestRouter />)).toThrow(
+          'and the route has no `orgSlug` param',
+        )
+      })
+
+      test("throws when the app's own useOrgRoles finds no organization", async () => {
+        const TestRouter = () => (
+          <Router
+            useAuth={useAuthWithRoles({})}
+            {...routerOrgRoles(() => null)}
+          >
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
+              <Route
+                path="/org/{orgSlug}/settings"
+                page={SettingsPage}
+                name="settings"
+              />
+            </PrivateSet>
+          </Router>
+        )
+
+        act(() => navigate('/org/acme/settings'))
+        expect(() => render(<TestRouter />)).toThrow(
+          "got no role check from the Router's `useOrgRoles` for this route",
+        )
+      })
+
+      test("passes on an error the app's own useOrgRoles throws", async () => {
+        const TestRouter = () => (
+          <Router
+            useAuth={useAuthWithRoles({})}
+            {...routerOrgRoles(() => {
+              throw new Error('This organization is suspended')
+            })}
+          >
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
+              <Route
+                path="/org/{orgSlug}/settings"
+                page={SettingsPage}
+                name="settings"
+              />
+            </PrivateSet>
+          </Router>
+        )
+
+        act(() => navigate('/org/acme/settings'))
+        expect(() => render(<TestRouter />)).toThrow(
+          'This organization is suspended',
+        )
+      })
+    })
   })
 })
 

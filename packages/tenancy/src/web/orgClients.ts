@@ -6,9 +6,10 @@ import type { ApolloClient } from '@apollo/client'
  * organization's reused slug must not hand out another tenant's cache). The
  * map is module-level so a tab keeps one client per organization it has
  * visited, sharing the transport and auth link with the app client while
- * giving each organization its own cache.
+ * giving each organization its own cache. Each client is stored with the role
+ * it was created for.
  */
-const clients = new Map<string, ApolloClient>()
+const clients = new Map<string, { client: ApolloClient; role: string }>()
 
 function clientKey(userId: string, organizationId: string): string {
   return `${userId}:${organizationId}`
@@ -17,6 +18,12 @@ function clientKey(userId: string, organizationId: string): string {
 export interface GetOrgClientOptions {
   userId: string
   organizationId: string
+  /**
+   * The user's role in the organization. A client cached for another role is
+   * replaced, so data cached under that role doesn't outlive it, whether or
+   * not an `OrgScope` was mounted to see the role change.
+   */
+  role: string
   /** Builds a new client. Only called on a cache miss. */
   createClient: () => ApolloClient
 }
@@ -29,39 +36,44 @@ export interface GetOrgClientOptions {
 export function getOrgClient({
   userId,
   organizationId,
+  role,
   createClient,
 }: GetOrgClientOptions): ApolloClient {
   const key = clientKey(userId, organizationId)
   const existing = clients.get(key)
 
+  if (existing?.role === role) {
+    return existing.client
+  }
+
   if (existing) {
-    return existing
+    void existing.client.clearStore()
   }
 
   const client = createClient()
-  clients.set(key, client)
+  clients.set(key, { client, role })
 
   return client
 }
 
 /**
  * Drops one organization's client, clearing its cache first. Called when a
- * memberships refresh shows the membership gone or its role changed, so
- * data cached under the previous authorization does not outlive it.
+ * memberships refresh shows the membership gone, so data cached under it
+ * does not outlive it. (A role change is handled by `getOrgClient`.)
  */
 export async function dropOrgClient(
   userId: string,
   organizationId: string,
 ): Promise<void> {
   const key = clientKey(userId, organizationId)
-  const client = clients.get(key)
+  const entry = clients.get(key)
 
-  if (!client) {
+  if (!entry) {
     return
   }
 
   clients.delete(key)
-  await client.clearStore()
+  await entry.client.clearStore()
 }
 
 /**
@@ -74,5 +86,5 @@ export async function clearOrgClients(): Promise<void> {
   const clientsToClear = Array.from(clients.values())
   clients.clear()
 
-  await Promise.all(clientsToClear.map((client) => client.clearStore()))
+  await Promise.all(clientsToClear.map(({ client }) => client.clearStore()))
 }

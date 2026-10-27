@@ -186,16 +186,17 @@ Here's an example of how you'd use a `PrivateSet`:
 </Router>
 ```
 
-For more fine-grained control, you can specify `roles` (which takes a string for a single role or an array of roles), and the router will check to see that the current user is authorized before giving them access to the Route. If they're not, they will be redirected to the page specified in the `unauthenticated` prop, such as a "forbidden" page. Read more about Role-based Access Control in Cedar [here](how-to/role-based-access-control.md).
+For more fine-grained control, you can specify `roles` (which takes a string for a single role or an array of roles), and the router will check to see that the current user is authorized before giving them access to the Route. If they're signed in but don't have one of the roles, they're redirected to the Route passed as the `unauthorized` prop, such as a "forbidden" page. Without `unauthorized`, they're redirected to the `unauthenticated` Route, like a user who isn't signed in. Read more about Role-based Access Control in Cedar [here](how-to/role-based-access-control.md).
 
 To protect private routes for access by a single role:
 
 ```jsx title="Routes.jsx"
 <Router useAuth={useAuth}>
-  <PrivateSet unauthenticated="forbidden" roles="admin">
+  <PrivateSet unauthenticated="login" unauthorized="forbidden" roles="admin">
     <Route path="/admin/users" page={UsersPage} name="users" />
   </PrivateSet>
 
+  <Route path="/login" page={LoginPage} name="login" />
   <Route path="/forbidden" page={ForbiddenPage} name="forbidden" />
 </Router>
 ```
@@ -205,13 +206,30 @@ To protect private routes for access by multiple roles:
 <!-- prettier-ignore -->
 ```jsx title="Routes.jsx"
 <Router useAuth={useAuth}>
-  <PrivateSet unauthenticated="forbidden" roles={['admin', 'editor', 'publisher']}>
+  <PrivateSet unauthenticated="login" unauthorized="forbidden" roles={['admin', 'editor', 'publisher']}>
     <Route path="/admin/posts/{id:Int}/edit" page={EditPostPage} name="editPost" />
   </PrivateSet>
 
+  <Route path="/login" page={LoginPage} name="login" />
   <Route path="/forbidden" page={ForbiddenPage} name="forbidden" />
 </Router>
 ```
+
+Only the redirect to `unauthenticated` adds the `redirectTo` param, for coming back after logging in.
+
+The `unauthenticated` and `unauthorized` Routes can have path params, as long as the Route the user tried to visit has params with the same names: the router fills them in from it. Here a user who isn't an editor is sent to the post they tried to edit:
+
+<!-- prettier-ignore -->
+```jsx title="Routes.jsx"
+<Router useAuth={useAuth}>
+  <Route path="/posts/{id:Int}" page={PostPage} name="post" />
+  <PrivateSet unauthenticated="login" unauthorized="post" roles="editor">
+    <Route path="/posts/{id:Int}/edit" page={EditPostPage} name="editPost" />
+  </PrivateSet>
+</Router>
+```
+
+A signed-in user without the `editor` role who visits `/posts/7/edit` is redirected to `/posts/7`. If the Route the user tried to visit doesn't have a param the redirect needs, the router throws an error.
 
 :::note[Note about roles]
 A route is permitted when authenticated and user has **any** of the provided roles such as `"admin"` or `["admin", "editor", "publisher"]`.

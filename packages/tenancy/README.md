@@ -135,12 +135,29 @@ rather than an organization use `@requireUserAuth`.
 
 ## Web
 
-`@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg` and
+`@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg`, `useOrgRoles` and
 `getMemberships`/`hasOrgRole` for the client side: a per-organization Apollo
 client provided under organization routes, keyed by the immutable organization
 id so switching organizations never mixes caches. `useCurrentOrg().hasOrgRole`
-checks the user's role in the organization, and `OrgScope`'s `roles` and
-`unauthorized` props guard routes by it. `useAuth().hasUserRole` checks
-`currentUser.roles`; there's no `useAuth().hasRole` or `<PrivateSet roles>` in
-an app with tenancy. See the how-to for the full
-`<Set wrap={OrgScope}>` setup `yarn cedar setup tenancy` generates.
+checks the user's role in the organization. To guard routes by it, pass
+`useOrgRoles` to the router and give a `PrivateSet` `orgRoles` and
+`unauthorized`:
+
+<!-- prettier-ignore -->
+```tsx
+<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
+    <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+  </PrivateSet>
+  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
+    <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+  </PrivateSet>
+</Router>
+```
+
+The router checks the role in the organization of the route's `orgSlug` param,
+so a `PrivateSet` with `orgRoles` throws without `useOrgRoles` on the router or
+an `{orgSlug}` in the route's path. `useAuth().hasUserRole` and
+`<PrivateSet userRoles>` check `currentUser.roles`; there's no
+`useAuth().hasRole` or `<PrivateSet roles>` in an app with tenancy. See the
+how-to for the full setup `yarn cedar setup tenancy` generates.
