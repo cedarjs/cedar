@@ -677,6 +677,8 @@ export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
   }
 
   const invitationToken = crypto.randomUUID()
+  // Seven days; see INVITATION_LIFETIME_MS in the generated service
+  const invitationExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
   const membership = await db.membership.create({
     data: {
@@ -684,10 +686,11 @@ export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
       role: input.role,
       invitedById: currentOrg.membershipId,
       invitationToken,
+      invitationExpiresAt,
     },
   })
 
-  return { membership, invitationToken }
+  return { membership, invitationToken, invitationExpiresAt }
 }
 ```
 
