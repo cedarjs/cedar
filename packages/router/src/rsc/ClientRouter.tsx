@@ -9,7 +9,15 @@ import type { RouterProps } from '../router.js'
 
 import { RscRoutes } from './RscRoutes.js'
 
-export const Router = ({ useAuth, paramTypes, children }: RouterProps) => {
+export const Router = (props: RouterProps) => {
+  const { useAuth, paramTypes, children } = props
+
+  // TODO (RSC): There's no organization to provide. `RouterProps` only has
+  // `tenancy` in an app with tenancy, so it is looked up by name.
+  if ('tenancy' in props && props.tenancy) {
+    throw new Error('`tenancy` is not supported with RSC yet')
+  }
+
   return (
     // Wrap it in the provider so that useLocation can be used
     <LocationProvider>
@@ -52,6 +60,19 @@ const LocationAwareRouter = ({
   }
 
   const requestedRoute = pathRouteMap[activeRoutePath]
+
+  // TODO (RSC): There's no organization here to check `orgRoles` or
+  // `orgPermission` in, and only `unauthenticated` is checked below, so fail
+  // closed rather than let every signed-in user in
+  for (const set of requestedRoute.sets) {
+    if (set.props.orgRoles !== undefined) {
+      throw new Error('`orgRoles` is not supported with RSC yet')
+    }
+
+    if (set.props.orgPermission !== undefined) {
+      throw new Error('`orgPermission` is not supported with RSC yet')
+    }
+  }
 
   // Need to reverse the sets array when finding the private set so that we
   // find the inner-most private set first. Otherwise we could end up

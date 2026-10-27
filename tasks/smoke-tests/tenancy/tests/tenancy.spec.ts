@@ -4,8 +4,8 @@ import { expect, test } from '@playwright/test'
 import { loginAsTestUser, signUpTestUser } from '../../shared/common.js'
 
 // Runs against a test project that `yarn e2e:tenancy` has set up: tenancy,
-// plus an organizations page (/orgs) and an organization's page under
-// OrgScope (/org/{orgSlug}). Each run signs up new users, so it can run
+// plus an organizations page (/orgs) and an organization's page in a
+// PrivateSet (/org/{orgSlug}). Each run signs up new users, so it can run
 // again against the same database.
 const run = Date.now()
 const owner = { email: `tenancy-owner-${run}@example.com`, fullName: 'Owner' }

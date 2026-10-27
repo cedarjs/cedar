@@ -130,34 +130,51 @@ Roles map to permissions in one place; fields ask for a permission with
 A role only gets what its list says, so a new role is one entry. Permission
 names are typed from the definitions. `withPermissions` in `getCurrentUser` gives each
 membership its permissions, which `useAuth().hasPermission()` checks inside
-`OrgScope`. Every permission is about an organization: fields about the user
+an organization route. Every permission is about an organization: fields about the user
 rather than an organization use `@requireUserAuth`.
 
 ## Web
 
-`@cedarjs/tenancy/web` exports `OrgScope`, `useCurrentOrg`, `useOrgRoles` and
-`getMemberships`/`hasOrgRole` for the client side: a per-organization Apollo
-client provided under organization routes, keyed by the immutable organization
-id so switching organizations never mixes caches. `useCurrentOrg().hasOrgRole`
-checks the user's role in the organization. To guard routes by it, pass
-`useOrgRoles` to the router and give a `PrivateSet` `orgRoles` and
-`unauthorized`:
+`@cedarjs/tenancy/web` exports `createTenancy`, a ready-made `tenancy`,
+`useCurrentOrg`, `useOrgBySlug` and `getMemberships`/`hasOrgRole` for the client
+side. Pass the tenancy to the router and put organization routes in a
+`PrivateSet`: the router renders a per-organization Apollo client, keyed by the
+immutable organization id so switching organizations never mixes caches, around
+the set's layouts and page. `useCurrentOrg().hasOrgRole` checks the user's role
+in the organization. To guard routes by it, give a `PrivateSet` `orgRoles` or
+`orgPermission`, and `unauthorized`:
 
 <!-- prettier-ignore -->
 ```tsx
-<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
-  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
+import { tenancy } from 'src/tenancy'
+
+<Router useAuth={useAuth} tenancy={tenancy}>
+  <PrivateSet wrap={OrgLayout} unauthenticated="login">
     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
   </PrivateSet>
-  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgRoles="owner">
     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+  </PrivateSet>
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="members.manage">
+    <Route path="/org/{orgSlug}/members" page={MembersPage} name="members" />
   </PrivateSet>
 </Router>
 ```
 
-The router checks the role in the organization of the route's `orgSlug` param,
-so a `PrivateSet` with `orgRoles` throws without `useOrgRoles` on the router or
-an `{orgSlug}` in the route's path. `useAuth().hasUserRole` and
-`<PrivateSet userRoles>` check `currentUser.roles`; there's no
-`useAuth().hasRole` or `<PrivateSet roles>` in an app with tenancy. See the
+```tsx title="web/src/tenancy.tsx"
+import { createTenancy } from '@cedarjs/tenancy/web'
+
+export const tenancy = createTenancy({
+  notAMember: <p>You don't have access to this organization.</p>,
+})
+```
+
+The router checks the role and permission in the organization of the route's
+`orgSlug` param. A `PrivateSet` with `orgRoles` or `orgPermission` throws when
+the router has no `tenancy` or its `useOrg` finds no organization for the
+route; with the default lookup, that's a route without `{orgSlug}`. A route
+with `{orgSlug}` outside a `PrivateSet` is a public page with no organization
+context. `useAuth().hasUserRole` and `<PrivateSet userRoles>` check
+`currentUser.roles`; there's no `useAuth().hasRole` or `<PrivateSet roles>` in
+an app with tenancy. See the
 how-to for the full setup `yarn cedar setup tenancy` generates.

@@ -15,10 +15,7 @@ import { normalizePage } from './page.js'
 import { PageLoadingContextProvider } from './PageLoadingContext.js'
 import { ParamsProvider } from './params.js'
 import { Redirect } from './redirect.js'
-import type {
-  RouterContextProviderProps,
-  UseOrgRoles,
-} from './router-context.js'
+import type { RouterContextProviderProps, Tenancy } from './router-context.js'
 import { RouterContextProvider } from './router-context.js'
 import { wrapWithSetWrappers } from './Set.js'
 import { SplashPage } from './splash-page.js'
@@ -26,29 +23,27 @@ import { matchPath, parseSearch, replaceParams, validatePath } from './util.js'
 import type { TrailingSlashesTypes } from './util.js'
 
 /**
- * `useOrgRoles`, only in an app with tenancy (see `AuthTenancy`), where sets
- * have `orgRoles`
+ * `tenancy`, only in an app with tenancy (see `AuthTenancy`), where sets have
+ * `orgRoles` and `orgPermission`
  */
-type RouterOrgRoles = AuthTenancy extends { enabled: true }
+type RouterTenancy = AuthTenancy extends { enabled: true }
   ? {
       /**
-       * Checks the user's role in the organization of the current route, for
-       * `<PrivateSet orgRoles>`. Pass `useOrgRoles` from
-       * `@cedarjs/tenancy/web`:
+       * How the router handles organizations: finding the one of the current
+       * route, checking `orgRoles` and `orgPermission` in it, and providing
+       * it to the layouts and page of a `PrivateSet`. Pass the `tenancy` from
+       * `createTenancy` in `@cedarjs/tenancy/web`:
        *
-       *   <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+       *   <Router useAuth={useAuth} tenancy={tenancy}>
        */
-      useOrgRoles?: UseOrgRoles
+      tenancy?: Tenancy
     }
   : Record<never, never>
 
 export interface RouterProps
   extends
-    Omit<
-      RouterContextProviderProps,
-      'routes' | 'activeRouteName' | 'useOrgRoles'
-    >,
-    RouterOrgRoles {
+    Omit<RouterContextProviderProps, 'routes' | 'activeRouteName' | 'tenancy'>,
+    RouterTenancy {
   trailingSlashes?: TrailingSlashesTypes
   pageLoadingDelay?: number
   children: ReactNode
@@ -56,16 +51,16 @@ export interface RouterProps
 
 /**
  * The props the router reads. In an app without tenancy `RouterProps` has no
- * `useOrgRoles`, but the router's own code is compiled as one, so it reads it
+ * `tenancy`, but the router's own code is compiled as one, so it reads it
  * through this type, which `RouterProps` always fits.
  */
 interface RouterImplementationProps extends RouterProps {
-  useOrgRoles?: UseOrgRoles
+  tenancy?: Tenancy
 }
 
 const RouterImplementation: React.FC<RouterImplementationProps> = ({
   useAuth,
-  useOrgRoles,
+  tenancy,
   paramTypes,
   pageLoadingDelay,
   trailingSlashes = 'never',
@@ -77,7 +72,7 @@ const RouterImplementation: React.FC<RouterImplementationProps> = ({
     <LocationProvider trailingSlashes={trailingSlashes}>
       <LocationAwareRouter
         useAuth={useAuth}
-        useOrgRoles={useOrgRoles}
+        tenancy={tenancy}
         paramTypes={paramTypes}
         pageLoadingDelay={pageLoadingDelay}
       >
@@ -94,7 +89,7 @@ export const Router: React.FC<RouterProps> = RouterImplementation
 
 const LocationAwareRouter: React.FC<RouterImplementationProps> = ({
   useAuth,
-  useOrgRoles,
+  tenancy,
   paramTypes,
   pageLoadingDelay,
   children,
@@ -148,7 +143,7 @@ const LocationAwareRouter: React.FC<RouterImplementationProps> = ({
       return (
         <RouterContextProvider
           useAuth={useAuth}
-          useOrgRoles={useOrgRoles}
+          tenancy={tenancy}
           paramTypes={paramTypes}
           routes={analyzeRoutesResult}
         >
@@ -208,7 +203,7 @@ const LocationAwareRouter: React.FC<RouterImplementationProps> = ({
   return (
     <RouterContextProvider
       useAuth={useAuth}
-      useOrgRoles={useOrgRoles}
+      tenancy={tenancy}
       paramTypes={paramTypes}
       routes={analyzeRoutesResult}
       activeRouteName={name}
@@ -246,6 +241,7 @@ interface WrappedPageProps {
       roles?: string | string[]
       userRoles?: string | string[]
       orgRoles?: string | string[]
+      orgPermission?: string
       whileLoadingAuth?: () => ReactElement | null
     }
   }[]
@@ -297,6 +293,7 @@ const WrappedPage = memo(({ sets, children }: WrappedPageProps) => {
           roles={set.props.roles}
           userRoles={set.props.userRoles}
           orgRoles={set.props.orgRoles}
+          orgPermission={set.props.orgPermission}
           whileLoadingAuth={set.props.whileLoadingAuth}
         >
           {wrapped}

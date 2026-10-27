@@ -5,7 +5,7 @@ import { useAuth } from 'src/auth'
 
 /**
  * Lists the signed-in user's organizations, from the memberships
- * `getCurrentUser` returns. Outside `OrgScope`, so it needs no organization.
+ * `getCurrentUser` returns. Outside an organization route, so it needs no organization.
  */
 const OrganizationsPage = () => {
   const { currentUser } = useAuth()

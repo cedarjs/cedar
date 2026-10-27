@@ -1,15 +1,16 @@
 import j from 'jscodeshift'
 
-const TENANCY_WEB = '@cedarjs/tenancy/web'
+const TENANCY_MODULE = 'src/tenancy'
 
 /**
- * Passes `useOrgRoles` from `@cedarjs/tenancy/web` to the app's `<Router>`
- * in `web/src/Routes`, next to `useAuth`, so `<PrivateSet orgRoles>` can
- * check the user's role in the route's organization:
+ * Passes the app's `tenancy` (`web/src/tenancy`) to its `<Router>` in
+ * `web/src/Routes`, next to `useAuth`, so the router renders the
+ * organization provider and checks `<PrivateSet orgRoles>` and
+ * `<PrivateSet orgPermission>`:
  *
- *   import { useOrgRoles } from '@cedarjs/tenancy/web'
+ *   import { tenancy } from 'src/tenancy'
  *
- *   <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+ *   <Router useAuth={useAuth} tenancy={tenancy}>
  *
  * Adds only what isn't there yet, so a file from an earlier run stays as it
  * is. Throws `CEDAR_CODEMOD_ERR_ROUTER_NOT_FOUND` unless there's exactly one
@@ -34,11 +35,11 @@ export default function transform(fileInfo: j.FileInfo) {
   const attributes = router.attributes ?? []
   const hasProp = attributes.some(
     (attribute) =>
-      j.JSXAttribute.check(attribute) && attribute.name.name === 'useOrgRoles',
+      j.JSXAttribute.check(attribute) && attribute.name.name === 'tenancy',
   )
 
   const hasImport =
-    root.find(j.ImportSpecifier, { local: { name: 'useOrgRoles' } }).length > 0
+    root.find(j.ImportSpecifier, { local: { name: 'tenancy' } }).length > 0
 
   if (hasProp && hasImport) {
     return fileInfo.source
@@ -51,8 +52,8 @@ export default function transform(fileInfo: j.FileInfo) {
     )
 
     const prop = j.jsxAttribute(
-      j.jsxIdentifier('useOrgRoles'),
-      j.jsxExpressionContainer(j.identifier('useOrgRoles')),
+      j.jsxIdentifier('tenancy'),
+      j.jsxExpressionContainer(j.identifier('tenancy')),
     )
 
     // Right after `useAuth`, or else last
@@ -65,28 +66,15 @@ export default function transform(fileInfo: j.FileInfo) {
   }
 
   if (!hasImport) {
-    const specifier = j.importSpecifier(j.identifier('useOrgRoles'))
-    // An import of other names from it, to add this one to: not a type-only
-    // or namespace import
-    const tenancyImport = root
-      .find(j.ImportDeclaration, { source: { value: TENANCY_WEB } })
-      .nodes()
-      .find(
-        (declaration) =>
-          declaration.importKind !== 'type' &&
-          declaration.specifiers?.every((existing) =>
-            j.ImportSpecifier.check(existing),
-          ),
+    root
+      .find(j.ImportDeclaration)
+      .at(-1)
+      .insertAfter(
+        j.importDeclaration(
+          [j.importSpecifier(j.identifier('tenancy'))],
+          j.literal(TENANCY_MODULE),
+        ),
       )
-
-    if (tenancyImport?.specifiers) {
-      tenancyImport.specifiers.push(specifier)
-    } else {
-      root
-        .find(j.ImportDeclaration)
-        .at(-1)
-        .insertAfter(j.importDeclaration([specifier], j.literal(TENANCY_WEB)))
-    }
   }
 
   return root.toSource()

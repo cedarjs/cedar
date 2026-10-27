@@ -20,7 +20,7 @@ const AuthProvider: React.FC<Props> = ({ children }) => {
 // When running tests, this is what they'll get when they import `useAuth`
 // thanks to the router import transform in the Vitest setup. Like the real
 // `useAuth`, `hasPermission` comes from a scope above when one provides it
-// (`OrgScope` from `@cedarjs/tenancy/web` does).
+// (the organization provider from `@cedarjs/tenancy/web` does).
 export function useAuth() {
   const scopedHasPermission = React.useContext(HasPermissionContext)
   const hasRole = (roles: string | string[]) =>

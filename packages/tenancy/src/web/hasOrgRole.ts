@@ -10,7 +10,7 @@ import type { OrgMembership } from './types.js'
  * `@cedarjs/tenancy`'s server-side `hasOrgRole`.
  */
 export function hasOrgRole(
-  memberships: OrgMembership[] | undefined,
+  memberships: readonly OrgMembership[] | undefined,
   roles: string | string[],
   organizationId: string,
 ): boolean {

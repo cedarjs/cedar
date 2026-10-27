@@ -24,7 +24,16 @@ export interface RouterProps extends Omit<
   children: ReactNode
 }
 
-export const Router: React.FC<RouterProps> = ({ paramTypes, children }) => {
+export const Router: React.FC<RouterProps> = ({
+  paramTypes,
+  tenancy,
+  children,
+}) => {
+  // TODO (RSC): There's no organization on the server to provide
+  if (tenancy) {
+    throw new Error('`tenancy` is not supported with RSC yet')
+  }
+
   const location = getLocation()
 
   console.log('ServerRouter.tsx location', location)
@@ -153,6 +162,7 @@ interface AuthenticatedRouteProps {
   roles?: string | string[]
   userRoles?: string | string[]
   orgRoles?: string | string[]
+  orgPermission?: string
   unauthenticated: string
   whileLoadingAuth?: () => React.ReactElement | null
 }
@@ -162,13 +172,18 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   roles,
   userRoles,
   orgRoles,
+  orgPermission,
 }) => {
   const { isAuthenticated } = getAuthState()
 
-  // TODO (RSC): There's no organization here to check `orgRoles` in, so fail
-  // closed rather than let everyone in
+  // TODO (RSC): There's no organization here to check `orgRoles` or
+  // `orgPermission` in, so fail closed rather than let everyone in
   if (orgRoles !== undefined) {
     throw new Error('`orgRoles` is not supported with RSC yet')
+  }
+
+  if (orgPermission !== undefined) {
+    throw new Error('`orgPermission` is not supported with RSC yet')
   }
 
   const isAuthorized =
@@ -202,6 +217,7 @@ interface WrappedPageProps {
       roles?: string | string[]
       userRoles?: string | string[]
       orgRoles?: string | string[]
+      orgPermission?: string
       whileLoadingAuth?: () => ReactElement | null
     }
   }[]
@@ -252,6 +268,7 @@ const WrappedPage = ({ routeLoaderElement, sets }: WrappedPageProps) => {
           roles={set.props.roles}
           userRoles={set.props.userRoles}
           orgRoles={set.props.orgRoles}
+          orgPermission={set.props.orgPermission}
           whileLoadingAuth={set.props.whileLoadingAuth}
         >
           {wrapped}

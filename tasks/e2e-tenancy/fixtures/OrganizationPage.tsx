@@ -37,7 +37,7 @@ const INVITE_MEMBER_MUTATION: TypedDocumentNode<
 `
 
 /**
- * An organization's page, under `OrgScope`. Its name comes from the api
+ * An organization's page, in a `PrivateSet`. Its name comes from the api
  * (`@requirePermission(permission: "organization.read")`), so it shows the
  * request went out for this organization, and the invite form shows only
  * when `useAuth().hasPermission('members.manage')`.

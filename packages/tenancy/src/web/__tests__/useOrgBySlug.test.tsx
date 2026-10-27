@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest'
 import type { AuthContextInterface, UseAuth } from '@cedarjs/auth'
 
 import type { OrgMembership } from '../types.js'
-import { useOrgRoles } from '../useOrgRoles.js'
+import { useOrgBySlug } from '../useOrgBySlug.js'
 
 type UnknownAuthContextInterface = AuthContextInterface<
   unknown,
@@ -75,46 +75,42 @@ const memberOfTwo = createUseAuth(true, {
   ],
 })
 
-function orgRolesCheck(useAuth: UseAuth, params: Record<string, string>) {
-  return renderHook(() => useOrgRoles(useAuth, params)).result.current
+function orgFor(useAuth: UseAuth, orgSlug: string | undefined) {
+  return renderHook(() => useOrgBySlug(useAuth, orgSlug)).result.current
 }
 
-describe('useOrgRoles', () => {
-  test('is null when the route has no orgSlug param', () => {
-    expect(orgRolesCheck(memberOfTwo, {})).toBeNull()
-    expect(orgRolesCheck(memberOfTwo, { id: '42' })).toBeNull()
+describe('useOrgBySlug', () => {
+  test('is null without a slug', () => {
+    expect(orgFor(memberOfTwo, undefined)).toBeNull()
   })
 
-  test("checks the role in the organization with the route's slug", () => {
-    const inOrgA = orgRolesCheck(memberOfTwo, { orgSlug: 'org-a' })
-    const inOrgB = orgRolesCheck(memberOfTwo, { orgSlug: 'org-b' })
+  test("finds the user's membership in the organization with the slug", () => {
+    const inOrgA = orgFor(memberOfTwo, 'org-a')
+    const inOrgB = orgFor(memberOfTwo, 'org-b')
 
-    expect(inOrgA?.('owner')).toBe(false)
-    expect(inOrgA?.('member')).toBe(true)
-    expect(inOrgB?.('owner')).toBe(true)
+    expect(inOrgA?.membership?.organizationId).toBe('org_a')
+    expect(inOrgA?.membership?.role).toBe('member')
+    expect(inOrgB?.membership?.organizationId).toBe('org_b')
+    expect(inOrgB?.membership?.role).toBe('owner')
   })
 
-  test('takes a list of roles', () => {
-    const inOrgA = orgRolesCheck(memberOfTwo, { orgSlug: 'org-a' })
-
-    expect(inOrgA?.(['owner', 'member'])).toBe(true)
-    expect(inOrgA?.(['owner', 'admin'])).toBe(false)
+  test('has all the memberships', () => {
+    expect(orgFor(memberOfTwo, 'org-a')?.memberships).toHaveLength(2)
   })
 
-  test('is false in an organization the user is not a member of', () => {
-    const check = orgRolesCheck(memberOfTwo, { orgSlug: 'org-c' })
+  test('has no membership in an organization the user is not a member of', () => {
+    const org = orgFor(memberOfTwo, 'org-c')
 
-    expect(check).not.toBeNull()
-    expect(check?.('member')).toBe(false)
-    expect(check?.([])).toBe(false)
+    expect(org).not.toBeNull()
+    expect(org?.membership).toBeNull()
   })
 
-  test('is false when the user is not signed in', () => {
-    const signedOut = createUseAuth(false, null)
-    const check = orgRolesCheck(signedOut, { orgSlug: 'org-a' })
+  test('has no membership when the user is not signed in', () => {
+    const org = orgFor(createUseAuth(false, null), 'org-a')
 
-    expect(check).not.toBeNull()
-    expect(check?.('member')).toBe(false)
+    expect(org).not.toBeNull()
+    expect(org?.membership).toBeNull()
+    expect(org?.memberships).toEqual([])
   })
 
   test('ignores memberships that are left over after signing out', () => {
@@ -123,8 +119,6 @@ describe('useOrgRoles', () => {
       memberships: [membership('org_a', 'org-a', 'owner')],
     })
 
-    expect(orgRolesCheck(staleUser, { orgSlug: 'org-a' })?.('owner')).toBe(
-      false,
-    )
+    expect(orgFor(staleUser, 'org-a')?.membership).toBeNull()
   })
 })

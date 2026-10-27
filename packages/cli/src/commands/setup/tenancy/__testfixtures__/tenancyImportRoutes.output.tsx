@@ -1,15 +1,17 @@
 import { Router, Route } from '@cedarjs/router'
 import type { OrgMembership } from '@cedarjs/tenancy/web'
-import { useCurrentOrg, useOrgRoles } from '@cedarjs/tenancy/web'
+import { useCurrentOrg } from '@cedarjs/tenancy/web'
 
 import { useAuth } from './auth'
+
+import { tenancy } from 'src/tenancy'
 
 const Routes = () => {
   return (
     <Router
       paramTypes={{}}
       useAuth={useAuth}
-      useOrgRoles={useOrgRoles}
+      tenancy={tenancy}
       trailingSlashes="always"
     >
       <Route notfound page={NotFoundPage} />
