@@ -39,9 +39,9 @@
   },
   "dependencies": {
     "@babel/generator": "7.29.8",
-    "@babel/parser": "7.29.9",
+    "@babel/parser": "7.29.11",
     "@babel/traverse": "7.29.10",
-    "@babel/types": "7.29.8",
+    "@babel/types": "7.29.11",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/structure": "workspace:*",
     "@cedarjs/vite": "workspace:*",
