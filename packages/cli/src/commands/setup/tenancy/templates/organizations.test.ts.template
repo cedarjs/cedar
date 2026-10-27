@@ -100,6 +100,27 @@ describe('organizations service', () => {
     )
 
     scenario(
+      'sets an expiry in the future',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.owner)
+
+        const result = await inviteMember({
+          input: { email: 'new-member@example.com', role: 'member' },
+        })
+
+        const created = await db.membership.findFirst({
+          where: { invitationToken: result.invitationToken },
+        })
+
+        expect(created?.invitationExpiresAt).toBeInstanceOf(Date)
+        expect(created!.invitationExpiresAt!.getTime()).toBeGreaterThan(
+          Date.now(),
+        )
+        expect(result.invitationExpiresAt).toEqual(created?.invitationExpiresAt)
+      },
+    )
+
+    scenario(
       'an admin cannot invite an owner',
       async (scenario: StandardScenario) => {
         asMember(scenario, scenario.membership.admin)
@@ -313,6 +334,55 @@ describe('organizations service', () => {
 
         expect(claimed?.userId).toEqual(invitee.id)
         expect(claimed?.invitationToken).not.toEqual(token)
+      },
+    )
+
+    scenario(
+      'accepts an invitation that has not expired yet',
+      async (scenario: StandardScenario) => {
+        const invitee = await db.user.create({
+          data: {
+            email: 'invitee@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+          },
+        })
+
+        mockCurrentUser({ id: invitee.id })
+
+        const result = await acceptInvitation({
+          token: scenario.membership.unexpired.invitationToken!,
+        })
+
+        expect(result.id).toEqual(scenario.organization.acme.id)
+      },
+    )
+
+    scenario(
+      'rejects an expired invitation and leaves it unclaimed',
+      async (scenario: StandardScenario) => {
+        const invitee = await db.user.create({
+          data: {
+            email: 'invitee@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+          },
+        })
+
+        const token = scenario.membership.expired.invitationToken!
+
+        mockCurrentUser({ id: invitee.id })
+
+        await expect(acceptInvitation({ token })).rejects.toThrow(
+          /has expired/,
+        )
+
+        const row = await db.membership.findUnique({
+          where: { id: scenario.membership.expired.id },
+        })
+
+        expect(row?.userId).toBeNull()
+        expect(row?.invitationToken).toEqual(token)
       },
     )
 
