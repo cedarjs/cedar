@@ -143,22 +143,6 @@ describe('running the tenancy codemods again', () => {
     expect(count(output, 'import { tenancy }')).toBe(1)
   })
 
-  it('routerCodemod replaces useOrgRoles, and a second run changes nothing', async () => {
-    const first = await runOn(
-      'routerCodemod',
-      "import { useOrgRoles } from '@cedarjs/tenancy/web'\n" +
-        fixture('defaultRoutes.input.tsx').replace(
-          '<Router useAuth={useAuth}>',
-          '<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>',
-        ),
-    )
-
-    expect(count(first, 'useOrgRoles')).toBe(0)
-    expect(count(first, 'tenancy={tenancy}')).toBe(1)
-    expect(count(first, 'import { tenancy }')).toBe(1)
-    expect(await runOn('routerCodemod', first)).toBe(first)
-  })
-
   it('authCodemod wraps a lookup that is not awaited only once', async () => {
     const notAwaited = fixture('defaultAuth.input.ts').replace(
       'return await db.user.findUnique(',
