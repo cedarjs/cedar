@@ -452,9 +452,12 @@ describe('createTenancy', () => {
     await waitFor(() => expect(window.location.search).toBe('?later'))
     await screen.findByText('projects: org_9-projects')
 
-    expect(new Set(clients)).toEqual(
-      new Set([firstUserClient, secondUserClient]),
-    )
+    // `Set` here is the router's component, so the built-in one by its
+    // global name: the clients created, each once, in order
+    expect([...new globalThis.Set(clients)]).toEqual([
+      firstUserClient,
+      secondUserClient,
+    ])
     expect(clients[clients.length - 1]).toBe(secondUserClient)
     expect(cachedProjects(secondUserClient)).toBeDefined()
   })
