@@ -377,6 +377,55 @@ describe('OrgScope', () => {
     expect(clientAfterRoleChange.cache).not.toBe(clientBeforeRoleChange.cache)
   })
 
+  test('a role change while no OrgScope is mounted still gives a fresh client', async () => {
+    setupFetchMock()
+    const authState: AuthState = {
+      isAuthenticated: true,
+      currentUser: {
+        id: 'user_1',
+        memberships: [membership('org_1', 'acme', 'Acme', 'owner')],
+      },
+    }
+    const useAuth = createUseAuth(authState)
+
+    const clients: ApolloClient[] = []
+    const captureClient = (client: ApolloClient) => clients.push(client)
+
+    const Tree = ({ mounted }: { mounted: boolean }) => (
+      <LocationProvider>
+        <ParamsProvider allParams={{}}>
+          <CedarApolloProvider>
+            {mounted && (
+              <OrgScope useAuth={useAuth} orgSlug="acme">
+                <ClientCapture onCapture={captureClient} />
+                <ProjectsView />
+              </OrgScope>
+            )}
+          </CedarApolloProvider>
+        </ParamsProvider>
+      </LocationProvider>
+    )
+
+    const { rerender } = render(<Tree mounted />)
+    await waitFor(() => screen.getByText('projects: org_1-projects'))
+    const ownerClient = clients[clients.length - 1]
+
+    // Like a route the router denies: the scope unmounts, the role changes
+    // while it's gone, and a new scope mounts with the new role
+    rerender(<Tree mounted={false} />)
+    authState.currentUser = {
+      id: 'user_1',
+      memberships: [membership('org_1', 'acme', 'Acme', 'member')],
+    }
+    rerender(<Tree mounted />)
+    await waitFor(() => screen.getByText('projects: org_1-projects'))
+
+    const memberClient = clients[clients.length - 1]
+
+    expect(memberClient).not.toBe(ownerClient)
+    expect(memberClient.cache).not.toBe(ownerClient.cache)
+  })
+
   test('a removed membership drops that org client; re-adding it later gets a fresh one', async () => {
     setupFetchMock()
     const authState: AuthState = {

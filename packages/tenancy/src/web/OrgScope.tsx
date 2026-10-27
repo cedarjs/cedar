@@ -267,6 +267,7 @@ export function OrgScope({
   const orgClient = getOrgClient({
     userId,
     organizationId: membership.organizationId,
+    role: membership.role,
     createClient: () =>
       createClient({
         headers: { [CEDAR_ORG_HEADER]: membership.organizationId },
