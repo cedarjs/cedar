@@ -641,17 +641,13 @@ To let only some roles in the organization open a page, give its `PrivateSet`
 `@cedarjs/tenancy/web` to the router, next to `useAuth` (`yarn cedar setup
 tenancy` adds it):
 
+<!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
 <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
   <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
   </PrivateSet>
-  <PrivateSet
-    wrap={[OrgScope, OrgLayout]}
-    unauthenticated="login"
-    unauthorized="projects"
-    orgRoles="owner"
-  >
+  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
   </PrivateSet>
 </Router>
@@ -685,16 +681,14 @@ subdomain (`acme.example.com`), give both `OrgScope` and the router the slug
 from the host. A hook that wraps `useOrgRoles` keeps Cedar's membership lookup
 and role check:
 
+<!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
 import { useOrgRoles } from '@cedarjs/tenancy/web'
 
-import { OrgScope } from 'src/components/OrgScope/OrgScope'
+import { OrgScope } from 'src/components/OrgScope'
 
 // There's no `window` when prerendering
-const slugFromHost = () =>
-  typeof window === 'undefined'
-    ? undefined
-    : window.location.hostname.split('.')[0]
+const slugFromHost = () => (typeof window === 'undefined' ? undefined : window.location.hostname.split('.')[0])
 
 const useHostOrgRoles: typeof useOrgRoles = (useAuth, params) => {
   const orgSlug = slugFromHost()
@@ -702,9 +696,7 @@ const useHostOrgRoles: typeof useOrgRoles = (useAuth, params) => {
   return useOrgRoles(useAuth, orgSlug ? { ...params, orgSlug } : params)
 }
 
-const HostOrgScope = ({ children }: { children: React.ReactNode }) => (
-  <OrgScope orgSlug={slugFromHost()}>{children}</OrgScope>
-)
+const HostOrgScope = ({ children }: { children: React.ReactNode }) => <OrgScope orgSlug={slugFromHost()}>{children}</OrgScope>
 
 const Routes = () => (
   <Router useAuth={useAuth} useOrgRoles={useHostOrgRoles}>
@@ -712,12 +704,7 @@ const Routes = () => (
     <PrivateSet wrap={[HostOrgScope, OrgLayout]} unauthenticated="login">
       <Route path="/projects" page={ProjectsPage} name="projects" />
     </PrivateSet>
-    <PrivateSet
-      wrap={[HostOrgScope, OrgLayout]}
-      unauthenticated="login"
-      unauthorized="projects"
-      orgRoles="owner"
-    >
+    <PrivateSet wrap={[HostOrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
       <Route path="/settings" page={SettingsPage} name="settings" />
     </PrivateSet>
   </Router>

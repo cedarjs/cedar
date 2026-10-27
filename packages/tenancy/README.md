@@ -143,17 +143,13 @@ checks the user's role in the organization. To guard routes by it, pass
 `useOrgRoles` to the router and give a `PrivateSet` `orgRoles` and
 `unauthorized`:
 
+<!-- prettier-ignore -->
 ```tsx
 <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
   <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
   </PrivateSet>
-  <PrivateSet
-    wrap={[OrgScope, OrgLayout]}
-    unauthenticated="login"
-    unauthorized="projects"
-    orgRoles="owner"
-  >
+  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
   </PrivateSet>
 </Router>

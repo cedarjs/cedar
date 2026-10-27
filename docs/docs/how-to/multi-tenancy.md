@@ -777,13 +777,14 @@ See [Permissions](../tenancy.md#permissions) in the reference.
 your layout. The `PrivateSet` sends a user who isn't signed in to log in, rather
 than to `OrgScope`'s not-a-member state:
 
+<!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
 import { PrivateSet, Route, Router } from '@cedarjs/router'
 import { useOrgRoles } from '@cedarjs/tenancy/web'
 
 import { useAuth } from 'src/auth'
-import OrgScope from 'src/components/OrgScope/OrgScope'
-import OrgLayout from 'src/layouts/OrgLayout/OrgLayout'
+import { OrgScope } from 'src/components/OrgScope'
+import OrgLayout from 'src/layouts/OrgLayout'
 
 const Routes = () => {
   return (
@@ -792,16 +793,8 @@ const Routes = () => {
       <Route path="/invite/{token}" page={InvitePage} name="invite" />
       {/* highlight-next-line */}
       <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
-        <Route
-          path="/org/{orgSlug}/projects"
-          page={ProjectsPage}
-          name="projects"
-        />
-        <Route
-          path="/org/{orgSlug}/settings"
-          page={OrgSettingsPage}
-          name="orgSettings"
-        />
+        <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+        <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
       </PrivateSet>
     </Router>
   )
@@ -856,22 +849,14 @@ roles in the organization may open, give its `PrivateSet` `orgRoles` and
 `unauthorized` (see
 [Guarding routes by role](../tenancy.md#guarding-routes-by-role)):
 
+<!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
 <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
   <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login">
     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
   </PrivateSet>
-  <PrivateSet
-    wrap={[OrgScope, OrgLayout]}
-    unauthenticated="login"
-    unauthorized="projects"
-    orgRoles="owner"
-  >
-    <Route
-      path="/org/{orgSlug}/settings"
-      page={OrgSettingsPage}
-      name="orgSettings"
-    />
+  <PrivateSet wrap={[OrgScope, OrgLayout]} unauthenticated="login" unauthorized="projects" orgRoles="owner">
+    <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
   </PrivateSet>
 </Router>
 ```
