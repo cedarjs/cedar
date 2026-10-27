@@ -412,6 +412,15 @@ describe('replaceParams', () => {
     ).toEqual('/posts/2021/09/19')
   })
 
+  it('keeps replacement patterns like $& in values as they are', () => {
+    expect(replaceParams('/posts/{slug}', { slug: 'a$&b' })).toEqual(
+      '/posts/a$&b',
+    )
+    expect(replaceParams('/posts/{slug}', { slug: "$'$`$$" })).toEqual(
+      "/posts/$'$`$$",
+    )
+  })
+
   it('appends extra parameters as search parameters', () => {
     expect(replaceParams('/extra', { foo: 'foo' })).toEqual('/extra?foo=foo')
     expect(replaceParams('/tags/{tag}', { tag: 'code', foo: 'foo' })).toEqual(

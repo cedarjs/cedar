@@ -326,7 +326,8 @@ export function replaceParams(
     const [name, _type, match] = param
     const value = args[name]
     if (value !== undefined) {
-      path = path.replace(match, value as string)
+      // A callback, so `$&`, `$1` and the like in the value stay as they are
+      path = path.replace(match, () => String(value))
     } else {
       throw new Error(
         `Missing parameter '${name}' for route '${route}' when generating a navigation URL.`,
