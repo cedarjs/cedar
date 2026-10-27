@@ -5,7 +5,6 @@ export type {
   CurrentUser,
   LoggedInUser,
   PermissionName,
-  RolesToCheck,
 } from './AuthContext.js'
 export type { AuthProviderProps } from './AuthProvider/AuthProvider.js'
 export { HasPermissionContext } from './HasPermissionContext.js'
