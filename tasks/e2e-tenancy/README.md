@@ -3,7 +3,7 @@
 This script runs `yarn cedar setup tenancy` on a test project, follows the
 next steps it prints, and checks that the app still builds, type-checks, lints
 and passes its tests. It also adds an organizations page (`/orgs`) and an
-organization's page under `OrgScope` (`/org/{orgSlug}`) for the Playwright
+organization's page in a `PrivateSet` (`/org/{orgSlug}`) for the Playwright
 suite in `tasks/smoke-tests/tenancy`, and checks that running setup again
 changes nothing.
 

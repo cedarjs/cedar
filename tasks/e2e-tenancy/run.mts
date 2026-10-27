@@ -126,7 +126,7 @@ function confirmSetup(projectPath: string) {
     'api/src/directives/requirePermission/requirePermission.ts',
     'api/src/lib/permissions.ts',
     'packages/permissions/src/index.ts',
-    'web/src/components/OrgScope/OrgScope.tsx',
+    'web/src/tenancy.tsx',
   ]) {
     if (!exists(file)) {
       throw new Error(`Expected ${file} to exist`)
@@ -182,7 +182,7 @@ function keepFixtureModelsGlobal(projectPath: string) {
 
 /**
  * The pages the Playwright suite in tasks/smoke-tests/tenancy uses: a list
- * of the user's organizations, an organization's page under `OrgScope`, and
+ * of the user's organizations, an organization's page in a `PrivateSet`, and
  * the invitation route `setup tenancy` asks for
  */
 function addOrganizationPages(projectPath: string) {
@@ -198,10 +198,11 @@ function addOrganizationPages(projectPath: string) {
 
   const routesPath = path.join(projectPath, 'web/src/Routes.tsx')
   const routes = fs.readFileSync(routesPath, 'utf-8')
-  const layoutsImport = "import BlogLayout from 'src/layouts/BlogLayout'\n"
+  const routerImport =
+    "import { Router, Route, Private, Set } from '@cedarjs/router'\n"
   const firstSet = '      <Set wrap={ContactsScaffoldLayout}>\n'
 
-  if (!routes.includes(layoutsImport) || !routes.includes(firstSet)) {
+  if (!routes.includes(routerImport) || !routes.includes(firstSet)) {
     throw new Error("web/src/Routes.tsx doesn't look like the fixture's")
   }
 
@@ -209,17 +210,16 @@ function addOrganizationPages(projectPath: string) {
     routesPath,
     routes
       .replace(
-        layoutsImport,
-        "import { OrgScope } from 'src/components/OrgScope/OrgScope'\n" +
-          layoutsImport,
+        routerImport,
+        "import { Router, Route, Private, PrivateSet, Set } from '@cedarjs/router'\n",
       )
       .replace(
         firstSet,
         '      <Route path="/invite/{token}" page={InvitePage} name="invite" />\n' +
           '      <Route path="/orgs" page={OrganizationsPage} name="organizations" />\n' +
-          '      <Set wrap={OrgScope}>\n' +
+          '      <PrivateSet unauthenticated="login">\n' +
           '        <Route path="/org/{orgSlug}" page={OrganizationPage} name="organization" />\n' +
-          '      </Set>\n' +
+          '      </PrivateSet>\n' +
           firstSet,
       ),
   )
