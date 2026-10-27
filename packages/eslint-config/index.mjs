@@ -199,6 +199,21 @@ export default async function createConfig() {
     },
   })
 
+  // SDL permission names. The rule reads the permission names from the app's
+  // permissions package (packages/permissions, added by `cedar setup
+  // tenancy`) and reports nothing in an app that has none. It runs on the
+  // TypeScript file itself, not on the GraphQL the web side's processor
+  // extracts, so the two don't meet
+  configs.push({
+    files: ['api/src/**/*.sdl.{js,ts}'],
+    plugins: {
+      '@cedarjs': cedarjsPlugin,
+    },
+    rules: {
+      '@cedarjs/valid-permission-names': 'error',
+    },
+  })
+
   // API services type annotations
   configs.push({
     files: ['api/src/services/**/*.ts'],
