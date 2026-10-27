@@ -318,3 +318,54 @@ upgrade again. From then on, every `yarn cedar upgrade` sets `prisma`,
 `@prisma/client` and any `@prisma/adapter-*` packages to the version Cedar
 supports, and adds `prisma` and `@prisma/client` if they go missing. If you
 upgrade your Cedar packages without `yarn cedar upgrade`, add them yourself.
+
+## Lint rule: GraphQL selections must include `id`
+
+`@cedarjs/eslint-config` lints the `gql` documents in `web/src` against your
+app's GraphQL schema, with
+[`@graphql-eslint/require-selections`](https://the-guild.dev/graphql/eslint/rules/require-selections)
+as an error: every selection of an object type that has an `id` field must
+select `id`.
+
+Apollo's cache can only normalize an object when the query selects its
+`id`. When one query selects `currentOrganization { timezone }` and another
+selects `currentOrganization { id features }`, the two copies replace each
+other in the cache and the queries refetch each other. Apollo stops the loop
+on its own and logs "Cache data may be lost when replacing the … field" in
+development, but GraphQL validation, type generation and tests all accept
+the queries.
+
+Fragment spreads are checked too: a spread of a fragment that doesn't select
+`id`, a fragment Cell's `FRAGMENT` for example, is reported where it's
+spread.
+
+The schema the rule reads is `.cedar/schema.graphql`, which
+`yarn cedar generate types` and `yarn cedar dev` write. The rule is skipped
+until that file exists, so in CI, run `yarn cedar generate types` before
+`yarn cedar lint`.
+
+### Upgrading
+
+Run `yarn cedar generate types`, then `yarn cedar lint`, and add `id` where
+it's reported. The Cells Cedar generates already select `id`, so most of
+what's reported is in hand-written or since-extended queries. After adding
+the ids:
+
+- Run `yarn cedar generate types` again. The generated types now include
+  `id`, so test data and mocks typed with them need an `id` too
+- Give mocked responses (`mockGraphQLQuery`, Cell `.mock` files) the newly
+  selected `id`s. Apollo treats a result that's missing a selected field as
+  incomplete and fetches it again, which shows up in tests that count
+  requests
+
+To keep the rule as a warning while you work through the list, add this
+after Cedar's config in `eslint.config.mjs`:
+
+```js
+{
+  files: ['web/src/**/*.graphql'],
+  rules: {
+    '@graphql-eslint/require-selections': 'warn',
+  },
+},
+```

@@ -1658,6 +1658,12 @@ yarn cedar lint
 - always use parenthesis around arrow functions
 - enforced import sorting
 
+It also lints the `gql` documents in `web/src` against your GraphQL schema:
+every selection of an object type that has an `id` must select `id`, so
+Apollo's cache can normalize it. The schema is `.cedar/schema.graphql`, which
+`yarn cedar generate types` writes. The rule is skipped until that file
+exists, so in CI, run `yarn cedar generate types` before `yarn cedar lint`.
+
 | Option  | Description       |
 | :------ | :---------------- |
 | `--fix` | Try to fix errors |
