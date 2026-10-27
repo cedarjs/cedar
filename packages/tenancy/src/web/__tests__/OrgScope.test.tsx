@@ -7,11 +7,13 @@ import { useApolloClient, useQuery } from '@apollo/client/react'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { HasOrgRoleContext } from '@cedarjs/auth'
 import type { AuthContextInterface, UseAuth } from '@cedarjs/auth'
 import {
   LocationProvider,
   navigate,
   ParamsProvider,
+  PrivateSet,
   Route,
   Router,
   Set,
@@ -654,6 +656,75 @@ describe('OrgScope', () => {
 
         await screen.findByText('not allowed')
         expect(fetchMock).not.toHaveBeenCalled()
+      })
+
+      test('provides the role check in the organization, for <PrivateSet orgRoles>', async () => {
+        setupFetchMock()
+
+        const IsOwner = () => {
+          const hasOrgRole = React.useContext(HasOrgRoleContext)
+          return <>owner: {String(hasOrgRole?.('owner'))}</>
+        }
+
+        const Tree = ({ orgSlug }: { orgSlug: string }) => (
+          <LocationProvider>
+            <ParamsProvider allParams={{}}>
+              <CedarApolloProvider>
+                <OrgScope useAuth={useAuth} orgSlug={orgSlug}>
+                  <IsOwner />
+                </OrgScope>
+              </CedarApolloProvider>
+            </ParamsProvider>
+          </LocationProvider>
+        )
+
+        const { rerender } = render(<Tree orgSlug="org-a" />)
+        await screen.findByText('owner: false')
+
+        rerender(<Tree orgSlug="org-b" />)
+        await screen.findByText('owner: true')
+      })
+
+      test('<PrivateSet orgRoles> nested inside it checks the role in the organization', async () => {
+        setupFetchMock()
+
+        const AnyMember = ({ children }: { children: React.ReactNode }) => (
+          <OrgScope useAuth={useAuth}>{children}</OrgScope>
+        )
+        const LoginPage = () => <>login</>
+        // These tests are an app without tenancy, where sets have no
+        // `orgRoles` prop. Spreading it lets it through the type check.
+        const ownersOnly = { orgRoles: 'owner' }
+
+        render(
+          <CedarApolloProvider>
+            <Router useAuth={useAuth}>
+              <Route path="/login" page={LoginPage} name="login" />
+              <Set wrap={AnyMember}>
+                <Route
+                  path="/org/{orgSlug}/home"
+                  page={OrgHomePage}
+                  name="orgHome"
+                />
+                <PrivateSet
+                  unauthenticated="login"
+                  unauthorized="orgHome"
+                  {...ownersOnly}
+                >
+                  <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
+                </PrivateSet>
+              </Set>
+            </Router>
+          </CedarApolloProvider>,
+        )
+
+        // An owner of org B, but only a member of org A
+        act(() => navigate('/org/org-b'))
+        await waitFor(() => screen.getByText('projects: org_b-projects'))
+
+        act(() => navigate('/org/org-a'))
+        await waitFor(() => screen.getByText('org home'))
+        expect(window.location.pathname).toBe('/org/org-a/home')
       })
     })
   })
