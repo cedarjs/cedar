@@ -666,10 +666,8 @@ when its path has an `{orgSlug}`. With no `unauthorized`, they're redirected to
 for them.
 
 A `PrivateSet` with `orgRoles` throws an error rather than let anyone in when
-the router has no `useOrgRoles`, or when the route has no `{orgSlug}` param, so
-there's no organization to check the role in. The router only reads the route
-param, not `OrgScope`'s `orgSlug` prop, so for an organization that doesn't come
-from the URL, use `OrgScope`'s `roles` and `unauthorized` instead.
+the router has no `useOrgRoles`, or when there's no organization to check the
+role in: with Cedar's `useOrgRoles`, a route with no `{orgSlug}` param.
 
 `userRoles` checks `currentUser.roles` the same way. Given both, a user needs
 both. As with every check on the web, this only decides what to show: the
@@ -678,6 +676,55 @@ api's `@requireOrgAuth` is what protects the data.
 `permission` works the same way, against the membership's
 [permissions](#permissions-on-the-web):
 `<OrgScope permission="members.manage" unauthorized="projects">`.
+
+#### An organization from the host
+
+Cedar's `useOrgRoles` reads the organization from the route's `orgSlug` param.
+For an organization that doesn't come from the path, such as one taken from a
+subdomain (`acme.example.com`), give both `OrgScope` and the router the slug
+from the host. A hook that wraps `useOrgRoles` keeps Cedar's membership lookup
+and role check:
+
+```tsx title="web/src/Routes.tsx"
+import { useOrgRoles } from '@cedarjs/tenancy/web'
+
+import { OrgScope } from 'src/components/OrgScope/OrgScope'
+
+// There's no `window` when prerendering
+const slugFromHost = () =>
+  typeof window === 'undefined'
+    ? undefined
+    : window.location.hostname.split('.')[0]
+
+const useHostOrgRoles: typeof useOrgRoles = (useAuth, params) => {
+  const orgSlug = slugFromHost()
+
+  return useOrgRoles(useAuth, orgSlug ? { ...params, orgSlug } : params)
+}
+
+const HostOrgScope = ({ children }: { children: React.ReactNode }) => (
+  <OrgScope orgSlug={slugFromHost()}>{children}</OrgScope>
+)
+
+const Routes = () => (
+  <Router useAuth={useAuth} useOrgRoles={useHostOrgRoles}>
+    <PrivateSet
+      wrap={[HostOrgScope, OrgLayout]}
+      unauthenticated="login"
+      unauthorized="projects"
+      orgRoles="owner"
+    >
+      <Route path="/settings" page={SettingsPage} name="settings" />
+    </PrivateSet>
+  </Router>
+)
+```
+
+Your hook can also throw an error, such as for an organization that's been
+suspended. It reaches your app's error boundary like
+any error thrown while rendering. Returning `null` means there's no
+organization, and a `PrivateSet` with `orgRoles` then throws the router's own
+error.
 
 ### `useCurrentOrg()`
 
