@@ -3173,6 +3173,7 @@ __metadata:
     "@typescript-eslint/typescript-estree": "npm:8.72.0"
     "@typescript-eslint/utils": "npm:8.72.0"
     eslint: "npm:8.57.1"
+    ts-dedent: "npm:2.3.0"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.12"
   languageName: unknown

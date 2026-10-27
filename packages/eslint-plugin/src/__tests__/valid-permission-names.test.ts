@@ -3,6 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 
 import { RuleTester } from '@typescript-eslint/rule-tester'
+import { dedent } from 'ts-dedent'
 
 import {
   parsePermissionNames,
@@ -30,30 +31,32 @@ function writeApp(name: string, indexSource?: string) {
 
 const sdlDir = writeApp(
   'tenant',
-  `import { definePermissions } from '@cedarjs/tenancy/permissions'
+  dedent`
+    import { definePermissions } from '@cedarjs/tenancy/permissions'
 
-export const permissions = definePermissions({
-  permissions: ['organization.read', 'members.manage'],
-  roles: { owner: ['organization.read', 'members.manage'] },
-})
-`,
+    export const permissions = definePermissions({
+      permissions: ['organization.read', 'members.manage'],
+      roles: { owner: ['organization.read', 'members.manage'] },
+    })
+  `,
 )
 const plainSdlDir = writeApp('plain')
 const dynamicSdlDir = writeApp(
   'dynamic',
-  `import { definePermissions } from '@cedarjs/tenancy/permissions'
-const names = ['a.b']
-export const permissions = definePermissions({ permissions: names, roles: {} })
-`,
+  dedent`
+    import { definePermissions } from '@cedarjs/tenancy/permissions'
+    const names = ['a.b']
+    export const permissions = definePermissions({ permissions: names, roles: {} })
+  `,
 )
 const brokenSdlDir = writeApp('broken', 'export const = ((')
 
-const sdl = (directive: string) => `
-export const schema = gql\`
-  type Query {
-    members: [String!]! ${directive}
-  }
-\`
+const sdl = (directive: string) => dedent`
+  export const schema = gql\`
+    type Query {
+      members: [String!]! ${directive}
+    }
+  \`
 `
 
 const sdlFile = (dir: string) => path.join(dir, 'members.sdl.ts')
@@ -120,24 +123,28 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
     {
       // An example in a description is not a directive
       filename: sdlFile(sdlDir),
-      code: `export const schema = gql\`
-  type Query {
-    """
-    Guarded with @requirePermission(permission: "example.read") in the
-    "real" SDL.
-    """
-    a: String @requirePermission(permission: "members.manage")
-    "Mentions # and @requirePermission(permission: \\"nope\\") too"
-    b: String
-  }
-\``,
+      code: dedent`
+        export const schema = gql\`
+          type Query {
+            """
+            Guarded with @requirePermission(permission: "example.read") in the
+            "real" SDL.
+            """
+            a: String @requirePermission(permission: "members.manage")
+            "Mentions # and @requirePermission(permission: \\"nope\\") too"
+            b: String
+          }
+        \`
+      `,
     },
     {
       // GraphQL allows commas and comments between the arguments
       filename: sdlFile(sdlDir),
-      code: sdl(`@requirePermission(
-        permission: "members.manage", # the comma and this comment are fine
-      )`),
+      code: sdl(dedent`
+        @requirePermission(
+          permission: "members.manage", # the comma and this comment are fine
+        )
+      `),
     },
     {
       // Not a gql template
@@ -158,9 +165,9 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
         {
           messageId: 'unknownPermission',
           data: { name: 'other.thing' },
-          line: 4,
+          line: 3,
           column: 57,
-          endLine: 4,
+          endLine: 3,
           endColumn: 68,
         },
       ],
@@ -168,9 +175,11 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
     {
       // Commas and comments don't hide a typo
       filename: sdlFile(sdlDir),
-      code: sdl(`@requirePermission(
-        permission: "members.manag", # comment
-      )`),
+      code: sdl(dedent`
+        @requirePermission(
+          permission: "members.manag", # comment
+        )
+      `),
       errors: [{ messageId: 'unknownPermissionWithSuggestion' }],
     },
     {
@@ -185,13 +194,15 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
     },
     {
       filename: path.join(sdlDir, 'members.sdl.js'),
-      code: `export const schema = gql\`
-  type Query {
-    a: String @requirePermission(permission: "organization.red")
-    b: String @requirePermission(permission: "members.manage")
-    c: String @requirePermission(permission: "zzz")
-  }
-\``,
+      code: dedent`
+        export const schema = gql\`
+          type Query {
+            a: String @requirePermission(permission: "organization.red")
+            b: String @requirePermission(permission: "members.manage")
+            c: String @requirePermission(permission: "zzz")
+          }
+        \`
+      `,
       errors: [
         {
           message:
