@@ -24,6 +24,9 @@ export interface AuthProviderProps {
   children: ReactNode
 }
 
+// No scope here to hold permissions; `HasPermissionContext` provides them
+const noPermissions = () => false
+
 export function createAuthProvider<
   TUser,
   TRestoreAuth,
@@ -163,6 +166,7 @@ export function createAuthProvider<
           getToken,
           getCurrentUser,
           ...roleChecks(hasRole),
+          hasPermission: noPermissions,
           reauthenticate,
           forgotPassword,
           resetPassword,

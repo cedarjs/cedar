@@ -62,6 +62,7 @@ function createDummyAuthContextValues(
     getCurrentUser: async () => null,
     hasRole: () => false,
     hasUserRole: () => false,
+    hasPermission: () => false,
     reauthenticate: async () => {},
     client: null,
     type: 'custom',

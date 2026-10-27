@@ -23,6 +23,23 @@ export interface LoggedInUser {}
 export type CurrentUser = (LoggedInUser & object) | null
 
 /**
+ * The app's permission names, as keys. Cedar generates them from the app's
+ * permission definitions (`packages/permissions`, set up by
+ * `cedar setup tenancy`). Empty when the app has none, and then
+ * `hasPermission` takes nothing: it could only ever answer `false`.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface AvailablePermissions {}
+
+/**
+ * A permission name `hasPermission` takes: see `AvailablePermissions`.
+ * `never` in an app without permissions, so calling it is a type error.
+ */
+export type PermissionName = [keyof AvailablePermissions] extends [never]
+  ? never
+  : Extract<keyof AvailablePermissions, string>
+
+/**
  * Whether the app has tenancy (`cedar setup tenancy`). This is a
  * declaration-merging target: `cedar generate types` writes
  * `.cedar/types/includes/web-tenancy.d.ts`, which augments it with
@@ -121,6 +138,12 @@ export interface AuthContextInterface<
    * but does not update the current user state.
    */
   getCurrentUser(): Promise<CurrentUser>
+  /**
+   * Whether the user has `permission` where they are in the app. Always
+   * `false` outside a scope that provides permissions, such as `OrgScope`
+   * from `@cedarjs/tenancy/web`.
+   */
+  hasPermission(permission: PermissionName): boolean
   /**
    * Redetermine authentication state and update the state.
    */

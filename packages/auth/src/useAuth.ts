@@ -2,6 +2,7 @@ import React from 'react'
 
 import { roleChecks } from './AuthContext.js'
 import type { AuthContextInterface } from './AuthContext.js'
+import { HasPermissionContext } from './HasPermissionContext.js'
 
 export function createUseAuth<
   TUser,
@@ -56,12 +57,18 @@ export function createUseAuth<
     TChangePassword
   > => {
     const context = React.useContext(AuthContext)
+    const hasPermission = React.useContext(HasPermissionContext)
+    const scoped = React.useMemo(
+      () =>
+        context && hasPermission ? { ...context, hasPermission } : context,
+      [context, hasPermission],
+    )
 
-    if (!context) {
+    if (!scoped) {
       throw new Error('useAuth must be used within an AuthProvider')
     }
 
-    return context
+    return scoped
   }
 
   return useAuth
@@ -94,6 +101,7 @@ export function useNoAuth(): AuthContextInterface<
     getToken: async () => null,
     getCurrentUser: async () => null,
     ...roleChecks(() => false),
+    hasPermission: () => false,
     reauthenticate: async () => {},
     forgotPassword: async () => {},
     resetPassword: async () => {},

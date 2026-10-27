@@ -14,6 +14,7 @@ import {
   generateTypeDefRouterPages,
   generateTypeDefCurrentUser,
   generateTypeDefGqlorm,
+  generateTypeDefPermissions,
   generateTypeDefRealtime,
   generateTypeDefTenancy,
   generateTypeDefRouterRoutes,
@@ -248,6 +249,50 @@ test('generate gqlorm db augmentation', () => {
   const paths = generateTypeDefGqlorm()
   const p = paths.map(cleanPaths)
   expect(p[0]).toEqual('.cedar/types/includes/all-gqlorm.d.ts')
+})
+
+test('no permission types without a permissions package', () => {
+  expect(generateTypeDefPermissions()).toEqual([])
+})
+
+test('generates permission types from the permissions package', () => {
+  const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-perms-'))
+  fs.writeFileSync(path.join(projectDir, 'cedar.toml'), '')
+  fs.mkdirSync(path.join(projectDir, 'packages', 'permissions'), {
+    recursive: true,
+  })
+  fs.writeFileSync(
+    path.join(projectDir, 'packages', 'permissions', 'package.json'),
+    JSON.stringify({
+      name: '@my-org/permissions',
+      dependencies: { '@cedarjs/tenancy': '1.0.0' },
+    }),
+  )
+
+  process.env.CEDAR_CWD = projectDir
+
+  try {
+    const [typeDefPath] = generateTypeDefPermissions()
+
+    expect(ensurePosixPath(path.relative(projectDir, typeDefPath))).toEqual(
+      '.cedar/types/includes/all-permissions.d.ts',
+    )
+    expect(fs.readFileSync(typeDefPath, 'utf-8')).toContain(
+      "import type { Permission } from '@my-org/permissions'",
+    )
+
+    // Without @cedarjs/tenancy it's some other package, and the file goes
+    fs.writeFileSync(
+      path.join(projectDir, 'packages', 'permissions', 'package.json'),
+      JSON.stringify({ name: '@my-org/permissions' }),
+    )
+
+    expect(generateTypeDefPermissions()).toEqual([])
+    expect(fs.existsSync(typeDefPath)).toBe(false)
+  } finally {
+    process.env.CEDAR_CWD = FIXTURE_PATH
+    fs.rmSync(projectDir, { recursive: true, force: true })
+  }
 })
 
 test('no realtime types without @cedarjs/realtime', () => {

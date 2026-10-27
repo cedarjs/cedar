@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest'
 import { runTransform } from '../../../../lib/runTransform.js'
 
 describe('tenancy authCodemod', () => {
-  it('adds a memberships select and replaces hasRole/requireAuth with createTenancyAuth', async () => {
+  it('adds a memberships select, withPermissions, and createTenancyAuth for hasRole/requireAuth', async () => {
     await matchTransformSnapshot('authCodemod', 'defaultAuth')
   })
 
@@ -45,8 +45,12 @@ describe('tenancy authCodemod', () => {
     },
   )
 
-  it('leaves an auth file that already uses createTenancyAuth as it is', async () => {
+  it('only adds withPermissions to an auth file that already uses createTenancyAuth', async () => {
     await matchTransformSnapshot('authCodemod', 'wiredAuth')
+  })
+
+  it('changes nothing the second time', async () => {
+    await matchTransformSnapshot('authCodemod', 'fullyWiredAuth')
   })
 
   it('throws CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND when getCurrentUser has no recognizable select', async () => {

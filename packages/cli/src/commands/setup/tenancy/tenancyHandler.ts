@@ -31,6 +31,11 @@ import {
   renameLibAuthImports,
 } from './authDirectives.js'
 import {
+  addPermissionsPackageTasks,
+  permissionsPackageName,
+} from './permissionsPackage.js'
+import type { PermissionsPackageCtx } from './permissionsPackage.js'
+import {
   authNotSetUpMessage,
   hasWebAuthFile,
   noUserModelMessage,
@@ -51,8 +56,10 @@ const DEFAULT_TENANT_FIELD = 'organizationId'
 const AUTH_SNIPPET = `
   import { createTenancyAuth } from '@cedarjs/tenancy'
 
+  import { withPermissions } from 'src/lib/permissions'
+
   export const getCurrentUser = async (session) => {
-    return await db.user.findUnique({
+    return withPermissions(await db.user.findUnique({
       where: { id: session.id },
       select: {
         // ...your existing fields...
@@ -65,7 +72,7 @@ const AUTH_SNIPPET = `
           },
         },
       },
-    })
+    }))
   }
 
   // In place of your hasRole and requireAuth
@@ -91,7 +98,7 @@ interface TenancyOptions {
   force: boolean
 }
 
-interface TenancyCtx {
+interface TenancyCtx extends PermissionsPackageCtx {
   /** Set once the schema-editing task runs; read by the "Next steps" task. */
   modelsExistOutcome?: ModelsExistOutcome
   /**
@@ -454,6 +461,52 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
       },
       {
+        title: 'Adding the permissions package...',
+        task: () =>
+          addPermissionsPackageTasks({
+            cedarVersion,
+            indexSource: fs.readFileSync(
+              path.resolve(
+                import.meta.dirname,
+                'templates',
+                'permissionsPackage.index.ts.template',
+              ),
+              'utf-8',
+            ),
+            force,
+          }),
+      },
+      {
+        title:
+          'Adding permission checks and the requirePermission directive...',
+        task: async () => {
+          const replacements = {
+            __PERMISSIONS_PACKAGE__: permissionsPackageName(),
+          }
+
+          await writeTemplateFile(
+            'permissions.ts.template',
+            path.join(paths.api.lib, `permissions.${ext}`),
+            replacements,
+          )
+
+          const directiveDir = path.join(
+            paths.api.directives,
+            'requirePermission',
+          )
+
+          await writeTemplateFile(
+            'requirePermission.ts.template',
+            path.join(directiveDir, `requirePermission.${ext}`),
+            replacements,
+          )
+          await writeTemplateFile(
+            'requirePermission.test.ts.template',
+            path.join(directiveDir, `requirePermission.test.${ext}`),
+          )
+        },
+      },
+      {
         title: 'Adding the organizations service...',
         task: async () => {
           const serviceDir = path.join(paths.api.services, 'organizations')
@@ -660,7 +713,17 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              tenant-owned models with ${c.highlight('withTenancy')} from ${c.highlight(
                '@cedarjs/tenancy',
              )}.
-          5. ${c.highlight('@requireAuth')} is gone. Your fields use ${c.highlight('@requireUserAuth')} now,
+          5. Your permissions, and what each role may do, are in
+             ${c.highlight('packages/permissions')}, shared by the api and web sides${
+               ctx.packagesWorkspaceTurnedOn
+                 ? ` (this
+             turned on ${c.highlight('experimental.packagesWorkspace')} in cedar.toml)`
+                 : ''
+             }. Guard
+             organization fields with ${c.highlight('@requirePermission(permission: "...")')}
+             (or ${c.highlight('@requireOrgAuth(roles: [...])')}), and check permissions on the
+             web with ${c.highlight('useAuth().hasPermission()')}.
+          6. ${c.highlight('@requireAuth')} is gone. Your fields use ${c.highlight('@requireUserAuth')} now,
              which checks what ${c.highlight('@requireAuth')} did: there were no organizations
              before. ${c.highlight('@requireOrgAuth')} needs a current organization, and checks
              the user's role in it.${
