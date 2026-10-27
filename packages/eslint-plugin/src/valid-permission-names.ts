@@ -66,6 +66,24 @@ type CachedNames = { mtimeMs: number; names: ReadonlySet<string> | null }
 
 const cache = new Map<string, CachedNames>()
 
+/**
+ * `node` without the TypeScript-only wrappers that change nothing at
+ * runtime: `x as const`, `x satisfies T`, `x!`
+ */
+function unwrapTypeExpressions(node: TSESTree.Node): TSESTree.Node {
+  let current = node
+
+  while (
+    current.type === AST_NODE_TYPES.TSAsExpression ||
+    current.type === AST_NODE_TYPES.TSSatisfiesExpression ||
+    current.type === AST_NODE_TYPES.TSNonNullExpression
+  ) {
+    current = current.expression
+  }
+
+  return current
+}
+
 function stringValue(node: TSESTree.Node): string | undefined {
   if (node.type === AST_NODE_TYPES.Literal && typeof node.value === 'string') {
     return node.value
@@ -134,16 +152,23 @@ export function parsePermissionNames(source: string): Set<string> | null {
       for (const property of options.properties) {
         if (
           property.type !== AST_NODE_TYPES.Property ||
-          propertyName(property) !== 'permissions' ||
-          property.value.type !== AST_NODE_TYPES.ArrayExpression
+          propertyName(property) !== 'permissions'
         ) {
+          continue
+        }
+
+        const value = unwrapTypeExpressions(property.value)
+
+        if (value.type !== AST_NODE_TYPES.ArrayExpression) {
           continue
         }
 
         const names = new Set<string>()
 
-        for (const element of property.value.elements) {
-          const name = element ? stringValue(element) : undefined
+        for (const element of value.elements) {
+          const name = element
+            ? stringValue(unwrapTypeExpressions(element))
+            : undefined
 
           if (name === undefined) {
             return

@@ -235,6 +235,14 @@ describe('parsePermissionNames', () => {
     ).toEqual(new Set(['a', 'b', 'c']))
   })
 
+  it('sees through as const, satisfies and non-null assertions', () => {
+    expect(
+      parsePermissionNames(
+        "definePermissions({ permissions: ['a' as const, 'b'!] as const satisfies readonly string[] })",
+      ),
+    ).toEqual(new Set(['a', 'b']))
+  })
+
   it('gives up on anything it cannot read', () => {
     expect(parsePermissionNames('definePermissions({ roles: {} })')).toBeNull()
     expect(parsePermissionNames('foo({ permissions: ["a"] })')).toBeNull()
