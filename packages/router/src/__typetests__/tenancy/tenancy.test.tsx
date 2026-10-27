@@ -3,12 +3,18 @@
 import { expect, test } from 'tstyche'
 
 import { createAuthentication } from '@cedarjs/auth'
-import type { AuthImplementation, UseAuth } from '@cedarjs/auth'
+import type { AuthImplementation } from '@cedarjs/auth'
 import { PrivateSet, Router, Set } from '@cedarjs/router'
+import type { Tenancy } from '@cedarjs/router'
 
 declare module '@cedarjs/auth' {
   interface AuthTenancy {
     enabled: true
+  }
+
+  interface AvailablePermissions {
+    'members.manage': true
+    'a.b': true
   }
 }
 
@@ -39,18 +45,26 @@ test("Router takes the app's useAuth", () => {
   expect(<Router useAuth={useAuth}>{null}</Router>).type.not.toRaiseError()
 })
 
-// `useOrgRoles` from `@cedarjs/tenancy/web`, which the router doesn't depend on
-declare function useOrgRoles(
-  useAuth: UseAuth,
-  params: Record<string, string>,
-): ((roles: string | string[]) => boolean) | null
+// What `createTenancy` from `@cedarjs/tenancy/web` returns, which the router
+// doesn't depend on
+declare const tenancy: Tenancy
 
-test("Router takes tenancy's useOrgRoles", () => {
+test("Router takes tenancy's tenancy", () => {
+  expect(
+    <Router useAuth={useAuth} tenancy={tenancy}>
+      {null}
+    </Router>,
+  ).type.not.toRaiseError()
+})
+
+test('Router takes no useOrgRoles', () => {
+  const useOrgRoles = () => null
+
   expect(
     <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
       {null}
     </Router>,
-  ).type.not.toRaiseError()
+  ).type.toRaiseError("Property 'useOrgRoles' does not exist")
 })
 
 test('PrivateSet and Set have no roles', () => {
@@ -93,4 +107,28 @@ test('PrivateSet takes userRoles and orgRoles instead', () => {
       {null}
     </PrivateSet>,
   ).type.not.toRaiseError()
+})
+
+test('PrivateSet takes orgPermission', () => {
+  expect(
+    <PrivateSet
+      unauthenticated="login"
+      unauthorized="projects"
+      orgPermission="members.manage"
+    >
+      {null}
+    </PrivateSet>,
+  ).type.not.toRaiseError()
+
+  expect(
+    <PrivateSet unauthenticated="login" orgRoles="owner" orgPermission="a.b">
+      {null}
+    </PrivateSet>,
+  ).type.not.toRaiseError()
+
+  expect(
+    <PrivateSet unauthenticated="login" orgPermission={['a.b']}>
+      {null}
+    </PrivateSet>,
+  ).type.toRaiseError()
 })

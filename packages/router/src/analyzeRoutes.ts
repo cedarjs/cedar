@@ -41,6 +41,7 @@ interface SetRenderProps {
   // An app with tenancy has these instead of `roles` (see `SetRoles`)
   userRoles?: string | string[]
   orgRoles?: string | string[]
+  orgPermission?: string
   whileLoadingAuth?: () => ReactElement | null
 }
 
@@ -77,6 +78,10 @@ function pickSetRenderProps(props: SetRenderProps) {
 
   if (props.orgRoles !== undefined) {
     picked.orgRoles = props.orgRoles
+  }
+
+  if (props.orgPermission !== undefined) {
+    picked.orgPermission = props.orgPermission
   }
 
   if (props.whileLoadingAuth !== undefined) {

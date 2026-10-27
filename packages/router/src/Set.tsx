@@ -1,7 +1,7 @@
 import type { ComponentType, ReactElement, ReactNode } from 'react'
 import React from 'react'
 
-import type { AuthTenancy } from '@cedarjs/auth' with {
+import type { AuthTenancy, PermissionName } from '@cedarjs/auth' with {
   'resolution-mode': 'import',
 }
 
@@ -32,7 +32,7 @@ export type WrapperType = ComponentType<WrapperProps>
 /**
  * The role props. An app with tenancy (see `AuthTenancy`) has `userRoles` and
  * `orgRoles` instead of `roles`: there, every role check says which kind it
- * is.
+ * is. It also has `orgPermission`.
  */
 type SetRoles = AuthTenancy extends { enabled: true }
   ? {
@@ -48,15 +48,22 @@ type SetRoles = AuthTenancy extends { enabled: true }
        * provided roles such as "owner" or ["owner", "admin"] in the current
        * organization. With `userRoles` as well, they need both.
        *
-       * The organization is the one with the route's `orgSlug` param, and
-       * the router checks the role with the `useOrgRoles` passed to it:
+       * The organization is the one the Router's `tenancy` finds for the
+       * route, by default the one with the route's `orgSlug` param:
        *
-       *   <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+       *   <Router useAuth={useAuth} tenancy={tenancy}>
        *
-       * A `PrivateSet` with `orgRoles` throws without `useOrgRoles` on the
-       * router, or on a route without `{orgSlug}` in its path.
+       * A `PrivateSet` with `orgRoles` throws without `tenancy` on the
+       * router, or on a route that isn't in an organization.
        */
       orgRoles?: string | string[]
+      /**
+       * Route is permitted when authenticated and the user's membership in
+       * the current organization has this permission (see
+       * `createPermissions` in `@cedarjs/tenancy`). The organization is found
+       * like for `orgRoles`, which it can be combined with: they need both.
+       */
+      orgPermission?: PermissionName
     }
   : {
       /**
@@ -149,6 +156,10 @@ export function Private(props: PrivateSetProps) {
  * `unauthenticated`, and users without the required roles to the one named by
  * `unauthorized`. Either route can have path params the current route has,
  * like `orgSlug`: they're filled in from the current route.
+ *
+ * In an app with tenancy, a `PrivateSet` whose routes have `{orgSlug}` in
+ * their path provides the organization to its layouts and page, see `tenancy`
+ * on the `Router`.
  *
  * Coming from React Router or a similar library and looking for something
  * like `RequireAuth` or `ProtectedRoute`? This is the Cedar equivalent.

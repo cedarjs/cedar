@@ -3,6 +3,7 @@ import { expect, test } from 'tstyche'
 import { createAuthentication } from '@cedarjs/auth'
 import type { AuthImplementation } from '@cedarjs/auth'
 import { PrivateSet, Router } from '@cedarjs/router'
+import type { Tenancy } from '@cedarjs/router'
 
 // Without tenancy: see tenancy/ for an app with it
 declare const authImplementation: AuthImplementation<{ sub: string }>
@@ -22,14 +23,14 @@ test("Router takes the app's useAuth", () => {
   expect(<Router useAuth={useAuth}>{null}</Router>).type.not.toRaiseError()
 })
 
-test('Router has no useOrgRoles', () => {
-  const useOrgRoles = () => null
+declare const tenancy: Tenancy
 
+test('Router has no tenancy', () => {
   expect(
-    <Router useAuth={useAuth} useOrgRoles={useOrgRoles}>
+    <Router useAuth={useAuth} tenancy={tenancy}>
       {null}
     </Router>,
-  ).type.toRaiseError("Property 'useOrgRoles' does not exist")
+  ).type.toRaiseError("Property 'tenancy' does not exist")
 })
 
 test('PrivateSet takes roles', () => {
@@ -48,7 +49,7 @@ test('PrivateSet takes unauthorized', () => {
   ).type.not.toRaiseError()
 })
 
-test('PrivateSet has no userRoles or orgRoles', () => {
+test('PrivateSet has no userRoles, orgRoles or orgPermission', () => {
   expect(
     <PrivateSet unauthenticated="login" userRoles="admin">
       {null}
@@ -60,4 +61,10 @@ test('PrivateSet has no userRoles or orgRoles', () => {
       {null}
     </PrivateSet>,
   ).type.toRaiseError("Property 'orgRoles' does not exist")
+
+  expect(
+    <PrivateSet unauthenticated="login" orgPermission="members.manage">
+      {null}
+    </PrivateSet>,
+  ).type.toRaiseError("Property 'orgPermission' does not exist")
 })

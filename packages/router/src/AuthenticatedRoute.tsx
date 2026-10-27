@@ -1,16 +1,17 @@
-import React from 'react'
+import React, { createContext, useContext } from 'react'
 
 import { useLocation } from './location.js'
 import { Redirect } from './redirect.js'
 import { useRouterState } from './router-context.js'
-import type { RouterState, UseOrgRoles } from './router-context.js'
+import type { RouterState, UseOrg } from './router-context.js'
 import { paramsForRoute, pathParamsText } from './util.js'
 
 interface AuthenticatedRouteProps {
-  children: React.ReactNode | Thenable<React.ReactNode>
+  children: React.ReactNode
   roles?: string | string[]
   userRoles?: string | string[]
   orgRoles?: string | string[]
+  orgPermission?: string
   unauthenticated: string
   unauthorized?: string
   whileLoadingAuth?: () => React.ReactElement | null
@@ -18,8 +19,18 @@ interface AuthenticatedRouteProps {
 
 const REPLACE = { replace: true }
 
-/** For a router without `useOrgRoles`: no organization to check a role in */
-const useNoOrgRoles: UseOrgRoles = () => null
+/** For a router without `tenancy`: no organization to find */
+const useNoOrg: UseOrg = () => null
+
+/**
+ * The id of the organization whose provider is mounted above, so a private
+ * set inside another one in the same organization doesn't render a second
+ * provider
+ */
+const MountedOrgContext = createContext<string | undefined>(undefined)
+
+const toList = (roles: string | string[]) =>
+  Array.isArray(roles) ? roles : [roles]
 
 /**
  * The current route's path params, as the text in the URL's path, so they go
@@ -90,10 +101,12 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   roles,
   userRoles,
   orgRoles,
+  orgPermission,
   whileLoadingAuth,
   children,
 }) => {
   const routerState = useRouterState()
+  const mountedOrgId = useContext(MountedOrgContext)
   // `hasRole` is in the router's own type for `useAuth`, which is the one
   // without tenancy. Auth providers provide it in every app, also where the
   // app's types only show `hasUserRole`, which is the same check.
@@ -106,54 +119,98 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   // prerendering
   const { pathname } = useLocation()
   const pathParams = currentPathParams(routerState, pathname)
+  const { tenancy } = routerState
   // Called on every render, with or without `orgRoles`, as hooks must be
   // called the same way every time
-  const useOrgRoles = routerState.useOrgRoles ?? useNoOrgRoles
-  const hasOrgRole = useOrgRoles(routerState.useAuth, pathParams)
+  const useOrg = tenancy?.useOrg ?? useNoOrg
+  const org = useOrg(routerState.useAuth, pathParams)
+  const needsOrg = orgRoles !== undefined || orgPermission !== undefined
 
-  // Fail closed: with no organization to check `orgRoles` in, it's a mistake
-  // in the routes, not a user without the role
-  if (orgRoles !== undefined && !hasOrgRole) {
-    if (!routerState.useOrgRoles) {
+  // Fail closed: with no organization to check `orgRoles` or `orgPermission`
+  // in, it's a mistake in the routes, not a user without access
+  if (needsOrg && !org) {
+    const prop = orgRoles !== undefined ? 'orgRoles' : 'orgPermission'
+
+    if (!tenancy) {
       throw new Error(
-        'A PrivateSet with `orgRoles` needs `useOrgRoles` on the Router to ' +
-          'check the role with. Please pass `useOrgRoles` from ' +
+        `A PrivateSet with \`${prop}\` needs \`tenancy\` on the Router to ` +
+          'find the organization with. Please pass `tenancy` from ' +
           '`@cedarjs/tenancy/web`: ' +
-          '<Router useAuth={useAuth} useOrgRoles={useOrgRoles}>',
+          '<Router useAuth={useAuth} tenancy={tenancy}>',
       )
     }
 
     if (pathParams['orgSlug'] === undefined) {
       throw new Error(
-        'A PrivateSet with `orgRoles` needs an organization to check the ' +
-          'role in, and the route has no `orgSlug` param. Please only use ' +
-          '`orgRoles` on routes with `{orgSlug}` in their path, or pass the ' +
-          'Router a `useOrgRoles` that finds the organization another way',
+        `A PrivateSet with \`${prop}\` needs an organization to check it ` +
+          'in, and the route has no `orgSlug` param. Please only use ' +
+          `\`${prop}\` on routes with \`{orgSlug}\` in their path, or ` +
+          'pass `createTenancy` a `useOrg` that finds the organization ' +
+          'another way',
       )
     }
 
-    // A `useOrgRoles` of the app's own found no organization for this route
+    // A `useOrg` of the app's own found no organization for this route
     throw new Error(
-      "A PrivateSet with `orgRoles` got no role check from the Router's " +
-        '`useOrgRoles` for this route, so there is no organization to check ' +
-        'the role in',
+      `A PrivateSet with \`${prop}\` got no organization from the ` +
+        "Router's `tenancy` for this route, so there is nothing to check " +
+        'it in',
     )
   }
 
-  const hasRequiredRoles =
-    (!roles || hasRole(roles)) &&
-    (!userRoles || hasRole(userRoles)) &&
-    (orgRoles === undefined || (!!hasOrgRole && hasOrgRole(orgRoles)))
+  const hasRequiredUserRoles =
+    (!roles || hasRole(roles)) && (!userRoles || hasRole(userRoles))
 
-  if (isAuthenticated && hasRequiredRoles) {
-    return <>{children}</>
+  if (isAuthenticated && hasRequiredUserRoles) {
+    // A route that isn't in an organization is an ordinary private route
+    if (!tenancy || !org) {
+      return <>{children}</>
+    }
+
+    const { membership, memberships } = org
+
+    if (!membership) {
+      // The user's memberships may still be on their way
+      if (authLoading) {
+        return whileLoadingAuth?.() || null
+      }
+
+      return <>{tenancy.notAMember ?? null}</>
+    }
+
+    const hasRequiredOrgAccess =
+      (orgRoles === undefined || toList(orgRoles).includes(membership.role)) &&
+      (orgPermission === undefined ||
+        (membership.permissions?.includes(orgPermission) ?? false))
+
+    if (hasRequiredOrgAccess) {
+      // An outer private set in this organization has rendered the provider
+      if (mountedOrgId === membership.organizationId) {
+        return <>{children}</>
+      }
+
+      // Keyed by the organization, not the route or the set, so the provider
+      // stays mounted across the organization's pages
+      return (
+        <tenancy.OrgProvider
+          key={membership.organizationId}
+          useAuth={routerState.useAuth}
+          membership={membership}
+          memberships={memberships}
+        >
+          <MountedOrgContext.Provider value={membership.organizationId}>
+            {children}
+          </MountedOrgContext.Provider>
+        </tenancy.OrgProvider>
+      )
+    }
   }
 
   if (authLoading) {
     return whileLoadingAuth?.() || null
   }
 
-  // Signed in, but without the required roles
+  // Signed in, but without the required roles or permission
   if (isAuthenticated && unauthorized) {
     return (
       <Redirect
