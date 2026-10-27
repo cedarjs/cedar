@@ -11,11 +11,11 @@ describe('tenancy routerCodemod', () => {
     await matchTransformSnapshot('routerCodemod', 'defaultRoutes')
   })
 
-  it('adds to an existing @cedarjs/tenancy/web import, and to a Router imported under another name', async () => {
+  it('adds to an existing @cedarjs/tenancy/web import', async () => {
     await matchTransformSnapshot('routerCodemod', 'tenancyImportRoutes')
   })
 
-  it('throws CEDAR_CODEMOD_ERR_ROUTER_NOT_FOUND without a Router from @cedarjs/router', async () => {
+  it('throws CEDAR_CODEMOD_ERR_ROUTER_NOT_FOUND without a <Router>', async () => {
     const transformResult = await runTransform({
       transformPath: path.join(__dirname, '../routerCodemod.ts'), // Use TS here!
       targetPaths: [
