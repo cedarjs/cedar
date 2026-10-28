@@ -897,38 +897,99 @@ export const CEDAR_ORG_HEADER = 'cedar-org'
 
 ## Testing
 
-There is no `mockCurrentOrg()` helper yet. To test a service that reads
-`context.currentOrg`, set it directly the same way `mockCurrentUser()`-style
-context setup works for `context.currentUser`:
+Tests set up the current organization the same way a request or a route
+does: from the user's memberships and what picks the organization (the
+`cedar-org` header on the api side, the route on the web side).
+
+### Services
+
+Give the user from `mockCurrentUser()` their `memberships`, then set the
+current organization with `setCurrentOrg` from `@cedarjs/tenancy`, the
+function `resolveCurrentOrg` calls for a request. It takes `role` and
+`membershipId` from the user's membership in that organization, and throws
+`ForbiddenError` when there isn't one, as it does for a request:
 
 ```ts title="api/src/services/projects/projects.test.ts"
 import { context } from '@cedarjs/context'
+import { setCurrentOrg } from '@cedarjs/tenancy'
 
-scenario('lists only the current organization's projects', async (scenario) => {
-  mockCurrentUser({ id: scenario.user.owner.id })
-
+scenario("lists only the current organization's projects", async (scenario) => {
+  mockCurrentUser({
+    id: scenario.user.owner.id,
+    memberships: [scenario.membership.ownerMembership],
+  })
   // highlight-next-line
-  context.currentOrg = {
-    id: scenario.organization.acme.id,
-    slug: 'acme',
-    role: 'owner',
-    membershipId: scenario.membership.ownerMembership.id,
-  }
+  setCurrentOrg(scenario.organization.acme, context.currentUser)
 
   const result = await projects()
 
-  expect(result.every((p) => p.organizationId === scenario.organization.acme.id)).toBe(true)
+  expect(
+    result.every((p) => p.organizationId === scenario.organization.acme.id)
+  ).toBe(true)
 })
 ```
 
-Unset `context.currentOrg` (or don't set it) to test the `TenantScopeError` /
-unauthorized paths.
+Call `setCurrentOrg` after `mockCurrentUser()`, which starts a new context.
+Leave it out to test the `TenantScopeError` and unauthorized paths.
 
-On the web, the mocked `useAuth` in tests behaves like the real one: inside an
-organization route, `hasPermission` checks the membership in that organization, so give
-the user from `mockCurrentUser()` the `memberships` your component's
-organization needs. Outside one, `hasPermission` is `false`. `hasUserRole`
-checks `currentUser.roles`, inside an organization route or not.
+### Components and pages
+
+In web tests and Storybook stories, `render` and `MockProviders` from
+`@cedarjs/testing/web` run your app's `tenancy` (the one passed to the
+`Router` in `Routes.tsx`) the way the router does on an organization route.
+Its `useOrg` finds the organization, and its provider renders around the
+component, so `useCurrentOrg()` and `useAuth().hasPermission` work as they do
+in the app.
+
+With the default `useOrg`, the organization is the `orgSlug` route param, so
+give the user their memberships and set the param with
+[`mockRouteParams()`](testing.md#mockrouteparams):
+
+```tsx title="web/src/pages/MembersPage/MembersPage.test.tsx"
+import { mockRouteParams, render, screen } from '@cedarjs/testing/web'
+
+import MembersPage from './MembersPage'
+
+describe('MembersPage', () => {
+  it('shows the invite form to a member who can manage members', () => {
+    mockCurrentUser({
+      id: 'user-1',
+      memberships: [
+        {
+          id: 'membership-1',
+          organizationId: 'org-acme',
+          role: 'admin',
+          permissions: ['members.manage'],
+          organization: { id: 'org-acme', slug: 'acme', name: 'Acme' },
+        },
+      ],
+    })
+    // highlight-next-line
+    mockRouteParams({ orgSlug: 'acme' })
+
+    render(<MembersPage />)
+
+    expect(screen.getByRole('button', { name: 'Invite' })).toBeInTheDocument()
+  })
+})
+```
+
+- A user who isn't a member of the organization gets your tenancy's
+  `notAMember`, not the component.
+- Without an organization (no `orgSlug`), the component renders without the
+  provider, so `useCurrentOrg()` throws and `hasPermission` is `false`, as on
+  a route outside an organization.
+- A tenancy whose `useOrg` finds the organization another way, such as from
+  the host, runs as it is. Mock what it reads, such as the function that
+  returns the subdomain.
+- The organization's Apollo client is cleared after each test, so one test's
+  cached query results don't answer the next test's queries.
+- `useCurrentOrg().setOrg` navigates as in the app, or calls your
+  `onSetOrg`. Assert on `navigate` or on what your `onSetOrg` does.
+- `<PrivateSet orgRoles>` and `orgPermission` are the router's checks, which
+  don't run for a component rendered on its own.
+
+`hasUserRole` checks `currentUser.roles`, in an organization or not.
 
 ## Limitations
 
