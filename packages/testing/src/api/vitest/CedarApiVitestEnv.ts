@@ -2,6 +2,7 @@ import path from 'node:path'
 
 import 'dotenv-defaults/config.js'
 import execa from 'execa'
+import type { Environment } from 'vitest/runtime'
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
@@ -17,23 +18,6 @@ import {
  * (Prisma prints its error last), so long output is trimmed from the start.
  */
 const MAX_ERROR_OUTPUT_LENGTH = 4000
-
-/**
- * Vitest 5 no longer publicly exports its `Environment` type: the
- * `vitest/environments` subpath still exists as a stub, but it points at a
- * dist file that's no longer published, and it's not listed in the
- * package's `exports` map either way. Since the real type isn't reachable
- * from any public entry point, we define the minimal shape Vitest's custom
- * environment API actually requires instead of depending on it.
- */
-interface Environment {
-  name: string
-  viteEnvironment?: string
-  setup: (
-    global: any,
-    options: Record<string, any>,
-  ) => Promise<{ teardown: () => void }>
-}
 
 function joinOutput(stdout: string | undefined, stderr: string | undefined) {
   return [stdout, stderr]
