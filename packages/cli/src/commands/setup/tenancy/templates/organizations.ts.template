@@ -214,9 +214,7 @@ interface ClaimedInvitation {
  * PostgreSQL, CockroachDB and SQLite.
  *
  * The same guard refuses an expired invitation: it only matches while
- * `invitationExpiresAt` is in the future. A null `invitationExpiresAt` means
- * the invitation never expires, which is what keeps invitations created
- * before that column existed claimable.
+ * `invitationExpiresAt` is in the future.
  *
  * Returns the claimed membership's organization id when `userId` holds the
  * membership, whether this call claimed it or an earlier one did, or `null`
@@ -230,10 +228,7 @@ const claimInvitation = async (
     where: {
       invitationToken: token,
       userId: null,
-      OR: [
-        { invitationExpiresAt: null },
-        { invitationExpiresAt: { gt: new Date() } },
-      ],
+      invitationExpiresAt: { gt: new Date() },
     },
     data: { userId, invitationToken: spentInvitationToken(token) },
   })

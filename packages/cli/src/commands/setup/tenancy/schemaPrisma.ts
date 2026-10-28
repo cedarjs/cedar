@@ -27,7 +27,7 @@ export const MEMBERSHIP_MODEL = `model Membership {
   organizationId      String
   invitedById         String?
   invitationToken     String?      @unique
-  // When a pending invitation stops being claimable; null means no expiry.
+  // When a pending invitation stops being claimable.
   invitationExpiresAt DateTime?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt

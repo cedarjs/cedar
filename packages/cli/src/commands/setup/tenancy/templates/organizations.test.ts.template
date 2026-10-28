@@ -338,27 +338,6 @@ describe('organizations service', () => {
     )
 
     scenario(
-      'accepts an invitation that has not expired yet',
-      async (scenario: StandardScenario) => {
-        const invitee = await db.user.create({
-          data: {
-            email: 'invitee@example.com',
-            hashedPassword: 'x',
-            salt: 'x',
-          },
-        })
-
-        mockCurrentUser({ id: invitee.id })
-
-        const result = await acceptInvitation({
-          token: scenario.membership.unexpired.invitationToken!,
-        })
-
-        expect(result.id).toEqual(scenario.organization.acme.id)
-      },
-    )
-
-    scenario(
       'rejects an expired invitation and leaves it unclaimed',
       async (scenario: StandardScenario) => {
         const invitee = await db.user.create({

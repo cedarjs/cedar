@@ -70,7 +70,7 @@ model Membership {
   organizationId      String
   invitedById         String?
   invitationToken     String?      @unique
-  // When a pending invitation stops being claimable; null means no expiry.
+  // When a pending invitation stops being claimable.
   invitationExpiresAt DateTime?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
@@ -111,7 +111,7 @@ are carried over from the article, stated as Cedar defaults:
   `invitationToken` column is the credential. Signing up or logging in with
   `?invitationToken=` attaches the authenticated user to that row. The
   invitation stops working once `invitationExpiresAt` has passed (seven days
-  after `inviteMember` by default; `null` means it never expires).
+  after `inviteMember` by default).
 - **`role` is a string, not an enum**, so an app can add roles without a schema
   migration. See
   [section 7](#7-strict-variant-compound-primary-keys-and-postgres-rls) for
@@ -401,7 +401,7 @@ Finally, `Organization` and `Membership` are appended to `schema.prisma`, and
 +  organizationId      String
 +  invitedById         String?
 +  invitationToken     String?      @unique
-+  // When a pending invitation stops being claimable; null means no expiry.
++  // When a pending invitation stops being claimable.
 +  invitationExpiresAt DateTime?
 +  createdAt           DateTime     @default(now())
 +  user                User?        @relation(fields: [userId], references: [id])
@@ -1189,7 +1189,7 @@ model Membership {
   organizationId      String
   invitedById         String?
   invitationToken     String?      @unique
-  // When a pending invitation stops being claimable; null means no expiry.
+  // When a pending invitation stops being claimable.
   invitationExpiresAt DateTime?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
