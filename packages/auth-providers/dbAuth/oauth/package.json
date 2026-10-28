@@ -45,7 +45,8 @@
     "oauth4webapi": "3.8.8",
     "publint": "0.3.25",
     "typescript": "5.9.3",
-    "vitest": "4.1.12"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "peerDependencies": {
     "oauth4webapi": "^3.0.0"

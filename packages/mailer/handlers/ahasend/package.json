@@ -29,7 +29,8 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "typescript": "5.9.3",
-    "vitest": "4.1.12"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "publishConfig": {
     "access": "public"

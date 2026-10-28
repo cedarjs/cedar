@@ -76,7 +76,7 @@ test('in dev and test it uses jwt.decode', async () => {
 })
 
 test('throws on expired token', async () => {
-  expect(
+  await expect(
     authDecoder('expired-token', 'netlify', {
       ...req.event,
       context: { clientContext: { user: { sub: 'abc123' } } },
