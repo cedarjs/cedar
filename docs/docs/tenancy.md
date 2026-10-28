@@ -985,9 +985,8 @@ describe('MembersPage', () => {
   returns the subdomain.
 - Route params are reset after each test, so a test that doesn't call
   `mockRouteParams()` is outside any organization.
-- The organization's Apollo client is cleared after each test, and before
-  each story, so one test's cached query results don't answer the next
-  test's queries.
+- The organization's Apollo client is cleared after each test, so one test's
+  cached query results don't answer the next test's queries.
 - `useCurrentOrg().setOrg` navigates as in the app, or calls your
   `onSetOrg`. Assert on `navigate` or on what your `onSetOrg` does.
 - `<PrivateSet orgRoles>` and `orgPermission` are the router's checks, which
