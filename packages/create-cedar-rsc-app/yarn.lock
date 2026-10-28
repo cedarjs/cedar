@@ -1289,7 +1289,7 @@ __metadata:
     node-fetch: "npm:3.3.2"
     prettier: "npm:3.9.10"
     prettier-plugin-curly: "npm:^0.4.1"
-    prettier-plugin-packagejson: "npm:3.0.2"
+    prettier-plugin-packagejson: "npm:3.0.3"
     prettier-plugin-sh: "npm:^0.20.0"
     publint: "npm:0.3.25"
     rimraf: "npm:^6.0.1"
@@ -2832,17 +2832,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier-plugin-packagejson@npm:3.0.2":
-  version: 3.0.2
-  resolution: "prettier-plugin-packagejson@npm:3.0.2"
+"prettier-plugin-packagejson@npm:3.0.3":
+  version: 3.0.3
+  resolution: "prettier-plugin-packagejson@npm:3.0.3"
   dependencies:
-    sort-package-json: "npm:^3.6.0"
+    sort-package-json: "npm:^4.0.0"
   peerDependencies:
     prettier: ^3
   peerDependenciesMeta:
     prettier:
       optional: true
-  checksum: 10c0/c277b3252ce299c11053ad1b01968b0895b3baf2483323fcedbdae66ce9999b76d4b9e70396c58c39c61429d4672ba3f63a5e6e9a3104ff3b0000ec5214a4963
+  checksum: 10c0/28e390256c029f28dae3c6428381e86ec0b4f05b91d14137dc1ed323f38f2fee65c4c351d22a1d58795624a36e9f5d1b9343e7d17c480c29d7975299bfbfeef4
   languageName: node
   linkType: hard
 
