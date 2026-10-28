@@ -81,11 +81,34 @@ test('$withoutTenant returns db’s model API, with raw SQL allowed', () => {
 
 test('a helper can take either db or a $withoutTenant client', () => {
   type EitherDb = typeof db | typeof unscopedDb
-  const either: EitherDb = unscopedDb
 
-  expect(either.project.groupBy({ by: ['name'] })).type.not.toRaiseError()
-  expect(
-    either.$transaction(async (tx) => tx.project.count()),
-  ).type.not.toRaiseError()
-  expect(either.$forOrg('some-org-id')).type.toBe<typeof db>()
+  // A parameter, so the calls below are made on the union itself, not on
+  // whichever member a variable was initialized with
+  const helper = (either: EitherDb) => {
+    expect(either.project.groupBy({ by: ['name'] })).type.not.toRaiseError()
+    expect(
+      either.$transaction(async (tx) => tx.project.count()),
+    ).type.not.toRaiseError()
+    // On the union, $forOrg's result is the union too: still a client with
+    // db's model API
+    expect(
+      either.$forOrg('some-org-id').project.groupBy({ by: ['name'] }),
+    ).type.not.toRaiseError()
+  }
+
+  expect(helper).type.toBeCallableWith(db)
+  expect(helper).type.toBeCallableWith(unscopedDb)
+})
+
+test('a transaction client has no $forOrg or $withoutTenant to call', () => {
+  // A client they built from a transaction client would run its queries
+  // outside the transaction
+  void db.$transaction(async (tx) => {
+    expect(tx.$forOrg('some-org-id')).type.toRaiseError("'this' context")
+    expect(tx.$withoutTenant()).type.toRaiseError("'this' context")
+  })
+  void unscopedDb.$transaction(async (tx) => {
+    expect(tx.$forOrg('some-org-id')).type.toRaiseError("'this' context")
+    expect(tx.$withoutTenant()).type.toRaiseError("'this' context")
+  })
 })

@@ -142,6 +142,9 @@ clients have `$forOrg` and `$withoutTenant` too.
   `db.$transaction(async (tx) => tx.project.create(...))` stays scoped.
   `$forOrg`/`$withoutTenant` clients have their own `$transaction`; don't mix a
   `tx` from one client with queries on another.
+  A `tx` has no `$forOrg` or `$withoutTenant`, since the client they returned
+  would run outside the transaction. Start the transaction on the client you
+  need instead: `db.$forOrg(orgId).$transaction(async (tx) => ...)`.
 - `db.$withoutTenant()` disables the only check that turns a missing
   `organizationId` into an error. Code using it is responsible for every `where`
   and `data` it writes, which is why seeds and admin code are the intended

@@ -132,6 +132,30 @@ describe('createTenancyExtension - reads', () => {
       })
       expect(projects.map((p) => p.id)).toEqual(['p1'])
     })
+
+    // A client built from a transaction client would run its queries on
+    // another connection, outside the transaction
+    it.each([
+      ['db', () => db],
+      ['a $forOrg client', () => db.$forOrg('org2')],
+      ['a $withoutTenant client', () => db.$withoutTenant()],
+    ])(
+      'refuses $forOrg and $withoutTenant on a transaction client of %s',
+      async (_name, client) => {
+        await expect(
+          client().$transaction(async (tx) => {
+            // @ts-expect-error -- a transaction client can't call it
+            return tx.$forOrg('org2')
+          }),
+        ).rejects.toThrow(TenantScopeError)
+        await expect(
+          client().$transaction(async (tx) => {
+            // @ts-expect-error -- a transaction client can't call it
+            return tx.$withoutTenant()
+          }),
+        ).rejects.toThrow(/db\.\$forOrg\(organizationId\)\.\$transaction/)
+      },
+    )
   })
 
   describe('unsupported operations', () => {

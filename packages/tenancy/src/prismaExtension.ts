@@ -1022,6 +1022,27 @@ function throwRawQueryBlocked(): never {
   throw new TenantScopeError(RAW_QUERY_MESSAGE)
 }
 
+const TRANSACTION_MESSAGE =
+  "$forOrg() and $withoutTenant() can't be called on a transaction client: " +
+  'the client they return would run its queries outside the transaction. ' +
+  'Start the transaction on the client you need instead, e.g. ' +
+  'db.$forOrg(organizationId).$transaction(async (tx) => ...).'
+
+/**
+ * A client the escape hatches can be called on. Prisma's interactive
+ * transaction client has no `$extends`, so a client built for it couldn't
+ * stay on the transaction's connection; leaving `$extends` out of its type
+ * makes `tx.$forOrg()` a type error, and `isTransactionClient` refuses it at
+ * runtime.
+ */
+type ExtendableClient = { $extends: unknown }
+
+function isTransactionClient(client: unknown) {
+  return (
+    typeof client === 'object' && client !== null && !('$extends' in client)
+  )
+}
+
 /**
  * The client methods a scoped client blocks (see `throwRawQueryBlocked`) and
  * an unscoped one allows.
@@ -1041,8 +1062,8 @@ export type UnscopedClient<TDb, TClient> = Omit<
   RawSqlMethod | '$forOrg' | '$withoutTenant'
 > &
   Pick<TClient, Extract<keyof TClient, RawSqlMethod>> & {
-    $forOrg(organizationId: string): TDb
-    $withoutTenant(): UnscopedClient<TDb, TClient>
+    $forOrg(this: ExtendableClient, organizationId: string): TDb
+    $withoutTenant(this: ExtendableClient): UnscopedClient<TDb, TClient>
   }
 
 /**
@@ -1091,8 +1112,14 @@ export function createTenancyExtension<TClient>(
      * for background jobs, webhooks, and other code that knows the tenant
      * but doesn't run inside a request.
      */
-    function $forOrg<T>(this: T, organizationId: string): T
-    function $forOrg(organizationId: string): unknown {
+    function $forOrg<T extends ExtendableClient>(
+      this: T,
+      organizationId: string,
+    ): T
+    function $forOrg(this: unknown, organizationId: string): unknown {
+      if (isTransactionClient(this)) {
+        throw new TenantScopeError(TRANSACTION_MESSAGE)
+      }
       return buildScopedClient(() => organizationId)
     }
 
@@ -1101,8 +1128,13 @@ export function createTenancyExtension<TClient>(
      * organizations: seeds, data migrations, admin tooling. Nothing here is
      * scoped, and raw SQL is allowed.
      */
-    function $withoutTenant<T>(this: T): UnscopedClient<T, TClient>
-    function $withoutTenant(): unknown {
+    function $withoutTenant<T extends ExtendableClient>(
+      this: T,
+    ): UnscopedClient<T, TClient>
+    function $withoutTenant(this: unknown): unknown {
+      if (isTransactionClient(this)) {
+        throw new TenantScopeError(TRANSACTION_MESSAGE)
+      }
       return unscopedClient
     }
 
