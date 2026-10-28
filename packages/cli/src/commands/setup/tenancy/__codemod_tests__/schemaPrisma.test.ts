@@ -165,7 +165,7 @@ describe('editSchema after prisma format', () => {
   // What `prisma format` does to the appended models: re-aligns columns
   const realign = (schema: string) =>
     schema.replace(/^( {2}\w+)( +)/gm, (_, field: string) =>
-      field.padEnd(20, ' '),
+      field.padEnd(22, ' '),
     )
 
   it('recognizes its own models however they are aligned', () => {

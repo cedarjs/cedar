@@ -11,6 +11,12 @@ import { requireCurrentOrg } from '@cedarjs/tenancy'
 
 import { Prisma, db } from 'src/lib/db'
 
+/**
+ * How long an invitation stays claimable after `inviteMember` creates it.
+ * Change it if seven days does not suit the app.
+ */
+const INVITATION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000
+
 interface MembershipSummary {
   id: string
   organizationId: string
@@ -143,7 +149,9 @@ export const createOrganization: MutationResolvers['createOrganization'] =
  * `Membership` has no email column: the caller is responsible for emailing
  * `input.email` a link built from the returned `invitationToken`, with its
  * own mailer. The token is returned here and nowhere else -- see the SDL
- * doc comment on `Invitation` for why.
+ * doc comment on `Invitation` for why. The invitation can be claimed until
+ * `invitationExpiresAt`, which is returned with the token so the email can
+ * say when the link stops working.
  */
 export const inviteMember: MutationResolvers['inviteMember'] = async ({
   input,
@@ -164,6 +172,7 @@ export const inviteMember: MutationResolvers['inviteMember'] = async ({
   }
 
   const invitationToken = crypto.randomUUID()
+  const invitationExpiresAt = new Date(Date.now() + INVITATION_LIFETIME_MS)
 
   const membership = await db.membership.create({
     data: {
@@ -171,10 +180,11 @@ export const inviteMember: MutationResolvers['inviteMember'] = async ({
       organizationId: currentOrg.id,
       invitedById: currentOrg.membershipId,
       invitationToken,
+      invitationExpiresAt,
     },
   })
 
-  return { membership, invitationToken }
+  return { membership, invitationToken, invitationExpiresAt }
 }
 
 /**
@@ -203,16 +213,23 @@ interface ClaimedInvitation {
  * `updateManyAndReturn` because Prisma only supports the latter on
  * PostgreSQL, CockroachDB and SQLite.
  *
+ * The same guard refuses an expired invitation: it only matches while
+ * `invitationExpiresAt` is in the future.
+ *
  * Returns the claimed membership's organization id when `userId` holds the
  * membership, whether this call claimed it or an earlier one did, or `null`
- * when the token is invalid or was claimed by a different user.
+ * when the token is invalid, expired, or was claimed by a different user.
  */
 const claimInvitation = async (
   token: string,
   userId: string,
 ): Promise<ClaimedInvitation | null> => {
   await db.membership.updateMany({
-    where: { invitationToken: token, userId: null },
+    where: {
+      invitationToken: token,
+      userId: null,
+      invitationExpiresAt: { gt: new Date() },
+    },
     data: { userId, invitationToken: spentInvitationToken(token) },
   })
 
@@ -224,10 +241,28 @@ const claimInvitation = async (
 }
 
 /**
+ * Whether `token` belongs to an invitation that is still unclaimed but past
+ * its expiry. Only used to pick the error message after a failed claim; the
+ * guard in `claimInvitation` is what decides.
+ */
+const isExpiredInvitation = async (token: string): Promise<boolean> => {
+  const pending = await db.membership.findFirst({
+    where: {
+      invitationToken: token,
+      userId: null,
+      invitationExpiresAt: { lte: new Date() },
+    },
+    select: { id: true },
+  })
+
+  return pending !== null
+}
+
+/**
  * Attaches the pending membership matching `token` to the signed-in user.
  * Idempotent when it is already attached to them; throws when the token
  * does not match a pending (unclaimed) membership, including when someone
- * else has already claimed it.
+ * else has already claimed it or the invitation has expired.
  */
 export const acceptInvitation: MutationResolvers['acceptInvitation'] = async ({
   token,
@@ -238,7 +273,11 @@ export const acceptInvitation: MutationResolvers['acceptInvitation'] = async ({
   const claim = await claimInvitation(token, userId)
 
   if (!claim) {
-    throw new ValidationError('This invitation is invalid or has expired.')
+    throw new ValidationError(
+      (await isExpiredInvitation(token))
+        ? 'This invitation has expired. Ask for a new one.'
+        : 'This invitation is invalid or has already been used.',
+    )
   }
 
   return db.organization.findUniqueOrThrow({

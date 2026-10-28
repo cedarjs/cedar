@@ -48,6 +48,16 @@ export const standard = defineScenario<
       data: {
         role: 'admin',
         invitationToken: 'invite-token',
+        invitationExpiresAt: new Date('2999-01-01T00:00:00Z'),
+        organization: { connect: { slug: 'acme-inc' } },
+      },
+    },
+    // A pending invitation whose expiry has passed.
+    expired: {
+      data: {
+        role: 'member',
+        invitationToken: 'expired-token',
+        invitationExpiresAt: new Date('2000-01-01T00:00:00Z'),
         organization: { connect: { slug: 'acme-inc' } },
       },
     },
@@ -55,4 +65,8 @@ export const standard = defineScenario<
 })
 
 export type StandardScenario = ScenarioData<Organization, 'organization', 'acme'> &
-  ScenarioData<Membership, 'membership', 'owner' | 'admin' | 'pending'>
+  ScenarioData<
+    Membership,
+    'membership',
+    'owner' | 'admin' | 'pending' | 'expired'
+  >

@@ -63,19 +63,21 @@ model Organization {
 }
 
 model Membership {
-  id              String       @id @default(cuid())
-  role            String
+  id                  String       @id @default(cuid())
+  role                String
   // Null while the membership is a pending invitation.
-  userId          String?
-  organizationId  String
-  invitedById     String?
-  invitationToken String?      @unique
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  user            User?        @relation(fields: [userId], references: [id])
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
-  invitees        Membership[] @relation("Inviter")
+  userId              String?
+  organizationId      String
+  invitedById         String?
+  invitationToken     String?      @unique
+  // When a pending invitation stops being claimable.
+  invitationExpiresAt DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  user                User?        @relation(fields: [userId], references: [id])
+  organization        Organization @relation(fields: [organizationId], references: [id])
+  invitedBy           Membership?  @relation("Inviter", fields: [invitedById], references: [id])
+  invitees            Membership[] @relation("Inviter")
 
   @@unique([userId, organizationId])
   @@index([organizationId])
@@ -107,7 +109,9 @@ are carried over from the article, stated as Cedar defaults:
   to build rather than something that falls out of the schema by accident.
 - **An invitation is a `Membership` with `userId = null`.** The
   `invitationToken` column is the credential. Signing up or logging in with
-  `?invitationToken=` attaches the authenticated user to that row.
+  `?invitationToken=` attaches the authenticated user to that row. The
+  invitation stops working once `invitationExpiresAt` has passed (seven days
+  after `inviteMember` by default).
 - **`role` is a string, not an enum**, so an app can add roles without a schema
   migration. See
   [section 7](#7-strict-variant-compound-primary-keys-and-postgres-rls) for
@@ -391,17 +395,19 @@ Finally, `Organization` and `Membership` are appended to `schema.prisma`, and
 +}
 +
 +model Membership {
-+  id              String       @id @default(cuid())
-+  role            String
-+  userId          String?
-+  organizationId  String
-+  invitedById     String?
-+  invitationToken String?      @unique
-+  createdAt       DateTime     @default(now())
-+  user            User?        @relation(fields: [userId], references: [id])
-+  organization    Organization @relation(fields: [organizationId], references: [id])
-+  invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
-+  invitees        Membership[] @relation("Inviter")
++  id                  String       @id @default(cuid())
++  role                String
++  userId              String?
++  organizationId      String
++  invitedById         String?
++  invitationToken     String?      @unique
++  // When a pending invitation stops being claimable.
++  invitationExpiresAt DateTime?
++  createdAt           DateTime     @default(now())
++  user                User?        @relation(fields: [userId], references: [id])
++  organization        Organization @relation(fields: [organizationId], references: [id])
++  invitedBy           Membership?  @relation("Inviter", fields: [invitedById], references: [id])
++  invitees            Membership[] @relation("Inviter")
 +
 +  @@unique([userId, organizationId])
 +  @@index([organizationId])
@@ -590,6 +596,7 @@ only the caller who just created the invitation.
 type Invitation {
   membership: Membership!
   invitationToken: String!
+  invitationExpiresAt: DateTime!
 }
 
 type Query {
@@ -670,6 +677,8 @@ export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
   }
 
   const invitationToken = crypto.randomUUID()
+  // Seven days; see INVITATION_LIFETIME_MS in the generated service
+  const invitationExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
   const membership = await db.membership.create({
     data: {
@@ -677,10 +686,11 @@ export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
       role: input.role,
       invitedById: currentOrg.membershipId,
       invitationToken,
+      invitationExpiresAt,
     },
   })
 
-  return { membership, invitationToken }
+  return { membership, invitationToken, invitationExpiresAt }
 }
 ```
 
@@ -1173,23 +1183,25 @@ membership was derived from:
 
 ```prisma title="api/db/schema.prisma"
 model Membership {
-  id              String       @id @default(cuid())
-  role            String
-  userId          String?
-  organizationId  String
-  invitedById     String?
-  invitationToken String?      @unique
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  user            User?        @relation(fields: [userId], references: [id])
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
-  invitees        Membership[] @relation("Inviter")
+  id                  String       @id @default(cuid())
+  role                String
+  userId              String?
+  organizationId      String
+  invitedById         String?
+  invitationToken     String?      @unique
+  // When a pending invitation stops being claimable.
+  invitationExpiresAt DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  user                User?        @relation(fields: [userId], references: [id])
+  organization        Organization @relation(fields: [organizationId], references: [id])
+  invitedBy           Membership?  @relation("Inviter", fields: [invitedById], references: [id])
+  invitees            Membership[] @relation("Inviter")
 
   // highlight-start
-  viaMembershipId String?
-  viaMembership   Membership?  @relation("AgencyProvenance", fields: [viaMembershipId], references: [id], onDelete: Cascade)
-  derivedMemberships Membership[] @relation("AgencyProvenance")
+  viaMembershipId     String?
+  viaMembership       Membership?  @relation("AgencyProvenance", fields: [viaMembershipId], references: [id], onDelete: Cascade)
+  derivedMemberships  Membership[] @relation("AgencyProvenance")
   // highlight-end
 
   @@unique([userId, organizationId])

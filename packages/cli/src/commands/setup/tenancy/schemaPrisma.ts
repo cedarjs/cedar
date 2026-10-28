@@ -20,19 +20,21 @@ export const ORGANIZATION_MODEL = `model Organization {
 }`
 
 export const MEMBERSHIP_MODEL = `model Membership {
-  id              String       @id @default(cuid())
-  role            String
+  id                  String       @id @default(cuid())
+  role                String
   // Null while the membership is a pending invitation.
-  userId          String?
-  organizationId  String
-  invitedById     String?
-  invitationToken String?      @unique
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  user            User?        @relation(fields: [userId], references: [id])
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
-  invitees        Membership[] @relation("Inviter")
+  userId              String?
+  organizationId      String
+  invitedById         String?
+  invitationToken     String?      @unique
+  // When a pending invitation stops being claimable.
+  invitationExpiresAt DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  user                User?        @relation(fields: [userId], references: [id])
+  organization        Organization @relation(fields: [organizationId], references: [id])
+  invitedBy           Membership?  @relation("Inviter", fields: [invitedById], references: [id])
+  invitees            Membership[] @relation("Inviter")
 
   @@unique([userId, organizationId])
   @@index([organizationId])
