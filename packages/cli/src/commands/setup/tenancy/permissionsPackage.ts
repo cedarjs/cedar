@@ -97,7 +97,7 @@ const packageNameIn = (packageDir: string): string | undefined => {
  * does).
  */
 export function permissionsPackageName(
-  packagesDir = path.join(getPaths().base, 'packages'),
+  packagesDir = getPaths().packages,
 ) {
   const existing = packageNameIn(
     path.join(packagesDir, PERMISSIONS_PACKAGE_FOLDER),
