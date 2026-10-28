@@ -1051,17 +1051,59 @@ type RawSqlMethod =
   '$queryRaw' | '$queryRawUnsafe' | '$executeRaw' | '$executeRawUnsafe'
 
 /**
+ * Raw SQL typed the way the un-extended client types it, instead of as
+ * always throwing.
+ */
+type AllowedRawSql<TClient> = Pick<
+  TClient,
+  Extract<keyof TClient, RawSqlMethod>
+>
+
+/**
+ * The `tx` and the options of `TDb`'s interactive `$transaction`, read from
+ * Prisma's own signature. A conditional type matches the last overload, which
+ * for Prisma is the interactive one (the batch form comes first).
+ */
+type InteractiveTransaction<TDb> = TDb extends {
+  $transaction: (
+    fn: (tx: infer Tx) => Promise<unknown>,
+    options?: infer Options,
+  ) => Promise<unknown>
+}
+  ? { tx: Tx; options: Options }
+  : never
+
+/**
+ * The `$transaction` of `db.$withoutTenant()`: its callback's `tx` is `db`'s
+ * own transaction client with raw SQL allowed, like the client it was started
+ * on (at runtime it's built from that unscoped client). `db`'s own overloads
+ * follow it, unchanged: the batch form, and the callback form for a callback
+ * that names `db`'s `tx` type. Keeping them also lets TypeScript call
+ * `$transaction` on a union of `db` and the unscoped client, using the
+ * signatures the two have in common.
+ */
+type UnscopedTransaction<TDb, TClient> = (<R>(
+  fn: (
+    tx: Omit<InteractiveTransaction<TDb>['tx'], RawSqlMethod> &
+      AllowedRawSql<TClient>,
+  ) => Promise<R>,
+  options?: InteractiveTransaction<TDb>['options'],
+) => Promise<R>) &
+  (TDb extends { $transaction: infer T } ? T : never)
+
+/**
  * The type of `db.$withoutTenant()`: `db`'s own type, with raw SQL typed the
- * way the un-extended client types it instead of as always throwing. Every
- * other member, the models and `$transaction` included, has exactly `db`'s
- * type, so code can take either client without the two forming a union
- * TypeScript can't call model methods on.
+ * way the un-extended client types it instead of as always throwing, on the
+ * client and on its interactive transactions' `tx`. Every other member, the
+ * models included, has exactly `db`'s type, so code can take either client
+ * without the two forming a union TypeScript can't call model methods on.
  */
 export type UnscopedClient<TDb, TClient> = Omit<
   TDb,
-  RawSqlMethod | '$forOrg' | '$withoutTenant'
+  RawSqlMethod | '$transaction' | '$forOrg' | '$withoutTenant'
 > &
-  Pick<TClient, Extract<keyof TClient, RawSqlMethod>> & {
+  AllowedRawSql<TClient> & {
+    $transaction: UnscopedTransaction<TDb, TClient>
     $forOrg(this: ExtendableClient, organizationId: string): TDb
     $withoutTenant(this: ExtendableClient): UnscopedClient<TDb, TClient>
   }

@@ -118,9 +118,9 @@ type.
 
 `db.$forOrg(orgId)` has the same type as `db`, so a helper that works with
 either can take a `typeof db` parameter. `db.$withoutTenant()` has `db`'s
-models and `$transaction` and differs only in allowing raw SQL; its type is
-`UnscopedClient<typeof db, typeof prismaClient>` from `@cedarjs/tenancy`. Both
-clients have `$forOrg` and `$withoutTenant` too.
+models and differs only in allowing raw SQL, in its `$transaction` callbacks
+too; its type is `UnscopedClient<typeof db, typeof prismaClient>` from
+`@cedarjs/tenancy`. Both clients have `$forOrg` and `$withoutTenant` too.
 
 | Situation                                                                    | Helper                                    | Why the default scope doesn't apply                                              |
 | ---------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------- |
