@@ -448,6 +448,79 @@ describe('cedarUploadsPlugin', () => {
         expect(res.json().error.message).toContain("'application/pdf'")
       })
 
+      test('says which type was sent and which the content is', async () => {
+        // An iPhone photo whose major brand is `hevc`: a HEIC sequence
+        const hevc = Buffer.concat([
+          Buffer.from([0, 0, 0, 0x18]),
+          Buffer.from('ftyphevc\0\0\0\0mif1msf1'),
+        ])
+        const res = await upload(
+          [{ filename: 'photo.heic', type: 'image/heic', content: hevc }],
+          tokenFor({ allowedMimeTypes: ['image/heic'] }),
+        )
+
+        expect(res.statusCode).toBe(415)
+        expect(res.json().error).toEqual({
+          code: 'MIME_TYPE_NOT_ALLOWED',
+          message:
+            "File 'photo.heic' was sent as 'image/heic', but its content is " +
+            "'image/heic-sequence', which is not in the allowedMimeTypes of " +
+            "upload profile 'avatar'. Add 'image/heic-sequence' to accept it.",
+        })
+      })
+
+      test('explains a refused file that was not sent as another type', async () => {
+        const message = async (part: Part, allowedMimeTypes?: string[]) => {
+          const res = await upload(
+            [part],
+            tokenFor(allowedMimeTypes ? { allowedMimeTypes } : {}),
+          )
+          expect(res.statusCode).toBe(415)
+          return res.json().error.message
+        }
+
+        expect(
+          await message({
+            filename: 'a.pdf',
+            type: 'application/pdf',
+            content: '%PDF-1.7\n',
+          }),
+        ).toBe(
+          "File 'a.pdf' is 'application/pdf', which is not in the " +
+            "allowedMimeTypes of upload profile 'avatar'. Add " +
+            "'application/pdf' to accept it.",
+        )
+        expect(
+          await message({
+            filename: 'a.png',
+            type: 'image/png',
+            content: '<html></html>',
+          }),
+        ).toBe(
+          "File 'a.png' was sent as 'image/png', but its content isn't " +
+            "'image/png' or any other type that could be recognised.",
+        )
+        expect(
+          await message({
+            filename: 'a.html',
+            type: 'text/html',
+            content: '<p>hi</p>',
+          }),
+        ).toBe(
+          "File 'a.html' was sent as 'text/html', which upload profile " +
+            "'avatar' only accepts when its allowedMimeTypes lists it by name.",
+        )
+        expect(
+          await message(
+            { filename: 'a.csv', type: 'text/csv', content: 'a,b\n' },
+            ['image/*'],
+          ),
+        ).toBe(
+          "File 'a.csv' was sent as 'text/csv', which is not in the " +
+            "allowedMimeTypes of upload profile 'avatar'.",
+        )
+      })
+
       test('admits an unrecognisable type through a wildcard, except types that can carry script', async () => {
         // The default token allows `text/*`
         const text = await upload([

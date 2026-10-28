@@ -16,6 +16,7 @@ export type {
 } from './profiles.js'
 export {
   acceptedContentType,
+  checkContentType,
   DETECT_CONTENT_TYPE_BYTES,
   DETECT_CONTENT_TYPE_TAIL_BYTES,
   DETECTABLE_CONTENT_TYPES,
@@ -24,7 +25,11 @@ export {
   isClaimedContentTypeAllowed,
   MAX_ZIP_DIRECTORY_BYTES,
 } from './detectContentType.js'
-export type { DetectContentTypeOptions } from './detectContentType.js'
+export type {
+  ContentTypeCheck,
+  ContentTypeRejection,
+  DetectContentTypeOptions,
+} from './detectContentType.js'
 export {
   canonicalContentType,
   CONTENT_TYPE_ALIASES,

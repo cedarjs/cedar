@@ -283,9 +283,13 @@ Office types that can carry macros must be listed exactly too, whether detected 
 
 A file a profile accepts as one type is never accepted as another because its bytes say so: a `.docx` is a ZIP, but a profile that allows only `application/zip` refuses it, because its bytes say it is a Word document.
 
+To accept photos from phones, list `image/heic` and `image/heif`, and `image/heic-sequence` too: some HEIC files have a sequence brand (bursts, animations), and their bytes say `image/heic-sequence` even when the browser sent `image/heic`.
+
+`checkContentType(bytes, accept, claimedType)` applies the same rules and says why a file is refused: it returns `{ contentType }`, or `{ rejected: { detected, claimed } }` with the type the bytes are (`null` if they weren't recognised) and the type the client claimed. `POST /upload/fs` uses it to name both in its error, for example `File 'photo.heic' was sent as 'image/heic', but its content is 'image/heic-sequence', which is not in the allowedMimeTypes of upload profile 'photos'. Add 'image/heic-sequence' to accept it.`
+
 ### Where uploads check
 
-- **`POST /upload/fs`** checks every file with `acceptedContentType()` against the profile and stores it under the type returned.
+- **`POST /upload/fs`** checks every file with `checkContentType()` against the profile and stores it under the type returned.
 - **Direct uploads to S3** never pass through your api, so the bytes are checked when the upload is settled, by `confirmUpload` or the S3 webhook (see [Confirming S3 uploads](#confirming-s3-uploads)). The object's head (and, for a ZIP, its tail) is read with a ranged GET and must be the type the client declared when it asked for the upload URL. That type was checked against the profile then, with the same exceptions as above. The bytes are checked against the declared type, not the profile, because the `Upload` row doesn't record which profile it was made for. A mismatch fails the upload and deletes the object.
 - **Database targets** go through the `uploadFile` service the setup command generates, which calls `acceptedContentType()` on the decoded bytes and stores the type it returns.
 
