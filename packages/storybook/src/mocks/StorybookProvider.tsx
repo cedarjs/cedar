@@ -10,6 +10,8 @@ import {
 
 import { MockProviders } from './MockProviders.js'
 
+import { clearOrgClients } from '~__CEDAR__ORG_CLIENTS_FOR_MOCK'
+
 export const MockingLoader = async () => {
   /**
    * Without this, the mock files are only loaded directly when
@@ -40,6 +42,10 @@ export const StorybookProvider: React.FunctionComponent<{
   // of each story
   mockCurrentUser(null)
   mockRouteParams({})
+  // A new Apollo client for each organization, so a story's queries aren't
+  // answered from an earlier story's cache. The clients are dropped
+  // synchronously; only clearing their caches is async.
+  void clearOrgClients()
 
   return <MockProviders>{storyFn()}</MockProviders>
 }

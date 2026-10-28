@@ -7,7 +7,12 @@ import { afterAll, afterEach, beforeAll } from 'vitest'
 import { getPaths } from '@cedarjs/project-config'
 
 import { findCellMocks } from '../findCellMocks.js'
-import { closeServer, setupRequestHandlers, startMSW } from '../mockRequests.js'
+import {
+  closeServer,
+  mockRouteParams,
+  setupRequestHandlers,
+  startMSW,
+} from '../mockRequests.js'
 
 let clearOrgClients: (() => Promise<void>) | undefined
 
@@ -31,6 +36,9 @@ beforeAll(async () => {
 afterEach(async () => {
   // Reset the handlers in each test
   setupRequestHandlers()
+
+  // Each test starts with no route params, so outside any organization
+  mockRouteParams({})
 
   // The per-organization Apollo clients live for the whole test file, so
   // one test's cached query results would answer the next test's queries

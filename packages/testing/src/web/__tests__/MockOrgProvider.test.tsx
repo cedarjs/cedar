@@ -113,6 +113,27 @@ describe('MockOrgProvider', () => {
     )
   })
 
+  it("doesn't find the organization from a search param", () => {
+    mockedTenancyMeta.tenancy = tenancy
+    mockCurrentUser({
+      id: 'user-1',
+      memberships: [{ ...acmeMembership, slug: 'acme' }],
+    })
+
+    render(
+      <LocationProvider location={new URL('https://example.com/?orgSlug=acme')}>
+        <MockParamsProvider>
+          <MockOrgProvider>
+            <p>Page</p>
+          </MockOrgProvider>
+        </MockParamsProvider>
+      </LocationProvider>,
+    )
+
+    expect(screen.getByText('Page')).toBeInTheDocument()
+    expect(screen.queryByTestId('org-provider')).not.toBeInTheDocument()
+  })
+
   it("renders the tenancy's notAMember for a user who isn't a member", () => {
     mockedTenancyMeta.tenancy = tenancy
     mockCurrentUser({ id: 'user-1', memberships: [] })

@@ -1,9 +1,9 @@
 import React from 'react'
 
-import { useParams } from '@cedarjs/router'
 import type { Tenancy } from '@cedarjs/router'
 
 import { useAuth } from './mockAuth.js'
+import { mockedRouteParamsMeta } from './mockRequests.js'
 import { mockedTenancyMeta } from './mockTenancy.js'
 
 interface Props {
@@ -36,8 +36,9 @@ const TenancyOrgProvider: React.FC<Props & { tenancy: Tenancy }> = ({
   tenancy,
   children,
 }) => {
-  const params = useParams()
-  const org = tenancy.useOrg(useAuth, params)
+  // Path params only, as the router gives `useOrg`: a search param of the
+  // same name doesn't pick the organization
+  const org = tenancy.useOrg(useAuth, mockedRouteParamsMeta.params)
 
   if (!org) {
     return <>{children}</>

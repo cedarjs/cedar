@@ -976,14 +976,18 @@ describe('MembersPage', () => {
 
 - A user who isn't a member of the organization gets your tenancy's
   `notAMember`, not the component.
-- Without an organization (no `orgSlug`), the component renders without the
-  provider, so `useCurrentOrg()` throws and `hasPermission` is `false`, as on
-  a route outside an organization.
+- When your tenancy's `useOrg` finds no organization (with the default one,
+  no `orgSlug` route param), the component renders without the provider, so
+  `useCurrentOrg()` throws and `hasPermission` is `false`, as on a route
+  outside an organization.
 - A tenancy whose `useOrg` finds the organization another way, such as from
   the host, runs as it is. Mock what it reads, such as the function that
   returns the subdomain.
-- The organization's Apollo client is cleared after each test, so one test's
-  cached query results don't answer the next test's queries.
+- Route params are reset after each test, so a test that doesn't call
+  `mockRouteParams()` is outside any organization.
+- The organization's Apollo client is cleared after each test, and before
+  each story, so one test's cached query results don't answer the next
+  test's queries.
 - `useCurrentOrg().setOrg` navigates as in the app, or calls your
   `onSetOrg`. Assert on `navigate` or on what your `onSetOrg` does.
 - `<PrivateSet orgRoles>` and `orgPermission` are the router's checks, which

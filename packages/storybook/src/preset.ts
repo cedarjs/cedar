@@ -10,6 +10,7 @@ import { getPaths } from '@cedarjs/project-config'
 
 import { autoImports } from './plugins/auto-imports.js'
 import { mockAuth } from './plugins/mock-auth.js'
+import { mockOrgClients } from './plugins/mock-org-clients.js'
 import { mockRouter } from './plugins/mock-router.js'
 import { reactDocgen } from './plugins/react-docgen.js'
 import type { StorybookConfig } from './types.js'
@@ -54,7 +55,7 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
   return mergeConfig(
     { ...config, plugins },
     {
-      plugins: [mockRouter(), mockAuth(), autoImports],
+      plugins: [mockRouter(), mockAuth(), mockOrgClients(), autoImports],
       resolve: {
         alias: {
           '~__CEDAR__USER_ROUTES_FOR_MOCK': cedarProjectPaths.web.routes,

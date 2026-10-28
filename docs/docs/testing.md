@@ -807,6 +807,9 @@ Call it before `render()`, the same as `mockCurrentUser()`. It's a plain
 substitute for the route params a matched route would otherwise provide, not
 a router mock &mdash; it doesn't affect `location` or navigation.
 
+The params are reset after each test, so call it in each test that needs
+them, or in a `beforeEach`. A `beforeAll` only covers the first test.
+
 ### Handling Duplication
 
 We had to duplicate the `mockCurrentUser()` call and duplication is usually another sign that things can be refactored. In Vitest you can nest `describe` blocks and include setup that is shared by the members of that block:
