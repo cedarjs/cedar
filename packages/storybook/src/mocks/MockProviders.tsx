@@ -6,6 +6,7 @@ import React from 'react'
 
 import { LocationProvider } from '@cedarjs/router'
 import { useAuth } from '@cedarjs/testing/auth'
+import { MockOrgProvider } from '@cedarjs/testing/web'
 import { CedarProvider } from '@cedarjs/web'
 import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
@@ -37,7 +38,9 @@ export const MockProviders: React.FunctionComponent<{
       <CedarApolloProvider useAuth={useAuth}>
         <UserRoutes />
         <LocationProvider>
-          <MockParamsProvider>{children}</MockParamsProvider>
+          <MockParamsProvider>
+            <MockOrgProvider>{children}</MockOrgProvider>
+          </MockParamsProvider>
         </LocationProvider>
       </CedarApolloProvider>
     </CedarProvider>

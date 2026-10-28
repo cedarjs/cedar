@@ -10,16 +10,31 @@ import { flattenAll } from '@cedarjs/router/dist/react-util'
 // for Vitest and Storybook. Not doing so would cause an infinite loop.
 import { isValidRoute } from '@cedarjs/router/dist/route-validators'
 import type { RouterProps } from '@cedarjs/router/dist/router'
+import type { Tenancy } from '@cedarjs/router/dist/router-context'
 import { replaceParams } from '@cedarjs/router/dist/util'
+
+import { mockedTenancyMeta } from './mockTenancy.js'
 
 export * from '@cedarjs/router/dist/index'
 
 export const routes: { [routeName: string]: () => string } = {}
 
 /**
- * This router populates the `routes.<pageName>()` utility object.
+ * The props this router reads. In an app without tenancy `RouterProps` has no
+ * `tenancy`, but this file is compiled as one, so it reads it through this
+ * type, which `RouterProps` always fits.
  */
-export const Router: React.FC<RouterProps> = ({ children }) => {
+interface MockRouterProps extends RouterProps {
+  tenancy?: Tenancy
+}
+
+/**
+ * This router populates the `routes.<pageName>()` utility object, and records
+ * the app's `tenancy` for `MockOrgProvider`.
+ */
+const MockRouter: React.FC<MockRouterProps> = ({ tenancy, children }) => {
+  mockedTenancyMeta.tenancy = tenancy
+
   const flatChildArray = flattenAll(children)
 
   flatChildArray.forEach((child) => {
@@ -34,3 +49,5 @@ export const Router: React.FC<RouterProps> = ({ children }) => {
 
   return null
 }
+
+export const Router: React.FC<RouterProps> = MockRouter

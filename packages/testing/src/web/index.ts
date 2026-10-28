@@ -8,6 +8,8 @@ export {
 
 export { MockProviders } from './MockProviders.js'
 
+export { MockOrgProvider } from './MockOrgProvider.js'
+
 export { useAuth } from './mockAuth.js'
 
 export * from './mockRequests.js'

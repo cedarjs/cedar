@@ -196,6 +196,15 @@ function addOrganizationPages(projectPath: string) {
     )
   }
 
+  // The organization's page under the app's tenancy in a web test
+  fs.copyFileSync(
+    path.join(FIXTURES, 'OrganizationPage.test.tsx'),
+    path.join(
+      projectPath,
+      'web/src/pages/OrganizationPage/OrganizationPage.test.tsx',
+    ),
+  )
+
   const routesPath = path.join(projectPath, 'web/src/Routes.tsx')
   const routes = fs.readFileSync(routesPath, 'utf-8')
   const routerImport =

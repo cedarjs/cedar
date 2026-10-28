@@ -1284,4 +1284,6 @@ articles this how-to draws on both call out, restated for Cedar:
   reads it and passes it to a generated `routes.*()` call fails route param
   validation in the test. Use `mockRouteParams({ orgSlug: 'acme' })` before
   `render()` &mdash; see [`mockRouteParams()`](../testing.md#mockrouteparams)
-  in the testing docs.
+  in the testing docs. With the organization in the mocked user's
+  `memberships`, it's also the organization `useCurrentOrg()` returns: see
+  [Testing](../tenancy.md#testing) in the tenancy reference.
