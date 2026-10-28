@@ -1663,6 +1663,13 @@ every selection of an object type that has an `id` must select `id`, so
 Apollo's cache can normalize it. The schema is `.cedar/schema.graphql`, which
 `yarn cedar lint` generates from your SDL files when it's missing.
 
+In an app with the permissions package that `yarn cedar setup tenancy` adds,
+it also checks the SDL files in `api/src`: every
+`@requirePermission(permission: "...")` must name a permission listed in
+`packages/permissions/src/index.ts`, so a typo fails the lint instead of
+throwing the first time the field is requested. Apps without that package
+are not checked.
+
 | Option  | Description       |
 | :------ | :---------------- |
 | `--fix` | Try to fix errors |

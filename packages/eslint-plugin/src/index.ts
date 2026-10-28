@@ -6,6 +6,7 @@ import { cellTypeAnnotations } from './cell-type-annotations.js'
 import { processEnvComputedRule } from './process-env-computed.js'
 import { serviceTypeAnnotations } from './service-type-annotations.js'
 import { unsupportedRouteComponents } from './unsupported-route-components.js'
+import { validPermissionNames } from './valid-permission-names.js'
 
 export const meta = {
   name: '@cedarjs/eslint-plugin',
@@ -17,7 +18,8 @@ export const rules = {
   'process-env-computed': processEnvComputedRule,
   'service-type-annotations': serviceTypeAnnotations,
   'unsupported-route-components': unsupportedRouteComponents,
-} satisfies Record<string, ESLintUtils.RuleModule<string>>
+  'valid-permission-names': validPermissionNames,
+} satisfies Record<string, ESLintUtils.RuleModule<string, readonly unknown[]>>
 
 const plugin = { meta, rules }
 
