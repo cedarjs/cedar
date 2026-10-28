@@ -68,6 +68,16 @@ describe('createTenancyExtension - reads', () => {
         TenantScopeError,
       )
     })
+
+    it('returns a client that has $forOrg and $withoutTenant too', async () => {
+      const orgTwoDb = db.$forOrg('org2')
+
+      const orgOneProjects = await orgTwoDb.$forOrg('org1').project.findMany()
+      expect(orgOneProjects.map((p) => p.id)).toEqual(['p1'])
+
+      const allProjects = await orgTwoDb.$withoutTenant().project.findMany()
+      expect(allProjects.map((p) => p.id).sort()).toEqual(['p1', 'p2'])
+    })
   })
 
   describe('$withoutTenant', () => {
@@ -80,6 +90,16 @@ describe('createTenancyExtension - reads', () => {
       const rows = await db.$withoutTenant()
         .$queryRaw`SELECT id FROM Project ORDER BY id`
       expect(rows).toHaveLength(2)
+    })
+
+    it('returns a client that has $forOrg and $withoutTenant too', async () => {
+      const unscopedDb = db.$withoutTenant()
+
+      const orgTwoProjects = await unscopedDb.$forOrg('org2').project.findMany()
+      expect(orgTwoProjects.map((p) => p.id)).toEqual(['p2'])
+
+      const allProjects = await unscopedDb.$withoutTenant().project.findMany()
+      expect(allProjects.map((p) => p.id).sort()).toEqual(['p1', 'p2'])
     })
   })
 
@@ -112,6 +132,30 @@ describe('createTenancyExtension - reads', () => {
       })
       expect(projects.map((p) => p.id)).toEqual(['p1'])
     })
+
+    // A client built from a transaction client would run its queries on
+    // another connection, outside the transaction
+    it.each([
+      ['db', () => db],
+      ['a $forOrg client', () => db.$forOrg('org2')],
+      ['a $withoutTenant client', () => db.$withoutTenant()],
+    ])(
+      'refuses $forOrg and $withoutTenant on a transaction client of %s',
+      async (_name, client) => {
+        await expect(
+          client().$transaction(async (tx) => {
+            // @ts-expect-error -- a transaction client can't call it
+            return tx.$forOrg('org2')
+          }),
+        ).rejects.toThrow(TenantScopeError)
+        await expect(
+          client().$transaction(async (tx) => {
+            // @ts-expect-error -- a transaction client can't call it
+            return tx.$withoutTenant()
+          }),
+        ).rejects.toThrow(/db\.\$forOrg\(organizationId\)\.\$transaction/)
+      },
+    )
   })
 
   describe('unsupported operations', () => {
