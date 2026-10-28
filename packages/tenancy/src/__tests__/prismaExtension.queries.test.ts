@@ -68,6 +68,16 @@ describe('createTenancyExtension - reads', () => {
         TenantScopeError,
       )
     })
+
+    it('returns a client that has $forOrg and $withoutTenant too', async () => {
+      const orgTwoDb = db.$forOrg('org2')
+
+      const orgOneProjects = await orgTwoDb.$forOrg('org1').project.findMany()
+      expect(orgOneProjects.map((p) => p.id)).toEqual(['p1'])
+
+      const allProjects = await orgTwoDb.$withoutTenant().project.findMany()
+      expect(allProjects.map((p) => p.id).sort()).toEqual(['p1', 'p2'])
+    })
   })
 
   describe('$withoutTenant', () => {
@@ -80,6 +90,16 @@ describe('createTenancyExtension - reads', () => {
       const rows = await db.$withoutTenant()
         .$queryRaw`SELECT id FROM Project ORDER BY id`
       expect(rows).toHaveLength(2)
+    })
+
+    it('returns a client that has $forOrg and $withoutTenant too', async () => {
+      const unscopedDb = db.$withoutTenant()
+
+      const orgTwoProjects = await unscopedDb.$forOrg('org2').project.findMany()
+      expect(orgTwoProjects.map((p) => p.id)).toEqual(['p2'])
+
+      const allProjects = await unscopedDb.$withoutTenant().project.findMany()
+      expect(allProjects.map((p) => p.id).sort()).toEqual(['p1', 'p2'])
     })
   })
 

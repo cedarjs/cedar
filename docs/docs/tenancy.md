@@ -116,6 +116,12 @@ costs nothing measurable, but create it once per unit of work rather than per
 query in a loop, since each `$extends` call produces a large derived TypeScript
 type.
 
+`db.$forOrg(orgId)` has the same type as `db`, so a helper that works with
+either can take a `typeof db` parameter. `db.$withoutTenant()` has `db`'s
+models and `$transaction` and differs only in allowing raw SQL; its type is
+`UnscopedClient<typeof db, typeof prismaClient>` from `@cedarjs/tenancy`. Both
+clients have `$forOrg` and `$withoutTenant` too.
+
 | Situation                                                                    | Helper                                    | Why the default scope doesn't apply                                              |
 | ---------------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------- |
 | Background job (`@cedarjs/jobs`), cron, `cedar exec` script                  | `db.$forOrg(orgId)`                       | No request, so no `currentOrg`; the job receives `organizationId` as an argument |
@@ -128,6 +134,10 @@ type.
 
 - `$on` must be attached to the base client before `$extends`. The `db.ts`
   template and the setup codemod keep that order.
+- Apply the tenancy extension last, after any other `$extends`. The
+  `$forOrg`/`$withoutTenant` clients are built from the client the tenancy
+  extension extends, so an extension added after it isn't on them, though
+  their type says it is. The setup codemod adds it last.
 - Query extensions run inside interactive transactions, so
   `db.$transaction(async (tx) => tx.project.create(...))` stays scoped.
   `$forOrg`/`$withoutTenant` clients have their own `$transaction`; don't mix a

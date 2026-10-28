@@ -1023,10 +1023,39 @@ function throwRawQueryBlocked(): never {
 }
 
 /**
+ * The client methods a scoped client blocks (see `throwRawQueryBlocked`) and
+ * an unscoped one allows.
+ */
+type RawSqlMethod =
+  '$queryRaw' | '$queryRawUnsafe' | '$executeRaw' | '$executeRawUnsafe'
+
+/**
+ * The type of `db.$withoutTenant()`: `db`'s own type, with raw SQL typed the
+ * way the un-extended client types it instead of as always throwing. Every
+ * other member, the models and `$transaction` included, has exactly `db`'s
+ * type, so code can take either client without the two forming a union
+ * TypeScript can't call model methods on.
+ */
+export type UnscopedClient<TDb, TClient> = Omit<
+  TDb,
+  RawSqlMethod | '$forOrg' | '$withoutTenant'
+> &
+  Pick<TClient, Extract<keyof TClient, RawSqlMethod>> & {
+    $forOrg(organizationId: string): TDb
+    $withoutTenant(): UnscopedClient<TDb, TClient>
+  }
+
+/**
  * Builds a Prisma Client extension that scopes every operation on a
  * tenant-owned model to the tenant id `config.getTenantId()` (or the
  * default reader of `context.currentOrg?.id`) returns, and adds
  * `db.$forOrg(organizationId)` / `db.$withoutTenant()` escape hatches.
+ *
+ * Every client the escape hatches return carries them too, and
+ * `db.$forOrg(id)` has the same type as `db`: TypeScript takes that type from
+ * the client the method is called on (`this`). So the tenancy extension
+ * should be the last one `db` is extended with; one added after it would be
+ * in the type of a `$forOrg` client but not on the client itself.
  *
  * See `docs/implementation-plans/2026-08-26-multi-tenancy.md` ("Layer 1")
  * for the full behavior table this implements.
@@ -1046,6 +1075,36 @@ export function createTenancyExtension<TClient>(
     // Built once per client and reused by every scoped client `$forOrg`
     // hands back; see `isListRelationField`.
     const listFieldsByModel = getListFieldsByModel(client)
+
+    // `$forOrg` and `$withoutTenant` are typed by overload signatures rather
+    // than their implementations: TypeScript infers `T` from the client a
+    // call is made on (`db`, or a client `$forOrg` returned), which a
+    // Prisma Client extension has no other way to name, since the client
+    // type the extension callback gets is Prisma's generic one, not the
+    // app's. The implementations build the client the signatures describe:
+    // the same client `db` was built from, extended the same way (except
+    // `$withoutTenant` doesn't scope), so the claim is kept here, in one
+    // place, instead of in casts at every caller.
+
+    /**
+     * A client scoped to `organizationId` regardless of request context —
+     * for background jobs, webhooks, and other code that knows the tenant
+     * but doesn't run inside a request.
+     */
+    function $forOrg<T>(this: T, organizationId: string): T
+    function $forOrg(organizationId: string): unknown {
+      return buildScopedClient(() => organizationId)
+    }
+
+    /**
+     * An unscoped client for code that intentionally reads or writes across
+     * organizations: seeds, data migrations, admin tooling. Nothing here is
+     * scoped, and raw SQL is allowed.
+     */
+    function $withoutTenant<T>(this: T): UnscopedClient<T, TClient>
+    function $withoutTenant(): unknown {
+      return unscopedClient
+    }
 
     function buildScopedClient(tenantIdSource: () => string | undefined) {
       const ctx: RewriteContext = {
@@ -1081,6 +1140,8 @@ export function createTenancyExtension<TClient>(
           $executeRawUnsafe: throwRawQueryBlocked,
         },
         client: {
+          $forOrg,
+          $withoutTenant,
           $queryRaw: throwRawQueryBlocked,
           $queryRawUnsafe: throwRawQueryBlocked,
           $executeRaw: throwRawQueryBlocked,
@@ -1089,32 +1150,11 @@ export function createTenancyExtension<TClient>(
       })
     }
 
-    const scopedClient = buildScopedClient(getTenantId)
-
-    return scopedClient.$extends({
-      client: {
-        /**
-         * A client scoped to `organizationId` regardless of request
-         * context — for background jobs, webhooks, and other code that
-         * knows the tenant but doesn't run inside a request.
-         */
-        $forOrg(organizationId: string) {
-          // The contract is that `$forOrg`/`$withoutTenant` return the same
-          // client API as the base, un-extended client: returning `TClient`
-          // here (instead of the extension's own derived type) keeps the
-          // type Prisma computes for `$extends` from growing with every
-          // helper.
-          return buildScopedClient(() => organizationId) as unknown as TClient
-        },
-        /**
-         * An unscoped client for code that intentionally reads or writes
-         * across organizations: seeds, data migrations, admin tooling.
-         * Nothing here is scoped, and raw SQL is allowed.
-         */
-        $withoutTenant() {
-          return client as unknown as TClient
-        },
-      },
+    const unscopedClient = client.$extends({
+      name: 'cedarjs-tenancy-unscoped',
+      client: { $forOrg, $withoutTenant },
     })
+
+    return buildScopedClient(getTenantId)
   })
 }
