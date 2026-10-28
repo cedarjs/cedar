@@ -18,8 +18,11 @@ import '@testing-library/jest-dom/vitest'
 // Fixed upstream in vitest 5 (its jsdom environment now overrides both
 // globals unconditionally), but this repo is still on vitest 4. Force both
 // storages back to jsdom's own instances until that upgrade happens.
+//
+// With --pool=vmThreads or --pool=vmForks, jsdomWindow is globalThis itself,
+// so skip the override to avoid infinite recursion in the getter.
 const jsdomWindow = (globalThis as { jsdom?: { window: Window } }).jsdom?.window
-if (jsdomWindow) {
+if (jsdomWindow && jsdomWindow !== globalThis) {
   for (const key of ['sessionStorage', 'localStorage'] as const) {
     Object.defineProperty(globalThis, key, {
       configurable: true,
