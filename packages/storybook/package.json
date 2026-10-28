@@ -62,7 +62,7 @@
   },
   "devDependencies": {
     "@storybook/types": "8.6.19",
-    "@types/node": "24.10.4",
+    "@types/node": "24.19.2",
     "typescript": "5.9.3",
     "vite": "7.3.7",
     "vitest": "4.1.12"
