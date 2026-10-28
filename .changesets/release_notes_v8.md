@@ -366,6 +366,16 @@ own (an editor, or `yarn eslint`) skips the rule until the file exists.
 
 ### Upgrading
 
+If your app already set up `@graphql-eslint` in `eslint.config.mjs`, remove
+that setup first: the plugin, its processor and its parser. Cedar's config
+now registers the plugin itself, and ESLint stops with
+`Cannot redefine plugin "@graphql-eslint"` when it's registered twice.
+`@cedarjs/eslint-config` depends on `@graphql-eslint/eslint-plugin`, so you
+can remove it from your `package.json` too, unless something else imports it.
+To keep other `@graphql-eslint` rules, set them in a block after Cedar's
+config, with `files: ['web/src/**/*.graphql']` and no `plugins`, like the one
+at the end of this section.
+
 Run `yarn cedar lint` and add `id` where it's reported. The Cells Cedar generates already select `id`, so most of
 what's reported is in hand-written or since-extended queries. After adding
 the ids:
