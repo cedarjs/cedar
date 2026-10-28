@@ -92,11 +92,13 @@ jobs:
         # Windows-relevant (see cases/windows.mts) or the PR has the `windows`
         # label. The nightly-windows workflow covers anything that slips by.
         os: ${{ needs.detect-changes.outputs.windows == 'true' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
+        node-version: ['24', '26']
 
-    name: 🏗 Build, lint, test / ${{ matrix.os }} / node 24 latest
+    name: 🏗 Build, lint, test / ${{ matrix.os }} / node ${{ matrix.node-version }}
     uses: ./.github/workflows/build-lint-test.yml
     with:
       os: ${{ matrix.os }}
+      node-version: ${{ matrix.node-version }}
 
   # Runs the server tests, the Ubuntu telemetry check, and the tutorial E2E
   # in a single job to save setup time and runner queue slots. The Windows

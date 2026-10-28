@@ -28,6 +28,11 @@
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
+> Node 26 is covered in CI (`build-lint-test` matrix) ahead of becoming the
+> default/supported runtime. New projects still declare `"node": "24.x"`, and
+> `create-cedar-app` warns Node 26 users to downgrade — CI coverage here is
+> about catching breakage early, not a claim of production support yet.
+
 ## REQUEST LIFECYCLE
 
 ```
