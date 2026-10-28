@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 
 import {
   acceptedContentType,
+  checkContentType,
   DETECT_CONTENT_TYPE_BYTES,
   DETECT_CONTENT_TYPE_TAIL_BYTES,
   DETECTABLE_CONTENT_TYPES,
@@ -804,6 +805,42 @@ describe('acceptedContentType', () => {
 
       expect(acceptedContentType(docm, [DOCX], DOCX)).toBeNull()
       expect(acceptedContentType(docm, [DOCX, DOCM], DOCX)).toBe(DOCM)
+    })
+  })
+})
+
+describe('checkContentType', () => {
+  test('returns the accepted type like acceptedContentType()', () => {
+    expect(
+      checkContentType(PNG, ['image/*'], 'application/octet-stream'),
+    ).toEqual({ contentType: 'image/png' })
+    expect(
+      checkContentType(bytes('name,email\n'), ['text/*'], 'TEXT/CSV'),
+    ).toEqual({ contentType: 'text/csv' })
+  })
+
+  test('says what the bytes are and what was claimed when it refuses', () => {
+    // An iPhone photo with a sequence brand, sent as a still
+    expect(
+      checkContentType(
+        ftyp('hevc', 'mif1', 'msf1'),
+        ['image/heic'],
+        'image/heic',
+      ),
+    ).toEqual({
+      rejected: { detected: 'image/heic-sequence', claimed: 'image/heic' },
+    })
+    expect(checkContentType(PNG, ['image/jpeg'], 'image/jpg')).toEqual({
+      rejected: { detected: 'image/png', claimed: 'image/jpeg' },
+    })
+    expect(checkContentType(bytes('<p>'), ['image/*'], 'image/png')).toEqual({
+      rejected: { detected: null, claimed: 'image/png' },
+    })
+    expect(checkContentType(bytes('<p>'), ['text/*'])).toEqual({
+      rejected: { detected: null, claimed: null },
+    })
+    expect(checkContentType(PNG, ['image/jpeg'], ' ')).toEqual({
+      rejected: { detected: 'image/png', claimed: null },
     })
   })
 })
