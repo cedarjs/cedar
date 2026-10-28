@@ -1,9 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { simpleTraverse, parse } from '@typescript-eslint/typescript-estree'
+import {
+  simpleTraverse,
+  parse as parseTypeScript,
+} from '@typescript-eslint/typescript-estree'
 import type { TSESTree } from '@typescript-eslint/utils'
 import { ESLintUtils, AST_NODE_TYPES } from '@typescript-eslint/utils'
+import { Kind, parse as parseGraphQL, visit } from 'graphql'
+import type { DirectiveNode, DocumentNode, StringValueNode } from 'graphql'
 
 const createRule = ESLintUtils.RuleCreator.withoutDocs
 
@@ -15,51 +20,78 @@ const PERMISSIONS_FILE = path.join('packages', 'permissions', 'src', 'index.ts')
 
 const SDL_FILE = /\.sdl\.(?:ts|js)$/
 
-// `@requirePermission(permission: "members.manage")`, with GraphQL's
-// optional commas between arguments. A directive with an interpolation in
-// it is split over two of the template's quasis, so it never matches here
-// and is left alone
-const DIRECTIVE =
-  /@requirePermission\s*\(\s*permission\s*:\s*"([^"\n]*)"[\s,]*\)/g
+// The check works on GraphQL's own AST. graphql-eslint hands its rules that
+// same AST, so this part would carry over as is if the api side's SDL ever
+// goes through graphql-eslint the way the web side's documents do. Only
+// the gql template handling in the rule itself is about parsing the SDL
+// ourselves.
+
+export type UnknownPermission = {
+  /** The directive's `permission` argument */
+  node: StringValueNode
+  name: string
+  /** The closest defined name, when one is close enough to be a typo */
+  suggestion: string | undefined
+}
 
 /**
- * `text` with every GraphQL comment and block string blanked out, so a
- * directive mentioned in a description or a comment isn't taken for a real
- * one. Same length as `text`, so indexes into it still point at the source.
- * Plain strings are kept: the directive's own argument is one.
+ * What's wrong with `directive`, or `undefined` when it isn't a
+ * `@requirePermission` whose `permission` is a literal that `names` doesn't
+ * have
  */
-function blankCommentsAndBlockStrings(text: string): string {
-  let out = ''
-  let i = 0
-
-  while (i < text.length) {
-    if (text.startsWith('"""', i)) {
-      const end = text.indexOf('"""', i + 3)
-      const stop = end === -1 ? text.length : end + 3
-      out += text.slice(i, stop).replace(/[^\n]/g, ' ')
-      i = stop
-    } else if (text[i] === '"') {
-      let j = i + 1
-
-      while (j < text.length && text[j] !== '"' && text[j] !== '\n') {
-        j += text[j] === '\\' ? 2 : 1
-      }
-
-      const stop = Math.min(j + 1, text.length)
-      out += text.slice(i, stop)
-      i = stop
-    } else if (text[i] === '#') {
-      const end = text.indexOf('\n', i)
-      const stop = end === -1 ? text.length : end
-      out += ' '.repeat(stop - i)
-      i = stop
-    } else {
-      out += text[i]
-      i += 1
-    }
+export function checkRequirePermission(
+  directive: DirectiveNode,
+  names: ReadonlySet<string>,
+): UnknownPermission | undefined {
+  if (directive.name.value !== 'requirePermission') {
+    return undefined
   }
 
-  return out
+  const argument = directive.arguments?.find(
+    (argument) => argument.name.value === 'permission',
+  )
+
+  // An enum value, say, isn't a name we can check
+  if (argument?.value.kind !== Kind.STRING) {
+    return undefined
+  }
+
+  const name = argument.value.value
+
+  if (names.has(name)) {
+    return undefined
+  }
+
+  return { node: argument.value, name, suggestion: closestName(name, names) }
+}
+
+/**
+ * The source of a gql template between its backticks, with every `${...}`
+ * blanked out so the text keeps its length: an offset into `text` plus
+ * `start` is an offset into the file. A whole interpolated definition
+ * leaves valid SDL behind; an interpolation inside one doesn't, and the
+ * template is then skipped.
+ */
+function templateText(
+  template: TSESTree.TemplateLiteral,
+  source: string,
+): { start: number; text: string } {
+  const start = template.range[0] + 1
+  let text = ''
+  let cursor = start
+
+  for (const quasi of template.quasis) {
+    // A quasi's range includes the backtick or `}` before it and the `${`
+    // or backtick after it
+    const rawStart = quasi.range[0] + 1
+    const rawEnd = quasi.range[1] - (quasi.tail ? 1 : 2)
+
+    text += source.slice(cursor, rawStart).replace(/[^\n]/g, ' ')
+    text += source.slice(rawStart, rawEnd)
+    cursor = rawEnd
+  }
+
+  return { start, text }
 }
 
 type CachedNames = { mtimeMs: number; names: ReadonlySet<string> | null }
@@ -122,7 +154,7 @@ export function parsePermissionNames(source: string): Set<string> | null {
   let ast: TSESTree.Program
 
   try {
-    ast = parse(source, { jsx: false, range: false, loc: false })
+    ast = parseTypeScript(source, { jsx: false, range: false, loc: false })
   } catch {
     return null
   }
@@ -326,26 +358,40 @@ export const validPermissionNames = createRule<
           return
         }
 
-        for (const quasi of node.quasi.quasis) {
-          const text = blankCommentsAndBlockStrings(quasi.value.raw)
-          // The quasi's range includes the backtick or `}` before it
-          const textStart = quasi.range[0] + 1
+        const { start, text } = templateText(node.quasi, sourceCode.text)
+        let document: DocumentNode
 
-          for (const match of text.matchAll(DIRECTIVE)) {
-            const name = match[1]
+        try {
+          document = parseGraphQL(text)
+        } catch {
+          // Not SDL we can read. The GraphQL server reports real syntax
+          // errors, with the directives in them still unchecked
+          return
+        }
 
-            if (names.has(name)) {
-              continue
+        visit(document, {
+          Directive(directive) {
+            const unknown = checkRequirePermission(directive, names)
+
+            if (!unknown?.node.loc) {
+              return
             }
 
-            const nameStart =
-              textStart + match.index + match[0].indexOf('"') + 1
-            const suggestion = closestName(name, names)
+            const { name, suggestion } = unknown
+            const { loc } = unknown.node
+
+            // A string with an interpolation in it was parsed as blanks
+            if (
+              sourceCode.text.slice(start + loc.start, start + loc.end) !==
+              text.slice(loc.start, loc.end)
+            ) {
+              return
+            }
 
             context.report({
               loc: {
-                start: sourceCode.getLocFromIndex(nameStart),
-                end: sourceCode.getLocFromIndex(nameStart + name.length),
+                start: sourceCode.getLocFromIndex(start + loc.start),
+                end: sourceCode.getLocFromIndex(start + loc.end),
               },
               ...(suggestion
                 ? {
@@ -357,8 +403,8 @@ export const validPermissionNames = createRule<
                     data: { name },
                   }),
             })
-          }
-        }
+          },
+        })
       },
     }
   },

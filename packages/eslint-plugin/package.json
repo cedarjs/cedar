@@ -25,7 +25,8 @@
   "dependencies": {
     "@typescript-eslint/typescript-estree": "8.72.0",
     "@typescript-eslint/utils": "8.72.0",
-    "eslint": "8.57.1"
+    "eslint": "8.57.1",
+    "graphql": "16.14.2"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

@@ -3,9 +3,11 @@ import os from 'node:os'
 import path from 'node:path'
 
 import { RuleTester } from '@typescript-eslint/rule-tester'
+import { parse, visit } from 'graphql'
 import { dedent } from 'ts-dedent'
 
 import {
+  checkRequirePermission,
   parsePermissionNames,
   validPermissionNames,
 } from '../valid-permission-names.js'
@@ -111,9 +113,9 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
       code: 'export const schema = gql`type Query { a: String @requirePermission(permission: ${name}) }`',
     },
     {
-      // A variable, not a literal
+      // An enum value, not a string
       filename: sdlFile(sdlDir),
-      code: sdl('@requirePermission(permission: $permission)'),
+      code: sdl('@requirePermission(permission: NOPE)'),
     },
     {
       // A GraphQL comment
@@ -147,6 +149,11 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
       `),
     },
     {
+      // Not SDL we can read: left to the GraphQL server to report
+      filename: sdlFile(sdlDir),
+      code: sdl('@requirePermission(permission: "nope"'),
+    },
+    {
       // Not a gql template
       filename: sdlFile(sdlDir),
       code: 'export const schema = sql`@requirePermission(permission: "nope")`',
@@ -166,9 +173,9 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
           messageId: 'unknownPermission',
           data: { name: 'other.thing' },
           line: 3,
-          column: 57,
+          column: 56,
           endLine: 3,
-          endColumn: 68,
+          endColumn: 69,
         },
       ],
     },
@@ -217,6 +224,30 @@ ruleTester.run('valid-permission-names', validPermissionNames, {
       ],
     },
     {
+      // A block string is a string too
+      filename: sdlFile(sdlDir),
+      code: sdl('@requirePermission(permission: """members.manag""")'),
+      errors: [
+        {
+          messageId: 'unknownPermissionWithSuggestion',
+          data: { name: 'members.manag', suggestion: 'members.manage' },
+        },
+      ],
+    },
+    {
+      // An interpolated definition is blanked out, the rest is checked
+      filename: sdlFile(sdlDir),
+      code: dedent`
+        export const schema = gql\`
+          \${shared}
+          type Query {
+            a: String @requirePermission(permission: "nope")
+          }
+        \`
+      `,
+      errors: [{ messageId: 'unknownPermission', line: 4, column: 46 }],
+    },
+    {
       // The file is named in the options, not found from the SDL file
       filename: path.join(root, 'elsewhere.sdl.ts'),
       options: [
@@ -260,5 +291,40 @@ describe('parsePermissionNames', () => {
     expect(
       parsePermissionNames('definePermissions({ permissions: [...x] })'),
     ).toBeNull()
+  })
+})
+
+describe('checkRequirePermission', () => {
+  function unknownIn(sdl: string, names: string[]) {
+    const unknown: string[] = []
+
+    visit(parse(sdl), {
+      Directive(directive) {
+        const result = checkRequirePermission(directive, new Set(names))
+
+        if (result) {
+          unknown.push(`${result.name} -> ${result.suggestion}`)
+        }
+      },
+    })
+
+    return unknown
+  }
+
+  it('reports unknown literal names, with the closest known one', () => {
+    expect(
+      unknownIn(
+        dedent`
+          type Query {
+            a: String @requirePermission(permission: "a.read")
+            b: String @requirePermission(permission: "a.raed")
+            c: String @requirePermission(permission: "zzz")
+            d: String @requirePermission(permission: NOPE)
+            e: String @requireAuth(roles: "zzz")
+          }
+        `,
+        ['a.read'],
+      ),
+    ).toEqual(['a.raed -> a.read', 'zzz -> undefined'])
   })
 })
