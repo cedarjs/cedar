@@ -92,6 +92,13 @@ describe('createTenancyExtension - reads', () => {
       expect(rows).toHaveLength(2)
     })
 
+    it('allows raw queries in its interactive transactions', async () => {
+      const rows = await db.$withoutTenant().$transaction(async (tx) => {
+        return tx.$queryRaw`SELECT id FROM Project ORDER BY id`
+      })
+      expect(rows).toHaveLength(2)
+    })
+
     it('returns a client that has $forOrg and $withoutTenant too', async () => {
       const unscopedDb = db.$withoutTenant()
 

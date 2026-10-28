@@ -69,7 +69,6 @@ test('a helper can take either db or a $forOrg client', () => {
 test('$withoutTenant returns db’s model API, with raw SQL allowed', () => {
   expect(unscopedDb).type.toBe<UnscopedClient<typeof db, typeof prismaClient>>()
   expect(unscopedDb.project).type.toBe<typeof db.project>()
-  expect(unscopedDb.$transaction).type.toBe<typeof db.$transaction>()
   expect(unscopedDb.$forOrg('some-org-id')).type.toBe<typeof db>()
   expect(unscopedDb.$withoutTenant()).type.toBe<typeof unscopedDb>()
 
@@ -77,6 +76,41 @@ test('$withoutTenant returns db’s model API, with raw SQL allowed', () => {
   expect(unscopedDb.$executeRawUnsafe('SELECT 1')).type.not.toRaiseError()
   expect(db.$queryRaw`SELECT 1`).type.toRaiseError()
   expect(scopedDb.$executeRawUnsafe('SELECT 1')).type.toRaiseError()
+})
+
+test('$withoutTenant’s transactions allow raw SQL too', () => {
+  // e.g. a transaction-scoped advisory lock that serializes work on a key
+  void unscopedDb.$transaction(async (tx) => {
+    expect(tx.project).type.toBe<typeof db.project>()
+    expect(
+      tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${'key'}))`,
+    ).type.not.toRaiseError()
+    expect(tx.$executeRawUnsafe('SELECT 1')).type.not.toRaiseError()
+  })
+  expect(
+    unscopedDb.$transaction(async (tx) => tx.project.count(), {
+      isolationLevel: 'Serializable',
+    }),
+  ).type.toBe<Promise<number>>()
+  expect(
+    unscopedDb.$transaction(async (tx) => tx.project.count(), {
+      isolationLevel: 'NotALevel',
+    }),
+  ).type.toRaiseError()
+
+  // The batch form works as on db
+  expect(
+    unscopedDb.$transaction([
+      unscopedDb.project.count(),
+      unscopedDb.$executeRaw`SELECT 1`,
+    ]),
+  ).type.toBe<Promise<[number, number]>>()
+
+  void db.$transaction(async (tx) => {
+    expect(tx.project).type.toBe<typeof db.project>()
+    expect(tx.$queryRaw`SELECT 1`).type.toRaiseError()
+    expect(tx.$executeRawUnsafe('SELECT 1')).type.toRaiseError()
+  })
 })
 
 test('a helper can take either db or a $withoutTenant client', () => {
