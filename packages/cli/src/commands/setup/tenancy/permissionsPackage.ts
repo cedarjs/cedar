@@ -96,9 +96,7 @@ const packageNameIn = (packageDir: string): string | undefined => {
  * else in one named after the app's folder (as `cedar generate package`
  * does).
  */
-export function permissionsPackageName(
-  packagesDir = path.join(getPaths().base, 'packages'),
-) {
+export function permissionsPackageName(packagesDir = getPaths().packages) {
   const existing = packageNameIn(
     path.join(packagesDir, PERMISSIONS_PACKAGE_FOLDER),
   )
