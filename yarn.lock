@@ -3298,7 +3298,7 @@ __metadata:
     cookie: "npm:1.1.1"
     fastify: "npm:5.12.7"
     graphql: "npm:16.14.2"
-    graphql-scalars: "npm:1.26.0"
+    graphql-scalars: "npm:2.0.1"
     graphql-tag: "npm:2.12.7"
     graphql-yoga: "npm:5.24.6"
     jsonwebtoken: "npm:9.0.3"
@@ -18945,14 +18945,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-scalars@npm:1.26.0":
-  version: 1.26.0
-  resolution: "graphql-scalars@npm:1.26.0"
+"graphql-scalars@npm:2.0.1":
+  version: 2.0.1
+  resolution: "graphql-scalars@npm:2.0.1"
   dependencies:
     tslib: "npm:^2.5.0"
   peerDependencies:
-    graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-  checksum: 10c0/75b2973add44e12a324aad49e2ace3fb3415bf375385f37f6035220980b3aed28e60f96b2ed765dbf40951b36ddc94d3e75c9382a75791844bd447015998815d
+    graphql: ^16.0.0 || ^17.0.0
+  checksum: 10c0/69cd83e9bc576a1d59924bfe807113b24f89e82f2701d289490b21468ae5fba461985719b979f5ca01309095db4fd8cb7d62bdaaca80c2e000a563cdc788d97c
   languageName: node
   linkType: hard
 
