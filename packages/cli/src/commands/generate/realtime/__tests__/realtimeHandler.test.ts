@@ -29,7 +29,7 @@ vi.mock('node:fs', async () => {
         }
 
         // An app without tenancy
-        if (filePath.includes('requireOrgAuth')) {
+        if (filePath.includes('requireUserAuth')) {
           return false
         }
 

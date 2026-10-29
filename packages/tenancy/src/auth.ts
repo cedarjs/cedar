@@ -78,17 +78,6 @@ export interface TenancyAuth {
    */
   hasUserRole(roles: Roles): boolean
   /**
-   * Guards a service or directive on the current organization: signed in,
-   * a member of the current organization and, when `roles` are given, with
-   * one of them there. With no `roles`, any member gets in, as any
-   * signed-in user gets past the single-tenant `requireAuth()`: use `roles`
-   * or `requirePermission()` for anything narrower.
-   *
-   * Throws `AuthenticationError` when no one is signed in, and
-   * `ForbiddenError` otherwise.
-   */
-  requireOrgAuth(options?: { roles?: Roles }): void
-  /**
    * Guards a service or directive on the signed-in user alone, in any
    * organization or none: their account, their memberships, accepting an
    * invitation. When `roles` are given, the user needs one of them in
@@ -107,12 +96,14 @@ export interface TenancyAuth {
  * exports in place of its single-tenant `hasRole` and `requireAuth`:
  *
  * ```ts
- * export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
+ * export const { hasUserRole, hasOrgRole, requireUserAuth } =
  *   createTenancyAuth()
  * ```
  *
  * There's no `hasRole` or `requireAuth`: every check says whether it's
- * about the signed-in user alone or the current organization.
+ * about the signed-in user alone or the current organization. Checks on
+ * the current organization are permissions (`createPermissions`), so a
+ * role can do only what its entry in the permission definitions lists.
  */
 export function createTenancyAuth(): TenancyAuth {
   return {
@@ -133,25 +124,6 @@ export function createTenancyAuth(): TenancyAuth {
       // As the single-tenant `requireAuth`: `roles`, even an empty list,
       // must match
       if (roles && !userRoles().some((role) => toList(roles).includes(role))) {
-        throw new ForbiddenError("You don't have access to do that.")
-      }
-    },
-
-    requireOrgAuth({ roles } = {}) {
-      if (!context.currentUser) {
-        throw new AuthenticationError("You don't have permission to do that.")
-      }
-
-      const currentOrg = getCurrentOrg()
-
-      if (!currentOrg) {
-        throw new ForbiddenError(
-          'You must be a member of an organization to do that.',
-        )
-      }
-
-      // As `requireUserAuth`: `roles`, even an empty list, must match
-      if (roles && !toList(roles).includes(currentOrg.role)) {
         throw new ForbiddenError("You don't have access to do that.")
       }
     },

@@ -100,57 +100,6 @@ describe('createTenancyAuth', () => {
     })
   })
 
-  describe('requireOrgAuth', () => {
-    const { requireOrgAuth } = createTenancyAuth()
-
-    it('throws AuthenticationError with no current user', async () => {
-      await run(() => {
-        expect(() => requireOrgAuth()).toThrow(AuthenticationError)
-      })
-    })
-
-    it('throws ForbiddenError with no current organization', async () => {
-      await run(() => {
-        setContext({ currentUser })
-        expect(() => requireOrgAuth()).toThrow(ForbiddenError)
-      })
-    })
-
-    it("doesn't fall back to currentUser.roles without an organization", async () => {
-      await run(() => {
-        // The role an app might have copied from some other membership
-        setContext({ currentUser: { ...currentUser, roles: ['owner'] } })
-        expect(() => requireOrgAuth({ roles: 'owner' })).toThrow(ForbiddenError)
-      })
-    })
-
-    it('passes any membership when no roles are given', async () => {
-      await run(() => {
-        setContext({ currentUser, currentOrg: currentOrg1Viewer })
-        expect(() => requireOrgAuth()).not.toThrow()
-      })
-    })
-
-    it('refuses everyone for an empty list, as requireUserAuth does', async () => {
-      await run(() => {
-        setContext({ currentUser, currentOrg: currentOrg1Viewer })
-        expect(() => requireOrgAuth({ roles: [] })).toThrow(ForbiddenError)
-      })
-    })
-
-    it('checks the role in the current organization', async () => {
-      await run(() => {
-        setContext({ currentUser, currentOrg: currentOrg1Viewer })
-        expect(() => requireOrgAuth({ roles: 'viewer' })).not.toThrow()
-        expect(() =>
-          requireOrgAuth({ roles: ['owner', 'viewer'] }),
-        ).not.toThrow()
-        // owner in org2 doesn't count in org1
-        expect(() => requireOrgAuth({ roles: 'owner' })).toThrow(ForbiddenError)
-      })
-    })
-  })
-
   describe('requireUserAuth', () => {
     const { requireUserAuth } = createTenancyAuth()
 

@@ -129,20 +129,17 @@ describe("tenancy's auth directives", () => {
     delete process.env.CEDAR_CWD
   })
 
-  test.each(['requireOrgAuth', 'requireUserAuth'])(
-    'checks the roles on @%s',
-    (directive) => {
-      expect(() =>
-        validateSchema(
-          parse(`type Query { todos: [String] @${directive}(roles: 1) }`),
-        ),
-      ).toThrowError(DIRECTIVE_INVALID_ROLE_TYPES_ERROR_MESSAGE)
+  test.each(['requireUserAuth'])('checks the roles on @%s', (directive) => {
+    expect(() =>
+      validateSchema(
+        parse(`type Query { todos: [String] @${directive}(roles: 1) }`),
+      ),
+    ).toThrowError(DIRECTIVE_INVALID_ROLE_TYPES_ERROR_MESSAGE)
 
-      expect(() =>
-        validateSchema(
-          parse(`type Query { todos: [String] @${directive}(roles: ["a"]) }`),
-        ),
-      ).not.toThrowError()
-    },
-  )
+    expect(() =>
+      validateSchema(
+        parse(`type Query { todos: [String] @${directive}(roles: ["a"]) }`),
+      ),
+    ).not.toThrowError()
+  })
 })

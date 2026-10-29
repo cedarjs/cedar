@@ -121,6 +121,19 @@ describe('organizations service', () => {
     )
 
     scenario(
+      'an admin can invite an admin',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.admin)
+
+        const result = await inviteMember({
+          input: { email: 'new-admin@example.com', role: 'admin' },
+        })
+
+        expect(result.invitationToken).toBeTruthy()
+      },
+    )
+
+    scenario(
       'an admin cannot invite an owner',
       async (scenario: StandardScenario) => {
         asMember(scenario, scenario.membership.admin)

@@ -29,10 +29,10 @@ describe('withAuthDirective', () => {
   })
 
   it("switches to tenancy's directives once tenancy has replaced it", () => {
-    fs.mkdirSync(path.join(directivesDir, 'requireOrgAuth'))
+    fs.mkdirSync(path.join(directivesDir, 'requireUserAuth'))
 
     expect(withAuthDirective(sdl, { belongsToOrg: true })).toBe(
-      'todos: [Todo!]! @requireOrgAuth @requireAuthor',
+      'todos: [Todo!]! @requirePermission(permission: "organization.read") @requireAuthor',
     )
     expect(withAuthDirective(sdl, { belongsToOrg: false })).toBe(
       'todos: [Todo!]! @requireUserAuth @requireAuthor',

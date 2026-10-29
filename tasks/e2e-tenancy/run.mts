@@ -121,7 +121,6 @@ function confirmSetup(projectPath: string) {
   const exists = (file: string) => fs.existsSync(path.join(projectPath, file))
 
   for (const file of [
-    'api/src/directives/requireOrgAuth/requireOrgAuth.ts',
     'api/src/directives/requireUserAuth/requireUserAuth.ts',
     'api/src/directives/requirePermission/requirePermission.ts',
     'api/src/lib/permissions.ts',
@@ -155,8 +154,8 @@ function confirmSetup(projectPath: string) {
     throw new Error('Expected posts.sdl.ts to use @requireUserAuth')
   }
 
-  if (!/\brequireOrgAuth\b/.test(read('api/src/lib/auth.ts'))) {
-    throw new Error('Expected api/src/lib/auth.ts to export requireOrgAuth')
+  if (!/\brequireUserAuth\b/.test(read('api/src/lib/auth.ts'))) {
+    throw new Error('Expected api/src/lib/auth.ts to export requireUserAuth')
   }
 }
 

@@ -37,7 +37,7 @@ function buildMembershipsSelectProperty() {
 }
 
 /** What replaces the app's `hasRole` and `requireAuth` */
-export const TENANCY_AUTH_EXPORT = `export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
+export const TENANCY_AUTH_EXPORT = `export const { hasUserRole, hasOrgRole, requireUserAuth } =
   createTenancyAuth()
 `
 
@@ -304,8 +304,8 @@ function addPermissionsImport(source: string): string {
  *   `resolveCurrentOrg` need.
  * - Replaces the single-tenant `hasRole` and `requireAuth` with
  *   `@cedarjs/tenancy`'s `createTenancyAuth`, which also gives `hasOrgRole`:
- *   `requireOrgAuth` checks the role in the current organization, and
- *   `requireUserAuth` what `requireAuth` did. The `AllowedRoles`
+ *   `requireUserAuth` checks what `requireAuth` did, and checks on the
+ *   current organization are permissions. The `AllowedRoles`
  *   type and the error imports go too when nothing else uses them.
  * - Wraps the user lookup in `withPermissions`, so each membership carries
  *   its permissions from `api/src/lib/permissions`.

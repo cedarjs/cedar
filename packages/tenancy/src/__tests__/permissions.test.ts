@@ -109,27 +109,27 @@ describe('createPermissions', () => {
   describe('requirePermission', () => {
     it('throws AuthenticationError with no current user', async () => {
       await run(() => {
-        expect(() =>
-          permissions.requirePermission({ permission: 'projects.read' }),
-        ).toThrow(AuthenticationError)
+        expect(() => permissions.requirePermission('projects.read')).toThrow(
+          AuthenticationError,
+        )
       })
     })
 
     it('throws ForbiddenError without a current organization', async () => {
       await run(() => {
         setContext({ currentUser })
-        expect(() =>
-          permissions.requirePermission({ permission: 'projects.read' }),
-        ).toThrow('You must be a member of an organization to do that.')
+        expect(() => permissions.requirePermission('projects.read')).toThrow(
+          'You must be a member of an organization to do that.',
+        )
       })
     })
 
     it("throws ForbiddenError when the role doesn't have it", async () => {
       await run(() => {
         setContext({ currentUser, currentOrg: inOrg1 })
-        expect(() =>
-          permissions.requirePermission({ permission: 'projects.edit' }),
-        ).toThrow(ForbiddenError)
+        expect(() => permissions.requirePermission('projects.edit')).toThrow(
+          ForbiddenError,
+        )
       })
     })
 
@@ -137,8 +137,54 @@ describe('createPermissions', () => {
       await run(() => {
         setContext({ currentUser, currentOrg: inOrg1 })
         expect(() =>
-          permissions.requirePermission({ permission: 'projects.read' }),
+          permissions.requirePermission('projects.read'),
         ).not.toThrow()
+      })
+    })
+  })
+
+  describe('canGrantRole', () => {
+    const inOrg2 = {
+      id: 'org2',
+      slug: 'org-two',
+      role: 'owner',
+      membershipId: 'membership2',
+    }
+
+    it('allows a role whose permissions the user all has', async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: inOrg2 })
+        expect(permissions.canGrantRole('owner')).toBe(true)
+        expect(permissions.canGrantRole('member')).toBe(true)
+      })
+    })
+
+    it('refuses a role with a permission the user lacks', async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: inOrg1 })
+        expect(permissions.canGrantRole('owner')).toBe(false)
+        expect(permissions.canGrantRole('member')).toBe(true)
+
+        setContext({ currentUser, currentOrg: inOrg2 })
+        // The owner can't sign reports themselves, so can't hand that out
+        expect(permissions.canGrantRole('fieldWorker')).toBe(false)
+      })
+    })
+
+    it('refuses a role the definitions do not list', async () => {
+      await run(() => {
+        setContext({ currentUser, currentOrg: inOrg2 })
+        expect(permissions.canGrantRole('constructor')).toBe(false)
+        expect(permissions.canGrantRole('toString')).toBe(false)
+      })
+    })
+
+    it('is false outside an organization, or with no current user', async () => {
+      await run(() => {
+        expect(permissions.canGrantRole('member')).toBe(false)
+
+        setContext({ currentUser })
+        expect(permissions.canGrantRole('member')).toBe(false)
       })
     })
   })

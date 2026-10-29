@@ -34,7 +34,17 @@ export interface Permissions<Permission extends string> {
    * `AuthenticationError` when no one is signed in, and `ForbiddenError`
    * when they may not.
    */
-  requirePermission(options: { permission: Permission }): void
+  requirePermission(permission: Permission): void
+  /**
+   * Whether the signed-in user may give `role` to someone in the current
+   * organization, or take it away: they hold every permission `role` has,
+   * so no one can hand out more than they may do themselves. False for a
+   * role the definitions don't list.
+   *
+   * This is only the role half: who may manage members at all is a
+   * permission of its own (`members.manage`, say) on the field.
+   */
+  canGrantRole(role: string): boolean
   /**
    * What a membership may do: its role's permissions. The one place a membership's permissions are worked out, which
    * `hasPermission`, `requirePermission` and `withPermissions` all use.
@@ -69,7 +79,7 @@ export interface Permissions<Permission extends string> {
  * // api/src/lib/permissions.ts
  * import { permissions } from '@my-app/permissions'
  *
- * export const { hasPermission, requirePermission, withPermissions } =
+ * export const { hasPermission, requirePermission, canGrantRole, withPermissions } =
  *   createPermissions(permissions)
  * ```
  *
@@ -151,7 +161,20 @@ export function createPermissions<const Permission extends string>(
     hasPermission,
     permissionsOf,
     withPermissions,
-    requirePermission({ permission }) {
+    canGrantRole(role) {
+      const membership = context.currentUser ? currentMembership() : undefined
+
+      if (!membership || !Object.hasOwn(definitions.roles, role)) {
+        return false
+      }
+
+      const held = permissionsOf(membership)
+
+      return definitions.roles[role].every((permission) =>
+        held.includes(permission),
+      )
+    },
+    requirePermission(permission) {
       assertDefined(permission)
 
       if (!context.currentUser) {

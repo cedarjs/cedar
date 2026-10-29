@@ -2251,7 +2251,7 @@ yarn cedar setup ui <library>
 ### setup tenancy
 
 Set up multi-tenancy: organizations, memberships, a tenant-scoped Prisma client
-extension, and the services, directive and web components an app needs to scope
+extension, and the services, directives and web components an app needs to scope
 data by organization. See the [multi-tenancy how-to](how-to/multi-tenancy.md)
 for the full walkthrough.
 

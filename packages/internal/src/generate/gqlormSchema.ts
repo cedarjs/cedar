@@ -73,7 +73,7 @@ export interface GqlormBackendConfig {
   membershipModelExists: boolean // whether the model exists in the project DMMF
   /**
    * Whether `cedar setup tenancy` replaced `@requireAuth` with
-   * `@requireOrgAuth` and `@requireUserAuth`. Fields then use
+   * `@requireUserAuth` and `@requirePermission`. Fields then use
    * `@requireUserAuth`, which checks what `@requireAuth` did: gqlorm does
    * its own scoping to the user's organizations.
    */
@@ -1382,7 +1382,7 @@ export async function generateGqlormArtifacts(): Promise<{
       membershipOrganizationField,
       membershipModelExists,
       tenancyAuthDirectives: fs.existsSync(
-        path.join(getPaths().api.directives, 'requireOrgAuth'),
+        path.join(getPaths().api.directives, 'requireUserAuth'),
       ),
     }
 

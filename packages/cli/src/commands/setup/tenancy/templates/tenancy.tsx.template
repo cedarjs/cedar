@@ -16,12 +16,8 @@ import { createTenancy } from '@cedarjs/tenancy/web'
  *
  * A user who isn't signed in is sent to log in, and one who isn't a member
  * of the organization sees `notAMember`. Pages only some members may open
- * take `orgRoles` or `orgPermission` (see api/src/lib/permissions), and the
- * one a member without them is sent to is `unauthorized`:
- *
- *   <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
- *     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
- *   </PrivateSet>
+ * take `orgPermission` (see packages/permissions), and the one a member
+ * without it is sent to is `unauthorized`:
  *
  *   <PrivateSet unauthenticated="login" unauthorized="projects" orgPermission="members.manage">
  *     <Route path="/org/{orgSlug}/members" page={MembersPage} name="members" />
