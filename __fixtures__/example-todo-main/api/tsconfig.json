@@ -22,7 +22,7 @@
       "../node_modules/@types",
       "./node_modules/@types"
     ],
-    "types": ["jest"]
+    "types": ["vitest/globals"]
   },
   "include": [
     "src",
