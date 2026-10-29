@@ -33,12 +33,10 @@
     },
     "typeRoots": [
       "../node_modules/@types",
-      "./node_modules/@types",
-      "../node_modules/@testing-library"
+      "./node_modules/@types"
     ],
     "types": [
-      "jest",
-      "jest-dom"
+      "vitest/globals"
     ],
     "jsx": "preserve"
   },
