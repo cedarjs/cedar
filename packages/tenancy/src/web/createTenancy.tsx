@@ -8,7 +8,6 @@ import type { OrgProviderProps, Tenancy, UseOrg } from '@cedarjs/router'
 import { useCreateApolloClient } from '@cedarjs/web/apollo'
 
 import { isOrgMembership } from './getMemberships.js'
-import { hasOrgRole } from './hasOrgRole.js'
 import { getOrgClient } from './orgClients.js'
 import { OrgContext } from './OrgContext.js'
 import type { CurrentOrgSummary, OrgContextValue } from './types.js'
@@ -176,8 +175,6 @@ function OrgProviderImplementation({
   const contextValue: OrgContextValue = {
     org,
     memberships,
-    hasOrgRole: (roles, organizationId) =>
-      hasOrgRole(memberships, roles, organizationId ?? org.id),
     setOrg,
   }
 
@@ -203,8 +200,7 @@ const useOrgFromParams: UseTenancyOrg = (useAuth, params) =>
  * Makes the `tenancy` to pass to the `Router`. The router then renders the
  * organization's provider itself, around the layouts and page of every
  * `PrivateSet` whose route is in an organization (by default, one with
- * `{orgSlug}` in its path), and checks `orgRoles` and `orgPermission` on
- * those sets.
+ * `{orgSlug}` in its path), and checks `orgPermission` on those sets.
  *
  * Call it once, at the top level of a module, like `web/src/tenancy.tsx`:
  * a new tenancy on each render would remount the provider.

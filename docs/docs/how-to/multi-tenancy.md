@@ -255,7 +255,7 @@ single-tenant `hasRole` and `requireAuth` are replaced with the tenancy ones:
 -export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
 -  // ...
 -}
-+export const { hasUserRole, hasOrgRole, requireUserAuth } = createTenancyAuth()
++export const { hasUserRole, requireUserAuth } = createTenancyAuth()
 ```
 
 There's no `requireAuth` any more. `requireUserAuth` (and `@requireUserAuth`)
@@ -893,9 +893,8 @@ const ProjectList = () => {
 Here `projects.edit` is a permission the app added to its definitions.
 `useCurrentOrg().memberships` gives every membership with its `permissions`,
 which is how you'd show a switcher entry as disabled for an organization where
-the user may not do something, without navigating there first.
-`useCurrentOrg().hasOrgRole` checks the role itself, and is there for the rare
-check that really is about the role. For `currentUser.roles`, use
+the user may not do something, without navigating there first. To show the
+user's role, read `org.role`. For `currentUser.roles`, use
 `useAuth().hasUserRole`.
 With tenancy there's no `useAuth().hasRole`: setup renames your existing uses
 to `hasUserRole`, and using it is a type error.
@@ -903,9 +902,7 @@ to `hasUserRole`, and using it is a type error.
 `<PrivateSet roles>` isn't available with tenancy either. For a page only
 some members may open, give its `PrivateSet` `orgPermission` and
 `unauthorized` (see
-[Guarding routes by permission](../tenancy.md#guarding-routes-by-permission)).
-`orgRoles` is there too, but a permission keeps the page open to exactly the
-roles whose list has it:
+[Guarding routes by permission](../tenancy.md#guarding-routes-by-permission)):
 
 <!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
@@ -924,9 +921,9 @@ roles whose list has it:
 
 A member who lacks the permission is redirected to the same organization's
 `projects` page. The router checks it against the membership it finds in the
-organization whose slug is the route's `orgSlug` param, so `orgPermission` and
-`orgRoles` need both a `tenancy` on the `Router` and a route in an
-organization: without either, they throw an error rather than let anyone in.
+organization whose slug is the route's `orgSlug` param, so `orgPermission`
+needs both a `tenancy` on the `Router` and a route in an organization: without
+either, it throws an error rather than let anyone in.
 
 ### `reauthenticate()` after membership-changing mutations
 

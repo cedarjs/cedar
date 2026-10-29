@@ -1,9 +1,9 @@
 import '@cedarjs/auth'
 
-// This app has tenancy, so every role check says which kind it is:
-// useAuth().hasUserRole for currentUser.roles, and
-// useCurrentOrg().hasOrgRole or <PrivateSet orgRoles> for the role in the
-// organization. No useAuth().hasRole or <PrivateSet roles>.
+// This app has tenancy, so every check says which kind it is:
+// useAuth().hasUserRole for currentUser.roles, and useAuth().hasPermission or
+// <PrivateSet orgPermission> for what the user may do in the organization.
+// No useAuth().hasRole or <PrivateSet roles>.
 declare module '@cedarjs/auth' {
   interface AuthTenancy {
     enabled: true

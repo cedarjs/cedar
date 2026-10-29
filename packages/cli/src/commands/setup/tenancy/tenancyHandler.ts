@@ -787,8 +787,8 @@ ${
              }
           7. Every role check names its kind now. ${c.highlight('hasRole')} is
              ${c.highlight('hasUserRole')} on both sides (your existing uses were renamed),
-             checking ${c.highlight('currentUser.roles')}; ${c.highlight('hasOrgRole')} checks the role in
-             the organization. ${c.highlight('<PrivateSet roles>')} isn't available with
+             checking ${c.highlight('currentUser.roles')}. In the organization, check
+             permissions instead. ${c.highlight('<PrivateSet roles>')} isn't available with
              tenancy: guard routes with ${c.highlight('<PrivateSet userRoles>')} for
              ${c.highlight('currentUser.roles')}, and with ${c.highlight('<PrivateSet orgPermission>')} for a
              permission of their membership in the route's organization. A

@@ -79,7 +79,7 @@ import {
 // api/src/lib/auth.ts, in place of the single-tenant hasRole/requireAuth
 import { createTenancyAuth } from '@cedarjs/tenancy'
 
-export const { hasUserRole, hasOrgRole, requireUserAuth } = createTenancyAuth()
+export const { hasUserRole, requireUserAuth } = createTenancyAuth()
 
 // In a service:
 requireUserAuth() // signed in, no organization needed
@@ -93,8 +93,7 @@ is for fields about the user rather than an organization: their account,
 their memberships, accepting an invitation. It needs a signed-in user, and
 checks `roles` against `currentUser.roles`. There's no `requireAuth` or
 `hasRole`, and no role check on the current organization: fields about an
-organization ask for a permission (below). `hasOrgRole` is there for the rare
-check that really is about the role itself.
+organization ask for a permission (below).
 
 ## Permissions
 
@@ -152,12 +151,12 @@ which `useAuth().hasPermission()` checks inside an organization route.
 ## Web
 
 `@cedarjs/tenancy/web` exports `createTenancy`, a ready-made `tenancy`,
-`useCurrentOrg`, `useOrgBySlug` and `getMemberships`/`hasOrgRole` for the client
+`useCurrentOrg`, `useOrgBySlug` and `getMemberships` for the client
 side. Pass the tenancy to the router and put organization routes in a
 `PrivateSet`: the router renders a per-organization Apollo client, keyed by the
 immutable organization id so switching organizations never mixes caches, around
-the set's layouts and page. `useCurrentOrg().hasOrgRole` checks the user's role
-in the organization. To guard routes by a permission of the user's
+the set's layouts and page. `useAuth().hasPermission()` checks what the user
+may do in the organization. To guard routes by a permission of the user's
 membership, give a `PrivateSet` `orgPermission` and `unauthorized`:
 
 <!-- prettier-ignore -->
@@ -182,8 +181,8 @@ export const tenancy = createTenancy({
 })
 ```
 
-The router checks the role and permission in the organization of the route's
-`orgSlug` param. A `PrivateSet` with `orgRoles` or `orgPermission` throws when
+The router checks the permission in the organization of the route's
+`orgSlug` param. A `PrivateSet` with `orgPermission` throws when
 the router has no `tenancy` or its `useOrg` finds no organization for the
 route; with the default lookup, that's a route without `{orgSlug}`. A route
 with `{orgSlug}` outside a `PrivateSet` is a public page with no organization
