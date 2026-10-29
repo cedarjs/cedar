@@ -3996,7 +3996,7 @@ __metadata:
     "@universal-deploy/vite": "npm:0.2.2"
     "@vitejs/plugin-react": "npm:4.7.0"
     "@whatwg-node/fetch": "npm:0.12.1"
-    "@whatwg-node/server": "npm:0.13.1"
+    "@whatwg-node/server": "npm:0.13.2"
     acorn: "npm:8.19.0"
     acorn-loose: "npm:8.5.2"
     ansis: "npm:4.4.0"
@@ -4506,6 +4506,16 @@ __metadata:
     "@whatwg-node/promise-helpers": "npm:^1.2.1"
     tslib: "npm:^2.5.0"
   checksum: 10c0/3177b08e39eae3cbe61e343ead6fa282e011001b538fcfb52c782dc2cbf1290548ebeb3f534229b030623b856328fc3ed9067147d5cfec3a94ca8a10acf71028
+  languageName: node
+  linkType: hard
+
+"@envelop/instrumentation@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@envelop/instrumentation@npm:2.0.0"
+  dependencies:
+    "@whatwg-node/promise-helpers": "npm:^2.0.0"
+    tslib: "npm:^2.5.0"
+  checksum: 10c0/fd01678bcec4906b517e1a2ea88a904523b54e175eff3ff742e3cf011f170a139f1993904e38cc310f391cd55a3cc0920474403e325bc5ac8a070735f0396085
   languageName: node
   linkType: hard
 
@@ -13353,16 +13363,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@whatwg-node/server@npm:0.13.1":
-  version: 0.13.1
-  resolution: "@whatwg-node/server@npm:0.13.1"
+"@whatwg-node/server@npm:0.13.2":
+  version: 0.13.2
+  resolution: "@whatwg-node/server@npm:0.13.2"
   dependencies:
-    "@envelop/instrumentation": "npm:^1.0.0"
+    "@envelop/instrumentation": "npm:^2.0.0"
     "@whatwg-node/disposablestack": "npm:^0.1.0"
     "@whatwg-node/fetch": "npm:^0.12.0"
     "@whatwg-node/promise-helpers": "npm:^2.0.0"
     tslib: "npm:^2.6.3"
-  checksum: 10c0/924d5d6d3413bcd89c71d2fccdd38d379d7f0075701e8fc20f950676952abba87c6ac488df3a826e936feaf79e4378f3b63116d16bce4d78f7421eba27f86e52
+  checksum: 10c0/1bdda6df18c87b1a924cadb9556a1d41e98e00efcdc12b2e13cc17d5ad9d19b1ba4795fc1fd2b5b380ad0b776aea6642bd7d94dd4007cebda2e416784d0c8fef
   languageName: node
   linkType: hard
 
