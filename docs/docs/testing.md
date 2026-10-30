@@ -767,6 +767,27 @@ mockCurrentUser({ roles: [] })
 
 That's it!
 
+#### Mocking Permissions
+
+In an app with [permissions](permissions.md), a component checks
+`useAuth().hasPermission()`. In tests, mock the user's `roles`, and
+`mockCurrentUser()` gives them the permissions the app's map gives those roles:
+
+```jsx
+mockCurrentUser({ roles: ['admin'] })
+```
+
+In Storybook, mock the permissions themselves, as a story shows one state of
+the UI whichever role grants it:
+
+```jsx
+mockCurrentUser({ permissions: ['contacts.edit'] })
+```
+
+With [tenancy](tenancy.md), permissions come from the user's membership in an
+organization instead: mock the memberships and the route's organization as in
+[Testing](tenancy.md#testing) in the tenancy docs.
+
 #### mockRouteParams()
 
 A component rendered in isolation (a cell test, for example) has no matched

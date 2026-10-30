@@ -70,7 +70,8 @@
     "react-dom": "19.3.1",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
-    "vitest": "4.1.12",
+    "vite": "7.3.7",
+    "vitest": "5.0.5",
     "zx": "8.8.5"
   },
   "peerDependencies": {

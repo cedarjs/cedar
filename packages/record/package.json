@@ -34,7 +34,8 @@
     "@cedarjs/framework-tools": "workspace:*",
     "esbuild": "0.28.2",
     "publint": "0.3.25",
-    "vitest": "4.1.12"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": ">=24"

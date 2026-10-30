@@ -6,6 +6,8 @@ import { afterAll, afterEach, beforeAll } from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
 
+import { loadAppPermissions } from '../../permissions/loadAppPermissions.js'
+import { setMockPermissionDefinitions } from '../../permissions/mockPermissions.js'
 import { findCellMocks } from '../findCellMocks.js'
 import {
   closeServer,
@@ -15,6 +17,10 @@ import {
 } from '../mockRequests.js'
 
 let clearOrgClients: (() => Promise<void>) | undefined
+
+// Before the test file runs, so a `mockCurrentUser()` anywhere in it gets
+// the permissions of the user's roles
+setMockPermissionDefinitions(await loadAppPermissions(getPaths().web.base))
 
 beforeAll(async () => {
   clearOrgClients = await importClearOrgClients()

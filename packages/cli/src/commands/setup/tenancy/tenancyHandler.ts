@@ -23,12 +23,12 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
-
 import {
   addPermissionsPackageTasks,
   permissionsPackageName,
-} from './permissionsPackage.js'
-import type { PermissionsPackageCtx } from './permissionsPackage.js'
+} from '../permissions/permissionsPackage.js'
+import type { PermissionsPackageCtx } from '../permissions/permissionsPackage.js'
+
 import {
   authNotSetUpMessage,
   hasWebAuthFile,
@@ -94,6 +94,18 @@ interface TenancyCtx extends PermissionsPackageCtx {
    * the next steps say to do it by hand
    */
   routerNeedsTenancy?: boolean
+  /** Set when the app's permission map is kept without organization.read */
+  mapNeedsOrgPermissions?: boolean
+  /**
+   * Set when `api/src/lib/permissions` is the app's own version of the one
+   * `setup permissions` writes, which is kept and checks `currentUser.roles`
+   */
+  libPermissionsNeedsMembership?: boolean
+  /**
+   * Set when the `@requirePermission` test is the app's own version of the
+   * one `setup permissions` writes, which is kept and mocks the user's roles
+   */
+  directiveTestMocksRoles?: boolean
 }
 
 export const handler = async ({ tenantField, force }: TenancyOptions) => {
@@ -146,9 +158,14 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
     outputPath: string,
     replacements: Record<string, string> = {},
     transform: (content: string) => string = (content) => content,
+    // Whether an existing file is one to replace even without --force
+    replaces: (existing: string) => boolean = () => false,
   ) => {
     const dirname = import.meta.dirname
-    const templatePath = path.resolve(dirname, 'templates', templateFile)
+    // The directive is the same as `setup permissions` writes
+    const templatePath = templateFile.startsWith('requirePermission.ts')
+      ? path.resolve(dirname, '../permissions/templates', templateFile)
+      : path.resolve(dirname, 'templates', templateFile)
     let templateContent = fs.readFileSync(templatePath, 'utf-8')
 
     for (const [token, value] of Object.entries(replacements)) {
@@ -162,14 +179,19 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       : await transformTSToJS(outputPath, templateContent)
 
     // From an earlier run, or the app's own: kept unless --force
-    if (fs.existsSync(outputPath) && !force) {
+    if (
+      fs.existsSync(outputPath) &&
+      !force &&
+      !replaces(fs.readFileSync(outputPath, 'utf-8'))
+    ) {
       keptFiles.push(outputPath)
       return
     }
 
     writtenFiles.push(outputPath)
 
-    return writeFile(outputPath, content, { overwriteExisting: force })
+    // Only an existing file `replaces` picked, or any with --force, is here
+    return writeFile(outputPath, content, { overwriteExisting: true })
   }
 
   const tasks = new Listr<TenancyCtx>(
@@ -368,8 +390,23 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title: 'Adding the permissions package...',
-        task: () =>
-          addPermissionsPackageTasks({
+        task: (ctx) => {
+          const indexPath = path.join(
+            paths.packages,
+            'permissions',
+            'src',
+            'index.ts',
+          )
+
+          // A map of the app's own, such as from `setup permissions`, which
+          // is kept, and needs the organization permissions the generated
+          // organizations service checks
+          ctx.mapNeedsOrgPermissions =
+            !force &&
+            fs.existsSync(indexPath) &&
+            !fs.readFileSync(indexPath, 'utf-8').includes('organization.read')
+
+          return addPermissionsPackageTasks({
             cedarVersion,
             indexSource: fs.readFileSync(
               path.resolve(
@@ -380,21 +417,70 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
               'utf-8',
             ),
             force,
-          }),
+          })
+        },
       },
       {
         title:
           'Adding permission checks and the requirePermission directive...',
-        task: async () => {
+        task: async (ctx) => {
           const replacements = {
             __PERMISSIONS_PACKAGE__: permissionsPackageName(),
           }
+          const libPermissionsPath = path.join(
+            paths.api.lib,
+            `permissions.${ext}`,
+          )
 
+          // Formatting aside, as setup formats what it writes
+          const asCode = (source: string) =>
+            source.replace(/\s+|;/g, '').replaceAll('"', "'")
+
+          // Whether a file is the one `setup permissions` writes from
+          // `templateFile`, unchanged. A changed one is the app's own, and
+          // kept
+          const isSetupPermissionsFile = async (
+            templateFile: string,
+            outputPath: string,
+          ) => {
+            let source = fs.readFileSync(
+              path.resolve(
+                import.meta.dirname,
+                '../permissions/templates',
+                templateFile,
+              ),
+              'utf-8',
+            )
+
+            for (const [token, value] of Object.entries(replacements)) {
+              source = source.replaceAll(token, value)
+            }
+
+            const generated = projectIsTypescript
+              ? source
+              : await transformTSToJS(outputPath, source)
+
+            return (existing: string) => asCode(existing) === asCode(generated)
+          }
+
+          // `setup permissions`' checks, of the user's own roles, become
+          // checks of their role in the current organization
           await writeTemplateFile(
             'permissions.ts.template',
-            path.join(paths.api.lib, `permissions.${ext}`),
+            libPermissionsPath,
             replacements,
+            undefined,
+            await isSetupPermissionsFile(
+              'permissions.ts.template',
+              libPermissionsPath,
+            ),
           )
+
+          ctx.libPermissionsNeedsMembership =
+            !force &&
+            fs
+              .readFileSync(libPermissionsPath, 'utf-8')
+              .includes('@cedarjs/permissions/api')
 
           const directiveDir = path.join(
             paths.api.directives,
@@ -406,10 +492,27 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             path.join(directiveDir, `requirePermission.${ext}`),
             replacements,
           )
+          const directiveTestPath = path.join(
+            directiveDir,
+            `requirePermission.test.${ext}`,
+          )
+
           await writeTemplateFile(
             'requirePermission.test.ts.template',
-            path.join(directiveDir, `requirePermission.test.${ext}`),
+            directiveTestPath,
+            {},
+            undefined,
+            await isSetupPermissionsFile(
+              'requirePermission.test.ts.template',
+              directiveTestPath,
+            ),
           )
+
+          ctx.directiveTestMocksRoles =
+            !force &&
+            fs
+              .readFileSync(directiveTestPath, 'utf-8')
+              .includes("one of the user's roles has it")
         },
       },
       {
@@ -687,15 +790,53 @@ ${
                </PrivateSet>
 
 ${
-  keptFiles.length > 0
+  ctx.libPermissionsNeedsMembership
     ? `
+          ${c.warning('Kept your api/src/lib/permissions.')}
+          Its checks use ${c.highlight('createPermissions')} from ${c.highlight('@cedarjs/permissions/api')},
+          which checks ${c.highlight('currentUser.roles')}. In an organization, a role belongs to
+          the membership: import ${c.highlight('createPermissions')} from ${c.highlight('@cedarjs/tenancy')} instead.
+
+`
+    : ''
+}${
+            ctx.directiveTestMocksRoles
+              ? `
+          ${c.warning('Kept your api/src/directives/requirePermission test.')}
+          It mocks users with ${c.highlight('roles')}. With tenancy, permissions come from
+          the user's membership in the current organization: mock
+          ${c.highlight('memberships')} and ${c.highlight('context.currentOrg')} instead.
+
+`
+              : ''
+          }${
+            ctx.mapNeedsOrgPermissions
+              ? `
+          ${c.warning('Kept your permission map in packages/permissions.')}
+          Its roles are now roles in an organization. Add the permissions the
+          generated organizations service checks, and give its member roles
+          these permissions, next to any they already have:
+
+            permissions: [...yours, 'organization.read', 'organization.manage', 'members.manage'],
+            roles: {
+              ...yours,
+              owner: [...(yours.owner ?? []), 'organization.read', 'organization.manage', 'members.manage'],
+              admin: [...(yours.admin ?? []), 'organization.read', 'members.manage'],
+              member: [...(yours.member ?? []), 'organization.read'],
+            },
+
+`
+              : ''
+          }${
+            keptFiles.length > 0
+              ? `
           Kept these existing files rather than overwriting them (run with
           ${c.highlight('--force')} to overwrite):
 ${keptFiles.map((file) => `            ${path.relative(paths.base, file)}`).join('\n')}
 
 `
-    : ''
-}          Check out the docs for more info:
+              : ''
+          }          Check out the docs for more info:
           ${terminalLink('', 'https://cedarjs.com/docs/tenancy')}
 
         `

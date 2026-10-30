@@ -22,7 +22,7 @@
     "@cedarjs/project-config": "7.1.0",
     "@cedarjs/testing": "7.1.0",
     "prisma": "7.10.1",
-    "vitest": "4.1.12",
+    "vitest": "5.0.5",
     "prettier-plugin-tailwindcss": "^0.8.0"
   },
   "engines": {

@@ -13,8 +13,8 @@ import type { DirectiveNode, DocumentNode, StringValueNode } from 'graphql'
 const createRule = ESLintUtils.RuleCreator.withoutDocs
 
 /**
- * Where `yarn cedar setup tenancy` puts the permissions package's source,
- * from the project root
+ * Where `yarn cedar setup permissions` and `yarn cedar setup tenancy` put the
+ * permissions package's source, from the project root
  */
 const PERMISSIONS_FILE = path.join('packages', 'permissions', 'src', 'index.ts')
 

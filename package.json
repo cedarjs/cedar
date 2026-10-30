@@ -25,6 +25,7 @@
     "clean": "node ./tasks/clean.mjs",
     "e2e": "node ./tasks/run-e2e.cjs",
     "e2e:background-jobs": "node ./tasks/e2e-background-jobs/run.mts",
+    "e2e:permissions": "node ./tasks/e2e-permissions/run.mts",
     "e2e:tenancy": "node ./tasks/e2e-tenancy/run.mts",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
@@ -131,7 +132,7 @@
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.1",
-    "vitest": "4.1.12",
+    "vitest": "5.0.5",
     "ws": "8.22.0",
     "yargs": "18.2.0",
     "zx": "8.8.5"
