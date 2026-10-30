@@ -1240,6 +1240,15 @@ describe('PrivateSet role checks', () => {
       })
     }
 
+  /**
+   * What each role may do, for a membership the test gives no permissions
+   * of its own, as `withPermissions` would add them in an app
+   */
+  const rolePermissions: Record<string, string[]> = {
+    owner: ['settings.manage', 'billing.manage'],
+    admin: ['settings.manage'],
+  }
+
   interface TestMembership {
     organizationId: string
     role: string
@@ -1266,7 +1275,10 @@ describe('PrivateSet role checks', () => {
     const toMembership = (slug: string): TestMembership => ({
       organizationId: `id-${slug}`,
       role: membershipBySlug[slug].role,
-      permissions: membershipBySlug[slug].permissions ?? [],
+      permissions:
+        membershipBySlug[slug].permissions ??
+        rolePermissions[membershipBySlug[slug].role] ??
+        [],
     })
 
     const useOrg: UseOrg = (useAuth, params) => {
@@ -1312,11 +1324,10 @@ describe('PrivateSet role checks', () => {
   }
 
   // The router's own tests are an app without tenancy, where sets have
-  // `roles` but no `userRoles`, `orgRoles` or `orgPermission`, and the
+  // `roles` but no `userRoles` or `orgPermission`, and the
   // Router no `tenancy`. Spreading the props, rather than writing them out,
   // lets them through the type check.
   const userRoles = (roles: string | string[]) => ({ userRoles: roles })
-  const orgRoles = (roles: string | string[]) => ({ orgRoles: roles })
   const orgPermission = (permission: string) => ({ orgPermission: permission })
   const routerTenancy = (tenancy: Tenancy) => ({ tenancy })
 
@@ -1583,7 +1594,7 @@ describe('PrivateSet role checks', () => {
           <PrivateSet
             unauthenticated="login"
             unauthorized="projects"
-            {...orgRoles(['owner', 'admin'])}
+            {...orgPermission('settings.manage')}
           >
             <Route
               path="/org/{orgSlug}/settings"
@@ -1595,7 +1606,7 @@ describe('PrivateSet role checks', () => {
             unauthenticated="login"
             unauthorized="projects"
             {...userRoles('staff')}
-            {...orgRoles('owner')}
+            {...orgPermission('billing.manage')}
           >
             <Route
               path="/org/{orgSlug}/billing"
@@ -1809,7 +1820,7 @@ describe('PrivateSet role checks', () => {
         expect(window.location.pathname).toBe('/org/acme/projects')
       })
 
-      test('gets notAMember on a set with orgRoles too, not a redirect', async () => {
+      test('gets notAMember on a set with orgPermission too, not a redirect', async () => {
         const screen = render(
           <TestRouter
             useAuth={useAuthWithRoles({})}
@@ -1824,8 +1835,8 @@ describe('PrivateSet role checks', () => {
       })
     })
 
-    describe('orgRoles', () => {
-      test('lets a member with the role in the organization in', async () => {
+    describe("orgPermission, from the membership's role", () => {
+      test('lets a member whose role has it in the organization in', async () => {
         const screen = render(
           <TestRouter
             useAuth={useAuthWithRoles({})}
@@ -1979,31 +1990,28 @@ describe('PrivateSet role checks', () => {
         console.error = err
       })
 
-      test.each([
-        ['orgRoles', orgRoles('owner')],
-        ['orgPermission', orgPermission('members.manage')],
-      ])(
-        'throws for %s without tenancy on the Router, even when not signed in',
-        async (prop, props) => {
-          const TestRouter = () => (
-            <Router useAuth={useAuthWithRoles({ isAuthenticated: false })}>
-              <Route path="/login" page={LoginPage} name="login" />
-              <PrivateSet unauthenticated="login" {...props}>
-                <Route
-                  path="/org/{orgSlug}/settings"
-                  page={SettingsPage}
-                  name="settings"
-                />
-              </PrivateSet>
-            </Router>
-          )
+      test('throws without tenancy on the Router, even when not signed in', async () => {
+        const TestRouter = () => (
+          <Router useAuth={useAuthWithRoles({ isAuthenticated: false })}>
+            <Route path="/login" page={LoginPage} name="login" />
+            <PrivateSet
+              unauthenticated="login"
+              {...orgPermission('members.manage')}
+            >
+              <Route
+                path="/org/{orgSlug}/settings"
+                page={SettingsPage}
+                name="settings"
+              />
+            </PrivateSet>
+          </Router>
+        )
 
-          act(() => navigate('/org/acme/settings'))
-          expect(() => render(<TestRouter />)).toThrow(
-            `A PrivateSet with \`${prop}\` needs \`tenancy\` on the Router`,
-          )
-        },
-      )
+        act(() => navigate('/org/acme/settings'))
+        expect(() => render(<TestRouter />)).toThrow(
+          'A PrivateSet with `orgPermission` needs `tenancy` on the Router',
+        )
+      })
 
       test('waits for auth to load when useOrg finds no organization', async () => {
         const noOrgTenancy = { ...tenancyFor({}), useOrg: () => null }
@@ -2021,7 +2029,7 @@ describe('PrivateSet role checks', () => {
             <PrivateSet
               unauthenticated="login"
               whileLoadingAuth={() => <p>Loading auth</p>}
-              {...orgRoles('owner')}
+              {...orgPermission('settings.manage')}
             >
               <Route
                 path="/org/{orgSlug}/settings"
@@ -2050,7 +2058,10 @@ describe('PrivateSet role checks', () => {
             {...routerTenancy(tenancyFor({ acme: { role: 'owner' } }))}
           >
             <Route path="/login" page={LoginPage} name="login" />
-            <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
+            <PrivateSet
+              unauthenticated="login"
+              {...orgPermission('settings.manage')}
+            >
               <Route path="/settings" page={SettingsPage} name="settings" />
             </PrivateSet>
           </Router>
@@ -2100,7 +2111,10 @@ describe('PrivateSet role checks', () => {
             })}
           >
             <Route path="/login" page={LoginPage} name="login" />
-            <PrivateSet unauthenticated="login" {...orgRoles('owner')}>
+            <PrivateSet
+              unauthenticated="login"
+              {...orgPermission('settings.manage')}
+            >
               <Route
                 path="/org/{orgSlug}/settings"
                 page={SettingsPage}

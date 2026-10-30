@@ -1,13 +1,13 @@
 /**
- * Moves an app from `@requireAuth` to tenancy's two auth directives:
- * `@requireOrgAuth` for fields about the current organization, and
+ * Moves an app from `@requireAuth` to tenancy's auth directives:
+ * `@requirePermission` for fields about the current organization, and
  * `@requireUserAuth` for fields about the signed-in user.
  *
  * Before tenancy there are no organizations, so every existing
  * `@requireAuth` is about the user. These rename them all to
  * `@requireUserAuth`, which checks what `@requireAuth` did, and the app
- * moves a model's fields to `@requireOrgAuth` once the model belongs to an
- * organization.
+ * moves a model's fields to `@requirePermission` once the model belongs to
+ * an organization.
  *
  * Plain text replacements, as these are names, not shapes: running them
  * again changes nothing.

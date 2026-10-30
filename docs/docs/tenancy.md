@@ -313,18 +313,8 @@ From `@cedarjs/tenancy`:
 ```ts
 export function createTenancyAuth(): {
   hasUserRole(roles: string | readonly string[]): boolean
-  hasOrgRole(
-    roles?: string | readonly string[],
-    organizationId?: string
-  ): boolean
   requireUserAuth(options?: { roles?: string | readonly string[] }): void
-  requireOrgAuth(options?: { roles?: string | readonly string[] }): void
 }
-
-export function hasOrgRole(
-  roles: string | readonly string[],
-  organizationId?: string
-): boolean
 ```
 
 ### `createTenancyAuth()`
@@ -333,36 +323,31 @@ The setup command replaces the single-tenant `hasRole` and `requireAuth` in
 `api/src/lib/auth.ts` with these:
 
 ```ts title="api/src/lib/auth.ts"
-export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
-  createTenancyAuth()
+export const { hasUserRole, requireUserAuth } = createTenancyAuth()
 ```
 
 There's no `hasRole` or `requireAuth`: each check says what it's about.
 
-|                             | User-level (`currentUser.roles`)                     | Organization-level (membership role)                  |
-| --------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
-| api (`createTenancyAuth()`) | `hasUserRole`, `requireUserAuth`, `@requireUserAuth` | `hasOrgRole`, `requireOrgAuth`, `@requireOrgAuth`     |
-| web                         | `useAuth().hasUserRole`                              | `useCurrentOrg().hasOrgRole`, `<PrivateSet orgRoles>` |
+|     | User-level (`currentUser.roles`)                     | Organization-level (membership)                                                              |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| api | `hasUserRole`, `requireUserAuth`, `@requireUserAuth` | `hasPermission`, `requirePermission`, `@requirePermission` (see [Permissions](#permissions)) |
+| web | `useAuth().hasUserRole`, `<PrivateSet userRoles>`    | `useAuth().hasPermission`, `<PrivateSet orgPermission>`                                      |
 
-- `requireOrgAuth({ roles })`: for fields about the current organization.
-  Throws `AuthenticationError` when no one is signed in, and `ForbiddenError`
-  when there's no `context.currentOrg`, or when `roles` are given and the
-  user's role in it isn't one of them. With no `roles`, any member gets in,
-  just as any signed-in user gets past a bare single-tenant `@requireAuth`:
-  a role you add later can use every field that lists no roles. For anything
-  narrower, list `roles` or use [`@requirePermission`](#permissions), which
-  gives a new role only what its permission list says.
 - `requireUserAuth({ roles })`: for fields about the signed-in user rather
   than an organization (their account, their memberships, accepting an
   invitation). Throws `AuthenticationError` when no one is signed in, and,
   when `roles` are given, `ForbiddenError` unless `currentUser.roles` has one
   of them. No organization is needed. It checks what the single-tenant
   `requireAuth` did.
+- Fields about the current organization ask for a permission with
+  [`requirePermission`](#checking-permissions-on-the-api) and
+  [`@requirePermission`](#requirepermission). There's no role check on the
+  current organization: a role is a named bundle of permissions, and checks
+  ask for the permission. Fields any member may use ask for
+  `organization.read`, which every role lists.
 
 `hasUserRole(roles)` checks `currentUser.roles`, as the single-tenant
-`hasRole` did. `hasOrgRole(roles?, organizationId?)` is the standalone
-`hasOrgRole` below: with no roles, it's whether the user is a member. Setup
-renames `hasRole` and `requireAuth` imported from `api/src/lib/auth` to
+`hasRole` did. Setup renames `hasRole` and `requireAuth` imported from `api/src/lib/auth` to
 `hasUserRole` and `requireUserAuth`, and `hasRole` from `useAuth()` in
 `web/src` to `hasUserRole`.
 
@@ -372,27 +357,36 @@ organization and has a narrower role in another would carry `owner` into every
 check made outside an organization. Leave `roles` off `currentUser`, or use it
 only for roles that really hold everywhere.
 
-### `hasOrgRole(roles, organizationId?)`
+### Other checks about organizations
 
-With an `organizationId`, checks `context.currentUser.memberships` for a
-matching role; without one, checks `context.currentOrg.role`. Returns `false`
-when unauthenticated, when there's no matching organization, or when
-`context.currentOrg` is unset. An empty `roles` array returns `true` as long as
-a membership exists. Use it for an organization other than the current one;
-for the current one, `requireOrgAuth` already checks it.
+- What the user may do in the current organization: `hasPermission()` from
+  `src/lib/permissions`.
+- What they may do in another organization: each of
+  `context.currentUser.memberships` carries its `permissions` once
+  `getCurrentUser` returns `withPermissions(...)`, so read
+  `memberships.find((m) => m.organizationId === id)?.permissions`.
+- Whether there's a current organization at all, which means the user is a
+  member of it: `getCurrentOrg()`.
+- The role itself, to show it: `context.currentOrg.role`, or a membership's
+  `role`.
 
-## The `@requireOrgAuth` and `@requireUserAuth` directives
+## The `@requireUserAuth` and `@requirePermission` directives
 
-`setup tenancy` replaces the app's `@requireAuth` directive with two, in
-`api/src/directives/requireOrgAuth/` and `api/src/directives/requireUserAuth/`,
-which pass their `roles` on to `requireOrgAuth()` and `requireUserAuth()`:
+`setup tenancy` replaces the app's `@requireAuth` directive with
+`@requireUserAuth`, in `api/src/directives/requireUserAuth/`, which passes its
+`roles` on to `requireUserAuth()`, and adds
+[`@requirePermission`](#requirepermission) for fields about the current
+organization:
 
 ```graphql
 type Query {
-  projects: [Project!]! @requireOrgAuth
-  inviteMember(input: InviteMemberInput!): Invitation!
-    @requireOrgAuth(roles: ["owner", "admin"])
+  projects: [Project!]! @requirePermission(permission: "organization.read")
   myMemberships: [Membership!]! @requireUserAuth
+}
+
+type Mutation {
+  inviteMember(input: InviteMemberInput!): Invitation!
+    @requirePermission(permission: "members.manage")
 }
 ```
 
@@ -402,23 +396,30 @@ and each `requireAuth` imported from `api/src/lib/auth` to `requireUserAuth`.
 They check what they did before. It deletes
 `api/src/directives/requireAuth/` when it's the one Cedar generates. A changed
 one is left, and so are its `@requireAuth` fields, so its checks keep running
-until you move them to `@requireUserAuth` or `@requireOrgAuth`.
+until you move them to `@requireUserAuth` or `@requirePermission`.
 
 When a model gets an `organizationId`, switch its fields to
-`@requireOrgAuth`. From then on `cedar generate sdl` and `cedar generate
-scaffold` pick the directive for you: `@requireOrgAuth` for a model with an
-`organizationId` (or the field you gave `--tenant-field`) or an
-`Organization` relation, `@requireUserAuth` for one without. Once
-`api/src/directives/requireAuth/` is gone, writing `@requireAuth` in a tenancy
-app is an unknown directive, so it fails when the schema is built rather than
-when the field is first called.
+`@requirePermission`: `organization.read` for any member, or a permission of
+its own. From then on `cedar generate sdl` and `cedar generate scaffold` pick
+the directive for you: `@requirePermission(permission: "organization.read")`
+for a model with an `organizationId` (or the field you gave `--tenant-field`)
+or an `Organization` relation, `@requireUserAuth` for one without. Change
+`organization.read` to a narrower permission where only some roles should get
+in. Once `api/src/directives/requireAuth/` is gone, writing `@requireAuth` in
+a tenancy app is an unknown directive, so it fails when the schema is built
+rather than when the field is first called.
 
 ## Permissions
 
-Roles map to permissions in one place, and fields ask for a permission instead
-of listing roles. Adding a role is then one entry in the definitions instead of an edit
-to every field it should reach, and the web reads the same answers instead of
-repeating role lists.
+A role is a named bundle of permissions, defined in one map. Fields, services
+and components check permissions, never roles, so a role can do exactly what
+its list says. Adding a role is then one entry in the definitions instead of an
+edit to every field it should reach, and the web reads the same answers instead
+of repeating role lists.
+
+Roles are still what a membership stores, what people grant when they invite
+someone, what the UI shows, and the key into the map. They're just not what
+checks ask for.
 
 ### The definitions
 
@@ -433,9 +434,9 @@ import { definePermissions } from '@cedarjs/tenancy/permissions'
 import type { PermissionName } from '@cedarjs/tenancy/permissions'
 
 export const permissions = definePermissions({
-  permissions: ['organization.read', 'members.manage'],
+  permissions: ['organization.read', 'organization.manage', 'members.manage'],
   roles: {
-    owner: ['organization.read', 'members.manage'],
+    owner: ['organization.read', 'organization.manage', 'members.manage'],
     admin: ['organization.read', 'members.manage'],
     member: ['organization.read'],
   },
@@ -451,6 +452,11 @@ export type Permission = PermissionName<typeof permissions>
 - `roles`: what each built-in role may do in an organization. A permission
   listed here needs a current organization, and the user's role there must
   have it. A role that isn't listed has no permissions.
+
+`organization.read` is "any member": every role lists it, and fields any
+member may use ask for it. A new role starts with nothing until its entry says
+otherwise. `organization.manage` is the owner's alone, which also keeps admins
+from making someone an owner (see [`canGrantRole`](#who-may-grant-a-role)).
 
 Every permission is about an organization. Fields about the user rather than
 an organization use `@requireUserAuth`.
@@ -470,6 +476,7 @@ import { permissions } from '@my-app/permissions'
 export const {
   hasPermission,
   requirePermission,
+  canGrantRole,
   permissionsOf,
   withPermissions,
 } = createPermissions(permissions)
@@ -480,7 +487,8 @@ From `@cedarjs/tenancy`:
 ```ts
 export function createPermissions(definitions: PermissionDefinitions): {
   hasPermission(permission: Permission): boolean
-  requirePermission(options: { permission: Permission }): void
+  requirePermission(permission: Permission): void
+  canGrantRole(role: string): boolean
   permissionsOf(membership: { role: string }): Permission[]
   withPermissions<User extends { memberships: { role: string }[] }>(
     user: User | null
@@ -491,8 +499,9 @@ export function createPermissions(definitions: PermissionDefinitions): {
 `Permission` is the union of the defined names, so a typo in a service is a
 type error.
 
-`hasPermission(permission)` answers for the current request.
-`requirePermission()` throws `AuthenticationError` when no one is signed in and
+`hasPermission(permission)` answers for the current request: whether the
+signed-in user's membership in the current organization has the permission. It's
+`false` with no current organization. `requirePermission(permission)` throws `AuthenticationError` when no one is signed in and
 `ForbiddenError` when `hasPermission()` is false, with a message saying an
 organization is needed when that's why. Both throw a plain `Error` for a name
 that isn't defined, so a typo in an SDL directive (which TypeScript can't see)
@@ -505,6 +514,55 @@ passes it the membership as `getCurrentUser` returned it.
 
 Permissions fail closed by construction: a field asks for one permission, and
 only the roles that list it get in. A new role starts with nothing.
+
+In a service, with `projects.edit` added to the definitions and to the roles
+that may edit projects:
+
+```ts title="api/src/services/projects/projects.ts"
+import { db } from 'src/lib/db'
+import { requirePermission } from 'src/lib/permissions'
+
+export const deleteProject = ({ id }) => {
+  requirePermission('projects.edit')
+
+  return db.project.delete({ where: { id } })
+}
+```
+
+### Who may grant a role
+
+`canGrantRole(role)` is whether the signed-in user may give someone `role` in
+the current organization, or take it away: they hold every permission `role`
+has. Nobody can hand out more than they may do themselves, and adding a role
+needs no grant table. It's `false` for a role the definitions don't list, and
+with no current organization or no signed-in user.
+
+It's only the role half. Who may manage members at all is a permission of its
+own, on the field: the generated `inviteMember` and `removeMember` are
+`@requirePermission(permission: "members.manage")`. With the default
+definitions an admin may invite an admin or a member, but not an owner, because
+an admin doesn't have `organization.manage`.
+
+The generated `inviteMember` refuses a role the definitions don't list with a
+`ValidationError`, and one the caller may not grant with a `ForbiddenError`:
+
+```ts title="api/src/services/organizations/organizations.ts"
+if (!Object.hasOwn(permissions.roles, input.role)) {
+  throw new ValidationError(
+    `"${input.role}" is not a known role. Add it to your permission ` +
+      'definitions before inviting with it.'
+  )
+}
+
+if (!canGrantRole(input.role)) {
+  throw new ForbiddenError(
+    `A "${currentOrg.role}" cannot invite a "${input.role}".`
+  )
+}
+```
+
+`removeMember` uses `canGrantRole(membership.role)` the same way, so an admin
+can't remove an owner.
 
 ### `@requirePermission`
 
@@ -521,9 +579,10 @@ type Mutation {
 }
 ```
 
-It sits beside `@requireOrgAuth`. Use whichever reads better per field; the
-generated organizations SDL uses `@requirePermission` for organization fields
-and `@requireUserAuth` for user-level ones.
+It's the directive for every field about the current organization. It needs
+a current organization, and the user's role there must have the permission.
+The generated organizations SDL uses `@requirePermission` for organization
+fields and `@requireUserAuth` for user-level ones.
 
 `yarn cedar lint` checks the permission names in the SDL against the ones
 `definePermissions` lists, so an unknown name is caught before it throws at
@@ -569,12 +628,6 @@ export interface CurrentOrgSummary {
   permissions: string[]
 }
 
-export function hasOrgRole(
-  memberships: OrgMembership[] | undefined,
-  roles: string | string[],
-  organizationId: string
-): boolean
-
 export function getMemberships(currentUser: unknown): OrgMembership[]
 
 export interface CreateTenancyOptions {
@@ -605,7 +658,6 @@ export function useOrgBySlug(
 export function useCurrentOrg(): {
   org: CurrentOrgSummary | undefined
   memberships: OrgMembership[]
-  hasOrgRole(roles: string | string[], organizationId?: string): boolean
   setOrg(idOrSlug: string): void
 }
 
@@ -672,24 +724,24 @@ and no `cedar-org` header on its queries (see
 [Prerendering](#prerendering-organization-pages)). A `PrivateSet` whose routes
 have no `{orgSlug}`, such as `/dashboard`, is an ordinary private set.
 
-On the web too, every role check names its kind: `useAuth().hasUserRole` and
+On the web too, every check names its kind: `useAuth().hasUserRole` and
 `<PrivateSet userRoles>` check `currentUser.roles`, and
-`useCurrentOrg().hasOrgRole` and `<PrivateSet orgRoles>` check the user's role
-in the organization. `useAuth().hasRole` and `<PrivateSet roles>` aren't
-available with tenancy: `cedar generate types` marks the app as having tenancy
-(`.cedar/types/includes/web-tenancy.d.ts`), and then using either is a type
-error. For the same reason `tenancy` on the `Router`, `orgRoles` and
-`orgPermission` only exist in an app with tenancy.
+`useAuth().hasPermission` and `<PrivateSet orgPermission>` check what the
+user's role in the organization may do. `useAuth().hasRole` and
+`<PrivateSet roles>` aren't available with tenancy: `cedar generate types`
+marks the app as having tenancy (`.cedar/types/includes/web-tenancy.d.ts`), and
+then using either is a type error. For the same reason `tenancy` on the
+`Router` and `orgPermission` only exist in an app with tenancy.
 
 Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
 `currentUser.id` changes, every cached client is dropped after `clearStore()`.
 When a memberships refresh shows a membership gone, that organization's client
 alone is dropped the same way, and one cached for another role is replaced.
 
-#### Guarding routes by role and permission
+#### Guarding routes by permission
 
-To let only some members open a page, give its `PrivateSet` `orgRoles` or
-`orgPermission`, and `unauthorized`:
+To let only some members open a page, give its `PrivateSet` `orgPermission`
+and `unauthorized`:
 
 <!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
@@ -697,7 +749,7 @@ To let only some members open a page, give its `PrivateSet` `orgRoles` or
   <PrivateSet wrap={OrgLayout} unauthenticated="login">
     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
   </PrivateSet>
-  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgRoles="owner">
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="organization.manage">
     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
   </PrivateSet>
   <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="members.manage">
@@ -706,27 +758,25 @@ To let only some members open a page, give its `PrivateSet` `orgRoles` or
 </Router>
 ```
 
-The router checks the membership it found for the organization: `orgRoles`
-against its role, and `orgPermission` against its
-[permissions](#permissions-on-the-web), the same ones `useAuth().hasPermission`
-checks. A member without one of `orgRoles`, or without the permission, is
-redirected to the `unauthorized` route, which gets the `orgSlug` of the page
+The router checks `orgPermission` against the
+[permissions](#permissions-on-the-web) of the membership it found for the
+organization, the same ones `useAuth().hasPermission` checks. A member without
+the permission is redirected to the `unauthorized` route, which gets the `orgSlug` of the page
 they tried to open when its path has an `{orgSlug}`. With no `unauthorized`,
 they're redirected to `unauthenticated`. Neither the provider nor the rest of
 the set's `wrap` renders for them. A user who isn't a member of the
 organization at all sees `notAMember` rather than being redirected.
 
 A `PrivateSet` inside another one in the same organization checks its own
-`orgRoles` and `orgPermission` and renders no second provider.
+`orgPermission` and renders no second provider.
 
-A `PrivateSet` with `orgRoles` or `orgPermission` throws an error rather than
+A `PrivateSet` with `orgPermission` throws an error rather than
 let anyone in when the router has no `tenancy`, or when there's no organization
 to check in: with Cedar's `tenancy`, a route with no `{orgSlug}` param.
 
 `userRoles` checks `currentUser.roles` the same way. Given more than one of
 them, a user needs all. As with every check on the web, this only decides what
-to show: the api's `@requireOrgAuth` and `@requirePermission` are what protect
-the data.
+to show: the api's `@requirePermission` is what protects the data.
 
 #### An organization from the host
 
@@ -734,7 +784,7 @@ By default the organization is the one in the route's `orgSlug` param. For an
 organization that doesn't come from the path, such as one taken from a
 subdomain (`acme.example.com`), give `createTenancy` a `useOrg` that finds it.
 `useOrgBySlug` keeps Cedar's membership lookup. This one place covers the
-router's `orgRoles` and `orgPermission` checks, the provider and
+router's `orgPermission` check, the provider and
 `useCurrentOrg()`:
 
 <!-- prettier-ignore -->
@@ -758,7 +808,7 @@ const Routes = () => (
     <PrivateSet wrap={OrgLayout} unauthenticated="login">
       <Route path="/projects" page={ProjectsPage} name="projects" />
     </PrivateSet>
-    <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgRoles="owner">
+    <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="organization.manage">
       <Route path="/settings" page={SettingsPage} name="settings" />
     </PrivateSet>
   </Router>
@@ -770,8 +820,7 @@ the router's `useAuth` and the route's path params. It can answer in three ways:
 
 - An organization: `{ membership, memberships }`, where `membership` is `null`
   when the user isn't a member of it. `useOrgBySlug` returns that.
-- `null`, for no organization. A `PrivateSet` with `orgRoles` or
-  `orgPermission` then throws the router's own error, and any other
+- `null`, for no organization. A `PrivateSet` with `orgPermission` then throws the router's own error, and any other
   `PrivateSet` is an ordinary private one.
 - An error of its own, such as for an organization that's been suspended. It
   reaches your app's error boundary like any error thrown while rendering.
@@ -839,14 +888,14 @@ calling it is a type error rather than a check that's always `false`.
 Like every check on the web, this only decides what to show; the api's
 `@requirePermission` is the guard. For a page only some may open, give its
 `PrivateSet` an `orgPermission` (see
-[Guarding routes by role and permission](#guarding-routes-by-role-and-permission)).
+[Guarding routes by permission](#guarding-routes-by-permission)).
 
-### `hasOrgRole` (web)
+### Other checks on the web
 
-The pure form, `hasOrgRole(memberships, roles, organizationId)`, takes the
-memberships array explicitly.
-`useCurrentOrg().hasOrgRole(roles, organizationId?)` is the convenience wrapper
-that reads memberships from context.
+To show something by what the user may do in another organization, such as
+a switcher entry, read `permissions` from that organization's membership in
+`useCurrentOrg().memberships`. A component under an organization route is
+already for a member, and `useCurrentOrg().org.role` gives the role to show.
 
 ### `clearOrgClients()`
 
@@ -989,8 +1038,8 @@ describe('MembersPage', () => {
   cached query results don't answer the next test's queries.
 - `useCurrentOrg().setOrg` navigates as in the app, or calls your
   `onSetOrg`. Assert on `navigate` or on what your `onSetOrg` does.
-- `<PrivateSet orgRoles>` and `orgPermission` are the router's checks, which
-  don't run for a component rendered on its own.
+- `<PrivateSet orgPermission>` is the router's check, which
+  doesn't run for a component rendered on its own.
 
 `hasUserRole` checks `currentUser.roles`, in an organization or not.
 

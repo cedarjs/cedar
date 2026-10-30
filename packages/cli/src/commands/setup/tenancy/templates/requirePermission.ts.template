@@ -22,9 +22,7 @@ type RequirePermissionValidate = ValidatorDirectiveFunc<{
 const validate: RequirePermissionValidate = ({ directiveArgs }) => {
   // A name the permissions map doesn't know throws, so a typo in the SDL is
   // an error rather than a field nobody can use
-  applicationRequirePermission({
-    permission: directiveArgs.permission as Permission,
-  })
+  applicationRequirePermission(directiveArgs.permission as Permission)
 }
 
 const requirePermission = createValidatorDirective(schema, validate)

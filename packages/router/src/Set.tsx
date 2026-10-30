@@ -30,38 +30,30 @@ export interface WrapperProps {
 export type WrapperType = ComponentType<WrapperProps>
 
 /**
- * The role props. An app with tenancy (see `AuthTenancy`) has `userRoles` and
- * `orgRoles` instead of `roles`: there, every role check says which kind it
- * is. It also has `orgPermission`.
+ * The role props. An app with tenancy (see `AuthTenancy`) has `userRoles`
+ * instead of `roles`, and `orgPermission` for what the user may do in the
+ * organization: there, every check says which kind it is.
  */
 type SetRoles = AuthTenancy extends { enabled: true }
   ? {
       /**
        * Route is permitted when authenticated and user has any of the
        * provided roles such as "admin" or ["admin", "editor"], in
-       * `currentUser.roles`, as opposed to a role in the organization they're
-       * in (see `orgRoles`). With `orgRoles` as well, they need both.
+       * `currentUser.roles`. With `orgPermission` as well, they need both.
        */
       userRoles?: string | string[]
       /**
-       * Route is permitted when authenticated and user has any of the
-       * provided roles such as "owner" or ["owner", "admin"] in the current
-       * organization. With `userRoles` as well, they need both.
+       * Route is permitted when authenticated and the user's membership in
+       * the current organization has this permission (see
+       * `createPermissions` in `@cedarjs/tenancy`).
        *
        * The organization is the one the Router's `tenancy` finds for the
        * route, by default the one with the route's `orgSlug` param:
        *
        *   <Router useAuth={useAuth} tenancy={tenancy}>
        *
-       * A `PrivateSet` with `orgRoles` throws without `tenancy` on the
+       * A `PrivateSet` with `orgPermission` throws without `tenancy` on the
        * router, or on a route that isn't in an organization.
-       */
-      orgRoles?: string | string[]
-      /**
-       * Route is permitted when authenticated and the user's membership in
-       * the current organization has this permission (see
-       * `createPermissions` in `@cedarjs/tenancy`). The organization is found
-       * like for `orgRoles`, which it can be combined with: they need both.
        */
       orgPermission?: PermissionName
     }

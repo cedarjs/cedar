@@ -161,7 +161,6 @@ interface AuthenticatedRouteProps {
   children: React.ReactNode
   roles?: string | string[]
   userRoles?: string | string[]
-  orgRoles?: string | string[]
   orgPermission?: string
   unauthenticated: string
   whileLoadingAuth?: () => React.ReactElement | null
@@ -171,17 +170,11 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   children,
   roles,
   userRoles,
-  orgRoles,
   orgPermission,
 }) => {
   const { isAuthenticated } = getAuthState()
 
-  // TODO (RSC): There's no organization here to check `orgRoles` or
-  // `orgPermission` in, so fail closed rather than let everyone in
-  if (orgRoles !== undefined) {
-    throw new Error('`orgRoles` is not supported with RSC yet')
-  }
-
+  // TODO (RSC): There's no organization here to check `orgPermission` in, so fail closed rather than let everyone in
   if (orgPermission !== undefined) {
     throw new Error('`orgPermission` is not supported with RSC yet')
   }
@@ -216,7 +209,6 @@ interface WrappedPageProps {
       unauthenticated?: string
       roles?: string | string[]
       userRoles?: string | string[]
-      orgRoles?: string | string[]
       orgPermission?: string
       whileLoadingAuth?: () => ReactElement | null
     }
@@ -267,7 +259,6 @@ const WrappedPage = ({ routeLoaderElement, sets }: WrappedPageProps) => {
           unauthenticated={unauthenticated}
           roles={set.props.roles}
           userRoles={set.props.userRoles}
-          orgRoles={set.props.orgRoles}
           orgPermission={set.props.orgPermission}
           whileLoadingAuth={set.props.whileLoadingAuth}
         >

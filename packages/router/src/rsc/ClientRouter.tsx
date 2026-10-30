@@ -61,14 +61,9 @@ const LocationAwareRouter = ({
 
   const requestedRoute = pathRouteMap[activeRoutePath]
 
-  // TODO (RSC): There's no organization here to check `orgRoles` or
-  // `orgPermission` in, and only `unauthenticated` is checked below, so fail
+  // TODO (RSC): There's no organization here to check `orgPermission` in, and only `unauthenticated` is checked below, so fail
   // closed rather than let every signed-in user in
   for (const set of requestedRoute.sets) {
-    if (set.props.orgRoles !== undefined) {
-      throw new Error('`orgRoles` is not supported with RSC yet')
-    }
-
     if (set.props.orgPermission !== undefined) {
       throw new Error('`orgPermission` is not supported with RSC yet')
     }
