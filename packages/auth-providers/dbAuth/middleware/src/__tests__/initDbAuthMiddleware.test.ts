@@ -31,33 +31,33 @@ const FIXTURE_PATH = path.resolve(
   '../../../../../../__fixtures__/example-todo-main',
 )
 
+// Mock the session decryption
+vi.mock('@cedarjs/auth-dbauth-api', async (importOriginal) => {
+  const original = (await importOriginal()) as any
+  return {
+    ...original,
+    dbAuthSession: vi.fn().mockImplementation((req, cookieName) => {
+      if (
+        req.headers
+          .get('Cookie')
+          .includes(`${cookieName}=this_is_the_only_correct_session`)
+      ) {
+        return {
+          currentUser: {
+            email: 'user-1@example.com',
+            id: 'mocked-current-user-1',
+          },
+          mockedSession: 'this_is_the_only_correct_session',
+        }
+      }
+
+      return undefined
+    }),
+  }
+})
+
 beforeAll(() => {
   process.env.CEDAR_CWD = FIXTURE_PATH
-
-  // Mock the session decryption
-  vi.mock('@cedarjs/auth-dbauth-api', async (importOriginal) => {
-    const original = (await importOriginal()) as any
-    return {
-      ...original,
-      dbAuthSession: vi.fn().mockImplementation((req, cookieName) => {
-        if (
-          req.headers
-            .get('Cookie')
-            .includes(`${cookieName}=this_is_the_only_correct_session`)
-        ) {
-          return {
-            currentUser: {
-              email: 'user-1@example.com',
-              id: 'mocked-current-user-1',
-            },
-            mockedSession: 'this_is_the_only_correct_session',
-          }
-        }
-
-        return undefined
-      }),
-    }
-  })
 })
 
 afterAll(() => {

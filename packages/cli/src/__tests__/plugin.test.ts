@@ -33,6 +33,32 @@ vi.mock('../lib/packages', () => {
     isModuleInstalled: vi.fn().mockReturnValue(true),
   }
 })
+// These two were previously (re-)declared inline, once per test, with
+// byte-identical factories every time. Vitest 5 hoists vi.mock calls
+// statically, so a single top-level declaration is both required and
+// sufficient here.
+vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
+  return {
+    commands: [
+      {
+        command: 'some-other-command',
+        description: 'Some example other command',
+        aliases: ['soc', 'someOtherCommand'],
+      },
+    ],
+  }
+})
+vi.mock('@cedarjs/cli-some-package', () => {
+  return {
+    commands: [
+      {
+        command: 'some-command',
+        description: 'Some example command',
+        aliases: ['sc', 'someCommand'],
+      },
+    ],
+  }
+})
 
 const MOCK_PATHS = {
   generated: { base: '' },
@@ -195,17 +221,6 @@ describe('plugin loading', () => {
           },
         },
       })
-      vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      })
       vol.fromJSON({
         ['commandCache.json']: JSON.stringify({
           '@cedarjs/cli-some-package': {
@@ -293,17 +308,6 @@ describe('plugin loading', () => {
             autoInstall: true,
           },
         },
-      })
-      vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
       })
       vol.fromJSON({
         ['commandCache.json']: JSON.stringify({
@@ -393,17 +397,6 @@ describe('plugin loading', () => {
           },
         },
       })
-      vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
-        return {
-          commands: [
-            {
-              command: 'some-other-command',
-              description: 'Some example other command',
-              aliases: ['soc', 'someOtherCommand'],
-            },
-          ],
-        }
-      })
       vol.fromJSON({
         ['commandCache.json']: JSON.stringify({
           '@cedarjs/cli-some-package': {
@@ -479,17 +472,6 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    })
-    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
-      return {
-        commands: [
-          {
-            command: 'some-other-command',
-            description: 'Some example other command',
-            aliases: ['soc', 'someOtherCommand'],
-          },
-        ],
-      }
     })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
@@ -575,17 +557,6 @@ describe('plugin loading', () => {
         },
       },
     })
-    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
-      return {
-        commands: [
-          {
-            command: 'some-other-command',
-            description: 'Some example other command',
-            aliases: ['soc', 'someOtherCommand'],
-          },
-        ],
-      }
-    })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
         '@cedarjs/cli-some-package': {
@@ -670,17 +641,6 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    })
-    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
-      return {
-        commands: [
-          {
-            command: 'some-other-command',
-            description: 'Some example other command',
-            aliases: ['soc', 'someOtherCommand'],
-          },
-        ],
-      }
     })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
@@ -776,28 +736,6 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    })
-    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
-      return {
-        commands: [
-          {
-            command: 'some-other-command',
-            description: 'Some example other command',
-            aliases: ['soc', 'someOtherCommand'],
-          },
-        ],
-      }
-    })
-    vi.mock('@cedarjs/cli-some-package', () => {
-      return {
-        commands: [
-          {
-            command: 'some-command',
-            description: 'Some example command',
-            aliases: ['sc', 'someCommand'],
-          },
-        ],
-      }
     })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({}),
@@ -901,17 +839,6 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    })
-    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
-      return {
-        commands: [
-          {
-            command: 'some-other-command',
-            description: 'Some example other command',
-            aliases: ['soc', 'someOtherCommand'],
-          },
-        ],
-      }
     })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({
@@ -1038,17 +965,6 @@ describe('plugin loading', () => {
           autoInstall: true,
         },
       },
-    })
-    vi.mock('@cedarjs/cli-some-package-not-in-cache', () => {
-      return {
-        commands: [
-          {
-            command: 'some-other-command',
-            description: 'Some example other command',
-            aliases: ['soc', 'someOtherCommand'],
-          },
-        ],
-      }
     })
     vol.fromJSON({
       ['commandCache.json']: JSON.stringify({

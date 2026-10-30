@@ -14,6 +14,28 @@ import * as scriptHandler from '../scriptHandler.js'
 
 const PROJECT_PATH = path.normalize('/path/to/project')
 
+// Vitest hoists vi.mock calls to the top of the file regardless of where
+// they're textually declared, so this has always applied to the whole file,
+// not just the 'custom template' describe block below. Vitest 5 now
+// requires it to actually be declared at the top level to make that
+// explicit.
+vi.mock('../../../../lib/index.js', async (importOriginal) => {
+  const originalLibIndex = await importOriginal<any>()
+
+  return {
+    ...originalLibIndex,
+    getPaths: () => {
+      const BASE_PATH = '/path/to/project'
+
+      return {
+        base: BASE_PATH,
+        generatorTemplates: path.join(BASE_PATH, 'generatorTemplates'),
+        scripts: path.join(BASE_PATH, 'scripts'),
+      }
+    },
+  }
+})
+
 test('creates a JavaScript function to execute', async () => {
   const output = await scriptHandler.files({
     name: 'scriptyMcScript',
@@ -30,23 +52,6 @@ test('creates a JavaScript function to execute', async () => {
 
 describe('custom template', () => {
   beforeAll(() => {
-    vi.mock('../../../../lib/index.js', async (importOriginal) => {
-      const originalLibIndex = await importOriginal<any>()
-
-      return {
-        ...originalLibIndex,
-        getPaths: () => {
-          const BASE_PATH = '/path/to/project'
-
-          return {
-            base: BASE_PATH,
-            generatorTemplates: path.join(BASE_PATH, 'generatorTemplates'),
-            scripts: path.join(BASE_PATH, 'scripts'),
-          }
-        },
-      }
-    })
-
     const scriptTemplatePath = path.join(
       PROJECT_PATH,
       'generatorTemplates',
