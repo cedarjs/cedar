@@ -96,6 +96,11 @@ interface TenancyCtx extends PermissionsPackageCtx {
   routerNeedsTenancy?: boolean
   /** Set when the app's permission map is kept without organization.read */
   mapNeedsOrgPermissions?: boolean
+  /**
+   * Set when `api/src/lib/permissions` is the app's own version of the one
+   * `setup permissions` writes, which is kept and checks `currentUser.roles`
+   */
+  libPermissionsNeedsMembership?: boolean
 }
 
 export const handler = async ({ tenantField, force }: TenancyOptions) => {
@@ -413,20 +418,51 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       {
         title:
           'Adding permission checks and the requirePermission directive...',
-        task: async () => {
+        task: async (ctx) => {
           const replacements = {
             __PERMISSIONS_PACKAGE__: permissionsPackageName(),
           }
+          const libPermissionsPath = path.join(
+            paths.api.lib,
+            `permissions.${ext}`,
+          )
+
+          let roleBased = fs.readFileSync(
+            path.resolve(
+              import.meta.dirname,
+              '../permissions/templates/permissions.ts.template',
+            ),
+            'utf-8',
+          )
+
+          for (const [token, value] of Object.entries(replacements)) {
+            roleBased = roleBased.replaceAll(token, value)
+          }
+
+          if (!projectIsTypescript) {
+            roleBased = await transformTSToJS(libPermissionsPath, roleBased)
+          }
+
+          // Formatting aside, as setup formats what it writes
+          const asCode = (source: string) =>
+            source.replace(/\s+|;/g, '').replaceAll('"', "'")
 
           // `setup permissions`' checks, of the user's own roles, become
-          // checks of their role in the current organization
+          // checks of their role in the current organization. A version the
+          // app changed is its own, and kept
           await writeTemplateFile(
             'permissions.ts.template',
-            path.join(paths.api.lib, `permissions.${ext}`),
+            libPermissionsPath,
             replacements,
             undefined,
-            (existing) => existing.includes('@cedarjs/permissions/api'),
+            (existing) => asCode(existing) === asCode(roleBased),
           )
+
+          ctx.libPermissionsNeedsMembership =
+            !force &&
+            fs
+              .readFileSync(libPermissionsPath, 'utf-8')
+              .includes('@cedarjs/permissions/api')
 
           const directiveDir = path.join(
             paths.api.directives,
@@ -722,8 +758,18 @@ ${
                </PrivateSet>
 
 ${
-  ctx.mapNeedsOrgPermissions
+  ctx.libPermissionsNeedsMembership
     ? `
+          ${c.warning('Kept your api/src/lib/permissions.')}
+          Its checks use ${c.highlight('createPermissions')} from ${c.highlight('@cedarjs/permissions/api')},
+          which checks ${c.highlight('currentUser.roles')}. In an organization, a role belongs to
+          the membership: import ${c.highlight('createPermissions')} from ${c.highlight('@cedarjs/tenancy')} instead.
+
+`
+    : ''
+}${
+            ctx.mapNeedsOrgPermissions
+              ? `
           ${c.warning('Kept your permission map in packages/permissions.')}
           Its roles are now roles in an organization. Add the permissions the
           generated organizations service checks, and roles for its members:
@@ -737,8 +783,8 @@ ${
             },
 
 `
-    : ''
-}${
+              : ''
+          }${
             keptFiles.length > 0
               ? `
           Kept these existing files rather than overwriting them (run with
