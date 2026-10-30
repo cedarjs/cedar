@@ -784,6 +784,10 @@ the UI whichever role grants it:
 mockCurrentUser({ permissions: ['contacts.edit'] })
 ```
 
+With [tenancy](tenancy.md), permissions come from the user's membership in an
+organization instead: mock the memberships and the route's organization as in
+[Testing](tenancy.md#testing) in the tenancy docs.
+
 #### mockRouteParams()
 
 A component rendered in isolation (a cell test, for example) has no matched
