@@ -15,8 +15,7 @@
       "types/*": ["./types/*", "../types/*"],
       "@cedarjs/testing": ["../node_modules/@cedarjs/testing/api"]
     },
-    "typeRoots": ["../node_modules/@types", "./node_modules/@types"],
-    "types": ["jest"],
+    "types": ["vitest/globals"],
     "jsx": "react-jsx"
   },
   "include": [
