@@ -28,11 +28,6 @@ vi.mock('node:fs', async () => {
           return !!mocks.serverTs
         }
 
-        // An app without tenancy
-        if (filePath.includes('requireOrgAuth')) {
-          return false
-        }
-
         return !filePath.includes('foobar')
       },
       mkdirSync: () => {},
@@ -59,14 +54,7 @@ vi.mock('@cedarjs/project-config', () => ({
   getPaths: () => {
     return {
       base: '',
-      api: {
-        src: '',
-        lib: '',
-        graphql: '',
-        services: '',
-        subscriptions: '',
-        directives: 'directives',
-      },
+      api: { src: '', lib: '', graphql: '', services: '', subscriptions: '' },
       web: { base: '', src: '' },
     }
   },

@@ -1,15 +1,14 @@
 import { context } from '@cedarjs/context'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
+import {
+  assertPermission,
+  assertPermissionDefinitions,
+  coversRole,
+  permissionsOf as rolePermissions,
+} from '@cedarjs/permissions'
+import type { PermissionDefinitions } from '@cedarjs/permissions'
 
 import { getCurrentOrg, isUserWithMemberships } from './context.js'
-import { assertPermissionDefinitions } from './definePermissions.js'
-import type { PermissionDefinitions } from './definePermissions.js'
-
-export { definePermissions } from './definePermissions.js'
-export type {
-  PermissionDefinitions,
-  PermissionName,
-} from './definePermissions.js'
 
 /** What `permissionsOf` needs to know about a membership */
 export interface MembershipForPermissions {
@@ -34,7 +33,17 @@ export interface Permissions<Permission extends string> {
    * `AuthenticationError` when no one is signed in, and `ForbiddenError`
    * when they may not.
    */
-  requirePermission(options: { permission: Permission }): void
+  requirePermission(permission: Permission): void
+  /**
+   * Whether the signed-in user may give `role` to someone in the current
+   * organization, or take it away: they hold every permission `role` has,
+   * so no one can hand out more than they may do themselves. False for a
+   * role the definitions don't list.
+   *
+   * This is only the role half: who may manage members at all is a
+   * permission of its own (`members.manage`, say) on the field.
+   */
+  canGrantRole(role: string): boolean
   /**
    * What a membership may do: its role's permissions. The one place a membership's permissions are worked out, which
    * `hasPermission`, `requirePermission` and `withPermissions` all use.
@@ -69,7 +78,7 @@ export interface Permissions<Permission extends string> {
  * // api/src/lib/permissions.ts
  * import { permissions } from '@my-app/permissions'
  *
- * export const { hasPermission, requirePermission, withPermissions } =
+ * export const { hasPermission, requirePermission, canGrantRole, withPermissions } =
  *   createPermissions(permissions)
  * ```
  *
@@ -84,19 +93,8 @@ export function createPermissions<const Permission extends string>(
 ): Permissions<Permission> {
   assertPermissionDefinitions(definitions)
 
-  const assertDefined = (permission: string) => {
-    if (!(definitions.permissions as readonly string[]).includes(permission)) {
-      throw new Error(
-        `Unknown permission "${permission}". Add it to \`permissions\` in ` +
-          'your permission definitions before using it.',
-      )
-    }
-  }
-
   const permissionsOf = (membership: MembershipForPermissions) =>
-    Object.hasOwn(definitions.roles, membership.role)
-      ? [...definitions.roles[membership.role]]
-      : []
+    rolePermissions(definitions, membership.role)
 
   /**
    * The signed-in user's membership in the current organization, as
@@ -120,7 +118,7 @@ export function createPermissions<const Permission extends string>(
   }
 
   const hasPermission = (permission: Permission): boolean => {
-    assertDefined(permission)
+    assertPermission(definitions, permission)
 
     if (!context.currentUser) {
       return false
@@ -151,8 +149,15 @@ export function createPermissions<const Permission extends string>(
     hasPermission,
     permissionsOf,
     withPermissions,
-    requirePermission({ permission }) {
-      assertDefined(permission)
+    canGrantRole(role) {
+      const membership = context.currentUser ? currentMembership() : undefined
+
+      return (
+        !!membership && coversRole(definitions, permissionsOf(membership), role)
+      )
+    },
+    requirePermission(permission) {
+      assertPermission(definitions, permission)
 
       if (!context.currentUser) {
         throw new AuthenticationError("You don't have permission to do that.")

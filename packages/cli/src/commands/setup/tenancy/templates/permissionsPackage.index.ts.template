@@ -1,25 +1,31 @@
-import { definePermissions } from '@cedarjs/tenancy/permissions'
-import type { PermissionName } from '@cedarjs/tenancy/permissions'
+import { definePermissions } from '@cedarjs/permissions'
+import type { PermissionName } from '@cedarjs/permissions'
 
 /**
- * Every permission the app checks, and what each role may do. Fields ask
- * for a permission (`@requirePermission(permission: "members.manage")`, or
- * `requirePermission()` in a service) instead of listing roles, so a new
- * role is one entry here: it can do exactly what its list says, and a
+ * Every permission the app checks, and what each role may do: a role is a
+ * named bundle of permissions. Fields ask for a permission
+ * (`@requirePermission(permission: "members.manage")`, or
+ * `requirePermission('members.manage')` in a service), never a role, so a
+ * new role is one entry here: it can do exactly what its list says, and a
  * field added later is closed to it unless its permission is on the list.
+ *
+ * `organization.read` is "any member": every role lists it, and fields any
+ * member may use ask for it. `organization.manage` is the owner's alone,
+ * which also keeps admins from making someone an owner: a role can only be
+ * given by someone who holds every permission it has.
  *
  * `roles` are per organization: a membership's role decides what the user
  * may do in that organization. Fields about the user rather than an
- * organization (their own account, say) use `@requireUserAuth` instead.
+ * organization (their own account, say) use `@requireAuth` instead.
  *
  * This package is shared: the api checks these permissions
  * (api/src/lib/permissions), and the web can import the names. The web gets each
  * membership's permissions from the api, through `getCurrentUser`.
  */
 export const permissions = definePermissions({
-  permissions: ['organization.read', 'members.manage'],
+  permissions: ['organization.read', 'organization.manage', 'members.manage'],
   roles: {
-    owner: ['organization.read', 'members.manage'],
+    owner: ['organization.read', 'organization.manage', 'members.manage'],
     admin: ['organization.read', 'members.manage'],
     member: ['organization.read'],
   },

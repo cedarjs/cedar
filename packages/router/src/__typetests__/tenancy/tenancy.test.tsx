@@ -32,13 +32,9 @@ declare const authImplementation: AuthImplementation<
 
 const { useAuth } = createAuthentication(authImplementation)
 
-test('useAuth() has no hasRole', () => {
-  expect(useAuth()).type.not.toHaveProperty('hasRole')
-})
-
-test('useAuth().hasUserRole checks currentUser.roles', () => {
-  expect(useAuth().hasUserRole).type.toBeCallableWith('admin')
-  expect(useAuth().hasUserRole).type.toBeCallableWith(['admin', 'editor'])
+test('useAuth().hasRole checks currentUser.roles', () => {
+  expect(useAuth().hasRole).type.toBeCallableWith('admin')
+  expect(useAuth().hasRole).type.toBeCallableWith(['admin', 'editor'])
 })
 
 test("Router takes the app's useAuth", () => {
@@ -57,67 +53,51 @@ test("Router takes tenancy's tenancy", () => {
   ).type.not.toRaiseError()
 })
 
-test('PrivateSet and Set have no roles', () => {
+test('PrivateSet and Set take roles, and no orgRoles', () => {
   expect(
-    <PrivateSet unauthenticated="login" roles="admin">
+    <PrivateSet unauthenticated="login" roles={['admin', 'editor']}>
       {null}
     </PrivateSet>,
-  ).type.toRaiseError("Property 'roles' does not exist")
+  ).type.not.toRaiseError()
 
   expect(
-    <Set private unauthenticated="login" roles={['admin']}>
+    <Set private unauthenticated="login" roles="admin">
       {null}
     </Set>,
-  ).type.toRaiseError("Property 'roles' does not exist")
-
-  expect(
-    <PrivateSet unauthenticated="login">{null}</PrivateSet>,
   ).type.not.toRaiseError()
-})
 
-test('PrivateSet takes userRoles and orgRoles instead', () => {
   expect(
-    <PrivateSet unauthenticated="login" userRoles={['admin', 'editor']}>
+    <PrivateSet unauthenticated="login" orgRoles="owner">
       {null}
     </PrivateSet>,
-  ).type.not.toRaiseError()
+  ).type.toRaiseError("Property 'orgRoles' does not exist")
+})
 
+test('PrivateSet takes permission, for the organization', () => {
   expect(
     <PrivateSet
       unauthenticated="login"
       unauthorized="projects"
-      orgRoles="owner"
+      permission="members.manage"
     >
       {null}
     </PrivateSet>,
   ).type.not.toRaiseError()
 
   expect(
-    <PrivateSet unauthenticated="login" userRoles="staff" orgRoles={['owner']}>
-      {null}
-    </PrivateSet>,
-  ).type.not.toRaiseError()
-})
-
-test('PrivateSet takes orgPermission', () => {
-  expect(
-    <PrivateSet
-      unauthenticated="login"
-      unauthorized="projects"
-      orgPermission="members.manage"
-    >
+    <PrivateSet unauthenticated="login" roles="staff" permission="a.b">
       {null}
     </PrivateSet>,
   ).type.not.toRaiseError()
 
   expect(
-    <PrivateSet unauthenticated="login" orgRoles="owner" orgPermission="a.b">
+    <PrivateSet unauthenticated="login" permission={['a.b']}>
       {null}
     </PrivateSet>,
-  ).type.not.toRaiseError()
+  ).type.toRaiseError()
 
   expect(
-    <PrivateSet unauthenticated="login" orgPermission={['a.b']}>
+    <PrivateSet unauthenticated="login" permission="billing.manage">
       {null}
     </PrivateSet>,
   ).type.toRaiseError()

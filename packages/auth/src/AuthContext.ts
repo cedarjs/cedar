@@ -25,8 +25,9 @@ export type CurrentUser = (LoggedInUser & object) | null
 /**
  * The app's permission names, as keys. Cedar generates them from the app's
  * permission definitions (`packages/permissions`, set up by
- * `cedar setup tenancy`). Empty when the app has none, and then
- * `hasPermission` takes nothing: it could only ever answer `false`.
+ * `cedar setup permissions` or `cedar setup tenancy`). Empty when the app
+ * has none, and then `hasPermission` takes nothing: it could only ever
+ * answer `false`.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AvailablePermissions {}
@@ -48,41 +49,6 @@ export type PermissionName = [keyof AvailablePermissions] extends [never]
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AuthTenancy {}
 
-/**
- * `useAuth()`'s role check: `hasUserRole` in an app with tenancy (see
- * `AuthTenancy`), where every role check says which kind it is, and `hasRole`
- * otherwise
- */
-type RoleCheck = AuthTenancy extends { enabled: true }
-  ? {
-      /**
-       * Whether the "currentUser" from the api side has one of `rolesToCheck`
-       * (a role, or a list of roles) in `currentUser.roles`, as opposed to a
-       * role in the organization they're in
-       */
-      hasUserRole(rolesToCheck: string | string[]): boolean
-    }
-  : {
-      /**
-       * Checks if the "currentUser" from the api side is assigned a role or one
-       * of a list of roles. If the user is assigned any of the provided list of
-       * roles, then hasRole is considered to be true.
-       */
-      hasRole(rolesToCheck: string | string[]): boolean
-    }
-
-/**
- * Both of `useAuth()`'s role checks, for an auth provider to spread into the
- * value it provides. It can't know whether the app has tenancy, so it
- * provides both, and the app's types show the one that fits (see
- * `RoleCheck`).
- */
-export function roleChecks(
-  check: (rolesToCheck: string | string[]) => boolean,
-) {
-  return { hasRole: check, hasUserRole: check }
-}
-
 export interface AuthContextInterface<
   TUser,
   TLogInOptions,
@@ -98,7 +64,7 @@ export interface AuthContextInterface<
   TClient,
   TChangePasswordOptions = unknown,
   TChangePassword = unknown,
-> extends RoleCheck {
+> {
   /** Determining your current authentication state */
   loading: boolean
   isAuthenticated: boolean
@@ -139,10 +105,17 @@ export interface AuthContextInterface<
    */
   getCurrentUser(): Promise<CurrentUser>
   /**
-   * Whether the user has `permission` where they are in the app. Always
-   * `false` outside a scope that provides permissions, such as an
-   * organization route with `tenancy` from `@cedarjs/tenancy/web` on the
-   * `Router`.
+   * Checks if the "currentUser" from the api side is assigned a role or one
+   * of a list of roles. If the user is assigned any of the provided list of
+   * roles, then hasRole is considered to be true.
+   */
+  hasRole(rolesToCheck: string | string[]): boolean
+  /**
+   * Whether the user has `permission` where they are in the app: in
+   * `currentUser.permissions`, or in a scope that provides permissions,
+   * such as an organization route with `tenancy` from
+   * `@cedarjs/tenancy/web` on the `Router`. With tenancy, `false` outside
+   * an organization.
    */
   hasPermission(permission: PermissionName): boolean
   /**

@@ -45,7 +45,7 @@ export const schema = gql`
 
   type Query {
     "Every membership belonging to the signed-in user, across all organizations they belong to."
-    myMemberships: [Membership!]! @requireUserAuth
+    myMemberships: [Membership!]! @requireAuth
 
     "The current organization, resolved by resolveCurrentOrg for this request."
     organization(id: String!): Organization
@@ -55,13 +55,12 @@ export const schema = gql`
   type Mutation {
     "Creates a new organization with the caller as its owner."
     createOrganization(input: CreateOrganizationInput!): Organization!
-      @requireUserAuth
+      @requireAuth
 
     """
     Creates a pending membership (an invitation) in the current organization,
-    for a role the caller's own role may grant (see ROLE_GRANTS in
-    organizations.ts) -- an admin can invite an admin or a member, but not an
-    owner. The app is responsible for emailing input.email a link built from
+    for a role whose permissions the caller all holds -- an admin can invite
+    an admin or a member, but not an owner. The app is responsible for emailing input.email a link built from
     the returned invitationToken; Membership has no email column of its own.
     The invitation can be claimed until the returned invitationExpiresAt.
     Web callers must call reauthenticate() from useAuth() in onCompleted so
@@ -78,7 +77,7 @@ export const schema = gql`
     the new membership is reflected in currentUser.memberships.
     """
     acceptInvitation(token: String!): Organization!
-      @requireUserAuth
+      @requireAuth
 
     """
     Removes a membership from the current organization, for a role the

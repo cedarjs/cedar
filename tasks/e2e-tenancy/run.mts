@@ -121,8 +121,7 @@ function confirmSetup(projectPath: string) {
   const exists = (file: string) => fs.existsSync(path.join(projectPath, file))
 
   for (const file of [
-    'api/src/directives/requireOrgAuth/requireOrgAuth.ts',
-    'api/src/directives/requireUserAuth/requireUserAuth.ts',
+    'api/src/directives/requireAuth/requireAuth.ts',
     'api/src/directives/requirePermission/requirePermission.ts',
     'api/src/lib/permissions.ts',
     'packages/permissions/src/index.ts',
@@ -133,30 +132,20 @@ function confirmSetup(projectPath: string) {
     }
   }
 
-  if (exists('api/src/directives/requireAuth')) {
+  // The app's own requireAuth stays: there were no organizations before, so
+  // every existing field is about the user
+  if (!read('api/src/graphql/posts.sdl.ts').includes('@requireAuth')) {
+    throw new Error('Expected posts.sdl.ts to still use @requireAuth')
+  }
+
+  // The app's own hasRole and requireAuth stay too, and getCurrentUser
+  // gives each membership its permissions
+  const auth = read('api/src/lib/auth.ts')
+
+  if (!/\bwithPermissions\(/.test(auth) || !/\bhasRole\b/.test(auth)) {
     throw new Error(
-      "Expected Cedar's requireAuth directive to be replaced, but it's still there",
+      'Expected api/src/lib/auth.ts to keep hasRole and use withPermissions',
     )
-  }
-
-  // There were no organizations before, so every existing field is about
-  // the user
-  const leftover = filesIn(projectPath, 'api/src').filter((file) =>
-    /@requireAuth\b/.test(read(file)),
-  )
-
-  if (leftover.length > 0) {
-    throw new Error(
-      `Expected no @requireAuth left, but found it in:\n${leftover.join('\n')}`,
-    )
-  }
-
-  if (!read('api/src/graphql/posts.sdl.ts').includes('@requireUserAuth')) {
-    throw new Error('Expected posts.sdl.ts to use @requireUserAuth')
-  }
-
-  if (!/\brequireOrgAuth\b/.test(read('api/src/lib/auth.ts'))) {
-    throw new Error('Expected api/src/lib/auth.ts to export requireOrgAuth')
   }
 }
 

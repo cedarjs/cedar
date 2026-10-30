@@ -4,12 +4,34 @@ import path from 'node:path'
 import { getPaths } from './index.js'
 
 /**
- * Whether `cedar setup tenancy` has replaced the app's `@requireAuth` with
- * `@requireOrgAuth` and `@requireUserAuth`
+ * Whether the app has tenancy: `cedar setup tenancy` adds `@cedarjs/tenancy`
+ * to the api side, together with the `@requirePermission` directive
  */
-export function hasTenancyAuthDirectives() {
-  return fs.existsSync(path.join(getPaths().api.directives, 'requireOrgAuth'))
+export function hasTenancy() {
+  let packageJson: {
+    dependencies?: Record<string, unknown>
+    devDependencies?: Record<string, unknown>
+  }
+
+  try {
+    packageJson = JSON.parse(
+      fs.readFileSync(path.join(getPaths().api.base, 'package.json'), 'utf-8'),
+    )
+  } catch {
+    return false
+  }
+
+  return (
+    !!packageJson.dependencies?.['@cedarjs/tenancy'] ||
+    !!packageJson.devDependencies?.['@cedarjs/tenancy']
+  )
 }
+
+/**
+ * The permission `cedar setup tenancy` gives every role, which generated
+ * fields on an organization's data ask for: any member may use them
+ */
+export const MEMBER_PERMISSION = 'organization.read'
 
 /**
  * The column tenant-owned models are scoped by: the `tenantField` given to
@@ -48,21 +70,21 @@ export function belongsToOrganization(model: {
 }
 
 /**
- * Generated `source` with its `@requireAuth` directives switched to the
- * ones an app with tenancy has: `@requireOrgAuth` when the data belongs to
- * an organization, `@requireUserAuth` when it doesn't. Unchanged in an app
- * without tenancy.
+ * Generated `source` with its `@requireAuth` directives switched to
+ * `@requirePermission` with `MEMBER_PERMISSION` when the data belongs to an
+ * organization in an app with tenancy. Unchanged otherwise: `@requireAuth`
+ * is for data about the signed-in user.
  */
 export function withAuthDirective(
   source: string,
   { belongsToOrg }: { belongsToOrg: boolean },
 ) {
-  if (!hasTenancyAuthDirectives()) {
+  if (!belongsToOrg || !hasTenancy()) {
     return source
   }
 
   return source.replace(
     /@requireAuth(?![\w$])/g,
-    belongsToOrg ? '@requireOrgAuth' : '@requireUserAuth',
+    `@requirePermission(permission: "${MEMBER_PERMISSION}")`,
   )
 }

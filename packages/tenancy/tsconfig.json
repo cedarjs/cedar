@@ -18,6 +18,7 @@
     { "path": "../context" },
     { "path": "../framework-tools" },
     { "path": "../graphql-server" },
+    { "path": "../permissions" },
     { "path": "../router" },
     { "path": "../web" }
   ]

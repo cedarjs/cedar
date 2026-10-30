@@ -24,12 +24,6 @@ import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
 
-import { TENANCY_AUTH_EXPORT } from './authCodemod.js'
-import {
-  isDefaultRequireAuthDirective,
-  renameRequireAuthDirective,
-  renameLibAuthImports,
-} from './authDirectives.js'
 import {
   addPermissionsPackageTasks,
   permissionsPackageName,
@@ -49,13 +43,10 @@ import {
   requiredUserFields,
 } from './schemaPrisma.js'
 import type { EditSchemaResult, ModelsExistOutcome } from './schemaPrisma.js'
-import { renameUseAuthHasRole } from './webHasRole.js'
 
 const DEFAULT_TENANT_FIELD = 'organizationId'
 
 const AUTH_SNIPPET = `
-  import { createTenancyAuth } from '@cedarjs/tenancy'
-
   import { withPermissions } from 'src/lib/permissions'
 
   export const getCurrentUser = async (session) => {
@@ -73,10 +64,7 @@ const AUTH_SNIPPET = `
         },
       },
     }))
-  }
-
-  // In place of your hasRole and requireAuth
-  ${TENANCY_AUTH_EXPORT}`
+  }`
 
 const SIGNUP_SNIPPET = `
   handler: async ({ username, hashedPassword, salt, userAttributes }) => {
@@ -101,11 +89,6 @@ interface TenancyOptions {
 interface TenancyCtx extends PermissionsPackageCtx {
   /** Set once the schema-editing task runs; read by the "Next steps" task. */
   modelsExistOutcome?: ModelsExistOutcome
-  /**
-   * Set when the app's `requireAuth` directive was changed from Cedar's, so
-   * was left for the app to move its changes over
-   */
-  keptRequireAuthDirective?: boolean
   /**
    * Set when `tenancy` couldn't be passed to the app's `<Router>`, so
    * the next steps say to do it by hand
@@ -323,8 +306,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
       },
       {
-        title:
-          'Adding memberships to getCurrentUser and the tenancy auth checks to api/src/lib/auth...',
+        title: 'Adding memberships and their permissions to getCurrentUser...',
         task: async (_ctx, task) => {
           if (!fs.existsSync(authPath)) {
             task.skip('No api/src/lib/auth file found; skipping.')
@@ -336,9 +318,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             targetPaths: [authPath],
           })
 
-          if (transformResult.error?.includes('AUTH_CHECKS_CHANGED')) {
-            task.output = `api/src/lib/auth's requireAuth or hasRole has checks of its own, so it was left as it is. Please add this by hand, keeping your checks:\n${AUTH_SNIPPET}`
-          } else if (transformResult.error) {
+          if (transformResult.error) {
             task.output = `Could not update api/src/lib/auth automatically. Please add this by hand:\n${AUTH_SNIPPET}`
           }
         },
@@ -385,85 +365,6 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
         skip: () =>
           isDbAuthProject ? false : 'Not a dbAuth project; skipping.',
-      },
-      {
-        title:
-          'Switching @requireAuth to @requireOrgAuth and @requireUserAuth, and hasRole to hasUserRole...',
-        task: async (ctx) => {
-          const oldDirectiveDir = path.join(paths.api.directives, 'requireAuth')
-          const isInOldDirective = (file: string) =>
-            file.startsWith(oldDirectiveDir + path.sep)
-
-          const oldDirectivePath = path.join(
-            oldDirectiveDir,
-            `requireAuth.${ext}`,
-          )
-          // An app's own `@requireAuth` stays, and so do its fields, so its
-          // checks keep running until the app moves them over
-          const keepOldDirective =
-            fs.existsSync(oldDirectivePath) &&
-            !isDefaultRequireAuthDirective(
-              fs.readFileSync(oldDirectivePath, 'utf-8'),
-            )
-
-          const sourceFilesIn = (dir: string) =>
-            fs
-              .readdirSync(dir, { recursive: true, withFileTypes: true })
-              .filter(
-                (entry) => entry.isFile() && /\.[jt]sx?$/.test(entry.name),
-              )
-              .map((entry) => path.join(entry.parentPath, entry.name))
-
-          // Before tenancy there are no organizations, so every existing
-          // field is about the user
-          for (const file of sourceFilesIn(paths.api.src)) {
-            const source = fs.readFileSync(file, 'utf-8')
-            // `lib/auth` exports no `requireAuth` any more, so imports of it
-            // are renamed even in a kept directive
-            const renamed = renameLibAuthImports(
-              keepOldDirective || isInOldDirective(file)
-                ? source
-                : renameRequireAuthDirective(source),
-            )
-
-            if (renamed !== source) {
-              fs.writeFileSync(file, renamed)
-              writtenFiles.push(file)
-            }
-          }
-
-          // And so is every existing role check on the web: `hasRole` isn't
-          // in a tenancy app's types, `hasUserRole` checks the same thing
-          for (const file of sourceFilesIn(paths.web.src)) {
-            const source = fs.readFileSync(file, 'utf-8')
-            const renamed = renameUseAuthHasRole(source)
-
-            if (renamed !== source) {
-              fs.writeFileSync(file, renamed)
-              writtenFiles.push(file)
-            }
-          }
-
-          if (keepOldDirective) {
-            ctx.keptRequireAuthDirective = true
-          } else if (fs.existsSync(oldDirectivePath)) {
-            // `@requireUserAuth` checks the same thing
-            fs.rmSync(oldDirectiveDir, { recursive: true, force: true })
-          }
-
-          for (const name of ['requireOrgAuth', 'requireUserAuth']) {
-            const directiveDir = path.join(paths.api.directives, name)
-
-            await writeTemplateFile(
-              `${name}.ts.template`,
-              path.join(directiveDir, `${name}.${ext}`),
-            )
-            await writeTemplateFile(
-              `${name}.test.ts.template`,
-              path.join(directiveDir, `${name}.test.${ext}`),
-            )
-          }
-        },
       },
       {
         title: 'Adding the permissions package...',
@@ -532,6 +433,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           await writeTemplateFile(
             'organizations.ts.template',
             path.join(serviceDir, `organizations.${ext}`),
+            { __PERMISSIONS_PACKAGE__: permissionsPackageName() },
           )
           await writeTemplateFile(
             'organizations.test.ts.template',
@@ -724,8 +626,9 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              User/Organization/Membership. For each existing model (e.g.
              Contact) whose rows belong to one organization, add
              ${c.highlight('organizationId String')} plus ${c.highlight('@@index([organizationId])')} to it in
-             schema.prisma, and switch its fields from ${c.highlight('@requireUserAuth')}
-             to ${c.highlight('@requireOrgAuth')}. For each one that stays global, add it
+             schema.prisma, and switch its fields from ${c.highlight('@requireAuth')}
+             to ${c.highlight('@requirePermission(permission: "organization.read")')}, or
+             a permission of its own. For each one that stays global, add it
              to the ${c.highlight('allExcept')} list in api/src/lib/db instead.
           3. Put your organization routes in a PrivateSet in web/src/Routes.tsx.
              The Router renders the organization for it, using the generated
@@ -764,33 +667,22 @@ ${
                  ? ` (this
              turned on ${c.highlight('experimental.packagesWorkspace')} in cedar.toml)`
                  : ''
-             }. Guard
-             organization fields with ${c.highlight('@requirePermission(permission: "...")')}
-             (or ${c.highlight('@requireOrgAuth(roles: [...])')}), and check permissions on the
-             web with ${c.highlight('useAuth().hasPermission()')}.
-          6. ${c.highlight('@requireAuth')} is gone. Your fields use ${c.highlight('@requireUserAuth')} now,
-             which checks what ${c.highlight('@requireAuth')} did: there were no organizations
-             before. ${c.highlight('@requireOrgAuth')} needs a current organization, and checks
-             the user's role in it.${
-               ctx.keptRequireAuthDirective
-                 ? `
-             api/src/directives/requireAuth was changed from Cedar's, so
-             it and your @requireAuth fields were left as they are: move
-             its checks to requireUserAuth or requireOrgAuth, switch the
-             fields over, then delete it.`
-                 : ''
-             }
-          7. Every role check names its kind now. ${c.highlight('hasRole')} is
-             ${c.highlight('hasUserRole')} on both sides (your existing uses were renamed),
-             checking ${c.highlight('currentUser.roles')}; ${c.highlight('hasOrgRole')} checks the role in
-             the organization. ${c.highlight('<PrivateSet roles>')} isn't available with
-             tenancy: guard routes with ${c.highlight('<PrivateSet userRoles>')} for
-             ${c.highlight('currentUser.roles')}, and with ${c.highlight('<PrivateSet orgRoles>')} for the
-             role in the route's organization. A member who lacks it is sent
-             to ${c.highlight('unauthorized')}, and ${c.highlight('<PrivateSet orgPermission>')} checks a
-             permission of their membership the same way:
+             }. A role is a bundle of
+             permissions: guard organization fields with
+             ${c.highlight('@requirePermission(permission: "...")')}, never a role, and check
+             permissions on the web with ${c.highlight('useAuth().hasPermission()')}. Fields
+             any member may use ask for ${c.highlight('organization.read')}, which every
+             role lists.
+          6. ${c.highlight('@requireAuth')} is for fields about the signed-in user.
+             ${c.highlight('@requirePermission')} needs a current organization, and checks
+             what the user's role there may do.
+          7. Roles are the user's own: ${c.highlight('hasRole')} and ${c.highlight('<PrivateSet roles>')}
+             check ${c.highlight('currentUser.roles')}. In an organization, check a
+             permission instead: guard routes with ${c.highlight('<PrivateSet permission>')},
+             which checks their membership in the route's organization.
+             A member who lacks it is sent to ${c.highlight('unauthorized')}:
 
-               <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+               <PrivateSet unauthenticated="login" unauthorized="projects" permission="organization.manage">
                  <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
                </PrivateSet>
 

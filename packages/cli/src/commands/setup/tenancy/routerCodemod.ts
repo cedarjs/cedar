@@ -5,8 +5,7 @@ const TENANCY_MODULE = 'src/tenancy'
 /**
  * Passes the app's `tenancy` (`web/src/tenancy`) to its `<Router>` in
  * `web/src/Routes`, next to `useAuth`, so the router renders the
- * organization provider and checks `<PrivateSet orgRoles>` and
- * `<PrivateSet orgPermission>`:
+ * organization provider and checks `<PrivateSet permission>` in it:
  *
  *   import { tenancy } from 'src/tenancy'
  *

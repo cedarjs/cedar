@@ -116,7 +116,6 @@ function createUseAuth(state: AuthState): UseAuth {
       getToken: async () => null,
       getCurrentUser: async () => null,
       hasRole: () => false,
-      hasUserRole: () => false,
       hasPermission: () => false,
       reauthenticate: async () => {},
       client: undefined,
@@ -662,29 +661,25 @@ describe('createTenancy', () => {
     })
 
     const CurrentOrg = () => {
-      const { org, memberships, hasOrgRole, setOrg } = useCurrentOrg()
+      const { org, memberships, setOrg } = useCurrentOrg()
 
       return (
         <>
           <p>
             org: {org?.slug} ({org?.role}), {memberships.length} memberships
           </p>
-          <p>owner here: {String(hasOrgRole('owner'))}</p>
-          <p>owner in b: {String(hasOrgRole('owner', 'org_b'))}</p>
           <button onClick={() => setOrg('org-b')}>switch</button>
         </>
       )
     }
 
-    test('gives the organization, the memberships and the role checks', async () => {
+    test('gives the organization and the memberships', async () => {
       setupFetchMock()
       renderApp({ useAuth, children: <CurrentOrg /> })
 
       act(() => navigate('/org/org-a'))
 
       await screen.findByText('org: org-a (member), 2 memberships')
-      screen.getByText('owner here: false')
-      screen.getByText('owner in b: true')
     })
 
     test('setOrg navigates to the same page of another organization', async () => {
@@ -888,14 +883,15 @@ describe('createTenancy', () => {
     const OrgPage = () => <ProjectsView />
     const OrgHomePage = () => <>org home</>
 
-    // These tests are an app without tenancy, where sets have no `orgRoles`
-    // or `orgPermission` prop and the router no `tenancy`. Spreading them
-    // lets them through the type check.
-    const ownersOnly = { orgRoles: 'owner' }
-    const canManageMembers = { orgPermission: 'members.manage' }
+    // These tests are an app without permission names or tenancy, where
+    // `permission` takes no names and the router has no `tenancy`.
+    // Spreading them lets them through the type check.
+    const canManageMembers: Record<string, string> = {
+      permission: 'members.manage',
+    }
     const tenancy = createTenancy({ notAMember: 'not a member' })
 
-    test('<PrivateSet orgRoles> checks the role in the URL’s organization, and redirects to unauthorized with its orgSlug', async () => {
+    test('a nested <PrivateSet permission> redirects to unauthorized with the URL’s orgSlug', async () => {
       setupFetchMock()
 
       render(
@@ -911,7 +907,7 @@ describe('createTenancy', () => {
               <PrivateSet
                 unauthenticated="login"
                 unauthorized="orgHome"
-                {...ownersOnly}
+                {...canManageMembers}
               >
                 <Route path="/org/{orgSlug}" page={OrgPage} name="org" />
               </PrivateSet>
@@ -920,7 +916,7 @@ describe('createTenancy', () => {
         </CedarApolloProvider>,
       )
 
-      // An owner of org B, but only a member of org A
+      // Manages the members of org B, but not of org A
       act(() => navigate('/org/org-b'))
       await waitFor(() => screen.getByText('projects: org_b-projects'))
 
@@ -929,7 +925,7 @@ describe('createTenancy', () => {
       expect(window.location.pathname).toBe('/org/org-a/home')
     })
 
-    test('<PrivateSet orgPermission> checks the permission in the URL’s organization', async () => {
+    test('<PrivateSet permission> checks the permission in the URL’s organization', async () => {
       setupFetchMock()
 
       render(

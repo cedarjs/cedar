@@ -6,37 +6,43 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { belongsToOrganization, withAuthDirective } from '../authDirective.js'
 
-let directivesDir: string
+let apiDir: string
 let libDir: string
 
 vi.mock('../index.js', () => ({
-  getPaths: () => ({ api: { directives: directivesDir, lib: libDir } }),
+  getPaths: () => ({ api: { base: apiDir, lib: libDir } }),
 }))
 
 const sdl = 'todos: [Todo!]! @requireAuth @requireAuthor'
 
 describe('withAuthDirective', () => {
   beforeEach(() => {
-    directivesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-test-'))
+    apiDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-test-'))
   })
 
   afterEach(() => {
-    fs.rmSync(directivesDir, { recursive: true, force: true })
+    fs.rmSync(apiDir, { recursive: true, force: true })
   })
 
   it('leaves @requireAuth in an app without tenancy', () => {
+    fs.writeFileSync(
+      path.join(apiDir, 'package.json'),
+      JSON.stringify({ dependencies: { '@cedarjs/api': '1.0.0' } }),
+    )
+
     expect(withAuthDirective(sdl, { belongsToOrg: true })).toBe(sdl)
   })
 
-  it("switches to tenancy's directives once tenancy has replaced it", () => {
-    fs.mkdirSync(path.join(directivesDir, 'requireOrgAuth'))
+  it('switches to @requirePermission for organization data with tenancy', () => {
+    fs.writeFileSync(
+      path.join(apiDir, 'package.json'),
+      JSON.stringify({ dependencies: { '@cedarjs/tenancy': '1.0.0' } }),
+    )
 
     expect(withAuthDirective(sdl, { belongsToOrg: true })).toBe(
-      'todos: [Todo!]! @requireOrgAuth @requireAuthor',
+      'todos: [Todo!]! @requirePermission(permission: "organization.read") @requireAuthor',
     )
-    expect(withAuthDirective(sdl, { belongsToOrg: false })).toBe(
-      'todos: [Todo!]! @requireUserAuth @requireAuthor',
-    )
+    expect(withAuthDirective(sdl, { belongsToOrg: false })).toBe(sdl)
   })
 })
 

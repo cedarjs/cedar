@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 
-import { roleChecks } from '../AuthContext.js'
 import type { AuthContextInterface, CurrentUser } from '../AuthContext.js'
 import type { AuthImplementation } from '../AuthImplementation.js'
+import { currentUserHasPermission } from '../currentUserHasPermission.js'
 
 import type { AuthProviderState } from './AuthProviderState.js'
 import { spaDefaultAuthProviderState } from './AuthProviderState.js'
@@ -23,9 +23,6 @@ import { useValidateResetToken } from './useValidateResetToken.js'
 export interface AuthProviderProps {
   children: ReactNode
 }
-
-// No scope here to hold permissions; `HasPermissionContext` provides them
-const noPermissions = () => false
 
 export function createAuthProvider<
   TUser,
@@ -117,6 +114,14 @@ export function createAuthProvider<
       ? customProviderHooks.useHasRole(authProviderState.currentUser)
       : // eslint-disable-next-line react-hooks/rules-of-hooks
         useHasRole(authProviderState.currentUser)
+    // The user's own permissions, from `getCurrentUser`. A scope with
+    // permissions of its own, such as an organization, provides
+    // `HasPermissionContext` instead
+    const { currentUser } = authProviderState
+    const hasPermission = useCallback(
+      (permission: string) => currentUserHasPermission(currentUser, permission),
+      [currentUser],
+    )
     const signUp = useSignUp(
       authImplementation,
       setAuthProviderState,
@@ -165,8 +170,8 @@ export function createAuthProvider<
           logOut,
           getToken,
           getCurrentUser,
-          ...roleChecks(hasRole),
-          hasPermission: noPermissions,
+          hasRole,
+          hasPermission,
           reauthenticate,
           forgotPassword,
           resetPassword,

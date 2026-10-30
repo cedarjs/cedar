@@ -6,10 +6,13 @@ import type {
   MembershipRelationResolvers,
 } from 'types/graphql'
 
+import { permissions } from '__PERMISSIONS_PACKAGE__'
+
 import { ForbiddenError, ValidationError } from '@cedarjs/graphql-server'
 import { requireCurrentOrg } from '@cedarjs/tenancy'
 
 import { Prisma, db } from 'src/lib/db'
+import { canGrantRole } from 'src/lib/permissions'
 
 /**
  * How long an invitation stays claimable after `inviteMember` creates it.
@@ -38,37 +41,11 @@ const membershipsForUser = (userId: string): Promise<MembershipSummary[]> =>
   })
 
 /**
- * Roles this generated service knows how to check, and which of them a
- * membership with that role may grant to someone else (`inviteMember`) or
- * revoke (`removeMember`). `owner` may grant or revoke any known role;
- * `admin` may grant or revoke `admin` and `member`, but never `owner`, so
- * an admin can never create or remove an owner. `member` grants nothing;
- * it's listed anyway so `KNOWN_ROLES` below covers every role a membership
- * can actually hold, which is what makes the "unknown role" check on
- * `inviteMember` meaningful.
- *
- * Add a role here when your app adds one. A role missing from this map can
- * never be granted to, or removed from, anyone by `inviteMember` /
- * `removeMember` -- including by an owner.
- */
-export const ROLE_GRANTS: Readonly<Record<string, readonly string[]>> = {
-  owner: ['owner', 'admin', 'member'],
-  admin: ['admin', 'member'],
-  member: [],
-}
-
-const KNOWN_ROLES = Object.keys(ROLE_GRANTS)
-
-/** Whether a membership with `granterRole` may grant or revoke `targetRole`. */
-const canGrantRole = (granterRole: string, targetRole: string): boolean =>
-  ROLE_GRANTS[granterRole]?.includes(targetRole) ?? false
-
-/**
  * Every membership belonging to the signed-in user, across all
  * organizations. `Membership` is a global model, so this reads plain `db`.
  */
 export const myMemberships: QueryResolvers['myMemberships'] = () => {
-  // @requireUserAuth guarantees a signed-in user before this resolver runs.
+  // @requireAuth guarantees a signed-in user before this resolver runs.
   return db.membership.findMany({
     where: { userId: context.currentUser!.id },
     orderBy: { createdAt: 'asc' },
@@ -95,7 +72,7 @@ export const organization: QueryResolvers['organization'] = async ({ id }) => {
 export const createOrganization: MutationResolvers['createOrganization'] =
   async ({ input }) => {
     const baseSlug = slugify(input.name)
-    // @requireUserAuth guarantees a signed-in user before this resolver runs.
+    // @requireAuth guarantees a signed-in user before this resolver runs.
     const userId = context.currentUser!.id
 
     let slug = baseSlug
@@ -139,12 +116,12 @@ export const createOrganization: MutationResolvers['createOrganization'] =
 
 /**
  * Creates a pending membership (an invitation) in the current organization,
- * for a role the caller's own role may grant per `ROLE_GRANTS` -- an
- * `admin` can invite an `admin` or a `member`, but not an `owner`, even
- * though `@requirePermission(permission: "members.manage")` lets an admin call
- * this mutation at all. A role that isn't in `ROLE_GRANTS` is rejected
- * outright, so a typo in `input.role` can never create a membership nobody
- * can check against.
+ * for a role the caller may grant (`canGrantRole`): one whose permissions
+ * they all hold. An `admin` can invite an `admin` or a `member`, but not an
+ * `owner`, even though `@requirePermission(permission: "members.manage")`
+ * lets an admin call this mutation at all. A role that isn't in the
+ * permission definitions is rejected outright, so a typo in `input.role`
+ * can never create a membership with no permissions.
  *
  * `Membership` has no email column: the caller is responsible for emailing
  * `input.email` a link built from the returned `invitationToken`, with its
@@ -158,14 +135,14 @@ export const inviteMember: MutationResolvers['inviteMember'] = async ({
 }) => {
   const currentOrg = requireCurrentOrg()
 
-  if (!KNOWN_ROLES.includes(input.role)) {
+  if (!Object.hasOwn(permissions.roles, input.role)) {
     throw new ValidationError(
-      `"${input.role}" is not a known role. Add it to ROLE_GRANTS in ` +
-        'organizations.ts before inviting with it.',
+      `"${input.role}" is not a known role. Add it to your permission ` +
+        'definitions before inviting with it.',
     )
   }
 
-  if (!canGrantRole(currentOrg.role, input.role)) {
+  if (!canGrantRole(input.role)) {
     throw new ForbiddenError(
       `A "${currentOrg.role}" cannot invite a "${input.role}".`,
     )
@@ -267,7 +244,7 @@ const isExpiredInvitation = async (token: string): Promise<boolean> => {
 export const acceptInvitation: MutationResolvers['acceptInvitation'] = async ({
   token,
 }) => {
-  // @requireUserAuth guarantees a signed-in user before this resolver runs.
+  // @requireAuth guarantees a signed-in user before this resolver runs.
   const userId = context.currentUser!.id
 
   const claim = await claimInvitation(token, userId)
@@ -288,7 +265,7 @@ export const acceptInvitation: MutationResolvers['acceptInvitation'] = async ({
 /**
  * Removes a membership from the current organization. A caller may only
  * remove a membership whose role they could grant via `inviteMember` (the
- * same `ROLE_GRANTS` rule), so an admin can never remove an owner, and the
+ * same `canGrantRole` rule), so an admin can never remove an owner, and the
  * organization's last owner can never be removed -- including by
  * themselves -- so an organization always keeps at least one owner who has
  * accepted their invitation.
@@ -306,7 +283,7 @@ export const removeMember: MutationResolvers['removeMember'] = async ({
     throw new ForbiddenError("You don't have access to that membership.")
   }
 
-  if (!canGrantRole(currentOrg.role, membership.role)) {
+  if (!canGrantRole(membership.role)) {
     throw new ForbiddenError(
       `A "${currentOrg.role}" cannot remove a "${membership.role}" member.`,
     )

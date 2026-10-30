@@ -1,0 +1,58 @@
+{
+  "name": "@cedarjs/permissions",
+  "version": "7.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cedarjs/cedar.git",
+    "directory": "packages/permissions"
+  },
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./api": {
+      "default": {
+        "types": "./dist/api.d.ts",
+        "default": "./dist/api.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.d.*"
+  ],
+  "scripts": {
+    "build": "node ./build.mts",
+    "build:pack": "yarn pack -o cedarjs-permissions.tgz",
+    "build:types": "tsc --build --verbose ./tsconfig.build.json",
+    "check:attw": "yarn cedar-fwtools-attw",
+    "check:package": "concurrently npm:check:attw yarn:publint",
+    "test": "vitest run",
+    "test:types": "tstyche",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "@cedarjs/context": "workspace:*",
+    "@cedarjs/graphql-server": "workspace:*"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
+    "@cedarjs/framework-tools": "workspace:*",
+    "concurrently": "9.2.5",
+    "publint": "0.3.25",
+    "tstyche": "5.0.2",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
