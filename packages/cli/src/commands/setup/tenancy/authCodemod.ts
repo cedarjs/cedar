@@ -147,9 +147,6 @@ function addPermissionsImport(source: string): string {
  * - Wraps the user lookup in `withPermissions`, so each membership carries
  *   its permissions from `api/src/lib/permissions`.
  *
- * The app's `hasRole` and `requireAuth` stay as they are: they check
- * `currentUser.roles`, the user's own roles, with or without tenancy.
- *
  * Throws `CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND` when `db.user.findUnique`'s
  * `select` object cannot be located.
  */

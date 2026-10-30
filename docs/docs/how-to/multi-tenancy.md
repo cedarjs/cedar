@@ -222,8 +222,7 @@ as `@cedarjs/storage`'s):
 ```
 
 `auth.ts` gains `memberships` in the `getCurrentUser()` select, wrapped in
-`withPermissions` so each membership carries its permissions. Its `hasRole`
-and `requireAuth` stay as they are:
+`withPermissions` so each membership carries its permissions:
 
 ```diff title="api/src/lib/auth.ts"
 +import { withPermissions } from 'src/lib/permissions'
@@ -263,9 +262,8 @@ organization, and check what the user's role there may do. Fields any member
 may use ask for `organization.read`, which every role lists.
 
 Before tenancy there are no organizations, so every field your app already has
-is about the user: your `@requireAuth` directive and fields stay as they are,
-and `requireAuth()` and `hasRole()` keep their names on both sides, checking
-the user's own roles in `currentUser.roles`. Your app works as it did. When you give a model an
+is about the user, and `@requireAuth`, `requireAuth()` and `hasRole()` check
+the user's own roles in `currentUser.roles`. When you give a model an
 `organizationId`, switch its fields to
 `@requirePermission(permission: "organization.read")`, or a permission of its
 own. `cedar generate sdl` and `cedar generate scaffold` write
@@ -703,9 +701,8 @@ beforehand.
 
 ### `@requireAuth` and `@requirePermission`
 
-The setup command keeps your app's `@requireAuth` directive, which passes its
-`roles` on to `requireAuth()` in `src/lib/auth`, and adds `@requirePermission`,
-which passes its permission on to `requirePermission()` in
+`@requireAuth` passes its `roles` on to `requireAuth()` in `src/lib/auth`, and
+the setup command adds `@requirePermission`, which passes its permission on to `requirePermission()` in
 `src/lib/permissions`:
 
 ```ts title="api/src/directives/requirePermission/requirePermission.ts"
@@ -722,8 +719,7 @@ Both throw `AuthenticationError` when there's no `context.currentUser`.
 `requirePermission()` throws `ForbiddenError` when there's no
 `context.currentOrg` or the user's role in it doesn't have the permission.
 `requireAuth()` throws `ForbiddenError` when `roles` are given and
-`currentUser.roles` has none of them, as it always did, so any error handling
-you already have on the web side keeps working.
+`currentUser.roles` has none of them.
 
 ### Permissions
 

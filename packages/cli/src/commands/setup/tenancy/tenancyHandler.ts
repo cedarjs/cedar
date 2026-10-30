@@ -673,12 +673,11 @@ ${
              permissions on the web with ${c.highlight('useAuth().hasPermission()')}. Fields
              any member may use ask for ${c.highlight('organization.read')}, which every
              role lists.
-          6. ${c.highlight('@requireAuth')} stays for fields about the signed-in user,
-             and checks what it did: there were no organizations before.
+          6. ${c.highlight('@requireAuth')} is for fields about the signed-in user.
              ${c.highlight('@requirePermission')} needs a current organization, and checks
              what the user's role there may do.
           7. Roles are the user's own: ${c.highlight('hasRole')} and ${c.highlight('<PrivateSet roles>')}
-             still check ${c.highlight('currentUser.roles')}. In an organization, check a
+             check ${c.highlight('currentUser.roles')}. In an organization, check a
              permission instead: guard routes with ${c.highlight('<PrivateSet orgPermission>')}
              for a permission of their membership in the route's organization.
              A member who lacks it is sent to ${c.highlight('unauthorized')}:

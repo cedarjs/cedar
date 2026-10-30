@@ -75,11 +75,10 @@ import {
 
 ## User checks
 
-An app with tenancy keeps the `hasRole` and `requireAuth` in its
-`api/src/lib/auth.ts`, and its `@requireAuth` directive. They're for fields
-about the user rather than an organization: their account, their
-memberships, accepting an invitation. `requireAuth` needs a signed-in user,
-and both check `roles` against `currentUser.roles`: the user's own roles, in
+`hasRole` and `requireAuth` in `api/src/lib/auth.ts`, and the `@requireAuth`
+directive, are for fields about the user rather than an organization: their
+account, their memberships, accepting an invitation. `requireAuth` needs a
+signed-in user, and both check `roles` against `currentUser.roles`: the user's own roles, in
 any organization or none. There's no role check on the current
 organization: fields about an organization ask for a permission (below).
 
@@ -88,8 +87,8 @@ organization: fields about an organization ask for a permission (below).
 Roles in an organization are named bundles of permissions, defined in one
 place. Fields, services and components check a permission in an
 organization, never the membership's role, so a role can do exactly what its
-list says. Checks on the user's own roles in `currentUser.roles` (`hasRole`,
-`<PrivateSet roles>`) are still fine.
+list says. `hasRole` and `<PrivateSet roles>` check the user's own roles, in
+`currentUser.roles`.
 
 ```ts
 // packages/permissions/src/index.ts, shared by the api and web sides

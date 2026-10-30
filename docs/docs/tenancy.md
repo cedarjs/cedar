@@ -308,8 +308,7 @@ anywhere `@cedarjs/context` is imported once the package is installed.
 
 ## User checks
 
-The setup command leaves `hasRole` and `requireAuth` in `api/src/lib/auth.ts`
-as they are, and the `@requireAuth` directive too. Roles are the user's own, in `currentUser.roles`. A check in an organization
+Roles are the user's own, in `currentUser.roles`. A check in an organization
 uses a permission.
 
 |     | User-level (`currentUser.roles`)          | Organization-level (membership)                                                              |
@@ -329,8 +328,8 @@ uses a permission.
   ask for the permission. Fields any member may use ask for
   `organization.read`, which every role lists.
 
-`hasRole(roles)` checks `currentUser.roles`. So your existing uses of
-`hasRole` and `requireAuth`, on the api and on the web, keep working.
+`hasRole(roles)` checks `currentUser.roles` too, on the api and, as
+`useAuth().hasRole`, on the web.
 
 With tenancy, a role belongs to a membership, so don't copy one into
 `currentUser.roles` in `getCurrentUser`: a user who is `owner` in one
@@ -353,8 +352,8 @@ only for roles that really hold everywhere.
 
 ## The `@requireAuth` and `@requirePermission` directives
 
-`setup tenancy` keeps the app's `@requireAuth` directive, which passes its
-`roles` on to `requireAuth()`, and adds
+`@requireAuth` passes its `roles` on to `requireAuth()`, and `setup tenancy`
+adds
 [`@requirePermission`](#requirepermission) for fields about the current
 organization:
 
@@ -388,8 +387,8 @@ in.
 A role in an organization is a named bundle of permissions, defined in one
 map. Fields, services and components check a permission in an organization,
 never the membership's role, so a role can do exactly what its list says.
-Checks on the user's own roles in `currentUser.roles` (`hasRole`,
-`<PrivateSet roles>`) are still fine. Adding a role is then one entry in the definitions instead of an
+`hasRole` and `<PrivateSet roles>` check the user's own roles, in
+`currentUser.roles`. Adding a role is then one entry in the definitions instead of an
 edit to every field it should reach, and the web reads the same answers instead
 of repeating role lists.
 
