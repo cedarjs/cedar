@@ -43,7 +43,7 @@
     "@graphql-tools/schema": "10.1.5",
     "@graphql-tools/utils": "12.1.0",
     "@graphql-yoga/plugin-persisted-operations": "3.24.6",
-    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/api": "1.10.0",
     "cookie": "1.1.1",
     "graphql": "16.14.2",
     "graphql-scalars": "2.0.1",
