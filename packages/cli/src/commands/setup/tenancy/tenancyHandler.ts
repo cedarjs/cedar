@@ -101,6 +101,11 @@ interface TenancyCtx extends PermissionsPackageCtx {
    * `setup permissions` writes, which is kept and checks `currentUser.roles`
    */
   libPermissionsNeedsMembership?: boolean
+  /**
+   * Set when the `@requirePermission` test is the app's own version of the
+   * one `setup permissions` writes, which is kept and mocks the user's roles
+   */
+  directiveTestMocksRoles?: boolean
 }
 
 export const handler = async ({ tenantField, force }: TenancyOptions) => {
@@ -427,35 +432,48 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             `permissions.${ext}`,
           )
 
-          let roleBased = fs.readFileSync(
-            path.resolve(
-              import.meta.dirname,
-              '../permissions/templates/permissions.ts.template',
-            ),
-            'utf-8',
-          )
-
-          for (const [token, value] of Object.entries(replacements)) {
-            roleBased = roleBased.replaceAll(token, value)
-          }
-
-          if (!projectIsTypescript) {
-            roleBased = await transformTSToJS(libPermissionsPath, roleBased)
-          }
-
           // Formatting aside, as setup formats what it writes
           const asCode = (source: string) =>
             source.replace(/\s+|;/g, '').replaceAll('"', "'")
 
+          // Whether a file is the one `setup permissions` writes from
+          // `templateFile`, unchanged. A changed one is the app's own, and
+          // kept
+          const isSetupPermissionsFile = async (
+            templateFile: string,
+            outputPath: string,
+          ) => {
+            let source = fs.readFileSync(
+              path.resolve(
+                import.meta.dirname,
+                '../permissions/templates',
+                templateFile,
+              ),
+              'utf-8',
+            )
+
+            for (const [token, value] of Object.entries(replacements)) {
+              source = source.replaceAll(token, value)
+            }
+
+            const generated = projectIsTypescript
+              ? source
+              : await transformTSToJS(outputPath, source)
+
+            return (existing: string) => asCode(existing) === asCode(generated)
+          }
+
           // `setup permissions`' checks, of the user's own roles, become
-          // checks of their role in the current organization. A version the
-          // app changed is its own, and kept
+          // checks of their role in the current organization
           await writeTemplateFile(
             'permissions.ts.template',
             libPermissionsPath,
             replacements,
             undefined,
-            (existing) => asCode(existing) === asCode(roleBased),
+            await isSetupPermissionsFile(
+              'permissions.ts.template',
+              libPermissionsPath,
+            ),
           )
 
           ctx.libPermissionsNeedsMembership =
@@ -474,13 +492,27 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             path.join(directiveDir, `requirePermission.${ext}`),
             replacements,
           )
+          const directiveTestPath = path.join(
+            directiveDir,
+            `requirePermission.test.${ext}`,
+          )
+
           await writeTemplateFile(
             'requirePermission.test.ts.template',
-            path.join(directiveDir, `requirePermission.test.${ext}`),
+            directiveTestPath,
             {},
             undefined,
-            (existing) => existing.includes("one of the user's roles has it"),
+            await isSetupPermissionsFile(
+              'requirePermission.test.ts.template',
+              directiveTestPath,
+            ),
           )
+
+          ctx.directiveTestMocksRoles =
+            !force &&
+            fs
+              .readFileSync(directiveTestPath, 'utf-8')
+              .includes("one of the user's roles has it")
         },
       },
       {
@@ -768,18 +800,29 @@ ${
 `
     : ''
 }${
+            ctx.directiveTestMocksRoles
+              ? `
+          ${c.warning('Kept your api/src/directives/requirePermission test.')}
+          It mocks users with ${c.highlight('roles')}. With tenancy, permissions come from
+          the user's membership in the current organization: mock
+          ${c.highlight('memberships')} and ${c.highlight('context.currentOrg')} instead.
+
+`
+              : ''
+          }${
             ctx.mapNeedsOrgPermissions
               ? `
           ${c.warning('Kept your permission map in packages/permissions.')}
           Its roles are now roles in an organization. Add the permissions the
-          generated organizations service checks, and roles for its members:
+          generated organizations service checks, and give its member roles
+          these permissions, next to any they already have:
 
             permissions: [...yours, 'organization.read', 'organization.manage', 'members.manage'],
             roles: {
-              owner: ['organization.read', 'organization.manage', 'members.manage'],
-              admin: ['organization.read', 'members.manage'],
-              member: ['organization.read'],
               ...yours,
+              owner: [...(yours.owner ?? []), 'organization.read', 'organization.manage', 'members.manage'],
+              admin: [...(yours.admin ?? []), 'organization.read', 'members.manage'],
+              member: [...(yours.member ?? []), 'organization.read'],
             },
 
 `
