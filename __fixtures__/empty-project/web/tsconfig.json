@@ -23,7 +23,7 @@
       "types/*": ["./types/*", "../types/*"],
       "@cedarjs/testing": ["../node_modules/@cedarjs/testing/web"]
     },
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals", "@testing-library/jest-dom/vitest"],
     "jsx": "preserve",
   },
   "include": [
