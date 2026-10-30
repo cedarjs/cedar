@@ -59,3 +59,36 @@ jobs:
           name: playwright-traces-tenancy-e2e-${{ runner.os }}
           path: tasks/smoke-tests/tenancy/test-results/**
           if-no-files-found: ignore
+
+  # On a test project of its own, so it runs beside the tenancy job. The e2e
+  # script checks setup permissions, the built app and its tests, and adding
+  # tenancy afterwards
+  permissions-e2e:
+    runs-on: ${{ inputs.os }}
+
+    env:
+      CEDAR_CI: 1
+      CEDAR_VERBOSE_TELEMETRY: 1
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - name: 🌲 Set up test project
+        id: set-up-test-project
+        uses: ./.github/actions/set-up-test-project
+        with:
+          canary: false
+        env:
+          CEDAR_DISABLE_TELEMETRY: 1
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+
+      - name: 🔐 Set up permissions and check the app
+        run: yarn e2e:permissions "${{ steps.set-up-test-project.outputs.test-project-path }}"
+        env:
+          CEDAR_DISABLE_TELEMETRY: 1
+          CEDAR_VERBOSE_TELEMETRY: ''
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
