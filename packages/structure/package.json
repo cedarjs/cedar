@@ -70,7 +70,7 @@
   },
   "devDependencies": {
     "@types/lodash": "4.17.27",
-    "@types/node": "24.10.4",
+    "@types/node": "24.19.2",
     "typescript": "5.9.3",
     "vite": "7.3.7",
     "vitest": "5.0.5"

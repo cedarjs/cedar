@@ -37,8 +37,7 @@ function buildMembershipsSelectProperty() {
 }
 
 /** What replaces the app's `hasRole` and `requireAuth` */
-export const TENANCY_AUTH_EXPORT = `export const { hasUserRole, hasOrgRole, requireUserAuth, requireOrgAuth } =
-  createTenancyAuth()
+export const TENANCY_AUTH_EXPORT = `export const { hasUserRole, requireUserAuth } = createTenancyAuth()
 `
 
 /**
@@ -300,12 +299,10 @@ function addPermissionsImport(source: string): string {
  * - Adds a `memberships` selection to `getCurrentUser`'s
  *   `db.user.findUnique({ ..., select: {...} })` call, so `currentUser`
  *   (both `context.currentUser` and the value sent to the web client) carries
- *   the memberships the web side's tenancy, `hasOrgRole` and
- *   `resolveCurrentOrg` need.
+ *   the memberships the web side's tenancy and `resolveCurrentOrg` need.
  * - Replaces the single-tenant `hasRole` and `requireAuth` with
- *   `@cedarjs/tenancy`'s `createTenancyAuth`, which also gives `hasOrgRole`:
- *   `requireOrgAuth` checks the role in the current organization, and
- *   `requireUserAuth` what `requireAuth` did. The `AllowedRoles`
+ *   `@cedarjs/tenancy`'s `createTenancyAuth`: `requireUserAuth` checks what `requireAuth` did, and checks on the
+ *   current organization are permissions. The `AllowedRoles`
  *   type and the error imports go too when nothing else uses them.
  * - Wraps the user lookup in `withPermissions`, so each membership carries
  *   its permissions from `api/src/lib/permissions`.

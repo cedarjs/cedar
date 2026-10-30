@@ -40,6 +40,5 @@ export interface CurrentOrgSummary {
 export interface OrgContextValue {
   org: CurrentOrgSummary | undefined
   memberships: OrgMembership[]
-  hasOrgRole(roles: string | string[], organizationId?: string): boolean
   setOrg(idOrSlug: string): void
 }

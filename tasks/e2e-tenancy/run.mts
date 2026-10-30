@@ -121,7 +121,6 @@ function confirmSetup(projectPath: string) {
   const exists = (file: string) => fs.existsSync(path.join(projectPath, file))
 
   for (const file of [
-    'api/src/directives/requireOrgAuth/requireOrgAuth.ts',
     'api/src/directives/requireUserAuth/requireUserAuth.ts',
     'api/src/directives/requirePermission/requirePermission.ts',
     'api/src/lib/permissions.ts',
@@ -155,8 +154,8 @@ function confirmSetup(projectPath: string) {
     throw new Error('Expected posts.sdl.ts to use @requireUserAuth')
   }
 
-  if (!/\brequireOrgAuth\b/.test(read('api/src/lib/auth.ts'))) {
-    throw new Error('Expected api/src/lib/auth.ts to export requireOrgAuth')
+  if (!/\brequireUserAuth\b/.test(read('api/src/lib/auth.ts'))) {
+    throw new Error('Expected api/src/lib/auth.ts to export requireUserAuth')
   }
 }
 
@@ -195,6 +194,15 @@ function addOrganizationPages(projectPath: string) {
       path.join(pageDir, `${page}.tsx`),
     )
   }
+
+  // The organization's page under the app's tenancy in a web test
+  fs.copyFileSync(
+    path.join(FIXTURES, 'OrganizationPage.test.tsx'),
+    path.join(
+      projectPath,
+      'web/src/pages/OrganizationPage/OrganizationPage.test.tsx',
+    ),
+  )
 
   const routesPath = path.join(projectPath, 'web/src/Routes.tsx')
   const routes = fs.readFileSync(routesPath, 'utf-8')

@@ -16,10 +16,10 @@ export const DIRECTIVE_INVALID_ROLE_TYPES_ERROR_MESSAGE =
   'Please check that the requireAuth roles is a string or an array of strings.'
 
 /**
- * Auth directives that take `roles`: Cedar's, and the two that replace it
+ * Auth directives that take `roles`: Cedar's, and the one that replaces it
  * once `cedar setup tenancy` has run
  */
-const ROLES_DIRECTIVES = ['requireAuth', 'requireOrgAuth', 'requireUserAuth']
+const ROLES_DIRECTIVES = ['requireAuth', 'requireUserAuth']
 
 /**
  * These are names that are commonly used in GraphQL schemas as scalars

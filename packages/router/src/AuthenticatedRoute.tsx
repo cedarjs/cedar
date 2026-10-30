@@ -10,7 +10,6 @@ interface AuthenticatedRouteProps {
   children: React.ReactNode
   roles?: string | string[]
   userRoles?: string | string[]
-  orgRoles?: string | string[]
   orgPermission?: string
   unauthenticated: string
   unauthorized?: string
@@ -28,9 +27,6 @@ const useNoOrg: UseOrg = () => null
  * provider
  */
 const MountedOrgContext = createContext<string | undefined>(undefined)
-
-const toList = (roles: string | string[]) =>
-  Array.isArray(roles) ? roles : [roles]
 
 /**
  * The current route's path params, as the text in the URL's path, so they go
@@ -100,7 +96,6 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   unauthorized,
   roles,
   userRoles,
-  orgRoles,
   orgPermission,
   whileLoadingAuth,
   children,
@@ -120,24 +115,21 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   const { pathname } = useLocation()
   const pathParams = currentPathParams(routerState, pathname)
   const { tenancy } = routerState
-  // Called on every render, with or without `orgRoles`, as hooks must be
+  // Called on every render, with or without `orgPermission`, as hooks must be
   // called the same way every time
   const useOrg = tenancy?.useOrg ?? useNoOrg
   const org = useOrg(routerState.useAuth, pathParams)
-  const needsOrg = orgRoles !== undefined || orgPermission !== undefined
+  const needsOrg = orgPermission !== undefined
 
-  // Fail closed: with no organization to check `orgRoles` or `orgPermission`
-  // in, it's a mistake in the routes, not a user without access. A router
+  // Fail closed: with no organization to check `orgPermission` in, it's a mistake in the routes, not a user without access. A router
   // without `tenancy` is a mistake whatever the auth state. A `useOrg` that
   // finds no organization may only be because auth is still loading, such as
   // when prerendering with an organization from the host, so that waits for
   // auth to load.
   if (needsOrg && !org) {
-    const prop = orgRoles !== undefined ? 'orgRoles' : 'orgPermission'
-
     if (!tenancy) {
       throw new Error(
-        `A PrivateSet with \`${prop}\` needs \`tenancy\` on the Router to ` +
+        'A PrivateSet with `orgPermission` needs `tenancy` on the Router to ' +
           'find the organization with. Please pass `tenancy` from ' +
           '`@cedarjs/tenancy/web`: ' +
           '<Router useAuth={useAuth} tenancy={tenancy}>',
@@ -150,9 +142,9 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
 
     if (pathParams['orgSlug'] === undefined) {
       throw new Error(
-        `A PrivateSet with \`${prop}\` needs an organization to check it ` +
-          'in, and the route has no `orgSlug` param. Please only use ' +
-          `\`${prop}\` on routes with \`{orgSlug}\` in their path, or ` +
+        'A PrivateSet with `orgPermission` needs an organization to check ' +
+          'it in, and the route has no `orgSlug` param. Please only use ' +
+          '`orgPermission` on routes with `{orgSlug}` in their path, or ' +
           'pass `createTenancy` a `useOrg` that finds the organization ' +
           'another way',
       )
@@ -160,7 +152,7 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
 
     // A `useOrg` of the app's own found no organization for this route
     throw new Error(
-      `A PrivateSet with \`${prop}\` got no organization from the ` +
+      'A PrivateSet with `orgPermission` got no organization from the ' +
         "Router's `tenancy` for this route, so there is nothing to check " +
         'it in',
     )
@@ -187,9 +179,8 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
     }
 
     const hasRequiredOrgAccess =
-      (orgRoles === undefined || toList(orgRoles).includes(membership.role)) &&
-      (orgPermission === undefined ||
-        (membership.permissions?.includes(orgPermission) ?? false))
+      orgPermission === undefined ||
+      (membership.permissions?.includes(orgPermission) ?? false)
 
     if (hasRequiredOrgAccess) {
       // An outer private set in this organization has rendered the provider

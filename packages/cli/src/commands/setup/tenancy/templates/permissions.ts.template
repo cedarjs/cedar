@@ -9,12 +9,14 @@ import { createPermissions } from '@cedarjs/tenancy'
  * `useAuth().hasPermission()`. The web only decides what to show; these
  * checks are the guard.
  *
- * Who may grant which role is `ROLE_GRANTS` in
- * api/src/services/organizations/organizations.
+ * `canGrantRole` is who may give someone a role, or take it away: whoever
+ * holds every permission it has (`inviteMember` and `removeMember` in
+ * api/src/services/organizations).
  */
 export const {
   hasPermission,
   requirePermission,
+  canGrantRole,
   permissionsOf,
   withPermissions,
 } = createPermissions(permissions)

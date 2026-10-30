@@ -70,7 +70,7 @@
     "@universal-deploy/vite": "0.2.2",
     "@vitejs/plugin-react": "4.7.0",
     "@whatwg-node/fetch": "0.12.1",
-    "@whatwg-node/server": "0.13.1",
+    "@whatwg-node/server": "0.13.2",
     "acorn": "8.19.0",
     "acorn-loose": "8.5.2",
     "ansis": "4.4.0",
@@ -114,7 +114,7 @@
     "publint": "0.3.25",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "rollup": "4.65.0",
+    "rollup": "4.65.1",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
     "vitest": "5.0.5"

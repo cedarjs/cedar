@@ -24,13 +24,13 @@ import type { TrailingSlashesTypes } from './util.js'
 
 /**
  * `tenancy`, only in an app with tenancy (see `AuthTenancy`), where sets have
- * `orgRoles` and `orgPermission`
+ * `orgPermission`
  */
 type RouterTenancy = AuthTenancy extends { enabled: true }
   ? {
       /**
        * How the router handles organizations: finding the one of the current
-       * route, checking `orgRoles` and `orgPermission` in it, and providing
+       * route, checking `orgPermission` in it, and providing
        * it to the layouts and page of a `PrivateSet`. Pass the `tenancy` from
        * `createTenancy` in `@cedarjs/tenancy/web`:
        *
@@ -240,7 +240,6 @@ interface WrappedPageProps {
       unauthorized?: string
       roles?: string | string[]
       userRoles?: string | string[]
-      orgRoles?: string | string[]
       orgPermission?: string
       whileLoadingAuth?: () => ReactElement | null
     }
@@ -292,7 +291,6 @@ const WrappedPage = memo(({ sets, children }: WrappedPageProps) => {
           unauthorized={set.props.unauthorized}
           roles={set.props.roles}
           userRoles={set.props.userRoles}
-          orgRoles={set.props.orgRoles}
           orgPermission={set.props.orgPermission}
           whileLoadingAuth={set.props.whileLoadingAuth}
         >

@@ -198,7 +198,6 @@ describe('RWRoute tenancy guards', () => {
 
     expect(route.unauthorized).toBeUndefined()
     expect(route.userRoles).toBeUndefined()
-    expect(route.orgRoles).toBeUndefined()
     expect(route.orgPermission).toBeUndefined()
   })
 
@@ -207,31 +206,28 @@ describe('RWRoute tenancy guards', () => {
 
     expect(route.unauthorized).toBeUndefined()
     expect(route.userRoles).toBeUndefined()
-    expect(route.orgRoles).toBeUndefined()
     expect(route.orgPermission).toBeUndefined()
   })
 
-  it('reads unauthorized, userRoles, orgRoles and orgPermission', () => {
+  it('reads unauthorized, userRoles and orgPermission', () => {
     const route = routeIn(
-      '<PrivateSet unauthenticated="login" unauthorized="projects" userRoles="admin" orgRoles="owner" orgPermission="members.manage">',
+      '<PrivateSet unauthenticated="login" unauthorized="projects" userRoles="admin" orgPermission="members.manage">',
       '</PrivateSet>',
     )
 
     expect(route.unauthorized).toBe('projects')
     expect(route.userRoles).toBe('admin')
-    expect(route.orgRoles).toBe('owner')
     expect(route.orgPermission).toBe('members.manage')
     expect(route.roles).toBeUndefined()
   })
 
-  it('reads the array and quasi-JSON forms of userRoles and orgRoles', () => {
+  it('reads the array and quasi-JSON forms of userRoles', () => {
     const route = routeIn(
-      `<PrivateSet unauthenticated="login" userRoles={['a', 'b']} orgRoles="['owner','admin']">`,
+      `<PrivateSet unauthenticated="login" userRoles={['a', 'b']}>`,
       '</PrivateSet>',
     )
 
     expect(route.userRoles).toEqual(['a', 'b'])
-    expect(route.orgRoles).toEqual(['owner', 'admin'])
   })
 
   it('takes unauthorized and orgPermission from the innermost ancestor', () => {
@@ -248,7 +244,7 @@ describe('RWRoute tenancy guards', () => {
   it('takes unauthorized and orgPermission from an outer ancestor when the inner has none', () => {
     const route = routeIn(
       `<PrivateSet unauthenticated="login" unauthorized="outer" orgPermission="a.read">
-        <Set wrap={Layout}><PrivateSet orgRoles="owner">`,
+        <Set wrap={Layout}><PrivateSet userRoles="owner">`,
       '</PrivateSet></Set></PrivateSet>',
     )
 
@@ -256,31 +252,28 @@ describe('RWRoute tenancy guards', () => {
     expect(route.orgPermission).toBe('a.read')
   })
 
-  it('unions userRoles and orgRoles across nested ancestors', () => {
+  it('unions userRoles across nested ancestors', () => {
     const route = routeIn(
-      `<PrivateSet unauthenticated="login" userRoles="admin" orgRoles={['owner']}>
-        <PrivateSet userRoles={['editor', 'admin']} orgRoles="member">`,
+      `<PrivateSet unauthenticated="login" userRoles="admin">
+        <PrivateSet userRoles={['editor', 'admin']}>`,
       '</PrivateSet></PrivateSet>',
     )
 
     expect(route.userRoles).toHaveLength(2)
     expect(route.userRoles).toEqual(expect.arrayContaining(['admin', 'editor']))
-    expect(route.orgRoles).toHaveLength(2)
-    expect(route.orgRoles).toEqual(expect.arrayContaining(['owner', 'member']))
   })
 
-  it('keeps the shape of a single ancestor with userRoles or orgRoles', () => {
+  it('keeps the shape of a single ancestor with userRoles', () => {
     const route = routeIn(
-      `<PrivateSet unauthenticated="login" userRoles="admin" orgRoles={['owner']}>
+      `<PrivateSet unauthenticated="login" userRoles={['admin']}>
         <PrivateSet unauthorized="projects">`,
       '</PrivateSet></PrivateSet>',
     )
 
-    expect(route.userRoles).toBe('admin')
-    expect(route.orgRoles).toEqual(['owner'])
+    expect(route.userRoles).toEqual(['admin'])
   })
 
-  it('keeps roles separate from userRoles and orgRoles', () => {
+  it('keeps roles separate from userRoles', () => {
     const route = routeIn(
       '<PrivateSet unauthenticated="login" roles="admin">',
       '</PrivateSet>',
@@ -288,7 +281,6 @@ describe('RWRoute tenancy guards', () => {
 
     expect(route.roles).toBe('admin')
     expect(route.userRoles).toBeUndefined()
-    expect(route.orgRoles).toBeUndefined()
   })
 
   it('has no value for a prop that is not a string literal', () => {

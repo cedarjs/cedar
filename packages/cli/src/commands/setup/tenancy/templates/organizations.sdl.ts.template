@@ -59,9 +59,8 @@ export const schema = gql`
 
     """
     Creates a pending membership (an invitation) in the current organization,
-    for a role the caller's own role may grant (see ROLE_GRANTS in
-    organizations.ts) -- an admin can invite an admin or a member, but not an
-    owner. The app is responsible for emailing input.email a link built from
+    for a role whose permissions the caller all holds -- an admin can invite
+    an admin or a member, but not an owner. The app is responsible for emailing input.email a link built from
     the returned invitationToken; Membership has no email column of its own.
     The invitation can be claimed until the returned invitationExpiresAt.
     Web callers must call reauthenticate() from useAuth() in onCompleted so

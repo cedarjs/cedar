@@ -388,7 +388,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title:
-          'Switching @requireAuth to @requireOrgAuth and @requireUserAuth, and hasRole to hasUserRole...',
+          'Switching @requireAuth to @requireUserAuth, and hasRole to hasUserRole...',
         task: async (ctx) => {
           const oldDirectiveDir = path.join(paths.api.directives, 'requireAuth')
           const isInOldDirective = (file: string) =>
@@ -451,18 +451,19 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             fs.rmSync(oldDirectiveDir, { recursive: true, force: true })
           }
 
-          for (const name of ['requireOrgAuth', 'requireUserAuth']) {
-            const directiveDir = path.join(paths.api.directives, name)
+          const directiveDir = path.join(
+            paths.api.directives,
+            'requireUserAuth',
+          )
 
-            await writeTemplateFile(
-              `${name}.ts.template`,
-              path.join(directiveDir, `${name}.${ext}`),
-            )
-            await writeTemplateFile(
-              `${name}.test.ts.template`,
-              path.join(directiveDir, `${name}.test.${ext}`),
-            )
-          }
+          await writeTemplateFile(
+            'requireUserAuth.ts.template',
+            path.join(directiveDir, `requireUserAuth.${ext}`),
+          )
+          await writeTemplateFile(
+            'requireUserAuth.test.ts.template',
+            path.join(directiveDir, `requireUserAuth.test.${ext}`),
+          )
         },
       },
       {
@@ -532,6 +533,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           await writeTemplateFile(
             'organizations.ts.template',
             path.join(serviceDir, `organizations.${ext}`),
+            { __PERMISSIONS_PACKAGE__: permissionsPackageName() },
           )
           await writeTemplateFile(
             'organizations.test.ts.template',
@@ -725,7 +727,8 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
              Contact) whose rows belong to one organization, add
              ${c.highlight('organizationId String')} plus ${c.highlight('@@index([organizationId])')} to it in
              schema.prisma, and switch its fields from ${c.highlight('@requireUserAuth')}
-             to ${c.highlight('@requireOrgAuth')}. For each one that stays global, add it
+             to ${c.highlight('@requirePermission(permission: "organization.read")')}, or
+             a permission of its own. For each one that stays global, add it
              to the ${c.highlight('allExcept')} list in api/src/lib/db instead.
           3. Put your organization routes in a PrivateSet in web/src/Routes.tsx.
              The Router renders the organization for it, using the generated
@@ -764,33 +767,34 @@ ${
                  ? ` (this
              turned on ${c.highlight('experimental.packagesWorkspace')} in cedar.toml)`
                  : ''
-             }. Guard
-             organization fields with ${c.highlight('@requirePermission(permission: "...")')}
-             (or ${c.highlight('@requireOrgAuth(roles: [...])')}), and check permissions on the
-             web with ${c.highlight('useAuth().hasPermission()')}.
+             }. A role is a bundle of
+             permissions: guard organization fields with
+             ${c.highlight('@requirePermission(permission: "...")')}, never a role, and check
+             permissions on the web with ${c.highlight('useAuth().hasPermission()')}. Fields
+             any member may use ask for ${c.highlight('organization.read')}, which every
+             role lists.
           6. ${c.highlight('@requireAuth')} is gone. Your fields use ${c.highlight('@requireUserAuth')} now,
              which checks what ${c.highlight('@requireAuth')} did: there were no organizations
-             before. ${c.highlight('@requireOrgAuth')} needs a current organization, and checks
-             the user's role in it.${
+             before. ${c.highlight('@requirePermission')} needs a current organization, and
+             checks what the user's role there may do.${
                ctx.keptRequireAuthDirective
                  ? `
              api/src/directives/requireAuth was changed from Cedar's, so
              it and your @requireAuth fields were left as they are: move
-             its checks to requireUserAuth or requireOrgAuth, switch the
+             its checks to requireUserAuth or requirePermission, switch the
              fields over, then delete it.`
                  : ''
              }
           7. Every role check names its kind now. ${c.highlight('hasRole')} is
              ${c.highlight('hasUserRole')} on both sides (your existing uses were renamed),
-             checking ${c.highlight('currentUser.roles')}; ${c.highlight('hasOrgRole')} checks the role in
-             the organization. ${c.highlight('<PrivateSet roles>')} isn't available with
+             checking ${c.highlight('currentUser.roles')}. In the organization, check
+             permissions instead. ${c.highlight('<PrivateSet roles>')} isn't available with
              tenancy: guard routes with ${c.highlight('<PrivateSet userRoles>')} for
-             ${c.highlight('currentUser.roles')}, and with ${c.highlight('<PrivateSet orgRoles>')} for the
-             role in the route's organization. A member who lacks it is sent
-             to ${c.highlight('unauthorized')}, and ${c.highlight('<PrivateSet orgPermission>')} checks a
-             permission of their membership the same way:
+             ${c.highlight('currentUser.roles')}, and with ${c.highlight('<PrivateSet orgPermission>')} for a
+             permission of their membership in the route's organization. A
+             member who lacks it is sent to ${c.highlight('unauthorized')}:
 
-               <PrivateSet unauthenticated="login" unauthorized="projects" orgRoles="owner">
+               <PrivateSet unauthenticated="login" unauthorized="projects" orgPermission="organization.manage">
                  <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
                </PrivateSet>
 
