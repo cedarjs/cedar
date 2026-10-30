@@ -3523,6 +3523,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@cedarjs/permissions@workspace:packages/permissions":
+  version: 0.0.0-use.local
+  resolution: "@cedarjs/permissions@workspace:packages/permissions"
+  dependencies:
+    "@arethetypeswrong/cli": "npm:0.18.5"
+    "@cedarjs/context": "workspace:*"
+    "@cedarjs/framework-tools": "workspace:*"
+    "@cedarjs/graphql-server": "workspace:*"
+    concurrently: "npm:9.2.5"
+    publint: "npm:0.3.25"
+    tstyche: "npm:5.0.2"
+    typescript: "npm:5.9.3"
+    vitest: "npm:4.1.12"
+  languageName: unknown
+  linkType: soft
+
 "@cedarjs/prerender@workspace:*, @cedarjs/prerender@workspace:packages/prerender":
   version: 0.0.0-use.local
   resolution: "@cedarjs/prerender@workspace:packages/prerender"
