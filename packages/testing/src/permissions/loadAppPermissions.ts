@@ -41,6 +41,32 @@ function isPermissionDefinitions(
 }
 
 /**
+ * The permissions package's source entry (`src/index.ts` for `dist/index.js`),
+ * which the app's dev server and build use too. So tests see the map as it is
+ * in the source, without building the package first.
+ */
+function sourceEntry(packageJson: Record<string, unknown>) {
+  const main = packageJson.main
+
+  if (typeof main !== 'string') {
+    return undefined
+  }
+
+  const base = path.join(
+    getPaths().packages,
+    'permissions',
+    main
+      .replace(/^\.\//, '')
+      .replace(/^dist\//, 'src/')
+      .replace(/\.[cm]?js$/, ''),
+  )
+
+  return ['.ts', '.mts', '.js', '.mjs']
+    .map((ext) => base + ext)
+    .find((file) => fs.existsSync(file))
+}
+
+/**
  * The `permissions` that the app's permissions package (`packages/permissions`,
  * from `cedar setup permissions`) exports, as `sideBase` (the api or web
  * side) imports it. `undefined` in an app without one, and in an app with
@@ -58,6 +84,7 @@ export async function loadAppPermissions(
 
   if (
     !sidePackageJson ||
+    !packageJson ||
     typeof name !== 'string' ||
     !dependsOn(sidePackageJson, name) ||
     dependsOn(sidePackageJson, '@cedarjs/tenancy')
@@ -65,10 +92,10 @@ export async function loadAppPermissions(
     return undefined
   }
 
-  let entry: string
+  let entry = sourceEntry(packageJson)
 
   try {
-    entry = createRequire(sidePackageJsonPath).resolve(name)
+    entry ??= createRequire(sidePackageJsonPath).resolve(name)
   } catch {
     console.warn(
       `Couldn't find ${name}, so mockCurrentUser() gives users no ` +
