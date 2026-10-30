@@ -25,8 +25,9 @@ export type CurrentUser = (LoggedInUser & object) | null
 /**
  * The app's permission names, as keys. Cedar generates them from the app's
  * permission definitions (`packages/permissions`, set up by
- * `cedar setup tenancy`). Empty when the app has none, and then
- * `hasPermission` takes nothing: it could only ever answer `false`.
+ * `cedar setup permissions` or `cedar setup tenancy`). Empty when the app
+ * has none, and then `hasPermission` takes nothing: it could only ever
+ * answer `false`.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AvailablePermissions {}
@@ -110,10 +111,11 @@ export interface AuthContextInterface<
    */
   hasRole(rolesToCheck: string | string[]): boolean
   /**
-   * Whether the user has `permission` where they are in the app. Always
-   * `false` outside a scope that provides permissions, such as an
-   * organization route with `tenancy` from `@cedarjs/tenancy/web` on the
-   * `Router`.
+   * Whether the user has `permission` where they are in the app: in
+   * `currentUser.permissions`, or in a scope that provides permissions,
+   * such as an organization route with `tenancy` from
+   * `@cedarjs/tenancy/web` on the `Router`. With tenancy, `false` outside
+   * an organization.
    */
   hasPermission(permission: PermissionName): boolean
   /**

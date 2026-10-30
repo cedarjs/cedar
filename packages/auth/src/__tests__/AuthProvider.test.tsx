@@ -32,6 +32,7 @@ let CURRENT_USER_DATA: {
   name: string
   email: string
   roles?: string | string[]
+  permissions?: string[]
 } = {
   name: 'Peter Pistorius',
   email: 'nospam@example.net',
@@ -652,6 +653,28 @@ describe('Custom auth provider', () => {
     })
 
     expect.assertions(1)
+  })
+
+  test("hasPermission checks the user's own permissions", async () => {
+    CURRENT_USER_DATA = {
+      name: 'Peter Pistorius',
+      email: 'nospam@example.net',
+      permissions: ['members.manage'],
+    }
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.hasPermission('members.manage')).toBe(false)
+
+    pretendWeLoggedIn()
+    await act(async () => {
+      await result.current.logIn()
+    })
+
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true))
+    expect(result.current.hasPermission('members.manage')).toBe(true)
+    expect(result.current.hasPermission('billing.manage')).toBe(false)
   })
 
   test("getToken doesn't fail if client throws an error", async () => {
