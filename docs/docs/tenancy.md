@@ -313,33 +313,34 @@ From `@cedarjs/tenancy`:
 ```ts
 export function createTenancyAuth(): {
   hasRole(roles: string | readonly string[]): boolean
-  requireUserAuth(options?: { roles?: string | readonly string[] }): void
+  requireAuth(options?: { roles?: string | readonly string[] }): void
 }
 ```
 
 ### `createTenancyAuth()`
 
 The setup command replaces the single-tenant `hasRole` and `requireAuth` in
-`api/src/lib/auth.ts` with these:
+`api/src/lib/auth.ts` with these, which have the same names and check the same
+things:
 
 ```ts title="api/src/lib/auth.ts"
-export const { hasRole, requireUserAuth } = createTenancyAuth()
+export const { hasRole, requireAuth } = createTenancyAuth()
 ```
 
 Roles are the user's own, in `currentUser.roles`. A check in an organization
 uses a permission.
 
-|     | User-level (`currentUser.roles`)                 | Organization-level (membership)                                                              |
-| --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| api | `hasRole`, `requireUserAuth`, `@requireUserAuth` | `hasPermission`, `requirePermission`, `@requirePermission` (see [Permissions](#permissions)) |
-| web | `useAuth().hasRole`, `<PrivateSet roles>`        | `useAuth().hasPermission`, `<PrivateSet orgPermission>`                                      |
+|     | User-level (`currentUser.roles`)          | Organization-level (membership)                                                              |
+| --- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
+| api | `hasRole`, `requireAuth`, `@requireAuth`  | `hasPermission`, `requirePermission`, `@requirePermission` (see [Permissions](#permissions)) |
+| web | `useAuth().hasRole`, `<PrivateSet roles>` | `useAuth().hasPermission`, `<PrivateSet orgPermission>`                                      |
 
-- `requireUserAuth({ roles })`: for fields about the signed-in user rather
+- `requireAuth({ roles })`: for fields about the signed-in user rather
   than an organization (their account, their memberships, accepting an
   invitation). Throws `AuthenticationError` when no one is signed in, and,
   when `roles` are given, `ForbiddenError` unless `currentUser.roles` has one
-  of them. No organization is needed. It checks what the single-tenant
-  `requireAuth` did.
+  of them. No organization is needed. It checks what the single-tenant one
+  did.
 - Fields about the current organization ask for a permission with
   [`requirePermission`](#checking-permissions-on-the-api) and
   [`@requirePermission`](#requirepermission). There's no role check on the
@@ -347,9 +348,9 @@ uses a permission.
   ask for the permission. Fields any member may use ask for
   `organization.read`, which every role lists.
 
-`hasRole(roles)` checks `currentUser.roles`, as the single-tenant one did, so
-your existing uses of it, on the api and on the web, keep working. Setup
-renames `requireAuth` imported from `api/src/lib/auth` to `requireUserAuth`.
+`hasRole(roles)` checks `currentUser.roles`, as the single-tenant one did. So
+your existing uses of `hasRole` and `requireAuth`, on the api and on the web,
+keep working.
 
 With tenancy, a role belongs to a membership, so don't copy one into
 `currentUser.roles` in `getCurrentUser`: a user who is `owner` in one
@@ -370,18 +371,17 @@ only for roles that really hold everywhere.
 - The role itself, to show it: `context.currentOrg.role`, or a membership's
   `role`.
 
-## The `@requireUserAuth` and `@requirePermission` directives
+## The `@requireAuth` and `@requirePermission` directives
 
-`setup tenancy` replaces the app's `@requireAuth` directive with
-`@requireUserAuth`, in `api/src/directives/requireUserAuth/`, which passes its
-`roles` on to `requireUserAuth()`, and adds
+`setup tenancy` keeps the app's `@requireAuth` directive, which passes its
+`roles` on to `requireAuth()`, and adds
 [`@requirePermission`](#requirepermission) for fields about the current
 organization:
 
 ```graphql
 type Query {
   projects: [Project!]! @requirePermission(permission: "organization.read")
-  myMemberships: [Membership!]! @requireUserAuth
+  myMemberships: [Membership!]! @requireAuth
 }
 
 type Mutation {
@@ -391,23 +391,17 @@ type Mutation {
 ```
 
 Before tenancy there are no organizations, so every field the app already has
-is about the user: setup renames each `@requireAuth` to `@requireUserAuth`,
-and each `requireAuth` imported from `api/src/lib/auth` to `requireUserAuth`.
-They check what they did before. It deletes
-`api/src/directives/requireAuth/` when it's the one Cedar generates. A changed
-one is left, and so are its `@requireAuth` fields, so its checks keep running
-until you move them to `@requireUserAuth` or `@requirePermission`.
+is about the user, and its `@requireAuth` checks what it did before.
 
 When a model gets an `organizationId`, switch its fields to
 `@requirePermission`: `organization.read` for any member, or a permission of
 its own. From then on `cedar generate sdl` and `cedar generate scaffold` pick
 the directive for you: `@requirePermission(permission: "organization.read")`
 for a model with an `organizationId` (or the field you gave `--tenant-field`)
-or an `Organization` relation, `@requireUserAuth` for one without. Change
+or an `Organization` relation, `@requireAuth` for one without. They tell a
+tenancy app by its api side depending on `@cedarjs/tenancy`. Change
 `organization.read` to a narrower permission where only some roles should get
-in. Once `api/src/directives/requireAuth/` is gone, writing `@requireAuth` in
-a tenancy app is an unknown directive, so it fails when the schema is built
-rather than when the field is first called.
+in.
 
 ## Permissions
 
@@ -461,7 +455,7 @@ otherwise. `organization.manage` is the owner's alone, which also keeps admins
 from making someone an owner (see [`canGrantRole`](#who-may-grant-a-role)).
 
 Every permission is about an organization. Fields about the user rather than
-an organization use `@requireUserAuth`.
+an organization use `@requireAuth`.
 
 A role listing a name that `permissions` doesn't define is a type
 error, and `definePermissions` throws for it at runtime too.
@@ -584,7 +578,7 @@ type Mutation {
 It's the directive for every field about the current organization. It needs
 a current organization, and the user's role there must have the permission.
 The generated organizations SDL uses `@requirePermission` for organization
-fields and `@requireUserAuth` for user-level ones.
+fields and `@requireAuth` for user-level ones.
 
 `yarn cedar lint` checks the permission names in the SDL against the ones
 `definePermissions` lists, so an unknown name is caught before it throws at

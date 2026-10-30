@@ -45,7 +45,7 @@ const membershipsForUser = (userId: string): Promise<MembershipSummary[]> =>
  * organizations. `Membership` is a global model, so this reads plain `db`.
  */
 export const myMemberships: QueryResolvers['myMemberships'] = () => {
-  // @requireUserAuth guarantees a signed-in user before this resolver runs.
+  // @requireAuth guarantees a signed-in user before this resolver runs.
   return db.membership.findMany({
     where: { userId: context.currentUser!.id },
     orderBy: { createdAt: 'asc' },
@@ -72,7 +72,7 @@ export const organization: QueryResolvers['organization'] = async ({ id }) => {
 export const createOrganization: MutationResolvers['createOrganization'] =
   async ({ input }) => {
     const baseSlug = slugify(input.name)
-    // @requireUserAuth guarantees a signed-in user before this resolver runs.
+    // @requireAuth guarantees a signed-in user before this resolver runs.
     const userId = context.currentUser!.id
 
     let slug = baseSlug
@@ -244,7 +244,7 @@ const isExpiredInvitation = async (token: string): Promise<boolean> => {
 export const acceptInvitation: MutationResolvers['acceptInvitation'] = async ({
   token,
 }) => {
-  // @requireUserAuth guarantees a signed-in user before this resolver runs.
+  // @requireAuth guarantees a signed-in user before this resolver runs.
   const userId = context.currentUser!.id
 
   const claim = await claimInvitation(token, userId)

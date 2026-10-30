@@ -41,7 +41,7 @@ export interface TenancyAuth {
    * Throws `AuthenticationError` when no one is signed in, and
    * `ForbiddenError` otherwise.
    */
-  requireUserAuth(options?: { roles?: Roles }): void
+  requireAuth(options?: { roles?: Roles }): void
 }
 
 /**
@@ -49,7 +49,7 @@ export interface TenancyAuth {
  * exports in place of its single-tenant `hasRole` and `requireAuth`:
  *
  * ```ts
- * export const { hasRole, requireUserAuth } = createTenancyAuth()
+ * export const { hasRole, requireAuth } = createTenancyAuth()
  * ```
  *
  * Roles are the user's own, in `currentUser.roles`. Checks on the current
@@ -67,7 +67,7 @@ export function createTenancyAuth(): TenancyAuth {
       )
     },
 
-    requireUserAuth({ roles } = {}) {
+    requireAuth({ roles } = {}) {
       if (!context.currentUser) {
         throw new AuthenticationError("You don't have permission to do that.")
       }

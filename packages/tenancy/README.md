@@ -79,17 +79,17 @@ import {
 // api/src/lib/auth.ts, in place of the single-tenant hasRole/requireAuth
 import { createTenancyAuth } from '@cedarjs/tenancy'
 
-export const { hasRole, requireUserAuth } = createTenancyAuth()
+export const { hasRole, requireAuth } = createTenancyAuth()
 
 // In a service:
-requireUserAuth() // signed in, no organization needed
+requireAuth() // signed in, no organization needed
 
 // Anywhere:
 if (hasRole('superuser')) { ... } // currentUser.roles
 ```
 
-`requireUserAuth` (and the `@requireUserAuth` directive `setup tenancy` adds)
-is for fields about the user rather than an organization: their account,
+`requireAuth` (and the app's `@requireAuth` directive, which calls it) is
+for fields about the user rather than an organization: their account,
 their memberships, accepting an invitation. It needs a signed-in user, and
 checks `roles` against `currentUser.roles`. `hasRole` checks
 `currentUser.roles` too: the user's own roles, in any organization or none.

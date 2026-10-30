@@ -195,8 +195,6 @@ no-op, `--force` or not.
 | `api/src/lib/auth.ts`                                                                          | Adds `memberships` to the `getCurrentUser()` select, replaces `hasRole` / `requireAuth` with `createTenancyAuth`                                   |
 | `api/src/functions/graphql.ts`                                                                 | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
 | `api/src/functions/auth.ts`                                                                    | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
-| `api/src/directives/`                                                                          | Replaces `@requireAuth` with `@requireUserAuth`                                                                                                    |
-| `api/src/graphql/`, other `api/src/` files                                                     | Renames `@requireAuth` and `requireAuth()` to `@requireUserAuth` and `requireUserAuth()`                                                           |
 | `packages/permissions/`, `api/src/lib/permissions.ts`, `api/src/directives/requirePermission/` | Generates the permissions map, the checks and the `@requirePermission` directive                                                                   |
 | `api/src/services/organizations/`                                                              | Generates the organizations service and SDL                                                                                                        |
 | `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts`                            | Backfills memberships for existing users                                                                                                           |
@@ -254,30 +252,27 @@ single-tenant `hasRole` and `requireAuth` are replaced with the tenancy ones:
 -export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
 -  // ...
 -}
-+export const { hasRole, requireUserAuth } = createTenancyAuth()
++export const { hasRole, requireAuth } = createTenancyAuth()
 ```
 
-There's no `requireAuth` any more. `requireUserAuth` (and `@requireUserAuth`)
-is about the signed-in user rather than an organization, as the generated
-`myMemberships`, `createOrganization` and `acceptInvitation` are: it needs a
-signed-in user, and checks `roles` against `currentUser.roles`, as
-`requireAuth` did. Fields about the current organization ask for a
+`requireAuth` (and `@requireAuth`) is about the signed-in user rather than an
+organization, as the generated `myMemberships`, `createOrganization` and
+`acceptInvitation` are: it needs a signed-in user, and checks `roles` against
+`currentUser.roles`, as it did before. Fields about the current organization ask for a
 [permission](#permissions) instead, with `@requirePermission` and
 `requirePermission()` from `src/lib/permissions`: they need a current
 organization, and check what the user's role there may do. Fields any member
 may use ask for `organization.read`, which every role lists.
 
 Before tenancy there are no organizations, so every field your app already has
-is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and
-each `requireAuth()` from `src/lib/auth` to `requireUserAuth()`. `hasRole()`
-keeps its name on both sides, and checks the user's own roles in
-`currentUser.roles`, as before. Your app works as it did. When you give a model an
+is about the user: your `@requireAuth` directive and fields stay as they are,
+and `requireAuth()` and `hasRole()` keep their names on both sides, checking
+the user's own roles in `currentUser.roles`. Your app works as it did. When you give a model an
 `organizationId`, switch its fields to
 `@requirePermission(permission: "organization.read")`, or a permission of its
 own. `cedar generate sdl` and `cedar generate scaffold` write
 `@requirePermission(permission: "organization.read")` for a model that belongs
-to an organization and `@requireUserAuth` for one that doesn't, and a leftover
-`@requireAuth` is an unknown directive, so it fails when the schema is built.
+to an organization and `@requireAuth` for one that doesn't.
 
 With tenancy, `getCurrentUser` shouldn't copy a membership's role into
 `currentUser.roles`: `requirePermission` and `hasPermission` get the role from
@@ -600,7 +595,7 @@ type Invitation {
 }
 
 type Query {
-  myMemberships: [Membership!]! @requireUserAuth
+  myMemberships: [Membership!]! @requireAuth
   organization(id: String!): Organization
     @requirePermission(permission: "organization.read")
 }
@@ -619,14 +614,14 @@ type Mutation {
   # Web callers must call `reauthenticate()` in `onCompleted`; this mutation
   # changes the memberships that the currentUser snapshot on the web holds.
   createOrganization(input: CreateOrganizationInput!): Organization!
-    @requireUserAuth
+    @requireAuth
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   inviteMember(input: InviteMemberInput!): Invitation!
     @requirePermission(permission: "members.manage")
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
-  acceptInvitation(token: String!): Organization! @requireUserAuth
+  acceptInvitation(token: String!): Organization! @requireAuth
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   removeMember(membershipId: String!): Membership!
@@ -708,12 +703,12 @@ two concurrent accepts of the same token can never both win, and it spends the
 token in that same write so it can't be replayed by anyone who observed it
 beforehand.
 
-### `@requireUserAuth` and `@requirePermission`
+### `@requireAuth` and `@requirePermission`
 
-The setup command replaces your app's `@requireAuth` directive with
-`@requireUserAuth`, which passes its `roles` on to `requireUserAuth()` in
-`src/lib/auth`, and adds `@requirePermission`, which passes its permission on
-to `requirePermission()` in `src/lib/permissions`:
+The setup command keeps your app's `@requireAuth` directive, which passes its
+`roles` on to `requireAuth()` in `src/lib/auth`, and adds `@requirePermission`,
+which passes its permission on to `requirePermission()` in
+`src/lib/permissions`:
 
 ```ts title="api/src/directives/requirePermission/requirePermission.ts"
 export const schema = gql`
@@ -728,10 +723,9 @@ const validate = ({ directiveArgs }) => {
 Both throw `AuthenticationError` when there's no `context.currentUser`.
 `requirePermission()` throws `ForbiddenError` when there's no
 `context.currentOrg` or the user's role in it doesn't have the permission.
-`requireUserAuth()` throws `ForbiddenError` when `roles` are given and
-`currentUser.roles` has none of them. These are the error types `requireAuth`
-always threw, so any error handling you already have on the web side keeps
-working.
+`requireAuth()` throws `ForbiddenError` when `roles` are given and
+`currentUser.roles` has none of them, as it always did, so any error handling
+you already have on the web side keeps working.
 
 ### Permissions
 

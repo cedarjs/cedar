@@ -49,19 +49,19 @@ describe('createTenancyAuth', () => {
     })
   })
 
-  describe('requireUserAuth', () => {
-    const { requireUserAuth } = createTenancyAuth()
+  describe('requireAuth', () => {
+    const { requireAuth } = createTenancyAuth()
 
     it('throws AuthenticationError with no current user', async () => {
       await run(() => {
-        expect(() => requireUserAuth()).toThrow(AuthenticationError)
+        expect(() => requireAuth()).toThrow(AuthenticationError)
       })
     })
 
     it('needs a signed-in user only', async () => {
       await run(() => {
         setContext({ currentUser })
-        expect(() => requireUserAuth()).not.toThrow()
+        expect(() => requireAuth()).not.toThrow()
       })
     })
 
@@ -71,17 +71,15 @@ describe('createTenancyAuth', () => {
           currentUser: { ...currentUser, roles: ['superuser'] },
           currentOrg: currentOrg1Viewer,
         })
-        expect(() => requireUserAuth({ roles: 'superuser' })).not.toThrow()
-        expect(() => requireUserAuth({ roles: 'viewer' })).toThrow(
-          ForbiddenError,
-        )
+        expect(() => requireAuth({ roles: 'superuser' })).not.toThrow()
+        expect(() => requireAuth({ roles: 'viewer' })).toThrow(ForbiddenError)
       })
     })
 
     it('refuses everyone for an empty list, as requireAuth did', async () => {
       await run(() => {
         setContext({ currentUser: { ...currentUser, roles: ['superuser'] } })
-        expect(() => requireUserAuth({ roles: [] })).toThrow(ForbiddenError)
+        expect(() => requireAuth({ roles: [] })).toThrow(ForbiddenError)
       })
     })
   })

@@ -121,7 +121,7 @@ function confirmSetup(projectPath: string) {
   const exists = (file: string) => fs.existsSync(path.join(projectPath, file))
 
   for (const file of [
-    'api/src/directives/requireUserAuth/requireUserAuth.ts',
+    'api/src/directives/requireAuth/requireAuth.ts',
     'api/src/directives/requirePermission/requirePermission.ts',
     'api/src/lib/permissions.ts',
     'packages/permissions/src/index.ts',
@@ -132,30 +132,16 @@ function confirmSetup(projectPath: string) {
     }
   }
 
-  if (exists('api/src/directives/requireAuth')) {
+  // The app's own requireAuth stays: there were no organizations before, so
+  // every existing field is about the user
+  if (!read('api/src/graphql/posts.sdl.ts').includes('@requireAuth')) {
+    throw new Error('Expected posts.sdl.ts to still use @requireAuth')
+  }
+
+  if (!/\bcreateTenancyAuth\b/.test(read('api/src/lib/auth.ts'))) {
     throw new Error(
-      "Expected Cedar's requireAuth directive to be replaced, but it's still there",
+      'Expected api/src/lib/auth.ts to export the checks from createTenancyAuth',
     )
-  }
-
-  // There were no organizations before, so every existing field is about
-  // the user
-  const leftover = filesIn(projectPath, 'api/src').filter((file) =>
-    /@requireAuth\b/.test(read(file)),
-  )
-
-  if (leftover.length > 0) {
-    throw new Error(
-      `Expected no @requireAuth left, but found it in:\n${leftover.join('\n')}`,
-    )
-  }
-
-  if (!read('api/src/graphql/posts.sdl.ts').includes('@requireUserAuth')) {
-    throw new Error('Expected posts.sdl.ts to use @requireUserAuth')
-  }
-
-  if (!/\brequireUserAuth\b/.test(read('api/src/lib/auth.ts'))) {
-    throw new Error('Expected api/src/lib/auth.ts to export requireUserAuth')
   }
 }
 
