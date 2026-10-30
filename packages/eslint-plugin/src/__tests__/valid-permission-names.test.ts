@@ -34,7 +34,7 @@ function writeApp(name: string, indexSource?: string) {
 const sdlDir = writeApp(
   'tenant',
   dedent`
-    import { definePermissions } from '@cedarjs/tenancy/permissions'
+    import { definePermissions } from '@cedarjs/permissions'
 
     export const permissions = definePermissions({
       permissions: ['organization.read', 'members.manage'],
@@ -46,7 +46,7 @@ const plainSdlDir = writeApp('plain')
 const dynamicSdlDir = writeApp(
   'dynamic',
   dedent`
-    import { definePermissions } from '@cedarjs/tenancy/permissions'
+    import { definePermissions } from '@cedarjs/permissions'
     const names = ['a.b']
     export const permissions = definePermissions({ permissions: names, roles: {} })
   `,

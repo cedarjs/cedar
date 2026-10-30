@@ -33,7 +33,7 @@ export interface RouterMembership {
   organizationId: string
   /** The user's role in the organization, passed on to the `OrgProvider` */
   role: string
-  /** What the membership may do, for `<PrivateSet orgPermission>` */
+  /** What the membership may do, for `<PrivateSet permission>` */
   permissions?: readonly string[] | undefined
 }
 
@@ -55,9 +55,9 @@ export interface RouterOrg {
  *
  * One of the app's own can answer in three ways:
  * - an organization, with the user's membership in it or `null` for none.
- *   A set with `orgPermission` denies a user with no
+ *   A set with `permission` denies a user with no
  *   membership, and the router renders the tenancy's `notAMember`.
- * - `null`, for no organization: a set with `orgPermission` then
+ * - `null`, for no organization: a set with `permission` then
  *   throws the router's own error.
  * - throw an error of its own, such as for an organization that's been
  *   suspended. It reaches the app's error boundary like any error thrown
@@ -80,7 +80,7 @@ export interface OrgProviderProps {
  * How the router handles organizations. `createTenancy` from
  * `@cedarjs/tenancy/web` makes one. The router renders its `OrgProvider`
  * around the layouts and page of a `PrivateSet` whose route is in an
- * organization, and checks `orgPermission` against the
+ * organization, and checks a set's `permission` against the
  * membership its `useOrg` finds.
  */
 export interface Tenancy {

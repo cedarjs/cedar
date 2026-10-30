@@ -314,7 +314,7 @@ uses a permission.
 |     | User-level (`currentUser.roles`)          | Organization-level (membership)                                                              |
 | --- | ----------------------------------------- | -------------------------------------------------------------------------------------------- |
 | api | `hasRole`, `requireAuth`, `@requireAuth`  | `hasPermission`, `requirePermission`, `@requirePermission` (see [Permissions](#permissions)) |
-| web | `useAuth().hasRole`, `<PrivateSet roles>` | `useAuth().hasPermission`, `<PrivateSet orgPermission>`                                      |
+| web | `useAuth().hasRole`, `<PrivateSet roles>` | `useAuth().hasPermission`, `<PrivateSet permission>`                                         |
 
 - `requireAuth({ roles })`: for fields about the signed-in user rather
   than an organization (their account, their memberships, accepting an
@@ -405,8 +405,8 @@ package in the scope your other packages use (`@my-org/permissions`), or after
 your app's folder when there are none.
 
 ```ts title="packages/permissions/src/index.ts"
-import { definePermissions } from '@cedarjs/tenancy/permissions'
-import type { PermissionName } from '@cedarjs/tenancy/permissions'
+import { definePermissions } from '@cedarjs/permissions'
+import type { PermissionName } from '@cedarjs/permissions'
 
 export const permissions = definePermissions({
   permissions: ['organization.read', 'organization.manage', 'members.manage'],
@@ -438,7 +438,7 @@ an organization use `@requireAuth`.
 
 A role listing a name that `permissions` doesn't define is a type
 error, and `definePermissions` throws for it at runtime too.
-`@cedarjs/tenancy/permissions` has no api code in it, so the web can import
+`@cedarjs/permissions` has no api code in it, so the web can import
 the package.
 
 ### Checking permissions on the api
@@ -704,11 +704,11 @@ have no `{orgSlug}`, such as `/dashboard`, is an ordinary private set.
 
 On the web, `useAuth().hasRole` and `<PrivateSet roles>` check the user's own
 roles in `currentUser.roles`, as without tenancy, and
-`useAuth().hasPermission` and `<PrivateSet orgPermission>` check what the
-user's role in the organization may do. `tenancy` on the `Router` and
-`orgPermission` only exist in an app with tenancy: `cedar generate types`
-marks the app as having tenancy (`.cedar/types/includes/web-tenancy.d.ts`),
-and using either without it is a type error.
+`useAuth().hasPermission` and `<PrivateSet permission>` check what the
+user's role in the organization may do. `tenancy` on the `Router` only exists
+in an app with tenancy: `cedar generate types` marks the app as having tenancy
+(`.cedar/types/includes/web-tenancy.d.ts`), and using it without it is a type
+error.
 
 Client teardown: when `useAuth().isAuthenticated` becomes `false`, or
 `currentUser.id` changes, every cached client is dropped after `clearStore()`.
@@ -717,7 +717,7 @@ alone is dropped the same way, and one cached for another role is replaced.
 
 #### Guarding routes by permission
 
-To let only some members open a page, give its `PrivateSet` `orgPermission`
+To let only some members open a page, give its `PrivateSet` `permission`
 and `unauthorized`:
 
 <!-- prettier-ignore -->
@@ -726,16 +726,16 @@ and `unauthorized`:
   <PrivateSet wrap={OrgLayout} unauthenticated="login">
     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
   </PrivateSet>
-  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="organization.manage">
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" permission="organization.manage">
     <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
   </PrivateSet>
-  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="members.manage">
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" permission="members.manage">
     <Route path="/org/{orgSlug}/members" page={MembersPage} name="members" />
   </PrivateSet>
 </Router>
 ```
 
-The router checks `orgPermission` against the
+The router checks `permission` against the
 [permissions](#permissions-on-the-web) of the membership it found for the
 organization, the same ones `useAuth().hasPermission` checks. A member without
 the permission is redirected to the `unauthorized` route, which gets the `orgSlug` of the page
@@ -745,14 +745,14 @@ the set's `wrap` renders for them. A user who isn't a member of the
 organization at all sees `notAMember` rather than being redirected.
 
 A `PrivateSet` inside another one in the same organization checks its own
-`orgPermission` and renders no second provider.
+`permission` and renders no second provider.
 
-A `PrivateSet` with `orgPermission` throws an error rather than
-let anyone in when the router has no `tenancy`, or when there's no organization
-to check in: with Cedar's `tenancy`, a route with no `{orgSlug}` param.
+With `tenancy` on the router, a `PrivateSet` with `permission` throws an error
+rather than let anyone in when there's no organization to check in: with
+Cedar's `tenancy`, a route with no `{orgSlug}` param.
 
 `roles` checks `currentUser.roles`, as without tenancy. Given both `roles` and
-`orgPermission`, a user needs both. As with every check on the web, this only decides what
+`permission`, a user needs both. As with every check on the web, this only decides what
 to show: the api's `@requirePermission` is what protects the data.
 
 #### An organization from the host
@@ -761,7 +761,7 @@ By default the organization is the one in the route's `orgSlug` param. For an
 organization that doesn't come from the path, such as one taken from a
 subdomain (`acme.example.com`), give `createTenancy` a `useOrg` that finds it.
 `useOrgBySlug` keeps Cedar's membership lookup. This one place covers the
-router's `orgPermission` check, the provider and
+router's `permission` check, the provider and
 `useCurrentOrg()`:
 
 <!-- prettier-ignore -->
@@ -785,7 +785,7 @@ const Routes = () => (
     <PrivateSet wrap={OrgLayout} unauthenticated="login">
       <Route path="/projects" page={ProjectsPage} name="projects" />
     </PrivateSet>
-    <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="organization.manage">
+    <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" permission="organization.manage">
       <Route path="/settings" page={SettingsPage} name="settings" />
     </PrivateSet>
   </Router>
@@ -797,7 +797,7 @@ the router's `useAuth` and the route's path params. It can answer in three ways:
 
 - An organization: `{ membership, memberships }`, where `membership` is `null`
   when the user isn't a member of it. `useOrgBySlug` returns that.
-- `null`, for no organization. A `PrivateSet` with `orgPermission` then throws the router's own error, and any other
+- `null`, for no organization. A `PrivateSet` with `permission` then throws the router's own error, and any other
   `PrivateSet` is an ordinary private one.
 - An error of its own, such as for an organization that's been suspended. It
   reaches your app's error boundary like any error thrown while rendering.
@@ -864,7 +864,7 @@ calling it is a type error rather than a check that's always `false`.
 
 Like every check on the web, this only decides what to show; the api's
 `@requirePermission` is the guard. For a page only some may open, give its
-`PrivateSet` an `orgPermission` (see
+`PrivateSet` a `permission` (see
 [Guarding routes by permission](#guarding-routes-by-permission)).
 
 ### Other checks on the web
@@ -1015,7 +1015,7 @@ describe('MembersPage', () => {
   cached query results don't answer the next test's queries.
 - `useCurrentOrg().setOrg` navigates as in the app, or calls your
   `onSetOrg`. Assert on `navigate` or on what your `onSetOrg` does.
-- `<PrivateSet orgPermission>` is the router's check, which
+- `<PrivateSet permission>` is the router's check, which
   doesn't run for a component rendered on its own.
 
 `hasRole` checks `currentUser.roles`, in an organization or not.

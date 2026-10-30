@@ -883,13 +883,15 @@ describe('createTenancy', () => {
     const OrgPage = () => <ProjectsView />
     const OrgHomePage = () => <>org home</>
 
-    // These tests are an app without tenancy, where sets have no
-    // `orgPermission` prop and the router no `tenancy`. Spreading them lets
-    // them through the type check.
-    const canManageMembers = { orgPermission: 'members.manage' }
+    // These tests are an app without permission names or tenancy, where
+    // `permission` takes no names and the router has no `tenancy`.
+    // Spreading them lets them through the type check.
+    const canManageMembers: Record<string, string> = {
+      permission: 'members.manage',
+    }
     const tenancy = createTenancy({ notAMember: 'not a member' })
 
-    test('a nested <PrivateSet orgPermission> redirects to unauthorized with the URL’s orgSlug', async () => {
+    test('a nested <PrivateSet permission> redirects to unauthorized with the URL’s orgSlug', async () => {
       setupFetchMock()
 
       render(
@@ -923,7 +925,7 @@ describe('createTenancy', () => {
       expect(window.location.pathname).toBe('/org/org-a/home')
     })
 
-    test('<PrivateSet orgPermission> checks the permission in the URL’s organization', async () => {
+    test('<PrivateSet permission> checks the permission in the URL’s organization', async () => {
       setupFetchMock()
 
       render(

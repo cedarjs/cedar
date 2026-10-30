@@ -1,5 +1,5 @@
-import { definePermissions } from '@cedarjs/tenancy/permissions'
-import type { PermissionName } from '@cedarjs/tenancy/permissions'
+import { definePermissions } from '@cedarjs/permissions'
+import type { PermissionName } from '@cedarjs/permissions'
 
 /**
  * Every permission the app checks, and what each role may do: a role is a

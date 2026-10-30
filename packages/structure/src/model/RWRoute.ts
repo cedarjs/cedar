@@ -121,13 +121,13 @@ export class RWRoute extends BaseNode {
   }
 
   /**
-   * The `orgPermission` prop of a `<Private>`/`<PrivateSet>` in an app with
-   * tenancy: the permission the user's membership in the current
-   * organization needs. It is one name, so this is the one of the innermost
-   * ancestor that carries it.
+   * The `permission` prop of a `<Private>`/`<PrivateSet>`: the permission
+   * the user needs, their own or, with tenancy, their membership's in the
+   * route's organization. It is one name, so this is the one of the
+   * innermost ancestor that carries it.
    */
-  @lazy() get orgPermission() {
-    return this.getInnermostStringAttr('orgPermission')
+  @lazy() get permission() {
+    return this.getInnermostStringAttr('permission')
   }
 
   /**

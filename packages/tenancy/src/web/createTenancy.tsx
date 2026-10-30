@@ -200,7 +200,7 @@ const useOrgFromParams: UseTenancyOrg = (useAuth, params) =>
  * Makes the `tenancy` to pass to the `Router`. The router then renders the
  * organization's provider itself, around the layouts and page of every
  * `PrivateSet` whose route is in an organization (by default, one with
- * `{orgSlug}` in its path), and checks `orgPermission` on those sets.
+ * `{orgSlug}` in its path), and checks `permission` on those sets in it.
  *
  * Call it once, at the top level of a module, like `web/src/tenancy.tsx`:
  * a new tenancy on each render would remount the provider.

@@ -678,11 +678,11 @@ ${
              what the user's role there may do.
           7. Roles are the user's own: ${c.highlight('hasRole')} and ${c.highlight('<PrivateSet roles>')}
              check ${c.highlight('currentUser.roles')}. In an organization, check a
-             permission instead: guard routes with ${c.highlight('<PrivateSet orgPermission>')}
-             for a permission of their membership in the route's organization.
+             permission instead: guard routes with ${c.highlight('<PrivateSet permission>')},
+             which checks their membership in the route's organization.
              A member who lacks it is sent to ${c.highlight('unauthorized')}:
 
-               <PrivateSet unauthenticated="login" unauthorized="projects" orgPermission="organization.manage">
+               <PrivateSet unauthenticated="login" unauthorized="projects" permission="organization.manage">
                  <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
                </PrivateSet>
 

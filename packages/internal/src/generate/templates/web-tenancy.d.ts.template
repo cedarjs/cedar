@@ -1,7 +1,7 @@
 import '@cedarjs/auth'
 
-// This app has tenancy, so the Router takes tenancy, and <PrivateSet> takes
-// orgPermission for what the user may do in the organization
+// This app has tenancy, so the Router takes tenancy, which checks a
+// <PrivateSet>'s permission in the route's organization
 declare module '@cedarjs/auth' {
   interface AuthTenancy {
     enabled: true

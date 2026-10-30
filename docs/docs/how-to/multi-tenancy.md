@@ -885,7 +885,7 @@ user's role in the organization, read `org.role`. `useAuth().hasRole` and
 `<PrivateSet roles>` check the user's own roles, in `currentUser.roles`, as
 without tenancy. A check in an organization uses a permission.
 
-For a page only some members may open, give its `PrivateSet` `orgPermission` and
+For a page only some members may open, give its `PrivateSet` `permission` and
 `unauthorized` (see
 [Guarding routes by permission](../tenancy.md#guarding-routes-by-permission)):
 
@@ -895,10 +895,10 @@ For a page only some members may open, give its `PrivateSet` `orgPermission` and
   <PrivateSet wrap={OrgLayout} unauthenticated="login">
     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
   </PrivateSet>
-  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="organization.manage">
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" permission="organization.manage">
     <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
   </PrivateSet>
-  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="members.manage">
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" permission="members.manage">
     <Route path="/org/{orgSlug}/members" page={MembersPage} name="members" />
   </PrivateSet>
 </Router>
@@ -906,9 +906,9 @@ For a page only some members may open, give its `PrivateSet` `orgPermission` and
 
 A member who lacks the permission is redirected to the same organization's
 `projects` page. The router checks it against the membership it finds in the
-organization whose slug is the route's `orgSlug` param, so `orgPermission`
-needs both a `tenancy` on the `Router` and a route in an organization: without
-either, it throws an error rather than let anyone in.
+organization whose slug is the route's `orgSlug` param. With `tenancy` on the
+`Router`, `permission` needs a route in an organization: without one, it throws
+an error rather than let anyone in.
 
 ### `reauthenticate()` after membership-changing mutations
 
