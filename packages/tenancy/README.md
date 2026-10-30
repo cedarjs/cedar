@@ -150,7 +150,7 @@ side. Pass the tenancy to the router and put organization routes in a
 immutable organization id so switching organizations never mixes caches, around
 the set's layouts and page. `useAuth().hasPermission()` checks what the user
 may do in the organization. To guard routes by a permission of the user's
-membership, give a `PrivateSet` `orgPermission` and `unauthorized`:
+membership, give a `PrivateSet` `permission` and `unauthorized`:
 
 <!-- prettier-ignore -->
 ```tsx
@@ -160,7 +160,7 @@ import { tenancy } from 'src/tenancy'
   <PrivateSet wrap={OrgLayout} unauthenticated="login">
     <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
   </PrivateSet>
-  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" orgPermission="members.manage">
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" permission="members.manage">
     <Route path="/org/{orgSlug}/members" page={MembersPage} name="members" />
   </PrivateSet>
 </Router>
@@ -176,9 +176,9 @@ export const tenancy = createTenancy({
 
 The router checks the permission in the organization that `tenancy.useOrg`
 returns. The default `useOrg` finds it by the route's `orgSlug` param, and a
-custom one can find it another way, such as from the host. A `PrivateSet` with `orgPermission` throws when
-the router has no `tenancy` or its `useOrg` finds no organization for the
-route; with the default lookup, that's a route without `{orgSlug}`. A route
+custom one can find it another way, such as from the host. A `PrivateSet` with
+`permission` throws when `useOrg` finds no organization for the route; with the
+default lookup, that's a route without `{orgSlug}`. A route
 with `{orgSlug}` outside a `PrivateSet` is a public page with no organization
 context. `useAuth().hasRole` and `<PrivateSet roles>` check
 `currentUser.roles`, the user's own roles, as in an app without tenancy;

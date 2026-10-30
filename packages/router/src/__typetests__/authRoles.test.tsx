@@ -45,10 +45,10 @@ test('PrivateSet takes unauthorized', () => {
   ).type.not.toRaiseError()
 })
 
-test('PrivateSet has no orgPermission', () => {
+test('PrivateSet takes no permission in an app without permissions', () => {
   expect(
-    <PrivateSet unauthenticated="login" orgPermission="members.manage">
+    <PrivateSet unauthenticated="login" permission="members.manage">
       {null}
     </PrivateSet>,
-  ).type.toRaiseError("Property 'orgPermission' does not exist")
+  ).type.toRaiseError("not assignable to type 'undefined'")
 })

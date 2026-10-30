@@ -9,7 +9,7 @@ import { paramsForRoute, pathParamsText } from './util.js'
 interface AuthenticatedRouteProps {
   children: React.ReactNode
   roles?: string | string[]
-  orgPermission?: string
+  permission?: string
   unauthenticated: string
   unauthorized?: string
   whileLoadingAuth?: () => React.ReactElement | null
@@ -94,7 +94,7 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   unauthenticated,
   unauthorized,
   roles,
-  orgPermission,
+  permission,
   whileLoadingAuth,
   children,
 }) => {
@@ -104,42 +104,36 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
     loading: authLoading,
     isAuthenticated,
     hasRole,
+    hasPermission,
   } = routerState.useAuth()
   // The router's location, not `globalThis.location`, which there isn't when
   // prerendering
   const { pathname } = useLocation()
   const pathParams = currentPathParams(routerState, pathname)
   const { tenancy } = routerState
-  // Called on every render, with or without `orgPermission`, as hooks must be
+  // Called on every render, with or without `permission`, as hooks must be
   // called the same way every time
   const useOrg = tenancy?.useOrg ?? useNoOrg
   const org = useOrg(routerState.useAuth, pathParams)
-  const needsOrg = orgPermission !== undefined
+  // With tenancy, permissions belong to a membership, so `permission` is
+  // checked in the route's organization
+  const needsOrg = permission !== undefined && !!tenancy
 
-  // Fail closed: with no organization to check `orgPermission` in, it's a mistake in the routes, not a user without access. A router
-  // without `tenancy` is a mistake whatever the auth state. A `useOrg` that
-  // finds no organization may only be because auth is still loading, such as
-  // when prerendering with an organization from the host, so that waits for
-  // auth to load.
+  // Fail closed: with no organization to check `permission` in, it's a
+  // mistake in the routes, not a user without access. A `useOrg` that finds
+  // no organization may only be because auth is still loading, such as when
+  // prerendering with an organization from the host, so that waits for auth
+  // to load.
   if (needsOrg && !org) {
-    if (!tenancy) {
-      throw new Error(
-        'A PrivateSet with `orgPermission` needs `tenancy` on the Router to ' +
-          'find the organization with. Please pass `tenancy` from ' +
-          '`@cedarjs/tenancy/web`: ' +
-          '<Router useAuth={useAuth} tenancy={tenancy}>',
-      )
-    }
-
     if (authLoading) {
       return whileLoadingAuth?.() || null
     }
 
     if (pathParams['orgSlug'] === undefined) {
       throw new Error(
-        'A PrivateSet with `orgPermission` needs an organization to check ' +
+        'A PrivateSet with `permission` needs an organization to check ' +
           'it in, and the route has no `orgSlug` param. Please only use ' +
-          '`orgPermission` on routes with `{orgSlug}` in their path, or ' +
+          '`permission` on routes with `{orgSlug}` in their path, or ' +
           'pass `createTenancy` a `useOrg` that finds the organization ' +
           'another way',
       )
@@ -147,15 +141,24 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
 
     // A `useOrg` of the app's own found no organization for this route
     throw new Error(
-      'A PrivateSet with `orgPermission` got no organization from the ' +
+      'A PrivateSet with `permission` got no organization from the ' +
         "Router's `tenancy` for this route, so there is nothing to check " +
         'it in',
     )
   }
 
+  // `useAuth()`'s `hasPermission` takes the app's permission names, which
+  // the router's own code doesn't know, so it's called through a method
+  // that takes any name
+  const auth: { hasPermission(permission: string): boolean } = {
+    hasPermission,
+  }
   const hasRequiredRoles = !roles || hasRole(roles)
+  // Without tenancy, the user's own permissions
+  const hasRequiredPermission =
+    !!tenancy || permission === undefined || auth.hasPermission(permission)
 
-  if (isAuthenticated && hasRequiredRoles) {
+  if (isAuthenticated && hasRequiredRoles && hasRequiredPermission) {
     // A route that isn't in an organization is an ordinary private route
     if (!tenancy || !org) {
       return <>{children}</>
@@ -173,8 +176,8 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
     }
 
     const hasRequiredOrgAccess =
-      orgPermission === undefined ||
-      (membership.permissions?.includes(orgPermission) ?? false)
+      permission === undefined ||
+      (membership.permissions?.includes(permission) ?? false)
 
     if (hasRequiredOrgAccess) {
       // An outer private set in this organization has rendered the provider
