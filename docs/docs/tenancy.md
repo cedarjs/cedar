@@ -405,8 +405,8 @@ package in the scope your other packages use (`@my-org/permissions`), or after
 your app's folder when there are none.
 
 ```ts title="packages/permissions/src/index.ts"
-import { definePermissions } from '@cedarjs/tenancy/permissions'
-import type { PermissionName } from '@cedarjs/tenancy/permissions'
+import { definePermissions } from '@cedarjs/permissions'
+import type { PermissionName } from '@cedarjs/permissions'
 
 export const permissions = definePermissions({
   permissions: ['organization.read', 'organization.manage', 'members.manage'],
@@ -438,7 +438,7 @@ an organization use `@requireAuth`.
 
 A role listing a name that `permissions` doesn't define is a type
 error, and `definePermissions` throws for it at runtime too.
-`@cedarjs/tenancy/permissions` has no api code in it, so the web can import
+`@cedarjs/permissions` has no api code in it, so the web can import
 the package.
 
 ### Checking permissions on the api
