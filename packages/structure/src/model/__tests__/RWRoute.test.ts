@@ -197,99 +197,67 @@ describe('RWRoute tenancy guards', () => {
     )
 
     expect(route.unauthorized).toBeUndefined()
-    expect(route.userRoles).toBeUndefined()
-    expect(route.orgPermission).toBeUndefined()
+    expect(route.roles).toBeUndefined()
+    expect(route.permission).toBeUndefined()
   })
 
   it('records nothing for a route outside a <PrivateSet>', () => {
     const route = routeIn('<Set wrap={Layout}>', '</Set>')
 
     expect(route.unauthorized).toBeUndefined()
-    expect(route.userRoles).toBeUndefined()
-    expect(route.orgPermission).toBeUndefined()
+    expect(route.roles).toBeUndefined()
+    expect(route.permission).toBeUndefined()
   })
 
-  it('reads unauthorized, userRoles and orgPermission', () => {
+  it('reads unauthorized, roles and permission', () => {
     const route = routeIn(
-      '<PrivateSet unauthenticated="login" unauthorized="projects" userRoles="admin" orgPermission="members.manage">',
+      '<PrivateSet unauthenticated="login" unauthorized="projects" roles="admin" permission="members.manage">',
       '</PrivateSet>',
     )
 
     expect(route.unauthorized).toBe('projects')
-    expect(route.userRoles).toBe('admin')
-    expect(route.orgPermission).toBe('members.manage')
-    expect(route.roles).toBeUndefined()
+    expect(route.roles).toBe('admin')
+    expect(route.permission).toBe('members.manage')
   })
 
-  it('reads the array and quasi-JSON forms of userRoles', () => {
+  it('reads the array form of roles', () => {
     const route = routeIn(
-      `<PrivateSet unauthenticated="login" userRoles={['a', 'b']}>`,
+      `<PrivateSet unauthenticated="login" roles={['a', 'b']}>`,
       '</PrivateSet>',
     )
 
-    expect(route.userRoles).toEqual(['a', 'b'])
+    expect(route.roles).toEqual(['a', 'b'])
   })
 
-  it('takes unauthorized and orgPermission from the innermost ancestor', () => {
+  it('takes unauthorized and permission from the innermost ancestor', () => {
     const route = routeIn(
-      `<PrivateSet unauthenticated="login" unauthorized="outer" orgPermission="a.read">
-        <PrivateSet unauthorized="inner" orgPermission="b.write">`,
+      `<PrivateSet unauthenticated="login" unauthorized="outer" permission="a.read">
+        <PrivateSet unauthorized="inner" permission="b.write">`,
       '</PrivateSet></PrivateSet>',
     )
 
     expect(route.unauthorized).toBe('inner')
-    expect(route.orgPermission).toBe('b.write')
+    expect(route.permission).toBe('b.write')
   })
 
-  it('takes unauthorized and orgPermission from an outer ancestor when the inner has none', () => {
+  it('takes unauthorized and permission from an outer ancestor when the inner has none', () => {
     const route = routeIn(
-      `<PrivateSet unauthenticated="login" unauthorized="outer" orgPermission="a.read">
-        <Set wrap={Layout}><PrivateSet userRoles="owner">`,
+      `<PrivateSet unauthenticated="login" unauthorized="outer" permission="a.read">
+        <Set wrap={Layout}><PrivateSet roles="owner">`,
       '</PrivateSet></Set></PrivateSet>',
     )
 
     expect(route.unauthorized).toBe('outer')
-    expect(route.orgPermission).toBe('a.read')
-  })
-
-  it('unions userRoles across nested ancestors', () => {
-    const route = routeIn(
-      `<PrivateSet unauthenticated="login" userRoles="admin">
-        <PrivateSet userRoles={['editor', 'admin']}>`,
-      '</PrivateSet></PrivateSet>',
-    )
-
-    expect(route.userRoles).toHaveLength(2)
-    expect(route.userRoles).toEqual(expect.arrayContaining(['admin', 'editor']))
-  })
-
-  it('keeps the shape of a single ancestor with userRoles', () => {
-    const route = routeIn(
-      `<PrivateSet unauthenticated="login" userRoles={['admin']}>
-        <PrivateSet unauthorized="projects">`,
-      '</PrivateSet></PrivateSet>',
-    )
-
-    expect(route.userRoles).toEqual(['admin'])
-  })
-
-  it('keeps roles separate from userRoles', () => {
-    const route = routeIn(
-      '<PrivateSet unauthenticated="login" roles="admin">',
-      '</PrivateSet>',
-    )
-
-    expect(route.roles).toBe('admin')
-    expect(route.userRoles).toBeUndefined()
+    expect(route.permission).toBe('a.read')
   })
 
   it('has no value for a prop that is not a string literal', () => {
     const route = routeIn(
-      '<PrivateSet unauthenticated="login" unauthorized={name} orgPermission={perm}>',
+      '<PrivateSet unauthenticated="login" unauthorized={name} permission={perm}>',
       '</PrivateSet>',
     )
 
     expect(route.unauthorized).toBeUndefined()
-    expect(route.orgPermission).toBeUndefined()
+    expect(route.permission).toBeUndefined()
   })
 })

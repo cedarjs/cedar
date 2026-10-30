@@ -79,8 +79,7 @@ export interface RWRouteManifestItem {
   unauthenticated: string | null
   roles: string | string[] | null
   unauthorized?: string | null
-  userRoles?: string | string[] | null
-  orgPermission?: string | null
+  permission?: string | null
   pageIdentifier: string | null
   // Probably want isNotFound here, so we can attach a separate 404 handler
 }
@@ -127,8 +126,7 @@ export const getProjectRoutes = (): RouteSpec[] => {
       unauthenticated: route.unauthenticated,
       roles: route.roles,
       unauthorized: route.unauthorized,
-      userRoles: route.userRoles,
-      orgPermission: route.orgPermission,
+      permission: route.permission,
       pageIdentifier: route.page_identifier_str,
     }
   })

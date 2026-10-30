@@ -1,7 +1,7 @@
 import type { ComponentType, ReactElement, ReactNode } from 'react'
 import React from 'react'
 
-import type { AuthTenancy, PermissionName } from '@cedarjs/auth' with {
+import type { PermissionName } from '@cedarjs/auth' with {
   'resolution-mode': 'import',
 }
 
@@ -29,44 +29,26 @@ export interface WrapperProps {
  */
 export type WrapperType = ComponentType<WrapperProps>
 
-/**
- * The role props. An app with tenancy (see `AuthTenancy`) has `userRoles`
- * instead of `roles`, and `orgPermission` for what the user may do in the
- * organization: there, every check says which kind it is.
- */
-type SetRoles = AuthTenancy extends { enabled: true }
-  ? {
-      /**
-       * Route is permitted when authenticated and user has any of the
-       * provided roles such as "admin" or ["admin", "editor"], in
-       * `currentUser.roles`. With `orgPermission` as well, they need both.
-       */
-      userRoles?: string | string[]
-      /**
-       * Route is permitted when authenticated and the user's membership in
-       * the current organization has this permission (see
-       * `createPermissions` in `@cedarjs/tenancy`).
-       *
-       * The organization is the one the Router's `tenancy` finds for the
-       * route, by default the one with the route's `orgSlug` param:
-       *
-       *   <Router useAuth={useAuth} tenancy={tenancy}>
-       *
-       * A `PrivateSet` with `orgPermission` throws without `tenancy` on the
-       * router, or on a route that isn't in an organization.
-       */
-      orgPermission?: PermissionName
-    }
-  : {
-      /**
-       * Route is permitted when authenticated and user has any of the
-       * provided roles such as "admin" or ["admin", "editor"], in
-       * `currentUser.roles`
-       */
-      roles?: string | string[]
-    }
-
-interface SetProps extends SetRoles {
+interface SetProps {
+  /**
+   * Route is permitted when authenticated and user has any of the provided
+   * roles such as "admin" or ["admin", "editor"], in `currentUser.roles`
+   */
+  roles?: string | string[]
+  /**
+   * Route is permitted when authenticated and the user has this permission
+   * (see `cedar setup permissions`). With `roles` as well, they need both.
+   *
+   * Without tenancy, it's one of the user's own permissions, in
+   * `currentUser.permissions`.
+   *
+   * With `tenancy` on the Router, it's a permission of the user's membership
+   * in the route's organization: the one the Router's `tenancy` finds, by
+   * default the one with the route's `orgSlug` param. A signed-in user who
+   * isn't a member gets the tenancy's `notAMember`. A `PrivateSet` with
+   * `permission` throws on a route that isn't in an organization.
+   */
+  permission?: PermissionName
   /**
    * Components to wrap all routes in this set with, like layouts. The first
    * one in an array is the outermost one.
@@ -129,8 +111,8 @@ type PrivateSetProps = Omit<
   unauthenticated: string
   /**
    * The page name where a user will be redirected when authenticated but
-   * without the required roles. Without it, they're redirected to
-   * `unauthenticated`.
+   * without the required roles or permission. Without it, they're
+   * redirected to `unauthenticated`.
    */
   unauthorized?: string
 }

@@ -15,12 +15,6 @@
         "default": "./dist/index.js"
       }
     },
-    "./permissions": {
-      "default": {
-        "types": "./dist/definePermissions.d.ts",
-        "default": "./dist/definePermissions.js"
-      }
-    },
     "./web": {
       "default": {
         "types": "./dist/web/index.d.ts",
@@ -46,7 +40,8 @@
   "dependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/context": "workspace:*",
-    "@cedarjs/graphql-server": "workspace:*"
+    "@cedarjs/graphql-server": "workspace:*",
+    "@cedarjs/permissions": "workspace:*"
   },
   "devDependencies": {
     "@apollo/client": "4.3.5",

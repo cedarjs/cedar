@@ -36,6 +36,10 @@
     "./currentUserHasRole": {
       "types": "./dist/currentUserHasRole.d.ts",
       "default": "./dist/currentUserHasRole.js"
+    },
+    "./currentUserHasPermission": {
+      "types": "./dist/currentUserHasPermission.d.ts",
+      "default": "./dist/currentUserHasPermission.js"
     }
   },
   "types": "./dist/index.d.ts",

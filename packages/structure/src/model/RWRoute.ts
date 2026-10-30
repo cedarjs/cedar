@@ -108,8 +108,8 @@ export class RWRoute extends BaseNode {
   }
 
   /**
-   * The `roles` prop of a `<Private>`/`<PrivateSet>`, which an app without
-   * tenancy has. An app with tenancy has `userRoles` instead.
+   * The `roles` prop of a `<Private>`/`<PrivateSet>`: roles in
+   * `currentUser.roles`.
    *
    * Each ancestor independently guards the route, so this is the union of
    * the roles of all of them. With a single ancestor that has roles, the
@@ -121,23 +121,13 @@ export class RWRoute extends BaseNode {
   }
 
   /**
-   * The `userRoles` prop of a `<Private>`/`<PrivateSet>` in an app with
-   * tenancy: roles in `currentUser.roles`. Combined across ancestors like
-   * `roles`.
+   * The `permission` prop of a `<Private>`/`<PrivateSet>`: the permission
+   * the user needs, their own or, with tenancy, their membership's in the
+   * route's organization. It is one name, so this is the one of the
+   * innermost ancestor that carries it.
    */
-  @lazy()
-  get userRoles() {
-    return this.getRolesUnion('userRoles')
-  }
-
-  /**
-   * The `orgPermission` prop of a `<Private>`/`<PrivateSet>` in an app with
-   * tenancy: the permission the user's membership in the current
-   * organization needs. It is one name, so this is the one of the innermost
-   * ancestor that carries it.
-   */
-  @lazy() get orgPermission() {
-    return this.getInnermostStringAttr('orgPermission')
+  @lazy() get permission() {
+    return this.getInnermostStringAttr('permission')
   }
 
   /**
@@ -188,7 +178,7 @@ export class RWRoute extends BaseNode {
   }
 
   /**
-   * Reads a role list attribute (`roles` or `userRoles`) off a
+   * Reads a role list attribute (`roles`) off a
    * `<Private>`/`<PrivateSet>` opening element, handling the string literal,
    * quasi-JSON string (e.g. `"['a','b']"`), and JSX array-literal expression
    * forms.

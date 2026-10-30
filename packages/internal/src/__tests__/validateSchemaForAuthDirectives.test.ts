@@ -4,7 +4,6 @@ import { CodeFileLoader } from '@graphql-tools/code-file-loader'
 import { loadTypedefs } from '@graphql-tools/load'
 import { mergeTypeDefs } from '@graphql-tools/merge'
 import type { DocumentNode } from 'graphql'
-import { parse } from 'graphql'
 import { describe, beforeAll, afterAll, test, expect } from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -117,29 +116,5 @@ describe('SDL uses auth directives', () => {
         ).rejects.toThrowError('Syntax Error: Expected Name, found Int "42".')
       })
     })
-  })
-})
-
-describe("tenancy's auth directives", () => {
-  beforeAll(() => {
-    process.env.CEDAR_CWD = FIXTURE_ERROR_PATH
-  })
-
-  afterAll(() => {
-    delete process.env.CEDAR_CWD
-  })
-
-  test.each(['requireUserAuth'])('checks the roles on @%s', (directive) => {
-    expect(() =>
-      validateSchema(
-        parse(`type Query { todos: [String] @${directive}(roles: 1) }`),
-      ),
-    ).toThrowError(DIRECTIVE_INVALID_ROLE_TYPES_ERROR_MESSAGE)
-
-    expect(() =>
-      validateSchema(
-        parse(`type Query { todos: [String] @${directive}(roles: ["a"]) }`),
-      ),
-    ).not.toThrowError()
   })
 })

@@ -61,14 +61,6 @@ const LocationAwareRouter = ({
 
   const requestedRoute = pathRouteMap[activeRoutePath]
 
-  // TODO (RSC): There's no organization here to check `orgPermission` in, and only `unauthenticated` is checked below, so fail
-  // closed rather than let every signed-in user in
-  for (const set of requestedRoute.sets) {
-    if (set.props.orgPermission !== undefined) {
-      throw new Error('`orgPermission` is not supported with RSC yet')
-    }
-  }
-
   // Need to reverse the sets array when finding the private set so that we
   // find the inner-most private set first. Otherwise we could end up
   // redirecting to the wrong route.

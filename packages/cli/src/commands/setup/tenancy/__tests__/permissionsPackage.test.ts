@@ -107,11 +107,11 @@ describe('permissionsPackageFiles', () => {
     indexSource: 'export const permissions = {}\n',
   })
 
-  it('depends on the same @cedarjs/tenancy version as the app', () => {
+  it('depends on the same @cedarjs/permissions version as the app', () => {
     const packageJson = JSON.parse(files['package.json'])
 
     expect(packageJson.name).toBe('@my-app/permissions')
-    expect(packageJson.dependencies['@cedarjs/tenancy']).toBe('1.2.3')
+    expect(packageJson.dependencies['@cedarjs/permissions']).toBe('1.2.3')
     // `cedar dev` only watches packages with a watch script
     expect(packageJson.scripts.watch).toBeDefined()
   })

@@ -62,7 +62,6 @@ function createDummyAuthContextValues(
     getToken: async () => null,
     getCurrentUser: async () => null,
     hasRole: () => false,
-    hasUserRole: () => false,
     hasPermission: () => false,
     reauthenticate: async () => {},
     client: null,
@@ -1219,14 +1218,19 @@ describe('PrivateSet role checks', () => {
   const toList = (roles: string | string[]) =>
     Array.isArray(roles) ? roles : [roles]
 
-  /** An auth provider's `useAuth`, for a user with `roles` in `currentUser` */
+  /**
+   * An auth provider's `useAuth`, for a user with `roles` and `permissions`
+   * of their own in `currentUser`
+   */
   const useAuthWithRoles =
     ({
       isAuthenticated = true,
       roles = [],
+      permissions = [],
     }: {
       isAuthenticated?: boolean
       roles?: string[]
+      permissions?: string[]
     }) =>
     () => {
       const hasRole = (rolesToCheck: string | string[]) =>
@@ -1236,7 +1240,7 @@ describe('PrivateSet role checks', () => {
         loading: false,
         isAuthenticated,
         hasRole,
-        hasUserRole: hasRole,
+        hasPermission: (name) => isAuthenticated && permissions.includes(name),
       })
     }
 
@@ -1323,13 +1327,126 @@ describe('PrivateSet role checks', () => {
     return { useOrg, OrgProvider, notAMember: <p>Not a member</p> }
   }
 
-  // The router's own tests are an app without tenancy, where sets have
-  // `roles` but no `userRoles` or `orgPermission`, and the
-  // Router no `tenancy`. Spreading the props, rather than writing them out,
-  // lets them through the type check.
-  const userRoles = (roles: string | string[]) => ({ userRoles: roles })
-  const orgPermission = (permission: string) => ({ orgPermission: permission })
+  // The router's own tests are an app without permission names or tenancy,
+  // where `permission` takes no names, and the Router has no `tenancy`.
+  // Spreading the props, rather than writing them out, lets them through
+  // the type check.
+  const permission = (name: string): Record<string, string> => ({
+    permission: name,
+  })
   const routerTenancy = (tenancy: Tenancy) => ({ tenancy })
+
+  describe("permission, without tenancy: the user's own", () => {
+    const TestRouter = ({ useAuth }: { useAuth: UseAuth }) => (
+      <Router useAuth={useAuth}>
+        <Route path="/" page={HomePage} name="home" />
+        <Route path="/login" page={LoginPage} name="login" />
+        <Route path="/forbidden" page={ForbiddenPage} name="forbidden" />
+        <PrivateSet
+          unauthenticated="login"
+          unauthorized="forbidden"
+          {...permission('settings.manage')}
+        >
+          <Route path="/settings" page={SettingsPage} name="settings" />
+          <Route
+            path="/org/{orgSlug}/settings"
+            page={SettingsPage}
+            name="orgSettings"
+          />
+        </PrivateSet>
+        <PrivateSet
+          unauthenticated="login"
+          unauthorized="forbidden"
+          roles="staff"
+          {...permission('settings.manage')}
+        >
+          <Route path="/billing" page={PrivatePage} name="billing" />
+        </PrivateSet>
+      </Router>
+    )
+
+    test('lets a user with the permission in', async () => {
+      const screen = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({ permissions: ['settings.manage'] })}
+        />,
+      )
+
+      act(() => navigate('/settings'))
+
+      await waitFor(() => screen.getByText(/Settings Page/i))
+    })
+
+    test('on any route, with an orgSlug param or not', async () => {
+      const screen = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({ permissions: ['settings.manage'] })}
+        />,
+      )
+
+      act(() => navigate('/org/acme/settings'))
+
+      await waitFor(() => screen.getByText(/Settings Page/i))
+    })
+
+    test('redirects a user without it to unauthorized', async () => {
+      const screen = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({ permissions: ['billing.manage'] })}
+        />,
+      )
+
+      act(() => navigate('/settings'))
+
+      await waitFor(() => {
+        screen.getByText(/Forbidden Page/i)
+        expect(window.location.pathname).toBe('/forbidden')
+      })
+      expect(screen.queryByText(/Settings Page/i)).not.toBeInTheDocument()
+    })
+
+    test('redirects a user who is not signed in to unauthenticated', async () => {
+      const screen = render(
+        <TestRouter useAuth={useAuthWithRoles({ isAuthenticated: false })} />,
+      )
+
+      act(() => navigate('/settings'))
+
+      await waitFor(() => {
+        screen.getByText(/Login Page/i)
+        expect(window.location.search).toBe('?redirectTo=/settings')
+      })
+    })
+
+    test('with roles as well, needs both', async () => {
+      const editor = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({
+            roles: ['editor'],
+            permissions: ['settings.manage'],
+          })}
+        />,
+      )
+
+      act(() => navigate('/billing'))
+
+      await waitFor(() => editor.getByText(/Forbidden Page/i))
+      editor.unmount()
+
+      const staff = render(
+        <TestRouter
+          useAuth={useAuthWithRoles({
+            roles: ['staff'],
+            permissions: ['settings.manage'],
+          })}
+        />,
+      )
+
+      act(() => navigate('/billing'))
+
+      await waitFor(() => staff.getByText(/Private Page/i))
+    })
+  })
 
   describe('unauthorized', () => {
     const TestRouter = ({ useAuth }: { useAuth: UseAuth }) => (
@@ -1499,44 +1616,6 @@ describe('PrivateSet role checks', () => {
     })
   })
 
-  describe('userRoles', () => {
-    const TestRouter = ({ useAuth }: { useAuth: UseAuth }) => (
-      <Router useAuth={useAuth}>
-        <Route path="/" page={HomePage} name="home" />
-        <Route path="/login" page={LoginPage} name="login" />
-        <Route path="/forbidden" page={ForbiddenPage} name="forbidden" />
-        <PrivateSet
-          unauthenticated="login"
-          unauthorized="forbidden"
-          {...userRoles('admin')}
-        >
-          <Route path="/admin" page={PrivatePage} name="admin" />
-        </PrivateSet>
-      </Router>
-    )
-
-    test('lets a user with the role in currentUser.roles in', async () => {
-      const screen = render(
-        <TestRouter useAuth={useAuthWithRoles({ roles: ['admin'] })} />,
-      )
-
-      act(() => navigate('/admin'))
-
-      await waitFor(() => screen.getByText(/Private Page/i))
-    })
-
-    test('redirects a user without it', async () => {
-      const screen = render(
-        <TestRouter useAuth={useAuthWithRoles({ roles: ['editor'] })} />,
-      )
-
-      act(() => navigate('/admin'))
-
-      await waitFor(() => screen.getByText(/Forbidden Page/i))
-      expect(screen.queryByText(/Private Page/i)).not.toBeInTheDocument()
-    })
-  })
-
   describe('tenancy', () => {
     /** An organization's layout, to see whether a set's wrap renders */
     const OrgLayout = ({ children }: WrapperProps) => {
@@ -1594,7 +1673,7 @@ describe('PrivateSet role checks', () => {
           <PrivateSet
             unauthenticated="login"
             unauthorized="projects"
-            {...orgPermission('settings.manage')}
+            {...permission('settings.manage')}
           >
             <Route
               path="/org/{orgSlug}/settings"
@@ -1605,8 +1684,8 @@ describe('PrivateSet role checks', () => {
           <PrivateSet
             unauthenticated="login"
             unauthorized="projects"
-            {...userRoles('staff')}
-            {...orgPermission('billing.manage')}
+            roles="staff"
+            {...permission('billing.manage')}
           >
             <Route
               path="/org/{orgSlug}/billing"
@@ -1619,7 +1698,7 @@ describe('PrivateSet role checks', () => {
           wrap={OrgLayout}
           unauthenticated="login"
           unauthorized="projects"
-          {...orgPermission('members.manage')}
+          {...permission('members.manage')}
         >
           <Route
             path="/org/{orgSlug}/members"
@@ -1820,7 +1899,7 @@ describe('PrivateSet role checks', () => {
         expect(window.location.pathname).toBe('/org/acme/projects')
       })
 
-      test('gets notAMember on a set with orgPermission too, not a redirect', async () => {
+      test('gets notAMember on a set with permission too, not a redirect', async () => {
         const screen = render(
           <TestRouter
             useAuth={useAuthWithRoles({})}
@@ -1835,7 +1914,7 @@ describe('PrivateSet role checks', () => {
       })
     })
 
-    describe("orgPermission, from the membership's role", () => {
+    describe("permission, from the membership's role", () => {
       test('lets a member whose role has it in the organization in', async () => {
         const screen = render(
           <TestRouter
@@ -1869,7 +1948,7 @@ describe('PrivateSet role checks', () => {
         expect(screen.queryByText(/Settings Page/i)).not.toBeInTheDocument()
       })
 
-      test('with userRoles too, needs both', async () => {
+      test('with roles too, needs both', async () => {
         const ownerOnly = render(
           <TestRouter
             useAuth={useAuthWithRoles({})}
@@ -1907,7 +1986,7 @@ describe('PrivateSet role checks', () => {
       })
     })
 
-    describe('orgPermission', () => {
+    describe('permission, from the membership', () => {
       test('lets a member with the permission in', async () => {
         const screen = render(
           <TestRouter
@@ -1942,6 +2021,22 @@ describe('PrivateSet role checks', () => {
           screen.getByText(/Projects Page/i)
           expect(window.location.pathname).toBe('/org/acme/projects')
         })
+        expect(screen.queryByText(/Members Page/i)).not.toBeInTheDocument()
+      })
+
+      test("doesn't go by the user's own permissions", async () => {
+        const screen = render(
+          <TestRouter
+            useAuth={useAuthWithRoles({ permissions: ['members.manage'] })}
+            membershipBySlug={{
+              acme: { role: 'owner', permissions: ['projects.read'] },
+            }}
+          />,
+        )
+
+        act(() => navigate('/org/acme/members'))
+
+        await waitFor(() => screen.getByText(/Projects Page/i))
         expect(screen.queryByText(/Members Page/i)).not.toBeInTheDocument()
       })
 
@@ -1990,29 +2085,6 @@ describe('PrivateSet role checks', () => {
         console.error = err
       })
 
-      test('throws without tenancy on the Router, even when not signed in', async () => {
-        const TestRouter = () => (
-          <Router useAuth={useAuthWithRoles({ isAuthenticated: false })}>
-            <Route path="/login" page={LoginPage} name="login" />
-            <PrivateSet
-              unauthenticated="login"
-              {...orgPermission('members.manage')}
-            >
-              <Route
-                path="/org/{orgSlug}/settings"
-                page={SettingsPage}
-                name="settings"
-              />
-            </PrivateSet>
-          </Router>
-        )
-
-        act(() => navigate('/org/acme/settings'))
-        expect(() => render(<TestRouter />)).toThrow(
-          'A PrivateSet with `orgPermission` needs `tenancy` on the Router',
-        )
-      })
-
       test('waits for auth to load when useOrg finds no organization', async () => {
         const noOrgTenancy = { ...tenancyFor({}), useOrg: () => null }
         const App = ({ loading }: { loading: boolean }) => (
@@ -2029,7 +2101,7 @@ describe('PrivateSet role checks', () => {
             <PrivateSet
               unauthenticated="login"
               whileLoadingAuth={() => <p>Loading auth</p>}
-              {...orgPermission('settings.manage')}
+              {...permission('settings.manage')}
             >
               <Route
                 path="/org/{orgSlug}/settings"
@@ -2060,7 +2132,7 @@ describe('PrivateSet role checks', () => {
             <Route path="/login" page={LoginPage} name="login" />
             <PrivateSet
               unauthenticated="login"
-              {...orgPermission('settings.manage')}
+              {...permission('settings.manage')}
             >
               <Route path="/settings" page={SettingsPage} name="settings" />
             </PrivateSet>
@@ -2083,7 +2155,7 @@ describe('PrivateSet role checks', () => {
             })}
           >
             <Route path="/login" page={LoginPage} name="login" />
-            <PrivateSet unauthenticated="login" {...orgPermission('a.b')}>
+            <PrivateSet unauthenticated="login" {...permission('a.b')}>
               <Route
                 path="/org/{orgSlug}/settings"
                 page={SettingsPage}
@@ -2113,7 +2185,7 @@ describe('PrivateSet role checks', () => {
             <Route path="/login" page={LoginPage} name="login" />
             <PrivateSet
               unauthenticated="login"
-              {...orgPermission('settings.manage')}
+              {...permission('settings.manage')}
             >
               <Route
                 path="/org/{orgSlug}/settings"

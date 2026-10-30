@@ -54,8 +54,7 @@ export async function buildRouteManifest() {
       unauthenticated: route.unauthenticated,
       roles: route.roles,
       unauthorized: route.unauthorized,
-      userRoles: route.userRoles,
-      orgPermission: route.orgPermission,
+      permission: route.permission,
       pageIdentifier: route.pageIdentifier,
     }
 

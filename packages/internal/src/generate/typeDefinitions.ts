@@ -430,8 +430,8 @@ export const generateTypeDefGqlorm = () => {
 /**
  * The permission names for `useAuth().hasPermission()`, from the app's
  * permission definitions: `packages/permissions`, when it's the package
- * `cedar setup tenancy` makes (it depends on `@cedarjs/tenancy`). None
- * otherwise, and a stale file goes.
+ * `cedar setup permissions` or `cedar setup tenancy` makes (it depends on
+ * `@cedarjs/permissions`). None otherwise, and a stale file goes.
  */
 export const generateTypeDefPermissions = () => {
   const paths = getPaths()
@@ -456,7 +456,7 @@ export const generateTypeDefPermissions = () => {
 
   if (
     typeof packageJson.name !== 'string' ||
-    !packageJson.dependencies?.['@cedarjs/tenancy']
+    !packageJson.dependencies?.['@cedarjs/permissions']
   ) {
     fs.rmSync(typeDefPath, { force: true })
     return []
@@ -506,9 +506,8 @@ export const generateTypeDefRealtime = () => {
 
 /**
  * Marks `@cedarjs/auth`'s `AuthTenancy` as enabled when the web side depends
- * on `@cedarjs/tenancy` (`cedar setup tenancy` adds it), which takes
- * `useAuth().hasRole` and `<PrivateSet roles>` away from the app's types.
- * None otherwise, and a stale file goes.
+ * on `@cedarjs/tenancy` (`cedar setup tenancy` adds it), which gives the
+ * Router `tenancy` in the app's types. None otherwise, and a stale file goes.
  */
 export const generateTypeDefTenancy = () => {
   const paths = getPaths()

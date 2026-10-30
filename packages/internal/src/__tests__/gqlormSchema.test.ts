@@ -1508,35 +1508,6 @@ describe('generateGqlormBackendContent', () => {
     expect(content).toContain("where['orgId'] = { in: organizationIds }")
     expect(content).toContain('orgMember: {')
   })
-  it('uses @requireUserAuth when tenancy replaced @requireAuth', () => {
-    const config: GqlormBackendConfig = {
-      membershipModel: 'Membership',
-      membershipModelCamel: 'membership',
-      membershipUserField: 'userId',
-      membershipOrganizationField: 'organizationId',
-      membershipModelExists: true,
-      tenancyAuthDirectives: true,
-    }
-
-    const content = generateGqlormBackendContent(
-      [
-        {
-          modelName: 'Project',
-          camelName: 'project',
-          pluralName: 'projects',
-          fields: [
-            backendField('id', 'Int', true, true),
-            backendField('organizationId', 'String', true),
-          ],
-          idField: backendField('id', 'Int', true, true),
-        },
-      ],
-      config,
-    )
-
-    expect(content).toContain('projects: [Project!]! @requireUserAuth')
-    expect(content).not.toContain('@requireAuth')
-  })
 })
 
 describe('generateGqlormBackendContent — org scoping notice', () => {

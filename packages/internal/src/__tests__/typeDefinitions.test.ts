@@ -265,7 +265,7 @@ test('generates permission types from the permissions package', () => {
     path.join(projectDir, 'packages', 'permissions', 'package.json'),
     JSON.stringify({
       name: '@my-org/permissions',
-      dependencies: { '@cedarjs/tenancy': '1.0.0' },
+      dependencies: { '@cedarjs/permissions': '1.0.0' },
     }),
   )
 
@@ -281,7 +281,7 @@ test('generates permission types from the permissions package', () => {
       "import type { Permission } from '@my-org/permissions'",
     )
 
-    // Without @cedarjs/tenancy it's some other package, and the file goes
+    // Without @cedarjs/permissions it's some other package, and the file goes
     fs.writeFileSync(
       path.join(projectDir, 'packages', 'permissions', 'package.json'),
       JSON.stringify({ name: '@my-org/permissions' }),
