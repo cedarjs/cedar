@@ -64,9 +64,7 @@ declare global {
 // In an app with permissions (`cedar setup permissions`), a mocked user with
 // `roles` gets the `permissions` the app's definitions give them, as
 // `getCurrentUser` does
-beforeAll(async () => {
-  setMockPermissionDefinitions(await loadAppPermissions(getPaths().api.base))
-})
+setMockPermissionDefinitions(await loadAppPermissions(getPaths().api.base))
 
 globalThis.mockCurrentUser = (currentUser: Partial<CurrentUser>) => {
   mockContextStore.set('context', {
