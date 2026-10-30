@@ -11,7 +11,7 @@ import { getPrettierOptions } from '@cedarjs/cli-helpers/fileHelpers'
 import { addApiPackages } from '@cedarjs/cli-helpers/installHelpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
-import { getSchemaPath } from '@cedarjs/project-config'
+import { getPrismaSchemas } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
@@ -170,11 +170,11 @@ export const handler = async ({ force }: { force: boolean }) => {
           let userHasRoles = false
 
           try {
+            // Every schema file, as the schema may be a folder of them
+            const { schemas } = await getPrismaSchemas()
+
             userHasRoles = userModelHasRoles(
-              fs.readFileSync(
-                await getSchemaPath(paths.api.prismaConfig),
-                'utf-8',
-              ),
+              schemas.map(([, schema]) => schema).join('\n'),
             )
           } catch {
             // No Prisma schema, so nothing to select roles from
