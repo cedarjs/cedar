@@ -146,10 +146,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ahasend/sdk@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@ahasend/sdk@npm:0.4.0"
-  checksum: 10c0/4624557990e70df3c47827518c777e0f0ca6f5995486dd5fa4069732f5a5b6648837515255d93171d4f35d2f149c207e6f95905619dae10c5011a3fc9beeb623
+"@ahasend/sdk@npm:0.5.0":
+  version: 0.5.0
+  resolution: "@ahasend/sdk@npm:0.5.0"
+  checksum: 10c0/7136c96a7d694e067dd19da58b8f38065722f165cf1b7493e9ea62535bf60dcccb80ba5c731e1fbd21cbd188b025e989e5be2cf8fa23b4110407e959c8a515a9
   languageName: node
   linkType: hard
 
@@ -3415,7 +3415,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@cedarjs/mailer-handler-ahasend@workspace:packages/mailer/handlers/ahasend"
   dependencies:
-    "@ahasend/sdk": "npm:0.4.0"
+    "@ahasend/sdk": "npm:0.5.0"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/mailer-core": "workspace:*"
     typescript: "npm:5.9.3"
