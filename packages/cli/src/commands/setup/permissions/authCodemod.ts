@@ -77,26 +77,47 @@ function isNothing(node: unknown) {
   )
 }
 
+/** A Prisma call such as `db.user.findUnique(...)`, which returns a promise */
+function isDbCall(node: unknown) {
+  return (
+    j.CallExpression.check(node) &&
+    j.MemberExpression.check(node.callee) &&
+    j.MemberExpression.check(node.callee.object) &&
+    j.Identifier.check(node.callee.object.object) &&
+    node.callee.object.object.name === 'db'
+  )
+}
+
 /**
  * `node`, as `getCurrentUser` returns it, passed through `withPermissions`.
- * A lookup that isn't awaited is a promise: it's awaited in an async
- * function, and gets `.then(withPermissions)` otherwise.
+ * Anything but an object literal may be a promise (a lookup, or a variable
+ * holding one), so an async function awaits it, and any other function
+ * resolves it first: `withPermissions` needs the user, not a promise of one.
  */
 function wrap(
   node: NonNullable<Parameters<typeof j.awaitExpression>[0]>,
   isAsync: boolean,
 ) {
-  if (j.CallExpression.check(node)) {
-    return isAsync
-      ? j.callExpression(j.identifier('withPermissions'), [
-          j.awaitExpression(node),
-        ])
-      : j.callExpression(j.memberExpression(node, j.identifier('then')), [
-          j.identifier('withPermissions'),
-        ])
+  const withPermissions = j.identifier('withPermissions')
+
+  if (j.ObjectExpression.check(node) || j.AwaitExpression.check(node)) {
+    return j.callExpression(withPermissions, [node])
   }
 
-  return j.callExpression(j.identifier('withPermissions'), [node])
+  if (isAsync) {
+    return j.callExpression(withPermissions, [j.awaitExpression(node)])
+  }
+
+  const promise = isDbCall(node)
+    ? node
+    : j.callExpression(
+        j.memberExpression(j.identifier('Promise'), j.identifier('resolve')),
+        [node],
+      )
+
+  return j.callExpression(j.memberExpression(promise, j.identifier('then')), [
+    withPermissions,
+  ])
 }
 
 /**

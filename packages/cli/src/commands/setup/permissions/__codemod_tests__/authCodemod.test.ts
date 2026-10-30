@@ -54,6 +54,43 @@ describe('permissions authCodemod', () => {
     },
   )
 
+  it('awaits a returned variable that may hold a lookup', async () => {
+    const { error, output } = await runOn(
+      [
+        "import { db } from './db.js'",
+        '',
+        'export const getCurrentUser = async (session) => {',
+        '  const user = db.user.findUnique({ where: { id: session.id } })',
+        '  return user',
+        '}',
+        '',
+      ].join('\n'),
+    )
+
+    expect(error).toBeUndefined()
+    expect(output).toContain('return withPermissions(await user)')
+    expect((await runOn(output)).output).toBe(output)
+  })
+
+  it('resolves what a function that is not async returns', async () => {
+    const { error, output } = await runOn(
+      [
+        "import { db } from './db.js'",
+        '',
+        'export const getCurrentUser = (session) => {',
+        '  return toUser(session)',
+        '}',
+        '',
+      ].join('\n'),
+    )
+
+    expect(error).toBeUndefined()
+    expect(output).toContain(
+      'return Promise.resolve(toUser(session)).then(withPermissions)',
+    )
+    expect((await runOn(output)).output).toBe(output)
+  })
+
   it('selects roles when the User model has them', async () => {
     const { error, output } = await runOn(fixture('defaultAuth.input.ts'), {
       userHasRoles: true,
