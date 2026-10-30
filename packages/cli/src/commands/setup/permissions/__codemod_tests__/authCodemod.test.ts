@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+import { dedent } from 'ts-dedent'
 import { describe, expect, it } from 'vitest'
 
 import { runTransform } from '../../../../lib/runTransform.js'
@@ -56,15 +57,14 @@ describe('permissions authCodemod', () => {
 
   it('awaits a returned variable that may hold a lookup', async () => {
     const { error, output } = await runOn(
-      [
-        "import { db } from './db.js'",
-        '',
-        'export const getCurrentUser = async (session) => {',
-        '  const user = db.user.findUnique({ where: { id: session.id } })',
-        '  return user',
-        '}',
-        '',
-      ].join('\n'),
+      dedent`
+        import { db } from './db.js'
+
+        export const getCurrentUser = async (session) => {
+          const user = db.user.findUnique({ where: { id: session.id } })
+          return user
+        }
+      `,
     )
 
     expect(error).toBeUndefined()
@@ -74,14 +74,13 @@ describe('permissions authCodemod', () => {
 
   it('resolves what a function that is not async returns', async () => {
     const { error, output } = await runOn(
-      [
-        "import { db } from './db.js'",
-        '',
-        'export const getCurrentUser = (session) => {',
-        '  return toUser(session)',
-        '}',
-        '',
-      ].join('\n'),
+      dedent`
+        import { db } from './db.js'
+
+        export const getCurrentUser = (session) => {
+          return toUser(session)
+        }
+      `,
     )
 
     expect(error).toBeUndefined()
@@ -136,14 +135,13 @@ describe('permissions authCodemod', () => {
 
   it('awaits a lookup that is returned without await', async () => {
     const { output } = await runOn(
-      [
-        "import { db } from 'src/lib/db'",
-        '',
-        'export const getCurrentUser = async (session) => {',
-        '  return db.user.findUnique({ where: { id: session.id } })',
-        '}',
-        '',
-      ].join('\n'),
+      dedent`
+        import { db } from 'src/lib/db'
+
+        export const getCurrentUser = async (session) => {
+          return db.user.findUnique({ where: { id: session.id } })
+        }
+      `,
     )
 
     expect(output).toContain(
@@ -156,12 +154,11 @@ describe('permissions authCodemod', () => {
 
   it('uses then() in a function that is not async', async () => {
     const { output } = await runOn(
-      [
-        'export function getCurrentUser(session) {',
-        '  return db.user.findUnique({ where: { id: session.id } })',
-        '}',
-        '',
-      ].join('\n'),
+      dedent`
+        export function getCurrentUser(session) {
+          return db.user.findUnique({ where: { id: session.id } })
+        }
+      `,
     )
 
     expect(output).toContain(

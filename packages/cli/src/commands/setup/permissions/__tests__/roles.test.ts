@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+import { dedent } from 'ts-dedent'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -13,7 +14,7 @@ import {
 
 describe('rolesInSource', () => {
   it('finds the roles of SDL role lists', () => {
-    const sdl = `
+    const sdl = dedent`
       type Query {
         posts: [Post!]! @requireAuth(roles: ["admin", "editor"])
         post(id: Int!): Post @requireAuth(roles: "reader")
@@ -28,7 +29,7 @@ describe('rolesInSource', () => {
   })
 
   it('finds requireAuth and hasRole roles', () => {
-    const source = `
+    const source = dedent`
       requireAuth({ roles: ['admin'] })
       requireAuth({ roles: "moderator" })
       if (hasRole('editor') || hasRole(["author", 'reviewer'])) {}
@@ -44,7 +45,7 @@ describe('rolesInSource', () => {
   })
 
   it('finds the roles of PrivateSet and Private', () => {
-    const routes = `
+    const routes = dedent`
       <PrivateSet unauthenticated="login" roles="admin">
       <PrivateSet unauthenticated="login" roles={['editor', "author"]}>
       <Private unauthenticated="login" roles={"owner"}>
@@ -59,7 +60,7 @@ describe('rolesInSource', () => {
   })
 
   it('skips roles that are not string literals', () => {
-    const source = `
+    const source = dedent`
       export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
         if (roles && !hasRole(roles)) {}
         if (typeof roles === 'string') {}
@@ -139,21 +140,21 @@ describe('permissionsIndexSource', () => {
 
 describe('userModelHasRoles', () => {
   it('is whether the User model has a roles field', () => {
-    const schema = (userFields: string) => `
-model Post {
-  id    Int      @id
-  roles String
-}
+    const schema = (userField: string) => dedent`
+      model Post {
+        id    Int      @id
+        roles String
+      }
 
-model User {
-  id    String @id
-${userFields}
-}
-`
+      model User {
+        id    String @id
+        ${userField}
+      }
+    `
 
-    expect(userModelHasRoles(schema('  roles String?'))).toBe(true)
-    expect(userModelHasRoles(schema('  roles Role[]'))).toBe(true)
-    expect(userModelHasRoles(schema('  email String'))).toBe(false)
+    expect(userModelHasRoles(schema('roles String?'))).toBe(true)
+    expect(userModelHasRoles(schema('roles Role[]'))).toBe(true)
+    expect(userModelHasRoles(schema('email String'))).toBe(false)
     expect(userModelHasRoles('model UserExample {\n  roles String\n}\n')).toBe(
       false,
     )
