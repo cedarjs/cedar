@@ -12315,11 +12315,11 @@ __metadata:
   linkType: hard
 
 "@types/mjml@npm:5":
-  version: 5.4.1
-  resolution: "@types/mjml@npm:5.4.1"
+  version: 5.4.2
+  resolution: "@types/mjml@npm:5.4.2"
   dependencies:
     "@types/mjml-core": "npm:~5.1"
-  checksum: 10c0/d3da3c574589fd11313839bcba8325bd0105a1eecb72672bc9e55559874caf34d4f4f08e7ac066cd7c27babb9f7b8f49a4d2b6c01eba63873eb508e9ba84b384
+  checksum: 10c0/8a515735cfe1a3d1d568d7df04871a9bb15e6322b658b2c104ca913b0d7837cb174b00e00154d9a7274a30183d99fe546ccf49356ed26328c415f0e59ed28ee9
   languageName: node
   linkType: hard
 
