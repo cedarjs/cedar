@@ -180,7 +180,8 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
 
     writtenFiles.push(outputPath)
 
-    return writeFile(outputPath, content, { overwriteExisting: force })
+    // Only an existing file `replaces` picked, or any with --force, is here
+    return writeFile(outputPath, content, { overwriteExisting: true })
   }
 
   const tasks = new Listr<TenancyCtx>(

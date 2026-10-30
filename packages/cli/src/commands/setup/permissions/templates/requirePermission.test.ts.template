@@ -26,7 +26,7 @@ describe('requirePermission directive', () => {
 
   it('throws for a permission that packages/permissions does not define', () => {
     const mockExecution = mockRedwoodDirective(requirePermission, {
-      context: { currentUser: { id: 1, roles: Object.keys(permissions.roles) } },
+      context: { currentUser: {} },
       directiveArgs: { permission: 'not.defined' },
     })
 
@@ -34,9 +34,9 @@ describe('requirePermission directive', () => {
   })
 
   if (granted) {
-    it("throws when none of the user's roles has it", () => {
+    it('throws for a user without roles', () => {
       const mockExecution = mockRedwoodDirective(requirePermission, {
-        context: { currentUser: { id: 1, roles: [] } },
+        context: { currentUser: {} },
         directiveArgs: { permission: granted.permission },
       })
 
@@ -45,7 +45,8 @@ describe('requirePermission directive', () => {
 
     it("passes when one of the user's roles has it", () => {
       const mockExecution = mockRedwoodDirective(requirePermission, {
-        context: { currentUser: { id: 1, roles: [granted.role] } },
+        // One role, as a string. A list of roles works too.
+        context: { currentUser: { roles: granted.role } },
         directiveArgs: { permission: granted.permission },
       })
 

@@ -193,7 +193,9 @@ permissions come from: their role in the current organization instead of
 `currentUser.roles`. It keeps the map and the `@requirePermission` directive,
 and replaces `api/src/lib/permissions` with the membership-based one, so
 `@requirePermission` fields, `hasPermission` calls and `<PrivateSet permission>`
-sets check the same names.
+sets check the same names, in the current organization. A request needs an
+organization for them, and a `<PrivateSet permission>` route an `{orgSlug}`
+(see [tenancy on the Router](tenancy.md#tenancy-on-the-router)).
 
 The map's roles are then roles in an organization. Its next steps list the
 permissions the generated organizations service checks (`organization.read`,
