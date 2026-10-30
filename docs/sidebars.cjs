@@ -212,6 +212,7 @@ module.exports = {
           },
           items: [{ type: 'doc', label: 'Sentry', id: 'monitoring/sentry' }],
         },
+        'permissions',
         'prerender',
         'project-configuration-dev-test-build',
         'redwoodrecord',

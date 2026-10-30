@@ -3823,6 +3823,7 @@ __metadata:
     "@cedarjs/context": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
+    "@cedarjs/permissions": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"

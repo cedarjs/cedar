@@ -26,6 +26,7 @@ import * as setupMonitoring from './setup/monitoring/monitoring.js'
 import * as setupNeon from './setup/neon/neon.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupPackage from './setup/package/package.js'
+import * as setupPermissions from './setup/permissions/permissions.js'
 // @ts-expect-error - Types not available for JS files
 import * as setupRealtime from './setup/realtime/realtime.js'
 // @ts-expect-error - Types not available for JS files
@@ -56,6 +57,8 @@ export const builder = (yargs: Argv) =>
     .command(setupMonitoring)
     .command(setupNeon)
     .command(setupPackage)
+    // @ts-expect-error - Yargs TS types aren't very good
+    .command(setupPermissions)
     .command(setupRealtime)
     .command(setupServerFile)
     // @ts-expect-error - Yargs TS types aren't very good

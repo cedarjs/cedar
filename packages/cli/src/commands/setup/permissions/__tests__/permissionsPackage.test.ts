@@ -96,7 +96,7 @@ describe('enablePackagesWorkspace', () => {
         [experimental]
           packagesWorkspace.enabled = false
       `),
-    ).toThrow('CEDAR_TENANCY_ERR_PACKAGES_WORKSPACE')
+    ).toThrow('CEDAR_PERMISSIONS_ERR_PACKAGES_WORKSPACE')
   })
 })
 

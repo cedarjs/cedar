@@ -8,21 +8,26 @@ import { requirePermission as applicationRequirePermission } from 'src/lib/permi
 
 export const schema = gql`
   """
-  Use to check that the signed-in user may do something: that their role in
-  the current organization has the permission (see packages/permissions).
+  Use to check that the signed-in user may do something: that they have the
+  permission (see packages/permissions and api/src/lib/permissions).
   """
   directive @requirePermission(permission: String!) on FIELD_DEFINITION
 `
 
-// Optional to fit `ValidatorDirectiveFunc`; the SDL makes it required
+// Optional to fit `ValidatorDirectiveFunc`; the SDL makes it required. Any
+// name can reach it from an SDL, which `requirePermission` checks.
 type RequirePermissionValidate = ValidatorDirectiveFunc<{
-  permission?: string
+  permission?: Permission
 }>
 
 const validate: RequirePermissionValidate = ({ directiveArgs }) => {
+  if (directiveArgs.permission === undefined) {
+    throw new Error('@requirePermission needs a `permission`')
+  }
+
   // A name the permissions map doesn't know throws, so a typo in the SDL is
   // an error rather than a field nobody can use
-  applicationRequirePermission(directiveArgs.permission as Permission)
+  applicationRequirePermission(directiveArgs.permission)
 }
 
 const requirePermission = createValidatorDirective(schema, validate)

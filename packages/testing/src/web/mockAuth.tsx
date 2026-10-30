@@ -5,6 +5,7 @@ import React from 'react'
 export * from '@cedarjs/auth'
 
 import { HasPermissionContext } from '@cedarjs/auth'
+import { currentUserHasPermission } from '@cedarjs/auth/currentUserHasPermission'
 import { currentUserHasRole } from '@cedarjs/auth/currentUserHasRole'
 
 import { mockedUserMeta } from './mockRequests.js'
@@ -20,7 +21,8 @@ const AuthProvider: React.FC<Props> = ({ children }) => {
 // When running tests, this is what they'll get when they import `useAuth`
 // thanks to the router import transform in the Vitest setup. Like the real
 // `useAuth`, `hasPermission` comes from a scope above when one provides it
-// (the organization provider from `@cedarjs/tenancy/web` does).
+// (the organization provider from `@cedarjs/tenancy/web` does), and checks
+// `currentUser.permissions` otherwise.
 export function useAuth() {
   const scopedHasPermission = React.useContext(HasPermissionContext)
   return {
@@ -35,7 +37,10 @@ export function useAuth() {
     getCurrentUser: async () => mockedUserMeta.currentUser,
     hasRole: (roles: string | string[]) =>
       currentUserHasRole(mockedUserMeta.currentUser, roles),
-    hasPermission: scopedHasPermission ?? (() => false),
+    hasPermission:
+      scopedHasPermission ??
+      ((permission: string) =>
+        currentUserHasPermission(mockedUserMeta.currentUser, permission)),
     reauthenticate: async () => {},
     forgotPassword: async () => {},
     resetPassword: async () => {},

@@ -1,9 +1,11 @@
 # @cedarjs/permissions
 
 Permissions for a Cedar app: who may do what, defined in one place. A role is a
-named bundle of permissions. Fields, services and components check a permission,
-never a role, so a role can do exactly what its list says, and a field added
-later is closed to it unless its permission is on the list.
+named bundle of permissions.
+
+Fields, services and components check a permission, never a role. So a role can
+do exactly what its list says. A field added later is closed to a role until its
+permission is on that role's list.
 
 `yarn cedar setup permissions` sets this up. In an app with tenancy
 (`yarn cedar setup tenancy`), `@cedarjs/tenancy` checks the same definitions

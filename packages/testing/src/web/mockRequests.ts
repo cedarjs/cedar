@@ -5,6 +5,8 @@ import type { StartOptions as StartMSWWorkerOptions } from 'msw/browser'
 
 import type { CurrentUser } from '@cedarjs/auth'
 
+import { withMockPermissions } from '../permissions/mockPermissions.js'
+
 // The APIs returned by `setupWorker()` (msw/browser) and `setupServer()`
 // (msw/node) resolve to ESM- or CJS-flavored type declarations depending on
 // which build of this package is being produced, and the two declaration sets
@@ -319,13 +321,19 @@ export const mockedUserMeta: { currentUser: CurrentUser } = {
   currentUser: null,
 }
 
-/** A mocked user only needs the fields the test uses */
+/**
+ * A mocked user only needs the fields the test uses. In an app with
+ * permissions (`cedar setup permissions`), a user with `roles` gets the
+ * `permissions` the app's definitions give them, as `getCurrentUser` does.
+ */
 export const mockCurrentUser = (user: Partial<CurrentUser>) => {
-  mockedUserMeta.currentUser = user
+  const currentUser = withMockPermissions(user)
+
+  mockedUserMeta.currentUser = currentUser
   mockGraphQLQuery('__CEDAR__AUTH_GET_CURRENT_USER', () => {
     return {
       cedar: {
-        currentUser: user,
+        currentUser,
       },
     }
   })
