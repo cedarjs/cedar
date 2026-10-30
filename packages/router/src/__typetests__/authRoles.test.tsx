@@ -15,10 +15,6 @@ test('useAuth().hasRole checks currentUser.roles', () => {
   expect(useAuth().hasRole).type.toBeCallableWith(['admin', 'editor'])
 })
 
-test('useAuth() has no hasUserRole', () => {
-  expect(useAuth()).type.not.toHaveProperty('hasUserRole')
-})
-
 test("Router takes the app's useAuth", () => {
   expect(<Router useAuth={useAuth}>{null}</Router>).type.not.toRaiseError()
 })
@@ -49,13 +45,7 @@ test('PrivateSet takes unauthorized', () => {
   ).type.not.toRaiseError()
 })
 
-test('PrivateSet has no userRoles or orgPermission', () => {
-  expect(
-    <PrivateSet unauthenticated="login" userRoles="admin">
-      {null}
-    </PrivateSet>,
-  ).type.toRaiseError("Property 'userRoles' does not exist")
-
+test('PrivateSet has no orgPermission', () => {
   expect(
     <PrivateSet unauthenticated="login" orgPermission="members.manage">
       {null}

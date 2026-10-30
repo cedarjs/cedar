@@ -192,15 +192,12 @@ no-op, `--force` or not.
 | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `api/db/schema.prisma`                                                                         | Adds `Organization` and `Membership`, adds `memberships Membership[]` to `User`, adds `RW_DataMigration` if `data-migrate install` has not run yet |
 | `api/src/lib/db.ts`                                                                            | Wraps `db` in `createTenancyExtension`                                                                                                             |
-| `api/src/lib/auth.ts`                                                                          | Adds `memberships` to the `getCurrentUser()` select, replaces `hasRole` / `requireAuth` with `createTenancyAuth`                                   |
+| `api/src/lib/auth.ts`                                                                          | Adds `memberships` to the `getCurrentUser()` select, and wraps it in `withPermissions`                                                             |
 | `api/src/functions/graphql.ts`                                                                 | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
 | `api/src/functions/auth.ts`                                                                    | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
-| `api/src/directives/`                                                                          | Replaces `@requireAuth` with `@requireUserAuth`                                                                                                    |
-| `api/src/graphql/`, other `api/src/` files                                                     | Renames `@requireAuth` and `requireAuth()` to `@requireUserAuth` and `requireUserAuth()`                                                           |
 | `packages/permissions/`, `api/src/lib/permissions.ts`, `api/src/directives/requirePermission/` | Generates the permissions map, the checks and the `@requirePermission` directive                                                                   |
 | `api/src/services/organizations/`                                                              | Generates the organizations service and SDL                                                                                                        |
 | `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts`                            | Backfills memberships for existing users                                                                                                           |
-| `web/src/` files                                                                               | Renames `hasRole` from `useAuth()` to `hasUserRole`                                                                                                |
 | `web/src/Routes.tsx`                                                                           | Passes `tenancy` to the `<Router>`                                                                                                                 |
 | `web/src/tenancy.tsx`                                                                          | Generates the app's `tenancy` for the `<Router>`                                                                                                   |
 | `web/src/pages/InvitePage/InvitePage.tsx`                                                      | Generates the invitation landing page                                                                                                              |
@@ -224,12 +221,16 @@ as `@cedarjs/storage`'s):
 +)
 ```
 
-`auth.ts` gains `memberships` in the `getCurrentUser()` select, and its
-single-tenant `hasRole` and `requireAuth` are replaced with the tenancy ones:
+`auth.ts` gains `memberships` in the `getCurrentUser()` select, wrapped in
+`withPermissions` so each membership carries its permissions:
 
 ```diff title="api/src/lib/auth.ts"
++import { withPermissions } from 'src/lib/permissions'
+
  export const getCurrentUser = async (session) => {
-   return db.user.findUnique({
+-  return db.user.findUnique({
++  return withPermissions(
++    await db.user.findUnique({
      where: { id: session.id },
 -    select: { id: true, email: true, roles: true },
 +    select: {
@@ -245,40 +246,29 @@ single-tenant `hasRole` and `requireAuth` are replaced with the tenancy ones:
 +        },
 +      },
 +    },
-   })
+-  })
++    }),
++  )
  }
-
--export const hasRole = (roles: AllowedRoles): boolean => {
--  // ...checks currentUser.roles
--}
--
--export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
--  // ...
--}
-+export const { hasUserRole, requireUserAuth } = createTenancyAuth()
 ```
 
-There's no `requireAuth` any more. `requireUserAuth` (and `@requireUserAuth`)
-is about the signed-in user rather than an organization, as the generated
-`myMemberships`, `createOrganization` and `acceptInvitation` are: it needs a
-signed-in user, and checks `roles` against `currentUser.roles`, as
-`requireAuth` did. Fields about the current organization ask for a
+`requireAuth` (and `@requireAuth`) is about the signed-in user rather than an
+organization, as the generated `myMemberships`, `createOrganization` and
+`acceptInvitation` are: it needs a signed-in user, and checks `roles` against
+`currentUser.roles`, as it did before. Fields about the current organization ask for a
 [permission](#permissions) instead, with `@requirePermission` and
 `requirePermission()` from `src/lib/permissions`: they need a current
 organization, and check what the user's role there may do. Fields any member
 may use ask for `organization.read`, which every role lists.
 
 Before tenancy there are no organizations, so every field your app already has
-is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and
-each `requireAuth()` and `hasRole()` from `src/lib/auth` to `requireUserAuth()`
-and `hasUserRole()`. On the web, it renames `hasRole` from `useAuth()` to
-`hasUserRole`. Your app works as it did. When you give a model an
+is about the user, and `@requireAuth`, `requireAuth()` and `hasRole()` check
+the user's own roles in `currentUser.roles`. When you give a model an
 `organizationId`, switch its fields to
 `@requirePermission(permission: "organization.read")`, or a permission of its
 own. `cedar generate sdl` and `cedar generate scaffold` write
 `@requirePermission(permission: "organization.read")` for a model that belongs
-to an organization and `@requireUserAuth` for one that doesn't, and a leftover
-`@requireAuth` is an unknown directive, so it fails when the schema is built.
+to an organization and `@requireAuth` for one that doesn't.
 
 With tenancy, `getCurrentUser` shouldn't copy a membership's role into
 `currentUser.roles`: `requirePermission` and `hasPermission` get the role from
@@ -601,7 +591,7 @@ type Invitation {
 }
 
 type Query {
-  myMemberships: [Membership!]! @requireUserAuth
+  myMemberships: [Membership!]! @requireAuth
   organization(id: String!): Organization
     @requirePermission(permission: "organization.read")
 }
@@ -620,14 +610,14 @@ type Mutation {
   # Web callers must call `reauthenticate()` in `onCompleted`; this mutation
   # changes the memberships that the currentUser snapshot on the web holds.
   createOrganization(input: CreateOrganizationInput!): Organization!
-    @requireUserAuth
+    @requireAuth
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   inviteMember(input: InviteMemberInput!): Invitation!
     @requirePermission(permission: "members.manage")
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
-  acceptInvitation(token: String!): Organization! @requireUserAuth
+  acceptInvitation(token: String!): Organization! @requireAuth
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   removeMember(membershipId: String!): Membership!
@@ -709,12 +699,11 @@ two concurrent accepts of the same token can never both win, and it spends the
 token in that same write so it can't be replayed by anyone who observed it
 beforehand.
 
-### `@requireUserAuth` and `@requirePermission`
+### `@requireAuth` and `@requirePermission`
 
-The setup command replaces your app's `@requireAuth` directive with
-`@requireUserAuth`, which passes its `roles` on to `requireUserAuth()` in
-`src/lib/auth`, and adds `@requirePermission`, which passes its permission on
-to `requirePermission()` in `src/lib/permissions`:
+`@requireAuth` passes its `roles` on to `requireAuth()` in `src/lib/auth`, and
+the setup command adds `@requirePermission`, which passes its permission on to `requirePermission()` in
+`src/lib/permissions`:
 
 ```ts title="api/src/directives/requirePermission/requirePermission.ts"
 export const schema = gql`
@@ -729,10 +718,8 @@ const validate = ({ directiveArgs }) => {
 Both throw `AuthenticationError` when there's no `context.currentUser`.
 `requirePermission()` throws `ForbiddenError` when there's no
 `context.currentOrg` or the user's role in it doesn't have the permission.
-`requireUserAuth()` throws `ForbiddenError` when `roles` are given and
-`currentUser.roles` has none of them. These are the error types `requireAuth`
-always threw, so any error handling you already have on the web side keeps
-working.
+`requireAuth()` throws `ForbiddenError` when `roles` are given and
+`currentUser.roles` has none of them.
 
 ### Permissions
 
@@ -894,13 +881,11 @@ Here `projects.edit` is a permission the app added to its definitions.
 `useCurrentOrg().memberships` gives every membership with its `permissions`,
 which is how you'd show a switcher entry as disabled for an organization where
 the user may not do something, without navigating there first. To show the
-user's role, read `org.role`. For `currentUser.roles`, use
-`useAuth().hasUserRole`.
-With tenancy there's no `useAuth().hasRole`: setup renames your existing uses
-to `hasUserRole`, and using it is a type error.
+user's role in the organization, read `org.role`. `useAuth().hasRole` and
+`<PrivateSet roles>` check the user's own roles, in `currentUser.roles`, as
+without tenancy. A check in an organization uses a permission.
 
-`<PrivateSet roles>` isn't available with tenancy either. For a page only
-some members may open, give its `PrivateSet` `orgPermission` and
+For a page only some members may open, give its `PrivateSet` `orgPermission` and
 `unauthorized` (see
 [Guarding routes by permission](../tenancy.md#guarding-routes-by-permission)):
 

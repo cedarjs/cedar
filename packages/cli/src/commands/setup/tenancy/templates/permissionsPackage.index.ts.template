@@ -16,7 +16,7 @@ import type { PermissionName } from '@cedarjs/tenancy/permissions'
  *
  * `roles` are per organization: a membership's role decides what the user
  * may do in that organization. Fields about the user rather than an
- * organization (their own account, say) use `@requireUserAuth` instead.
+ * organization (their own account, say) use `@requireAuth` instead.
  *
  * This package is shared: the api checks these permissions
  * (api/src/lib/permissions), and the web can import the names. The web gets each

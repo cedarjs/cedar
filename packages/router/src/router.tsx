@@ -239,7 +239,6 @@ interface WrappedPageProps {
       unauthenticated?: string
       unauthorized?: string
       roles?: string | string[]
-      userRoles?: string | string[]
       orgPermission?: string
       whileLoadingAuth?: () => ReactElement | null
     }
@@ -290,7 +289,6 @@ const WrappedPage = memo(({ sets, children }: WrappedPageProps) => {
           unauthenticated={unauthenticated}
           unauthorized={set.props.unauthorized}
           roles={set.props.roles}
-          userRoles={set.props.userRoles}
           orgPermission={set.props.orgPermission}
           whileLoadingAuth={set.props.whileLoadingAuth}
         >

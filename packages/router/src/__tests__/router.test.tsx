@@ -62,7 +62,6 @@ function createDummyAuthContextValues(
     getToken: async () => null,
     getCurrentUser: async () => null,
     hasRole: () => false,
-    hasUserRole: () => false,
     hasPermission: () => false,
     reauthenticate: async () => {},
     client: null,
@@ -1236,7 +1235,6 @@ describe('PrivateSet role checks', () => {
         loading: false,
         isAuthenticated,
         hasRole,
-        hasUserRole: hasRole,
       })
     }
 
@@ -1324,10 +1322,8 @@ describe('PrivateSet role checks', () => {
   }
 
   // The router's own tests are an app without tenancy, where sets have
-  // `roles` but no `userRoles` or `orgPermission`, and the
-  // Router no `tenancy`. Spreading the props, rather than writing them out,
-  // lets them through the type check.
-  const userRoles = (roles: string | string[]) => ({ userRoles: roles })
+  // no `orgPermission`, and the Router no `tenancy`. Spreading the props,
+  // rather than writing them out, lets them through the type check.
   const orgPermission = (permission: string) => ({ orgPermission: permission })
   const routerTenancy = (tenancy: Tenancy) => ({ tenancy })
 
@@ -1499,44 +1495,6 @@ describe('PrivateSet role checks', () => {
     })
   })
 
-  describe('userRoles', () => {
-    const TestRouter = ({ useAuth }: { useAuth: UseAuth }) => (
-      <Router useAuth={useAuth}>
-        <Route path="/" page={HomePage} name="home" />
-        <Route path="/login" page={LoginPage} name="login" />
-        <Route path="/forbidden" page={ForbiddenPage} name="forbidden" />
-        <PrivateSet
-          unauthenticated="login"
-          unauthorized="forbidden"
-          {...userRoles('admin')}
-        >
-          <Route path="/admin" page={PrivatePage} name="admin" />
-        </PrivateSet>
-      </Router>
-    )
-
-    test('lets a user with the role in currentUser.roles in', async () => {
-      const screen = render(
-        <TestRouter useAuth={useAuthWithRoles({ roles: ['admin'] })} />,
-      )
-
-      act(() => navigate('/admin'))
-
-      await waitFor(() => screen.getByText(/Private Page/i))
-    })
-
-    test('redirects a user without it', async () => {
-      const screen = render(
-        <TestRouter useAuth={useAuthWithRoles({ roles: ['editor'] })} />,
-      )
-
-      act(() => navigate('/admin'))
-
-      await waitFor(() => screen.getByText(/Forbidden Page/i))
-      expect(screen.queryByText(/Private Page/i)).not.toBeInTheDocument()
-    })
-  })
-
   describe('tenancy', () => {
     /** An organization's layout, to see whether a set's wrap renders */
     const OrgLayout = ({ children }: WrapperProps) => {
@@ -1605,7 +1563,7 @@ describe('PrivateSet role checks', () => {
           <PrivateSet
             unauthenticated="login"
             unauthorized="projects"
-            {...userRoles('staff')}
+            roles="staff"
             {...orgPermission('billing.manage')}
           >
             <Route
@@ -1869,7 +1827,7 @@ describe('PrivateSet role checks', () => {
         expect(screen.queryByText(/Settings Page/i)).not.toBeInTheDocument()
       })
 
-      test('with userRoles too, needs both', async () => {
+      test('with roles too, needs both', async () => {
         const ownerOnly = render(
           <TestRouter
             useAuth={useAuthWithRoles({})}

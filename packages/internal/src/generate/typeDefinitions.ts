@@ -506,8 +506,8 @@ export const generateTypeDefRealtime = () => {
 
 /**
  * Marks `@cedarjs/auth`'s `AuthTenancy` as enabled when the web side depends
- * on `@cedarjs/tenancy` (`cedar setup tenancy` adds it), which takes
- * `useAuth().hasRole` and `<PrivateSet roles>` away from the app's types.
+ * on `@cedarjs/tenancy` (`cedar setup tenancy` adds it), which gives the
+ * Router `tenancy` and `<PrivateSet>` `orgPermission` in the app's types.
  * None otherwise, and a stale file goes.
  */
 export const generateTypeDefTenancy = () => {

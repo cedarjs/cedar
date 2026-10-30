@@ -45,7 +45,7 @@ export const schema = gql`
 
   type Query {
     "Every membership belonging to the signed-in user, across all organizations they belong to."
-    myMemberships: [Membership!]! @requireUserAuth
+    myMemberships: [Membership!]! @requireAuth
 
     "The current organization, resolved by resolveCurrentOrg for this request."
     organization(id: String!): Organization
@@ -55,7 +55,7 @@ export const schema = gql`
   type Mutation {
     "Creates a new organization with the caller as its owner."
     createOrganization(input: CreateOrganizationInput!): Organization!
-      @requireUserAuth
+      @requireAuth
 
     """
     Creates a pending membership (an invitation) in the current organization,
@@ -77,7 +77,7 @@ export const schema = gql`
     the new membership is reflected in currentUser.memberships.
     """
     acceptInvitation(token: String!): Organization!
-      @requireUserAuth
+      @requireAuth
 
     """
     Removes a membership from the current organization, for a role the

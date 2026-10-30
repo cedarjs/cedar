@@ -20,12 +20,10 @@ describe('mockAuth useAuth', () => {
 
     expect(result.current.hasRole('admin')).toBe(true)
     expect(result.current.hasRole('owner')).toBe(false)
-    expect(result.current.hasUserRole('admin')).toBe(true)
-    expect(result.current.hasUserRole('owner')).toBe(false)
     expect(result.current.hasPermission('members.manage')).toBe(false)
   })
 
-  it('uses hasPermission from a scope above, and keeps hasUserRole on currentUser.roles', () => {
+  it('uses hasPermission from a scope above, and keeps hasRole on currentUser.roles', () => {
     mockCurrentUser({ id: 1, roles: ['admin'] })
 
     const { result } = renderHook(() => useAuth(), {
@@ -38,8 +36,8 @@ describe('mockAuth useAuth', () => {
       ),
     })
 
-    expect(result.current.hasUserRole('admin')).toBe(true)
-    expect(result.current.hasUserRole('owner')).toBe(false)
+    expect(result.current.hasRole('admin')).toBe(true)
+    expect(result.current.hasRole('owner')).toBe(false)
     expect(result.current.hasPermission('members.manage')).toBe(true)
   })
 })

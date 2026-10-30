@@ -71,13 +71,6 @@ export interface GqlormBackendConfig {
   membershipUserField: string // e.g., "userId"
   membershipOrganizationField: string // e.g., "organizationId"
   membershipModelExists: boolean // whether the model exists in the project DMMF
-  /**
-   * Whether `cedar setup tenancy` replaced `@requireAuth` with
-   * `@requireUserAuth` and `@requirePermission`. Fields then use
-   * `@requireUserAuth`, which checks what `@requireAuth` did: gqlorm does
-   * its own scoping to the user's organizations.
-   */
-  tenancyAuthDirectives?: boolean
 }
 
 const DEFAULT_GQLORM_BACKEND_CONFIG: GqlormBackendConfig = {
@@ -776,10 +769,6 @@ export function generateGqlormBackendContent(
     lines.push('')
   }
 
-  const requireAuthDirective = config.tenancyAuthDirectives
-    ? '@requireUserAuth'
-    : '@requireAuth'
-
   lines.push('  type Query {')
   for (const model of models) {
     const hasUserField = model.fields.some(
@@ -792,7 +781,7 @@ export function generateGqlormBackendContent(
     const needsAuth =
       hasUserField ||
       (hasOrgField && config.membershipModelExists && !isMembershipModel)
-    const authDirective = needsAuth ? requireAuthDirective : '@skipAuth'
+    const authDirective = needsAuth ? '@requireAuth' : '@skipAuth'
     lines.push(
       `    ${model.pluralName}: [${model.modelName}!]! ${authDirective}`,
     )
@@ -818,7 +807,7 @@ export function generateGqlormBackendContent(
       const needsAuth =
         hasUserField ||
         (hasOrgField && config.membershipModelExists && !isMembershipModel)
-      const authDirective = needsAuth ? requireAuthDirective : '@skipAuth'
+      const authDirective = needsAuth ? '@requireAuth' : '@skipAuth'
       const idNullMark = model.idField.isRequired ? '!' : ''
 
       lines.push(
@@ -1381,9 +1370,6 @@ export async function generateGqlormArtifacts(): Promise<{
       membershipUserField,
       membershipOrganizationField,
       membershipModelExists,
-      tenancyAuthDirectives: fs.existsSync(
-        path.join(getPaths().api.directives, 'requireUserAuth'),
-      ),
     }
 
     // Filter out models whose type name already exists in user-authored SDLs
