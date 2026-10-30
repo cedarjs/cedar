@@ -399,10 +399,11 @@ checks ask for.
 ### The definitions
 
 `setup tenancy` generates `packages/permissions`, a package that both sides
-share, or keeps the one [`setup permissions`](permissions.md) generated: the api checks the permissions, and the web can import their names. It
-turns on `experimental.packagesWorkspace` in `cedar.toml` for it, and names the
-package in the scope your other packages use (`@my-org/permissions`), or after
-your app's folder when there are none.
+share, or keeps the one [`setup permissions`](permissions.md) generated: the api
+checks the permissions, and the web can import their names. It turns on
+`experimental.packagesWorkspace` in `cedar.toml` for it, and names the package
+in the scope your other packages use (`@my-org/permissions`), or after your
+app's folder when there are none.
 
 ```ts title="packages/permissions/src/index.ts"
 import { definePermissions } from '@cedarjs/permissions'

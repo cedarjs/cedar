@@ -109,8 +109,8 @@ export const {
 The checks work out the permissions from `currentUser.roles`, on each request.
 They go by the roles alone, so a `permissions` field stored on the user record
 has no effect on them, and neither does the `currentUser.permissions` that
-`withPermissions` adds for the web. Permission names are typed from the map, so a typo in a service is a type error, and a name the
-map doesn't define throws.
+`withPermissions` adds for the web. Permission names are typed from the map, so
+a typo in a service is a type error, and a name the map doesn't define throws.
 
 ```ts title="api/src/services/posts/posts.ts"
 import { db } from 'src/lib/db'
