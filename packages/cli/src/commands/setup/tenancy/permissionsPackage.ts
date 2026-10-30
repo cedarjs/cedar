@@ -150,7 +150,7 @@ export function permissionsPackageFiles({
       watch: 'tsc --watch',
     },
     dependencies: {
-      '@cedarjs/tenancy': cedarVersion,
+      '@cedarjs/permissions': cedarVersion,
     },
     devDependencies: {
       typescript: '5.9.3',

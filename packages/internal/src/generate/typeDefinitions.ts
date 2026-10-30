@@ -430,8 +430,8 @@ export const generateTypeDefGqlorm = () => {
 /**
  * The permission names for `useAuth().hasPermission()`, from the app's
  * permission definitions: `packages/permissions`, when it's the package
- * `cedar setup tenancy` makes (it depends on `@cedarjs/tenancy`). None
- * otherwise, and a stale file goes.
+ * `cedar setup permissions` or `cedar setup tenancy` makes (it depends on
+ * `@cedarjs/permissions`). None otherwise, and a stale file goes.
  */
 export const generateTypeDefPermissions = () => {
   const paths = getPaths()
@@ -456,7 +456,7 @@ export const generateTypeDefPermissions = () => {
 
   if (
     typeof packageJson.name !== 'string' ||
-    !packageJson.dependencies?.['@cedarjs/tenancy']
+    !packageJson.dependencies?.['@cedarjs/permissions']
   ) {
     fs.rmSync(typeDefPath, { force: true })
     return []

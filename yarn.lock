@@ -3523,7 +3523,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cedarjs/permissions@workspace:packages/permissions":
+"@cedarjs/permissions@workspace:*, @cedarjs/permissions@workspace:packages/permissions":
   version: 0.0.0-use.local
   resolution: "@cedarjs/permissions@workspace:packages/permissions"
   dependencies:
@@ -3766,6 +3766,7 @@ __metadata:
     "@cedarjs/context": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/graphql-server": "workspace:*"
+    "@cedarjs/permissions": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
     "@prisma/adapter-better-sqlite3": "npm:7.10.1"

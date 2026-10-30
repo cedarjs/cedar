@@ -85,14 +85,15 @@ organization: fields about an organization ask for a permission (below).
 ## Permissions
 
 Roles in an organization are named bundles of permissions, defined in one
-place. Fields, services and components check a permission in an
+place with `definePermissions` from
+`@cedarjs/permissions`. Fields, services and components check a permission in an
 organization, never the membership's role, so a role can do exactly what its
 list says. `hasRole` and `<PrivateSet roles>` check the user's own roles, in
 `currentUser.roles`.
 
 ```ts
 // packages/permissions/src/index.ts, shared by the api and web sides
-import { definePermissions } from '@cedarjs/tenancy/permissions'
+import { definePermissions } from '@cedarjs/permissions'
 
 const member = ['organization.read', 'projects.read'] as const
 

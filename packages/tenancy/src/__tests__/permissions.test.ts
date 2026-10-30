@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { setContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store.js'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
+import { definePermissions } from '@cedarjs/permissions'
 
-import { createPermissions, definePermissions } from '../permissions.js'
+import { createPermissions } from '../permissions.js'
 
 const run = (fn: () => void | Promise<void>) =>
   getAsyncStoreInstance().run(new Map(), async () => fn())
@@ -40,24 +41,12 @@ const inOrg1 = {
   membershipId: 'membership1',
 }
 
-describe('definePermissions', () => {
-  it('throws for a role listing a permission that is not defined', () => {
-    expect(() =>
-      definePermissions({
-        permissions: ['projects.read'],
-        // @ts-expect-error - a typo is a type error too
-        roles: { owner: ['projects.raed'] },
-      }),
-    ).toThrow('Unknown permission "projects.raed" in role "owner"')
-  })
-})
-
 describe('createPermissions', () => {
   it('checks the definitions too', () => {
     expect(() =>
       createPermissions({
         permissions: ['projects.read'],
-        roles: { owner: ['projects.raed' as 'projects.read'] },
+        roles: { owner: ['projects.raed'] },
       }),
     ).toThrow('Unknown permission "projects.raed" in role "owner"')
   })
