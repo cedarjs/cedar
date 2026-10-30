@@ -44,6 +44,14 @@ describe('withMockPermissions', () => {
     expect(withMockPermissions({ id: 1 })).toEqual({ id: 1 })
   })
 
+  it('leaves a user whose roles have no permissions as it is', () => {
+    setMockPermissionDefinitions(definitions)
+
+    const user = { id: 1, roles: 'secret_agent' }
+
+    expect(withMockPermissions(user)).toStrictEqual(user)
+  })
+
   it('leaves the user as it is without definitions', () => {
     expect(withMockPermissions({ roles: ['admin'] })).toEqual({
       roles: ['admin'],

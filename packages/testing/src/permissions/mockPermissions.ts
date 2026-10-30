@@ -16,7 +16,7 @@ export function setMockPermissionDefinitions(
 /**
  * `user` with the `permissions` the app's definitions give its `roles`, as
  * `withPermissions` adds them in `getCurrentUser`. A user with permissions
- * of its own keeps them, and without definitions `user` is as it was.
+ * of its own keeps them.
  */
 export function withMockPermissions<User>(user: User): User {
   if (
@@ -37,5 +37,9 @@ export function withMockPermissions<User>(user: User): User {
         ? roles.filter((role): role is string => typeof role === 'string')
         : []
 
-  return { ...user, permissions: permissionsOf(definitions, roleList) }
+  const permissions = permissionsOf(definitions, roleList)
+
+  // A user whose roles have no permissions is left as the test wrote it, so
+  // a test comparing the mocked user to what it passed in still matches
+  return permissions.length > 0 ? { ...user, permissions } : user
 }
