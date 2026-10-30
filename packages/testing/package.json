@@ -56,6 +56,7 @@
   "dependencies": {
     "@cedarjs/context": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
+    "@cedarjs/permissions": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@prisma/internals": "7.10.1",
     "@testing-library/dom": "10.4.2",

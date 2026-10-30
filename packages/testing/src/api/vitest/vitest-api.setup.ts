@@ -8,6 +8,12 @@ import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { defineScenario } from '@cedarjs/testing/api'
 import type { DefineScenario } from '@cedarjs/testing/api'
 
+import { loadAppPermissions } from '../../permissions/loadAppPermissions.js'
+import {
+  setMockPermissionDefinitions,
+  withMockPermissions,
+} from '../../permissions/mockPermissions.js'
+
 import { emptyTablesInWorkingOrder } from './teardown.js'
 
 // Attempt to emulate the request context isolation behavior
@@ -55,8 +61,17 @@ declare global {
   var mockCurrentUser: (currentUser: Partial<CurrentUser>) => void
 }
 
+// In an app with permissions (`cedar setup permissions`), a mocked user with
+// `roles` gets the `permissions` the app's definitions give them, as
+// `getCurrentUser` does
+beforeAll(async () => {
+  setMockPermissionDefinitions(await loadAppPermissions(getPaths().api.base))
+})
+
 globalThis.mockCurrentUser = (currentUser: Partial<CurrentUser>) => {
-  mockContextStore.set('context', { currentUser })
+  mockContextStore.set('context', {
+    currentUser: withMockPermissions(currentUser),
+  })
 }
 
 // ====================================

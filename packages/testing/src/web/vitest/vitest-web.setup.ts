@@ -6,6 +6,8 @@ import { afterAll, afterEach, beforeAll } from 'vitest'
 
 import { getPaths } from '@cedarjs/project-config'
 
+import { loadAppPermissions } from '../../permissions/loadAppPermissions.js'
+import { setMockPermissionDefinitions } from '../../permissions/mockPermissions.js'
 import { findCellMocks } from '../findCellMocks.js'
 import {
   closeServer,
@@ -18,6 +20,7 @@ let clearOrgClients: (() => Promise<void>) | undefined
 
 beforeAll(async () => {
   clearOrgClients = await importClearOrgClients()
+  setMockPermissionDefinitions(await loadAppPermissions(getPaths().web.base))
 
   const cellMocks = findCellMocks(getPaths().web.src)
 
