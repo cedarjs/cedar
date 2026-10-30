@@ -772,11 +772,12 @@ import { requirePermission } from 'src/lib/permissions'
 requirePermission('members.manage')
 ```
 
-`canGrantRole(role)` is who may give someone a role, or take it away: whoever
-holds every permission the role has. Nobody can hand out more than they may do
-themselves, so an admin, without `organization.manage`, can't make anyone an
-owner. A new role needs no grant table. `canGrantRole` doesn't check
-`members.manage`: the field's `@requirePermission` does.
+`canGrantRole(role)` is whether the signed-in user may give someone `role`, or
+take it away. They may if they hold every permission the role has. Nobody can
+hand out more than they may do themselves, so an admin, without
+`organization.manage`, can't make anyone an owner. A new role needs no grant
+table. Who may manage members at all is the field's
+`@requirePermission(permission: "members.manage")`.
 
 `getCurrentUser` returns each membership with its `permissions`
 (`withPermissions`), so the web asks the same question with
