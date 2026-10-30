@@ -399,7 +399,7 @@ checks ask for.
 ### The definitions
 
 `setup tenancy` generates `packages/permissions`, a package that both sides
-share: the api checks the permissions, and the web can import their names. It
+share, or keeps the one [`setup permissions`](permissions.md) generated: the api checks the permissions, and the web can import their names. It
 turns on `experimental.packagesWorkspace` in `cedar.toml` for it, and names the
 package in the scope your other packages use (`@my-org/permissions`), or after
 your app's folder when there are none.
@@ -438,8 +438,9 @@ an organization use `@requireAuth`.
 
 A role listing a name that `permissions` doesn't define is a type
 error, and `definePermissions` throws for it at runtime too.
-`@cedarjs/permissions` has no api code in it, so the web can import
-the package.
+`@cedarjs/permissions` has no api code in it, so the web can import the
+package. An app without tenancy uses the same map, with roles of the user's
+own: see [Permissions](permissions.md).
 
 ### Checking permissions on the api
 

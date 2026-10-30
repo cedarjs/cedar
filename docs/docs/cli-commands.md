@@ -1663,7 +1663,8 @@ every selection of an object type that has an `id` must select `id`, so
 Apollo's cache can normalize it. The schema is `.cedar/schema.graphql`, which
 `yarn cedar lint` generates from your SDL files when it's missing.
 
-In an app with the permissions package that `yarn cedar setup tenancy` adds,
+In an app with the permissions package that `yarn cedar setup permissions` or
+`yarn cedar setup tenancy` adds,
 it also checks the SDL files in `api/src`: every
 `@requirePermission(permission: "...")` must name a permission listed in
 `packages/permissions/src/index.ts`, so a typo fails the lint instead of
@@ -2247,6 +2248,23 @@ yarn cedar setup ui <library>
 | :------------------ | :-------------------------------------------------------------------------- |
 | `library`           | Library to configure. Choices are `chakra-ui`, `tailwindcss`, and `mantine` |
 | `--force, -f`       | Overwrite existing configuration                                            |
+
+### setup permissions
+
+Set up permissions for an app without tenancy: a map in `packages/permissions`
+of what each role may do, the `@requirePermission` directive,
+`hasPermission`/`requirePermission` in `api/src/lib/permissions`, and
+`withPermissions` in `getCurrentUser`, so `useAuth().hasPermission()` and
+`<PrivateSet permission>` work on the web. Each role the app's role lists name
+gets an entry with no permissions yet. See [Permissions](permissions.md).
+
+```
+yarn cedar setup permissions
+```
+
+| Arguments & Options | Description                      |
+| :------------------ | :------------------------------- |
+| `--force, -f`       | Overwrite existing configuration |
 
 ### setup tenancy
 
