@@ -45,7 +45,7 @@ export function enablePackagesWorkspace(tomlContent: string): string | null {
       // Set some other way (dotted keys, an inline table), which we'd only
       // risk breaking
       throw new Error(
-        'CEDAR_TENANCY_ERR_PACKAGES_WORKSPACE: set ' +
+        'CEDAR_PERMISSIONS_ERR_PACKAGES_WORKSPACE: set ' +
           '`experimental.packagesWorkspace.enabled = true` in cedar.toml ' +
           'and run this command again.',
       )

@@ -1,0 +1,26 @@
+import { definePermissions } from '@cedarjs/permissions'
+import type { PermissionName } from '@cedarjs/permissions'
+
+/**
+ * Every permission the app checks, and what each role may do: a role is a
+ * named bundle of permissions. Fields ask for a permission
+ * (`@requirePermission(permission: "posts.edit")`, or
+ * `requirePermission('posts.edit')` in a service), never a role, so a role
+ * can do exactly what its list says, and a field added later is closed to
+ * it unless its permission is on the list.
+ *
+ * A user's roles are in `currentUser.roles` (one role, or a list of them),
+ * and they may do what any of their roles may do. A role that isn't listed
+ * here may do nothing.
+ *
+__ROLES_COMMENT__
+ *
+ * This package is shared: the api checks these permissions
+ * (api/src/lib/permissions), and the web can import the names. The web gets
+ * the user's permissions from the api, through `getCurrentUser`.
+ */
+export const permissions = definePermissions({
+__DEFINITIONS__
+})
+
+export type Permission = PermissionName<typeof permissions>

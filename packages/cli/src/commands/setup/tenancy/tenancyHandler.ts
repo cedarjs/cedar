@@ -23,12 +23,12 @@ import { errorTelemetry } from '@cedarjs/telemetry'
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
-
 import {
   addPermissionsPackageTasks,
   permissionsPackageName,
-} from './permissionsPackage.js'
-import type { PermissionsPackageCtx } from './permissionsPackage.js'
+} from '../permissions/permissionsPackage.js'
+import type { PermissionsPackageCtx } from '../permissions/permissionsPackage.js'
+
 import {
   authNotSetUpMessage,
   hasWebAuthFile,
@@ -94,6 +94,8 @@ interface TenancyCtx extends PermissionsPackageCtx {
    * the next steps say to do it by hand
    */
   routerNeedsTenancy?: boolean
+  /** Set when the app's permission map is kept without organization.read */
+  mapNeedsOrgPermissions?: boolean
 }
 
 export const handler = async ({ tenantField, force }: TenancyOptions) => {
@@ -146,9 +148,14 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
     outputPath: string,
     replacements: Record<string, string> = {},
     transform: (content: string) => string = (content) => content,
+    // Whether an existing file is one to replace even without --force
+    replaces: (existing: string) => boolean = () => false,
   ) => {
     const dirname = import.meta.dirname
-    const templatePath = path.resolve(dirname, 'templates', templateFile)
+    // The directive is the same as `setup permissions` writes
+    const templatePath = templateFile.startsWith('requirePermission.ts')
+      ? path.resolve(dirname, '../permissions/templates', templateFile)
+      : path.resolve(dirname, 'templates', templateFile)
     let templateContent = fs.readFileSync(templatePath, 'utf-8')
 
     for (const [token, value] of Object.entries(replacements)) {
@@ -162,7 +169,11 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       : await transformTSToJS(outputPath, templateContent)
 
     // From an earlier run, or the app's own: kept unless --force
-    if (fs.existsSync(outputPath) && !force) {
+    if (
+      fs.existsSync(outputPath) &&
+      !force &&
+      !replaces(fs.readFileSync(outputPath, 'utf-8'))
+    ) {
       keptFiles.push(outputPath)
       return
     }
@@ -368,8 +379,23 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title: 'Adding the permissions package...',
-        task: () =>
-          addPermissionsPackageTasks({
+        task: (ctx) => {
+          const indexPath = path.join(
+            paths.packages,
+            'permissions',
+            'src',
+            'index.ts',
+          )
+
+          // A map of the app's own, such as from `setup permissions`, which
+          // is kept, and needs the organization permissions the generated
+          // organizations service checks
+          ctx.mapNeedsOrgPermissions =
+            !force &&
+            fs.existsSync(indexPath) &&
+            !fs.readFileSync(indexPath, 'utf-8').includes('organization.read')
+
+          return addPermissionsPackageTasks({
             cedarVersion,
             indexSource: fs.readFileSync(
               path.resolve(
@@ -380,7 +406,8 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
               'utf-8',
             ),
             force,
-          }),
+          })
+        },
       },
       {
         title:
@@ -390,10 +417,14 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             __PERMISSIONS_PACKAGE__: permissionsPackageName(),
           }
 
+          // `setup permissions`' checks, of the user's own roles, become
+          // checks of their role in the current organization
           await writeTemplateFile(
             'permissions.ts.template',
             path.join(paths.api.lib, `permissions.${ext}`),
             replacements,
+            undefined,
+            (existing) => existing.includes('@cedarjs/permissions/api'),
           )
 
           const directiveDir = path.join(
@@ -409,6 +440,9 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           await writeTemplateFile(
             'requirePermission.test.ts.template',
             path.join(directiveDir, `requirePermission.test.${ext}`),
+            {},
+            undefined,
+            (existing) => existing.includes("one of the user's roles has it"),
           )
         },
       },
@@ -687,15 +721,32 @@ ${
                </PrivateSet>
 
 ${
-  keptFiles.length > 0
+  ctx.mapNeedsOrgPermissions
     ? `
+          ${c.warning('Kept your permission map in packages/permissions.')}
+          Its roles are now roles in an organization. Add the permissions the
+          generated organizations service checks, and roles for its members:
+
+            permissions: [...yours, 'organization.read', 'organization.manage', 'members.manage'],
+            roles: {
+              owner: ['organization.read', 'organization.manage', 'members.manage'],
+              admin: ['organization.read', 'members.manage'],
+              member: ['organization.read'],
+              ...yours,
+            },
+
+`
+    : ''
+}${
+            keptFiles.length > 0
+              ? `
           Kept these existing files rather than overwriting them (run with
           ${c.highlight('--force')} to overwrite):
 ${keptFiles.map((file) => `            ${path.relative(paths.base, file)}`).join('\n')}
 
 `
-    : ''
-}          Check out the docs for more info:
+              : ''
+          }          Check out the docs for more info:
           ${terminalLink('', 'https://cedarjs.com/docs/tenancy')}
 
         `
