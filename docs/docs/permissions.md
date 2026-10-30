@@ -106,8 +106,10 @@ export const {
 - `withPermissions(user)`: `user` with `permissions` added, for `getCurrentUser`
   to return.
 
-The checks work out the permissions from `currentUser.roles`. Permission names
-are typed from the map, so a typo in a service is a type error, and a name the
+The checks work out the permissions from `currentUser.roles`, on each request.
+They go by the roles alone, so a `permissions` field stored on the user record
+has no effect on them, and neither does the `currentUser.permissions` that
+`withPermissions` adds for the web. Permission names are typed from the map, so a typo in a service is a type error, and a name the
 map doesn't define throws.
 
 ```ts title="api/src/services/posts/posts.ts"
@@ -146,9 +148,9 @@ export const getCurrentUser = async (session) => {
 }
 ```
 
-`currentUser.permissions` is a snapshot from when the user signed in, which
-`reauthenticate()` refreshes. The api's checks read the roles of the request's
-user.
+On the web, `currentUser.permissions` is a snapshot from when the user signed
+in, which `reauthenticate()` refreshes. On the api, each request's checks work
+the permissions out again from that request's `currentUser.roles`.
 
 ## On the web
 
@@ -175,16 +177,32 @@ protect the data.
 
 ## Testing
 
-`mockCurrentUser({ roles: ['editor'] })` gives the user the permissions the map
-gives `editor`, on the api and the web, so tests check the real map. The test
-setup imports the app's permissions package for it. A mocked user with
-`permissions` of its own keeps them.
+In tests, `mockCurrentUser({ roles: ['editor'] })` gives the user the
+permissions the map gives `editor`, on the api and the web, so tests check the
+real map. The test setup imports the app's permissions package for it. A mocked
+user with `permissions` of its own keeps them.
 
 ```ts
 mockCurrentUser({ id: 1, roles: ['editor'] })
 
 expect(() => deletePost({ id: 1 })).not.toThrow()
 ```
+
+In Storybook, mock the permissions themselves. A story shows the UI in one
+state, and which role grants it is beside the point there:
+
+```tsx title="web/src/components/ContactActions/ContactActions.stories.tsx"
+export const CanEdit: Story = {
+  render: () => {
+    mockCurrentUser({ permissions: ['contacts.edit'] })
+
+    return <ContactActions />
+  },
+}
+```
+
+`useAuth().hasPermission()` checks `currentUser.permissions`, so the story
+shows what a user with `contacts.edit` sees.
 
 ## Adding tenancy later
 
