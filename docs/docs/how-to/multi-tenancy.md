@@ -192,7 +192,7 @@ no-op, `--force` or not.
 | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `api/db/schema.prisma`                                                                         | Adds `Organization` and `Membership`, adds `memberships Membership[]` to `User`, adds `RW_DataMigration` if `data-migrate install` has not run yet |
 | `api/src/lib/db.ts`                                                                            | Wraps `db` in `createTenancyExtension`                                                                                                             |
-| `api/src/lib/auth.ts`                                                                          | Adds `memberships` to the `getCurrentUser()` select, replaces `hasRole` / `requireAuth` with `createTenancyAuth`                                   |
+| `api/src/lib/auth.ts`                                                                          | Adds `memberships` to the `getCurrentUser()` select, and wraps it in `withPermissions`                                                             |
 | `api/src/functions/graphql.ts`                                                                 | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
 | `api/src/functions/auth.ts`                                                                    | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
 | `packages/permissions/`, `api/src/lib/permissions.ts`, `api/src/directives/requirePermission/` | Generates the permissions map, the checks and the `@requirePermission` directive                                                                   |
@@ -221,12 +221,17 @@ as `@cedarjs/storage`'s):
 +)
 ```
 
-`auth.ts` gains `memberships` in the `getCurrentUser()` select, and its
-single-tenant `hasRole` and `requireAuth` are replaced with the tenancy ones:
+`auth.ts` gains `memberships` in the `getCurrentUser()` select, wrapped in
+`withPermissions` so each membership carries its permissions. Its `hasRole`
+and `requireAuth` stay as they are:
 
 ```diff title="api/src/lib/auth.ts"
++import { withPermissions } from 'src/lib/permissions'
+
  export const getCurrentUser = async (session) => {
-   return db.user.findUnique({
+-  return db.user.findUnique({
++  return withPermissions(
++    await db.user.findUnique({
      where: { id: session.id },
 -    select: { id: true, email: true, roles: true },
 +    select: {
@@ -242,17 +247,10 @@ single-tenant `hasRole` and `requireAuth` are replaced with the tenancy ones:
 +        },
 +      },
 +    },
-   })
+-  })
++    }),
++  )
  }
-
--export const hasRole = (roles: AllowedRoles): boolean => {
--  // ...checks currentUser.roles
--}
--
--export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
--  // ...
--}
-+export const { hasRole, requireAuth } = createTenancyAuth()
 ```
 
 `requireAuth` (and `@requireAuth`) is about the signed-in user rather than an

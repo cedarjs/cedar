@@ -306,28 +306,10 @@ export default async () => {
 `GlobalContext` via declaration merging, so `context.currentOrg` is typed
 anywhere `@cedarjs/context` is imported once the package is installed.
 
-## Auth helpers
+## User checks
 
-From `@cedarjs/tenancy`:
-
-```ts
-export function createTenancyAuth(): {
-  hasRole(roles: string | readonly string[]): boolean
-  requireAuth(options?: { roles?: string | readonly string[] }): void
-}
-```
-
-### `createTenancyAuth()`
-
-The setup command replaces the single-tenant `hasRole` and `requireAuth` in
-`api/src/lib/auth.ts` with these, which have the same names and check the same
-things:
-
-```ts title="api/src/lib/auth.ts"
-export const { hasRole, requireAuth } = createTenancyAuth()
-```
-
-Roles are the user's own, in `currentUser.roles`. A check in an organization
+The setup command leaves `hasRole` and `requireAuth` in `api/src/lib/auth.ts`
+as they are, and the `@requireAuth` directive too. Roles are the user's own, in `currentUser.roles`. A check in an organization
 uses a permission.
 
 |     | User-level (`currentUser.roles`)          | Organization-level (membership)                                                              |
@@ -339,8 +321,7 @@ uses a permission.
   than an organization (their account, their memberships, accepting an
   invitation). Throws `AuthenticationError` when no one is signed in, and,
   when `roles` are given, `ForbiddenError` unless `currentUser.roles` has one
-  of them. No organization is needed. It checks what the single-tenant one
-  did.
+  of them. No organization is needed.
 - Fields about the current organization ask for a permission with
   [`requirePermission`](#checking-permissions-on-the-api) and
   [`@requirePermission`](#requirepermission). There's no role check on the
@@ -348,9 +329,8 @@ uses a permission.
   ask for the permission. Fields any member may use ask for
   `organization.read`, which every role lists.
 
-`hasRole(roles)` checks `currentUser.roles`, as the single-tenant one did. So
-your existing uses of `hasRole` and `requireAuth`, on the api and on the web,
-keep working.
+`hasRole(roles)` checks `currentUser.roles`. So your existing uses of
+`hasRole` and `requireAuth`, on the api and on the web, keep working.
 
 With tenancy, a role belongs to a membership, so don't copy one into
 `currentUser.roles` in `getCurrentUser`: a user who is `owner` in one

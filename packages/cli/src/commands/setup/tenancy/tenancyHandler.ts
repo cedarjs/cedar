@@ -24,7 +24,6 @@ import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
 
-import { TENANCY_AUTH_EXPORT } from './authCodemod.js'
 import {
   addPermissionsPackageTasks,
   permissionsPackageName,
@@ -48,8 +47,6 @@ import type { EditSchemaResult, ModelsExistOutcome } from './schemaPrisma.js'
 const DEFAULT_TENANT_FIELD = 'organizationId'
 
 const AUTH_SNIPPET = `
-  import { createTenancyAuth } from '@cedarjs/tenancy'
-
   import { withPermissions } from 'src/lib/permissions'
 
   export const getCurrentUser = async (session) => {
@@ -67,10 +64,7 @@ const AUTH_SNIPPET = `
         },
       },
     }))
-  }
-
-  // In place of your hasRole and requireAuth
-  ${TENANCY_AUTH_EXPORT}`
+  }`
 
 const SIGNUP_SNIPPET = `
   handler: async ({ username, hashedPassword, salt, userAttributes }) => {
@@ -312,8 +306,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
       },
       {
-        title:
-          'Adding memberships to getCurrentUser and the tenancy auth checks to api/src/lib/auth...',
+        title: 'Adding memberships and their permissions to getCurrentUser...',
         task: async (_ctx, task) => {
           if (!fs.existsSync(authPath)) {
             task.skip('No api/src/lib/auth file found; skipping.')
@@ -325,9 +318,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             targetPaths: [authPath],
           })
 
-          if (transformResult.error?.includes('AUTH_CHECKS_CHANGED')) {
-            task.output = `api/src/lib/auth's requireAuth or hasRole has checks of its own, so it was left as it is. Please add this by hand, keeping your checks:\n${AUTH_SNIPPET}`
-          } else if (transformResult.error) {
+          if (transformResult.error) {
             task.output = `Could not update api/src/lib/auth automatically. Please add this by hand:\n${AUTH_SNIPPET}`
           }
         },

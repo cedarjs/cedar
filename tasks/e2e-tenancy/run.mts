@@ -138,9 +138,13 @@ function confirmSetup(projectPath: string) {
     throw new Error('Expected posts.sdl.ts to still use @requireAuth')
   }
 
-  if (!/\bcreateTenancyAuth\b/.test(read('api/src/lib/auth.ts'))) {
+  // The app's own hasRole and requireAuth stay too, and getCurrentUser
+  // gives each membership its permissions
+  const auth = read('api/src/lib/auth.ts')
+
+  if (!/\bwithPermissions\(/.test(auth) || !/\bhasRole\b/.test(auth)) {
     throw new Error(
-      'Expected api/src/lib/auth.ts to export the checks from createTenancyAuth',
+      'Expected api/src/lib/auth.ts to keep hasRole and use withPermissions',
     )
   }
 }

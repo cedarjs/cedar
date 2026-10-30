@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 import { describe, it, expect } from 'vitest'
@@ -5,52 +7,39 @@ import { describe, it, expect } from 'vitest'
 import { runTransform } from '../../../../lib/runTransform.js'
 
 describe('tenancy authCodemod', () => {
-  it('adds a memberships select, withPermissions, and createTenancyAuth for hasRole/requireAuth', async () => {
+  it('adds a memberships select and withPermissions', async () => {
     await matchTransformSnapshot('authCodemod', 'defaultAuth')
   })
 
-  it('throws CEDAR_CODEMOD_ERR_AUTH_CHECKS_NOT_FOUND when hasRole/requireAuth are not there to replace', async () => {
-    const transformResult = await runTransform({
-      transformPath: path.join(__dirname, '../authCodemod.ts'), // Use TS here!
-      targetPaths: [
-        path.join(__dirname, '../__testfixtures__/noAuthChecks.input.ts'),
-      ],
-    })
+  it("leaves the app's own hasRole and requireAuth as they are", async () => {
+    const tempDir = fs.mkdtempSync(
+      path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
+    )
+    const tempFilePath = path.join(tempDir, 'auth.ts')
 
-    expect(transformResult.error).toContain('ERR_AUTH_CHECKS_NOT_FOUND')
-  })
+    fs.copyFileSync(
+      path.join(__dirname, '../__testfixtures__/customAuthChecks.input.ts'),
+      tempFilePath,
+    )
 
-  it("throws CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED rather than dropping requireAuth's own checks", async () => {
-    const transformResult = await runTransform({
-      transformPath: path.join(__dirname, '../authCodemod.ts'), // Use TS here!
-      targetPaths: [
-        path.join(__dirname, '../__testfixtures__/customAuthChecks.input.ts'),
-      ],
-    })
-
-    expect(transformResult.error).toContain('ERR_AUTH_CHECKS_CHANGED')
-  })
-
-  it.each(['customHasRole', 'wrappedRequireAuth'])(
-    'throws CEDAR_CODEMOD_ERR_AUTH_CHECKS_CHANGED for %s',
-    async (fixture) => {
+    try {
       const transformResult = await runTransform({
         transformPath: path.join(__dirname, '../authCodemod.ts'), // Use TS here!
-        targetPaths: [
-          path.join(__dirname, `../__testfixtures__/${fixture}.input.ts`),
-        ],
+        targetPaths: [tempFilePath],
       })
 
-      expect(transformResult.error).toContain('ERR_AUTH_CHECKS_CHANGED')
-    },
-  )
+      expect(transformResult.error).toBeUndefined()
 
-  it('only adds withPermissions to an auth file that already uses createTenancyAuth', async () => {
-    await matchTransformSnapshot('authCodemod', 'wiredAuth')
-  })
+      const output = fs.readFileSync(tempFilePath, 'utf-8')
 
-  it('changes nothing the second time', async () => {
-    await matchTransformSnapshot('authCodemod', 'fullyWiredAuth')
+      expect(output).toContain('withPermissions(')
+      expect(output).toContain('export const hasRole = ')
+      expect(output).toContain(
+        "throw new ForbiddenError('Your account is suspended.')",
+      )
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
   })
 
   it('throws CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND when getCurrentUser has no recognizable select', async () => {

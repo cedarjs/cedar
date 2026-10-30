@@ -73,28 +73,15 @@ import {
 - `getCurrentOrg()` / `requireCurrentOrg()` — read the organization set on the
   current request; the latter throws `TenantScopeError` when none is set.
 
-## Auth helpers
+## User checks
 
-```ts
-// api/src/lib/auth.ts, in place of the single-tenant hasRole/requireAuth
-import { createTenancyAuth } from '@cedarjs/tenancy'
-
-export const { hasRole, requireAuth } = createTenancyAuth()
-
-// In a service:
-requireAuth() // signed in, no organization needed
-
-// Anywhere:
-if (hasRole('superuser')) { ... } // currentUser.roles
-```
-
-`requireAuth` (and the app's `@requireAuth` directive, which calls it) is
-for fields about the user rather than an organization: their account,
-their memberships, accepting an invitation. It needs a signed-in user, and
-checks `roles` against `currentUser.roles`. `hasRole` checks
-`currentUser.roles` too: the user's own roles, in any organization or none.
-There's no role check on the current organization: fields about an
-organization ask for a permission (below).
+An app with tenancy keeps the `hasRole` and `requireAuth` in its
+`api/src/lib/auth.ts`, and its `@requireAuth` directive. They're for fields
+about the user rather than an organization: their account, their
+memberships, accepting an invitation. `requireAuth` needs a signed-in user,
+and both check `roles` against `currentUser.roles`: the user's own roles, in
+any organization or none. There's no role check on the current
+organization: fields about an organization ask for a permission (below).
 
 ## Permissions
 
