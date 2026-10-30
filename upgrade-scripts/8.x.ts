@@ -312,6 +312,48 @@ function findMissingPrismaPackages() {
     )
 }
 
+/**
+ * Returns the TypeScript and JavaScript config files on the api and web sides
+ * that load Jest's global types through `compilerOptions.types`, instead of
+ * `vitest/globals`.
+ *
+ * Reads the `types` array with a regular expression rather than by parsing
+ * the file, because these config files are JSON with comments and trailing
+ * commas, which `JSON.parse` rejects.
+ */
+function findJestTypesConfigs() {
+  const configs: string[] = []
+
+  for (const side of ['api', 'web'] as const) {
+    for (const name of ['tsconfig.json', 'jsconfig.json']) {
+      const configPath = path.join(projectPaths[side].base, name)
+
+      if (!fs.existsSync(configPath)) {
+        continue
+      }
+
+      const typesArray = /"types"\s*:\s*\[([^\]]*)\]/.exec(
+        fs.readFileSync(configPath, 'utf8'),
+      )
+      const types = Array.from(
+        typesArray?.[1].matchAll(/"([^"]*)"/g) ?? [],
+        (match) => match[1],
+      )
+
+      if (types.includes('jest') && !types.includes('vitest/globals')) {
+        configs.push(
+          path
+            .relative(projectPaths.base, configPath)
+            .split(path.sep)
+            .join('/'),
+        )
+      }
+    }
+  }
+
+  return configs
+}
+
 async function main() {
   // Set by any check that has found something the user must fix before
   // upgrading. Checked once at the end so every problem gets reported in one
@@ -425,6 +467,29 @@ async function main() {
         '    yarn cedar setup ui tailwindcss --force',
       'See https://tailwindcss.com/docs/upgrade-guide for all the changes in\n' +
         'Tailwind CSS v4.',
+    ])
+  }
+
+  const jestTypesConfigs = findJestTypesConfigs()
+
+  if (jestTypesConfigs.length > 0) {
+    warn('Test globals are typed by vitest/globals', [
+      'Cedar runs your tests with Vitest, and the types for `describe`, `it`,\n' +
+        '`expect` and `vi` now come from `vitest/globals`. These config files\n' +
+        'still load them from Jest through `"jest"` in `compilerOptions.types`:\n\n' +
+        jestTypesConfigs.map((file) => `  ${file}`).join('\n'),
+      'The generated test globals no longer declare `vi`, so type-checking\n' +
+        "your tests fails with `Cannot find name 'vi'` until you update them.\n" +
+        'Tests still run.',
+      'In each file, replace `"jest"` with `"vitest/globals"`, and remove the\n' +
+        '`typeRoots` option, which stops TypeScript from finding\n' +
+        '`vitest/globals`. In the web side config, also replace `"jest-dom"`\n' +
+        'with `"@testing-library/jest-dom/vitest"`. Keep any other entries in\n' +
+        '`types`. For the web side:\n\n' +
+        '    "types": ["vitest/globals", "@testing-library/jest-dom/vitest"],',
+      'Make sure `vitest` is in the devDependencies of api/package.json and\n' +
+        'web/package.json, so `vitest/globals` can be resolved from each side.\n' +
+        'New projects declare it in both.',
     ])
   }
 

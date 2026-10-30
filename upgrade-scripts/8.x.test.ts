@@ -228,3 +228,109 @@ describe('8.x: Prisma packages the project declares', () => {
     }
   })
 })
+
+describe('8.x: Jest types in tsconfig and jsconfig', () => {
+  function createProject(files: Record<string, string>) {
+    const projectPath = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'cedar-8x-jest-types-'),
+    )
+
+    fs.writeFileSync(path.join(projectPath, 'cedar.toml'), '')
+
+    for (const [file, content] of Object.entries(files)) {
+      fs.mkdirSync(path.join(projectPath, path.dirname(file)), {
+        recursive: true,
+      })
+      fs.writeFileSync(path.join(projectPath, file), content)
+    }
+
+    return projectPath
+  }
+
+  test('warns about configs that load Jest types without aborting', () => {
+    // Real configs are JSON with comments and trailing commas
+    const projectPath = createProject({
+      'api/tsconfig.json': [
+        '{',
+        '  "compilerOptions": {',
+        '    // Jest globals',
+        '    "types": ["jest"],',
+        '  },',
+        '}',
+      ].join('\n'),
+      'web/tsconfig.json': [
+        '{',
+        '  "compilerOptions": {',
+        '    "paths": { "types/*": ["./types/*"] },',
+        '    "types": [',
+        '      "jest",',
+        '      "jest-dom",',
+        '      "react/experimental"',
+        '    ]',
+        '  }',
+        '}',
+      ].join('\n'),
+    })
+
+    try {
+      const { status, stdout, stderr } = runScriptIn(projectPath)
+
+      assert.equal(stderr, '')
+      assert.equal(status, 0)
+      assert.match(stdout, /Test globals are typed by vitest\/globals/)
+      assert.match(stdout, / {2}api\/tsconfig\.json\n/)
+      assert.match(stdout, / {2}web\/tsconfig\.json\n/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('checks jsconfig.json too', () => {
+    const projectPath = createProject({
+      'web/jsconfig.json':
+        '{ "compilerOptions": { "types": ["jest", "jest-dom"] } }',
+    })
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.match(stdout, / {2}web\/jsconfig\.json\n/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('ignores configs that already use vitest/globals', () => {
+    const projectPath = createProject({
+      'api/tsconfig.json':
+        '{ "compilerOptions": { "types": ["vitest/globals"] } }',
+      'web/tsconfig.json':
+        '{ "compilerOptions": { "types": ["vitest/globals", "@testing-library/jest-dom/vitest"] } }',
+    })
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.doesNotMatch(stdout, /Test globals are typed by vitest/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('ignores configs without a types array', () => {
+    const projectPath = createProject({
+      'api/tsconfig.json': '{ "compilerOptions": { "strict": true } }',
+    })
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.doesNotMatch(stdout, /Test globals are typed by vitest/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+})
