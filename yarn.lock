@@ -3581,7 +3581,8 @@ __metadata:
     publint: "npm:0.3.25"
     tstyche: "npm:5.0.2"
     typescript: "npm:5.9.3"
-    vitest: "npm:4.1.12"
+    vite: "npm:7.3.7"
+    vitest: "npm:5.0.5"
   languageName: unknown
   linkType: soft
 
