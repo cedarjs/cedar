@@ -2,12 +2,14 @@ import { definePermissions } from '@cedarjs/permissions'
 import type { PermissionName } from '@cedarjs/permissions'
 
 /**
- * Every permission the app checks, and what each role may do: a role is a
- * named bundle of permissions. Fields ask for a permission
- * (`@requirePermission(permission: "posts.edit")`, or
- * `requirePermission('posts.edit')` in a service), never a role, so a role
- * can do exactly what its list says, and a field added later is closed to
- * it unless its permission is on the list.
+ * Every permission the app checks, and what each role may do. A role is a
+ * named bundle of permissions.
+ *
+ * Fields and services ask for a permission, never a role:
+ * `@requirePermission(permission: "posts.edit")` on a field, and
+ * `requirePermission('posts.edit')` in a service. So a role can do exactly
+ * what its list says. A field added later is closed to a role until its
+ * permission is on that role's list.
  *
  * A user's roles are in `currentUser.roles` (one role, or a list of them),
  * and they may do what any of their roles may do. A role that isn't listed

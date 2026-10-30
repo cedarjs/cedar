@@ -5,11 +5,12 @@ description: Who may do what, as permissions that roles bundle
 # Permissions
 
 A permission names something a user may do, such as `posts.edit`. A role is a
-named bundle of permissions, defined in one map. Fields, services and components
-check a permission, never a role, so a role can do exactly what its entry in the
-map says, and a field added later is closed to it unless its permission is on
-the list. Adding a role is one entry in the map instead of an edit to every
-field it should reach.
+named bundle of permissions, defined in one map.
+
+Fields, services and components check a permission, never a role. So a role can
+do exactly what its entry in the map says. A field added later is closed to a
+role until its permission is on that role's list. And adding a role is one entry
+in the map, instead of an edit to every field it should reach.
 
 Roles are what's stored on a user (`currentUser.roles`), what people
 grant, what the UI shows, and the key into the map. Checks ask for a permission
