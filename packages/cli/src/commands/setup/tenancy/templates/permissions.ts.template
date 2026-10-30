@@ -6,8 +6,8 @@ import { createPermissions } from '@cedarjs/tenancy'
  * Checks the permissions defined in __PERMISSIONS_PACKAGE__
  * (packages/permissions). `getCurrentUser` adds each membership's
  * permissions with `withPermissions`, so the web can check them with
- * `useAuth().hasPermission()`. The web only decides what to show; these
- * checks are the guard.
+ * `useAuth().hasPermission()` and `<PrivateSet permission>`. The web only
+ * uses them to decide what to show. These checks are the guard.
  *
  * `canGrantRole` is who may give someone a role, or take it away: whoever
  * holds every permission it has (`inviteMember` and `removeMember` in

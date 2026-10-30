@@ -8,7 +8,7 @@ import { createPermissions } from '@cedarjs/permissions/api'
  * `currentUser.roles`, may do. `getCurrentUser` adds the user's permissions
  * with `withPermissions`, so the web can check them with
  * `useAuth().hasPermission()` and `<PrivateSet permission>`. The web only
- * decides what to show; these checks are the guard.
+ * uses them to decide what to show. These checks are the guard.
  *
  * `canGrantRole` is who may give someone a role, or take it away: whoever
  * holds every permission it has.
