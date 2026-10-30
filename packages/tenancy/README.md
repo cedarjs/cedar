@@ -143,7 +143,10 @@ names are typed from the definitions, and an unknown name throws.
 
 `canGrantRole(role)` is whether the signed-in user may give someone `role`,
 or take it away: they hold every permission it has. Nobody can hand out more
-than they may do themselves, and a new role needs no grant table.
+than they may do themselves, and a new role needs no grant table. It
+doesn't check `members.manage`: whoever calls it checks that first, as the
+generated `inviteMember` and `removeMember` do with
+`@requirePermission(permission: "members.manage")`.
 
 `withPermissions` in `getCurrentUser` gives each membership its permissions,
 which `useAuth().hasPermission()` checks inside an organization route.

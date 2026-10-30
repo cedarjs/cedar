@@ -1039,7 +1039,7 @@ describe('MembersPage', () => {
 - `useCurrentOrg().setOrg` navigates as in the app, or calls your
   `onSetOrg`. Assert on `navigate` or on what your `onSetOrg` does.
 - `<PrivateSet orgPermission>` is the router's check, which
-  don't run for a component rendered on its own.
+  doesn't run for a component rendered on its own.
 
 `hasUserRole` checks `currentUser.roles`, in an organization or not.
 
