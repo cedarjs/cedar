@@ -108,8 +108,8 @@ export class RWRoute extends BaseNode {
   }
 
   /**
-   * The `roles` prop of a `<Private>`/`<PrivateSet>`, which an app without
-   * tenancy has. An app with tenancy has `userRoles` instead.
+   * The `roles` prop of a `<Private>`/`<PrivateSet>`: roles in
+   * `currentUser.roles`.
    *
    * Each ancestor independently guards the route, so this is the union of
    * the roles of all of them. With a single ancestor that has roles, the
@@ -118,16 +118,6 @@ export class RWRoute extends BaseNode {
   @lazy()
   get roles() {
     return this.getRolesUnion('roles')
-  }
-
-  /**
-   * The `userRoles` prop of a `<Private>`/`<PrivateSet>` in an app with
-   * tenancy: roles in `currentUser.roles`. Combined across ancestors like
-   * `roles`.
-   */
-  @lazy()
-  get userRoles() {
-    return this.getRolesUnion('userRoles')
   }
 
   /**
@@ -188,7 +178,7 @@ export class RWRoute extends BaseNode {
   }
 
   /**
-   * Reads a role list attribute (`roles` or `userRoles`) off a
+   * Reads a role list attribute (`roles`) off a
    * `<Private>`/`<PrivateSet>` opening element, handling the string literal,
    * quasi-JSON string (e.g. `"['a','b']"`), and JSX array-literal expression
    * forms.

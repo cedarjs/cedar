@@ -37,7 +37,7 @@ function buildMembershipsSelectProperty() {
 }
 
 /** What replaces the app's `hasRole` and `requireAuth` */
-export const TENANCY_AUTH_EXPORT = `export const { hasUserRole, requireUserAuth } = createTenancyAuth()
+export const TENANCY_AUTH_EXPORT = `export const { hasRole, requireUserAuth } = createTenancyAuth()
 `
 
 /**
@@ -416,24 +416,10 @@ export default function transform(fileInfo: j.FileInfo) {
     .nodes()[0]
 
   // In place of `requireAuth`, so it stays where the app's other code
-  // expects it; `hasRole` just goes
+  // expects it. It exports `hasRole` too, so the file's other uses of it
+  // keep working
   requireAuth.replaceWith(tenancyAuth)
   hasRole.remove()
-
-  // Anything else in the file that used `hasRole` gets `hasUserRole`, which
-  // checks the same thing
-  root
-    .find(j.Identifier, { name: 'hasRole' })
-    .filter(
-      (path) =>
-        !(
-          j.MemberExpression.check(path.parent.node) &&
-          path.parent.node.property === path.node
-        ),
-    )
-    .forEach((path) => {
-      path.node.name = 'hasUserRole'
-    })
 
   // Used anywhere but in its own declaration (an import, or a type alias)
   const isUnused = (name: string) =>

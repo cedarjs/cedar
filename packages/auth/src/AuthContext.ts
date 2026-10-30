@@ -48,41 +48,6 @@ export type PermissionName = [keyof AvailablePermissions] extends [never]
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AuthTenancy {}
 
-/**
- * `useAuth()`'s role check: `hasUserRole` in an app with tenancy (see
- * `AuthTenancy`), where every role check says which kind it is, and `hasRole`
- * otherwise
- */
-type RoleCheck = AuthTenancy extends { enabled: true }
-  ? {
-      /**
-       * Whether the "currentUser" from the api side has one of `rolesToCheck`
-       * (a role, or a list of roles) in `currentUser.roles`, as opposed to a
-       * role in the organization they're in
-       */
-      hasUserRole(rolesToCheck: string | string[]): boolean
-    }
-  : {
-      /**
-       * Checks if the "currentUser" from the api side is assigned a role or one
-       * of a list of roles. If the user is assigned any of the provided list of
-       * roles, then hasRole is considered to be true.
-       */
-      hasRole(rolesToCheck: string | string[]): boolean
-    }
-
-/**
- * Both of `useAuth()`'s role checks, for an auth provider to spread into the
- * value it provides. It can't know whether the app has tenancy, so it
- * provides both, and the app's types show the one that fits (see
- * `RoleCheck`).
- */
-export function roleChecks(
-  check: (rolesToCheck: string | string[]) => boolean,
-) {
-  return { hasRole: check, hasUserRole: check }
-}
-
 export interface AuthContextInterface<
   TUser,
   TLogInOptions,
@@ -98,7 +63,7 @@ export interface AuthContextInterface<
   TClient,
   TChangePasswordOptions = unknown,
   TChangePassword = unknown,
-> extends RoleCheck {
+> {
   /** Determining your current authentication state */
   loading: boolean
   isAuthenticated: boolean
@@ -138,6 +103,12 @@ export interface AuthContextInterface<
    * but does not update the current user state.
    */
   getCurrentUser(): Promise<CurrentUser>
+  /**
+   * Checks if the "currentUser" from the api side is assigned a role or one
+   * of a list of roles. If the user is assigned any of the provided list of
+   * roles, then hasRole is considered to be true.
+   */
+  hasRole(rolesToCheck: string | string[]): boolean
   /**
    * Whether the user has `permission` where they are in the app. Always
    * `false` outside a scope that provides permissions, such as an

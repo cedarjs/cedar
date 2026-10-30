@@ -25,8 +25,8 @@ const run = (fn: () => void | Promise<void>) =>
   getAsyncStoreInstance().run(new Map(), async () => fn())
 
 describe('createTenancyAuth', () => {
-  describe('hasUserRole', () => {
-    const { hasUserRole } = createTenancyAuth()
+  describe('hasRole', () => {
+    const { hasRole } = createTenancyAuth()
 
     it("checks currentUser.roles, not the membership's", async () => {
       await run(() => {
@@ -34,17 +34,17 @@ describe('createTenancyAuth', () => {
           currentUser: { ...currentUser, roles: ['superuser'] },
           currentOrg: currentOrg1Viewer,
         })
-        expect(hasUserRole('superuser')).toBe(true)
-        expect(hasUserRole(['admin', 'superuser'])).toBe(true)
+        expect(hasRole('superuser')).toBe(true)
+        expect(hasRole(['admin', 'superuser'])).toBe(true)
         // The role in the current organization doesn't count
-        expect(hasUserRole('viewer')).toBe(false)
-        expect(hasUserRole([])).toBe(false)
+        expect(hasRole('viewer')).toBe(false)
+        expect(hasRole([])).toBe(false)
       })
     })
 
     it('is false with no current user', async () => {
       await run(() => {
-        expect(hasUserRole('superuser')).toBe(false)
+        expect(hasRole('superuser')).toBe(false)
       })
     })
   })

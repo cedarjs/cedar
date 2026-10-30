@@ -27,14 +27,13 @@ const LIB_AUTH_IMPORT =
  */
 const LIB_AUTH_RENAMES = {
   requireAuth: 'requireUserAuth',
-  hasRole: 'hasUserRole',
 } as const
 
 /**
- * `source` with `requireAuth` and `hasRole`, imported from
- * `api/src/lib/auth`, renamed `requireUserAuth` and `hasUserRole`, where
- * they're imported and where they're used. Those check what the old ones
- * did, and `lib/auth` exports neither old name once tenancy is set up.
+ * `source` with `requireAuth`, imported from `api/src/lib/auth`, renamed
+ * `requireUserAuth`, where it's imported and where it's used. That checks
+ * what the old one did, and `lib/auth` doesn't export `requireAuth` once
+ * tenancy is set up.
  */
 export function renameLibAuthImports(source: string): string {
   let result = source

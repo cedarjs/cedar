@@ -49,7 +49,6 @@ import {
   requiredUserFields,
 } from './schemaPrisma.js'
 import type { EditSchemaResult, ModelsExistOutcome } from './schemaPrisma.js'
-import { renameUseAuthHasRole } from './webHasRole.js'
 
 const DEFAULT_TENANT_FIELD = 'organizationId'
 
@@ -387,8 +386,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           isDbAuthProject ? false : 'Not a dbAuth project; skipping.',
       },
       {
-        title:
-          'Switching @requireAuth to @requireUserAuth, and hasRole to hasUserRole...',
+        title: 'Switching @requireAuth to @requireUserAuth...',
         task: async (ctx) => {
           const oldDirectiveDir = path.join(paths.api.directives, 'requireAuth')
           const isInOldDirective = (file: string) =>
@@ -425,18 +423,6 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
                 ? source
                 : renameRequireAuthDirective(source),
             )
-
-            if (renamed !== source) {
-              fs.writeFileSync(file, renamed)
-              writtenFiles.push(file)
-            }
-          }
-
-          // And so is every existing role check on the web: `hasRole` isn't
-          // in a tenancy app's types, `hasUserRole` checks the same thing
-          for (const file of sourceFilesIn(paths.web.src)) {
-            const source = fs.readFileSync(file, 'utf-8')
-            const renamed = renameUseAuthHasRole(source)
 
             if (renamed !== source) {
               fs.writeFileSync(file, renamed)
@@ -785,14 +771,11 @@ ${
              fields over, then delete it.`
                  : ''
              }
-          7. Every role check names its kind now. ${c.highlight('hasRole')} is
-             ${c.highlight('hasUserRole')} on both sides (your existing uses were renamed),
-             checking ${c.highlight('currentUser.roles')}. In the organization, check
-             permissions instead. ${c.highlight('<PrivateSet roles>')} isn't available with
-             tenancy: guard routes with ${c.highlight('<PrivateSet userRoles>')} for
-             ${c.highlight('currentUser.roles')}, and with ${c.highlight('<PrivateSet orgPermission>')} for a
-             permission of their membership in the route's organization. A
-             member who lacks it is sent to ${c.highlight('unauthorized')}:
+          7. Roles are the user's own: ${c.highlight('hasRole')} and ${c.highlight('<PrivateSet roles>')}
+             still check ${c.highlight('currentUser.roles')}. In an organization, check a
+             permission instead: guard routes with ${c.highlight('<PrivateSet orgPermission>')}
+             for a permission of their membership in the route's organization.
+             A member who lacks it is sent to ${c.highlight('unauthorized')}:
 
                <PrivateSet unauthenticated="login" unauthorized="projects" orgPermission="organization.manage">
                  <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />

@@ -70,11 +70,11 @@ describe('renameLibAuthImports', () => {
     `
 
     expect(renameLibAuthImports(source)).toBe(dedent`
-      import { hasUserRole, requireUserAuth } from 'src/lib/auth'
+      import { hasRole, requireUserAuth } from 'src/lib/auth'
 
       export const posts = () => {
         requireUserAuth({ roles: ['admin'] })
-        return hasUserRole('editor') ? db.post.findMany() : []
+        return hasRole('editor') ? db.post.findMany() : []
       }
     `)
   })

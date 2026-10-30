@@ -79,27 +79,30 @@ import {
 // api/src/lib/auth.ts, in place of the single-tenant hasRole/requireAuth
 import { createTenancyAuth } from '@cedarjs/tenancy'
 
-export const { hasUserRole, requireUserAuth } = createTenancyAuth()
+export const { hasRole, requireUserAuth } = createTenancyAuth()
 
 // In a service:
 requireUserAuth() // signed in, no organization needed
 
 // Anywhere:
-if (hasUserRole('superuser')) { ... } // currentUser.roles
+if (hasRole('superuser')) { ... } // currentUser.roles
 ```
 
 `requireUserAuth` (and the `@requireUserAuth` directive `setup tenancy` adds)
 is for fields about the user rather than an organization: their account,
 their memberships, accepting an invitation. It needs a signed-in user, and
-checks `roles` against `currentUser.roles`. There's no `requireAuth` or
-`hasRole`, and no role check on the current organization: fields about an
+checks `roles` against `currentUser.roles`. `hasRole` checks
+`currentUser.roles` too: the user's own roles, in any organization or none.
+There's no role check on the current organization: fields about an
 organization ask for a permission (below).
 
 ## Permissions
 
-Roles are named bundles of permissions, defined in one place. Fields,
-services and components check permissions, never roles, so a role can do
-exactly what its list says.
+Roles in an organization are named bundles of permissions, defined in one
+place. Fields, services and components check a permission in an
+organization, never the membership's role, so a role can do exactly what its
+list says. Checks on the user's own roles in `currentUser.roles` (`hasRole`,
+`<PrivateSet roles>`) are still fine.
 
 ```ts
 // packages/permissions/src/index.ts, shared by the api and web sides
@@ -184,12 +187,13 @@ export const tenancy = createTenancy({
 })
 ```
 
-The router checks the permission in the organization of the route's
-`orgSlug` param. A `PrivateSet` with `orgPermission` throws when
+The router checks the permission in the organization that `tenancy.useOrg`
+returns. The default `useOrg` finds it by the route's `orgSlug` param, and a
+custom one can find it another way, such as from the host. A `PrivateSet` with `orgPermission` throws when
 the router has no `tenancy` or its `useOrg` finds no organization for the
 route; with the default lookup, that's a route without `{orgSlug}`. A route
 with `{orgSlug}` outside a `PrivateSet` is a public page with no organization
-context. `useAuth().hasUserRole` and `<PrivateSet userRoles>` check
-`currentUser.roles`; there's no `useAuth().hasRole` or `<PrivateSet roles>` in
-an app with tenancy. See the
+context. `useAuth().hasRole` and `<PrivateSet roles>` check
+`currentUser.roles`, the user's own roles, as in an app without tenancy;
+checks in an organization use a permission. See the
 how-to for the full setup `yarn cedar setup tenancy` generates.

@@ -32,13 +32,9 @@ declare const authImplementation: AuthImplementation<
 
 const { useAuth } = createAuthentication(authImplementation)
 
-test('useAuth() has no hasRole', () => {
-  expect(useAuth()).type.not.toHaveProperty('hasRole')
-})
-
-test('useAuth().hasUserRole checks currentUser.roles', () => {
-  expect(useAuth().hasUserRole).type.toBeCallableWith('admin')
-  expect(useAuth().hasUserRole).type.toBeCallableWith(['admin', 'editor'])
+test('useAuth().hasRole checks currentUser.roles', () => {
+  expect(useAuth().hasRole).type.toBeCallableWith('admin')
+  expect(useAuth().hasRole).type.toBeCallableWith(['admin', 'editor'])
 })
 
 test("Router takes the app's useAuth", () => {
@@ -57,29 +53,17 @@ test("Router takes tenancy's tenancy", () => {
   ).type.not.toRaiseError()
 })
 
-test('PrivateSet and Set have no roles', () => {
+test('PrivateSet and Set take roles, and no orgRoles', () => {
   expect(
-    <PrivateSet unauthenticated="login" roles="admin">
+    <PrivateSet unauthenticated="login" roles={['admin', 'editor']}>
       {null}
     </PrivateSet>,
-  ).type.toRaiseError("Property 'roles' does not exist")
+  ).type.not.toRaiseError()
 
   expect(
-    <Set private unauthenticated="login" roles={['admin']}>
+    <Set private unauthenticated="login" roles="admin">
       {null}
     </Set>,
-  ).type.toRaiseError("Property 'roles' does not exist")
-
-  expect(
-    <PrivateSet unauthenticated="login">{null}</PrivateSet>,
-  ).type.not.toRaiseError()
-})
-
-test('PrivateSet takes userRoles instead, and no orgRoles', () => {
-  expect(
-    <PrivateSet unauthenticated="login" userRoles={['admin', 'editor']}>
-      {null}
-    </PrivateSet>,
   ).type.not.toRaiseError()
 
   expect(
@@ -101,7 +85,7 @@ test('PrivateSet takes orgPermission', () => {
   ).type.not.toRaiseError()
 
   expect(
-    <PrivateSet unauthenticated="login" userRoles="staff" orgPermission="a.b">
+    <PrivateSet unauthenticated="login" roles="staff" orgPermission="a.b">
       {null}
     </PrivateSet>,
   ).type.not.toRaiseError()

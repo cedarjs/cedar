@@ -30,22 +30,15 @@ export interface WrapperProps {
 export type WrapperType = ComponentType<WrapperProps>
 
 /**
- * The role props. An app with tenancy (see `AuthTenancy`) has `userRoles`
- * instead of `roles`, and `orgPermission` for what the user may do in the
- * organization: there, every check says which kind it is.
+ * `orgPermission`, only in an app with tenancy (see `AuthTenancy`)
  */
-type SetRoles = AuthTenancy extends { enabled: true }
+type SetOrgPermission = AuthTenancy extends { enabled: true }
   ? {
-      /**
-       * Route is permitted when authenticated and user has any of the
-       * provided roles such as "admin" or ["admin", "editor"], in
-       * `currentUser.roles`. With `orgPermission` as well, they need both.
-       */
-      userRoles?: string | string[]
       /**
        * Route is permitted when authenticated and the user's membership in
        * the current organization has this permission (see
-       * `createPermissions` in `@cedarjs/tenancy`).
+       * `createPermissions` in `@cedarjs/tenancy`). With `roles` as well,
+       * they need both.
        *
        * The organization is the one the Router's `tenancy` finds for the
        * route, by default the one with the route's `orgSlug` param:
@@ -57,16 +50,14 @@ type SetRoles = AuthTenancy extends { enabled: true }
        */
       orgPermission?: PermissionName
     }
-  : {
-      /**
-       * Route is permitted when authenticated and user has any of the
-       * provided roles such as "admin" or ["admin", "editor"], in
-       * `currentUser.roles`
-       */
-      roles?: string | string[]
-    }
+  : Record<never, never>
 
-interface SetProps extends SetRoles {
+interface SetProps extends SetOrgPermission {
+  /**
+   * Route is permitted when authenticated and user has any of the provided
+   * roles such as "admin" or ["admin", "editor"], in `currentUser.roles`
+   */
+  roles?: string | string[]
   /**
    * Components to wrap all routes in this set with, like layouts. The first
    * one in an array is the outermost one.

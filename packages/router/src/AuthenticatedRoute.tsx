@@ -9,7 +9,6 @@ import { paramsForRoute, pathParamsText } from './util.js'
 interface AuthenticatedRouteProps {
   children: React.ReactNode
   roles?: string | string[]
-  userRoles?: string | string[]
   orgPermission?: string
   unauthenticated: string
   unauthorized?: string
@@ -95,16 +94,12 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   unauthenticated,
   unauthorized,
   roles,
-  userRoles,
   orgPermission,
   whileLoadingAuth,
   children,
 }) => {
   const routerState = useRouterState()
   const mountedOrgId = useContext(MountedOrgContext)
-  // `hasRole` is in the router's own type for `useAuth`, which is the one
-  // without tenancy. Auth providers provide it in every app, also where the
-  // app's types only show `hasUserRole`, which is the same check.
   const {
     loading: authLoading,
     isAuthenticated,
@@ -158,10 +153,9 @@ export const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
     )
   }
 
-  const hasRequiredUserRoles =
-    (!roles || hasRole(roles)) && (!userRoles || hasRole(userRoles))
+  const hasRequiredRoles = !roles || hasRole(roles)
 
-  if (isAuthenticated && hasRequiredUserRoles) {
+  if (isAuthenticated && hasRequiredRoles) {
     // A route that isn't in an organization is an ordinary private route
     if (!tenancy || !org) {
       return <>{children}</>

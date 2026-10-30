@@ -31,4 +31,4 @@ export const isAuthenticated = (): boolean => {
   return !!context.currentUser
 }
 
-export const { hasUserRole, requireUserAuth } = createTenancyAuth()
+export const { hasRole, requireUserAuth } = createTenancyAuth()

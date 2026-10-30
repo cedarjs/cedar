@@ -23,9 +23,6 @@ const AuthProvider: React.FC<Props> = ({ children }) => {
 // (the organization provider from `@cedarjs/tenancy/web` does).
 export function useAuth() {
   const scopedHasPermission = React.useContext(HasPermissionContext)
-  const hasRole = (roles: string | string[]) =>
-    currentUserHasRole(mockedUserMeta.currentUser, roles)
-
   return {
     loading: false,
     isAuthenticated: !!mockedUserMeta.currentUser,
@@ -36,8 +33,8 @@ export function useAuth() {
     userMetadata: mockedUserMeta.currentUser,
     getToken: async () => null,
     getCurrentUser: async () => mockedUserMeta.currentUser,
-    hasRole,
-    hasUserRole: hasRole,
+    hasRole: (roles: string | string[]) =>
+      currentUserHasRole(mockedUserMeta.currentUser, roles),
     hasPermission: scopedHasPermission ?? (() => false),
     reauthenticate: async () => {},
     forgotPassword: async () => {},

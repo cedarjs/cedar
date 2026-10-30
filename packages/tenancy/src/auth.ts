@@ -11,7 +11,7 @@ const toList = (roles: Roles): string[] =>
  * membership, so most apps leave it empty; it's for roles that hold in
  * every organization, if an app has any.
  */
-function userRoles(): string[] {
+function currentUserRoles(): string[] {
   const roles = (context.currentUser as { roles?: unknown } | undefined)?.roles
 
   if (typeof roles === 'string') {
@@ -28,9 +28,10 @@ function userRoles(): string[] {
 export interface TenancyAuth {
   /**
    * Whether the signed-in user holds one of `roles` in `currentUser.roles`,
-   * in any organization or none. What the single-tenant `hasRole()` checked.
+   * in any organization or none, as the single-tenant `hasRole()`. A check
+   * in the current organization is a permission (`createPermissions`).
    */
-  hasUserRole(roles: Roles): boolean
+  hasRole(roles: Roles): boolean
   /**
    * Guards a service or directive on the signed-in user alone, in any
    * organization or none: their account, their memberships, accepting an
@@ -48,23 +49,21 @@ export interface TenancyAuth {
  * exports in place of its single-tenant `hasRole` and `requireAuth`:
  *
  * ```ts
- * export const { hasUserRole, requireUserAuth } =
- *   createTenancyAuth()
+ * export const { hasRole, requireUserAuth } = createTenancyAuth()
  * ```
  *
- * There's no `hasRole` or `requireAuth`: every check says whether it's
- * about the signed-in user alone or the current organization. Checks on
- * the current organization are permissions (`createPermissions`), so a
- * role can do only what its entry in the permission definitions lists.
+ * Roles are the user's own, in `currentUser.roles`. Checks on the current
+ * organization are permissions (`createPermissions`), so a role can do only
+ * what its entry in the permission definitions lists.
  */
 export function createTenancyAuth(): TenancyAuth {
   return {
-    hasUserRole(roles) {
+    hasRole(roles) {
       const roleList = toList(roles)
 
       return (
         !!context.currentUser &&
-        userRoles().some((role) => roleList.includes(role))
+        currentUserRoles().some((role) => roleList.includes(role))
       )
     },
 
@@ -75,7 +74,10 @@ export function createTenancyAuth(): TenancyAuth {
 
       // As the single-tenant `requireAuth`: `roles`, even an empty list,
       // must match
-      if (roles && !userRoles().some((role) => toList(roles).includes(role))) {
+      if (
+        roles &&
+        !currentUserRoles().some((role) => toList(roles).includes(role))
+      ) {
         throw new ForbiddenError("You don't have access to do that.")
       }
     },

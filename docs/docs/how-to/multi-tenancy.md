@@ -200,7 +200,6 @@ no-op, `--force` or not.
 | `packages/permissions/`, `api/src/lib/permissions.ts`, `api/src/directives/requirePermission/` | Generates the permissions map, the checks and the `@requirePermission` directive                                                                   |
 | `api/src/services/organizations/`                                                              | Generates the organizations service and SDL                                                                                                        |
 | `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts`                            | Backfills memberships for existing users                                                                                                           |
-| `web/src/` files                                                                               | Renames `hasRole` from `useAuth()` to `hasUserRole`                                                                                                |
 | `web/src/Routes.tsx`                                                                           | Passes `tenancy` to the `<Router>`                                                                                                                 |
 | `web/src/tenancy.tsx`                                                                          | Generates the app's `tenancy` for the `<Router>`                                                                                                   |
 | `web/src/pages/InvitePage/InvitePage.tsx`                                                      | Generates the invitation landing page                                                                                                              |
@@ -255,7 +254,7 @@ single-tenant `hasRole` and `requireAuth` are replaced with the tenancy ones:
 -export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
 -  // ...
 -}
-+export const { hasUserRole, requireUserAuth } = createTenancyAuth()
++export const { hasRole, requireUserAuth } = createTenancyAuth()
 ```
 
 There's no `requireAuth` any more. `requireUserAuth` (and `@requireUserAuth`)
@@ -270,9 +269,9 @@ may use ask for `organization.read`, which every role lists.
 
 Before tenancy there are no organizations, so every field your app already has
 is about the user: setup renames each `@requireAuth` to `@requireUserAuth`, and
-each `requireAuth()` and `hasRole()` from `src/lib/auth` to `requireUserAuth()`
-and `hasUserRole()`. On the web, it renames `hasRole` from `useAuth()` to
-`hasUserRole`. Your app works as it did. When you give a model an
+each `requireAuth()` from `src/lib/auth` to `requireUserAuth()`. `hasRole()`
+keeps its name on both sides, and checks the user's own roles in
+`currentUser.roles`, as before. Your app works as it did. When you give a model an
 `organizationId`, switch its fields to
 `@requirePermission(permission: "organization.read")`, or a permission of its
 own. `cedar generate sdl` and `cedar generate scaffold` write
@@ -894,13 +893,11 @@ Here `projects.edit` is a permission the app added to its definitions.
 `useCurrentOrg().memberships` gives every membership with its `permissions`,
 which is how you'd show a switcher entry as disabled for an organization where
 the user may not do something, without navigating there first. To show the
-user's role, read `org.role`. For `currentUser.roles`, use
-`useAuth().hasUserRole`.
-With tenancy there's no `useAuth().hasRole`: setup renames your existing uses
-to `hasUserRole`, and using it is a type error.
+user's role in the organization, read `org.role`. `useAuth().hasRole` and
+`<PrivateSet roles>` check the user's own roles, in `currentUser.roles`, as
+without tenancy. A check in an organization uses a permission.
 
-`<PrivateSet roles>` isn't available with tenancy either. For a page only
-some members may open, give its `PrivateSet` `orgPermission` and
+For a page only some members may open, give its `PrivateSet` `orgPermission` and
 `unauthorized` (see
 [Guarding routes by permission](../tenancy.md#guarding-routes-by-permission)):
 

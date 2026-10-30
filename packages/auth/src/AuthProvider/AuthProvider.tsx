@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import React, { useContext, useEffect, useState } from 'react'
 
-import { roleChecks } from '../AuthContext.js'
 import type { AuthContextInterface, CurrentUser } from '../AuthContext.js'
 import type { AuthImplementation } from '../AuthImplementation.js'
 
@@ -165,7 +164,7 @@ export function createAuthProvider<
           logOut,
           getToken,
           getCurrentUser,
-          ...roleChecks(hasRole),
+          hasRole,
           hasPermission: noPermissions,
           reauthenticate,
           forgotPassword,
