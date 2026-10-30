@@ -115,3 +115,10 @@ export function permissionsIndexSource(template: string, roles: string[]) {
     .replace('__ROLES_COMMENT__', rolesComment)
     .replace('__DEFINITIONS__', definitions.join('\n'))
 }
+
+/** Whether `schema.prisma`'s `User` model has a `roles` field */
+export function userModelHasRoles(schema: string) {
+  const userModel = schema.match(/^model\s+User\s*\{([\s\S]*?)^\}/m)?.[1]
+
+  return !!userModel && /^\s*roles\s+\S/m.test(userModel)
+}

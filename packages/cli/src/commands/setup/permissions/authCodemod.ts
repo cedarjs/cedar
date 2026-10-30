@@ -100,16 +100,77 @@ function wrap(
 }
 
 /**
- * Wraps what `getCurrentUser` in `api/src/lib/auth` returns in
- * `withPermissions` from `api/src/lib/permissions`, so `currentUser` carries
- * the permissions of the user's roles, which `useAuth().hasPermission()`
- * checks on the web. Returns of `null` are left alone, and so are ones
- * already wrapped.
+ * Adds `roles: true` to the `select` of each `db.user.findUnique(...)` in
+ * `getCurrentUser` that doesn't select `roles`, as the permissions come from
+ * them. Returns whether it added any.
+ */
+function selectRoles(getCurrentUser: j.Collection) {
+  let added = false
+
+  getCurrentUser
+    .find(j.CallExpression, {
+      callee: {
+        type: 'MemberExpression',
+        object: {
+          type: 'MemberExpression',
+          object: { name: 'db' },
+          property: { name: 'user' },
+        },
+        property: { name: 'findUnique' },
+      },
+    })
+    .forEach((path) => {
+      const [args] = path.node.arguments
+      const select = j.ObjectExpression.check(args)
+        ? args.properties.find(
+            (prop) =>
+              j.ObjectProperty.check(prop) &&
+              j.Identifier.check(prop.key) &&
+              prop.key.name === 'select',
+          )
+        : undefined
+
+      if (
+        !j.ObjectProperty.check(select) ||
+        !j.ObjectExpression.check(select.value)
+      ) {
+        return
+      }
+
+      const hasRoles = select.value.properties.some(
+        (prop) =>
+          j.ObjectProperty.check(prop) &&
+          j.Identifier.check(prop.key) &&
+          prop.key.name === 'roles',
+      )
+
+      if (!hasRoles) {
+        select.value.properties.push(
+          j.objectProperty(j.identifier('roles'), j.booleanLiteral(true)),
+        )
+        added = true
+      }
+    })
+
+  return added
+}
+
+/**
+ * Wraps each user (not `null`) that `getCurrentUser` in `api/src/lib/auth`
+ * returns in `withPermissions` from `api/src/lib/permissions`, once, so
+ * `currentUser` carries the permissions of the user's roles, which
+ * `useAuth().hasPermission()` checks on the web. With the `userHasRoles` option (the app's `User` model has
+ * a `roles` field), a `db.user.findUnique` whose `select` has no `roles` gets
+ * `roles: true`.
  *
  * Throws `CEDAR_CODEMOD_ERR_GET_CURRENT_USER_NOT_FOUND` when there's no
  * `getCurrentUser` that returns a user.
  */
-export default function transform(fileInfo: j.FileInfo) {
+export default function transform(
+  fileInfo: j.FileInfo,
+  _api: j.API,
+  options: { userHasRoles?: unknown } = {},
+) {
   // TS-aware, as lib/auth files have type annotations
   const root = j.withParser('tsx')(fileInfo.source)
   const getCurrentUser = findGetCurrentUser(root).at(0)
@@ -159,6 +220,10 @@ export default function transform(fileInfo: j.FileInfo) {
 
   if (!wrapsAUser) {
     throw new Error('CEDAR_CODEMOD_ERR_GET_CURRENT_USER_NOT_FOUND')
+  }
+
+  if (options.userHasRoles === true && selectRoles(getCurrentUser)) {
+    changed = true
   }
 
   return addPermissionsImport(changed ? root.toSource() : fileInfo.source)

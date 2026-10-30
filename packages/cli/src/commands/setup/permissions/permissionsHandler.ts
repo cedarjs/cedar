@@ -11,6 +11,7 @@ import { getPrettierOptions } from '@cedarjs/cli-helpers/fileHelpers'
 import { addApiPackages } from '@cedarjs/cli-helpers/installHelpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
 import { runBinSync } from '@cedarjs/cli-helpers/packageManager/exec'
+import { getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
@@ -24,7 +25,11 @@ import {
 } from './permissionsPackage.js'
 import type { PermissionsPackageCtx } from './permissionsPackage.js'
 import { authNotSetUpMessage, hasTenancyMessage } from './preflight.js'
-import { findRoles, permissionsIndexSource } from './roles.js'
+import {
+  findRoles,
+  permissionsIndexSource,
+  userModelHasRoles,
+} from './roles.js'
 
 const AUTH_SNIPPET = `
   import { withPermissions } from 'src/lib/permissions'
@@ -162,9 +167,23 @@ export const handler = async ({ force }: { force: boolean }) => {
             return
           }
 
+          let userHasRoles = false
+
+          try {
+            userHasRoles = userModelHasRoles(
+              fs.readFileSync(
+                await getSchemaPath(paths.api.prismaConfig),
+                'utf-8',
+              ),
+            )
+          } catch {
+            // No Prisma schema, so nothing to select roles from
+          }
+
           const transformResult = await runTransform({
             transformPath: path.join(import.meta.dirname, 'authCodemod.js'),
             targetPaths: [authPath],
+            options: { userHasRoles },
           })
 
           if (transformResult.error) {
@@ -230,8 +249,10 @@ export const handler = async ({ force }: { force: boolean }) => {
              ${rolesText}
              A role is a bundle of permissions: list what each one may do.
           2. A user may do what any of their roles, in ${c.highlight('currentUser.roles')},
-             may do, so ${c.highlight('getCurrentUser')} needs to return ${c.highlight('roles')}. It
-             returns the user through ${c.highlight('withPermissions')}, which adds
+             may do, so ${c.highlight('getCurrentUser')} returns ${c.highlight('roles')}: this selects
+             them when your ${c.highlight('User')} model has a ${c.highlight('roles')} field. Without one,
+             return the user's roles from where they're kept. It returns the
+             user through ${c.highlight('withPermissions')}, which adds
              ${c.highlight('currentUser.permissions')} for the web.
           3. Guard fields with ${c.highlight('@requirePermission(permission: "...")')}, and
              services with ${c.highlight("requirePermission('...')")} from src/lib/permissions.

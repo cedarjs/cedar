@@ -4,7 +4,12 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { findRoles, permissionsIndexSource, rolesInSource } from '../roles.js'
+import {
+  findRoles,
+  permissionsIndexSource,
+  rolesInSource,
+  userModelHasRoles,
+} from '../roles.js'
 
 describe('rolesInSource', () => {
   it('finds the roles of SDL role lists', () => {
@@ -128,6 +133,29 @@ describe('permissionsIndexSource', () => {
   it('writes an example map without roles', () => {
     expect(permissionsIndexSource(template, [])).toContain(
       "editor: ['posts.read', 'posts.edit'],",
+    )
+  })
+})
+
+describe('userModelHasRoles', () => {
+  it('is whether the User model has a roles field', () => {
+    const schema = (userFields: string) => `
+model Post {
+  id    Int      @id
+  roles String
+}
+
+model User {
+  id    String @id
+${userFields}
+}
+`
+
+    expect(userModelHasRoles(schema('  roles String?'))).toBe(true)
+    expect(userModelHasRoles(schema('  roles Role[]'))).toBe(true)
+    expect(userModelHasRoles(schema('  email String'))).toBe(false)
+    expect(userModelHasRoles('model UserExample {\n  roles String\n}\n')).toBe(
+      false,
     )
   })
 })

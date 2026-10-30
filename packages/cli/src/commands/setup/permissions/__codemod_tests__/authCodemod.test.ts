@@ -5,8 +5,9 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { runTransform } from '../../../../lib/runTransform.js'
+import { formatCode } from '../../../../testUtils/index.js'
 
-const runOn = async (source: string) => {
+const runOn = async (source: string, options: Record<string, unknown> = {}) => {
   const tempDir = fs.mkdtempSync(
     path.join(fs.realpathSync(os.tmpdir()), 'cedar-test-'),
   )
@@ -18,6 +19,7 @@ const runOn = async (source: string) => {
     const result = await runTransform({
       transformPath: path.join(__dirname, '../authCodemod.ts'),
       targetPaths: [tempFilePath],
+      options,
     })
 
     return {
@@ -51,6 +53,39 @@ describe('permissions authCodemod', () => {
       expect(output).toBe(wired)
     },
   )
+
+  it('selects roles when the User model has them', async () => {
+    const { error, output } = await runOn(fixture('defaultAuth.input.ts'), {
+      userHasRoles: true,
+    })
+
+    expect(error).toBeUndefined()
+    expect(await formatCode(output)).toBe(
+      await formatCode(fixture('selectRoles.output.ts')),
+    )
+
+    // Once
+    const again = await runOn(output, { userHasRoles: true })
+
+    expect(again.output).toBe(output)
+  })
+
+  it('adds roles to a select that is already wrapped', async () => {
+    const { output } = await runOn(fixture('defaultAuth.output.ts'), {
+      userHasRoles: true,
+    })
+
+    expect(await formatCode(output)).toBe(
+      await formatCode(fixture('selectRoles.output.ts')),
+    )
+  })
+
+  it('keeps a select with roles as the app wrote it', async () => {
+    const wired = fixture('selectRoles.output.ts')
+    const { output } = await runOn(wired, { userHasRoles: true })
+
+    expect(output).toBe(wired)
+  })
 
   it("leaves tenancy's wiring as it is", async () => {
     const wired = fixture(
