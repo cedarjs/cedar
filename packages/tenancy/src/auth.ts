@@ -12,7 +12,11 @@ const toList = (roles: Roles): string[] =>
  * every organization, if an app has any.
  */
 function currentUserRoles(): string[] {
-  const roles = (context.currentUser as { roles?: unknown } | undefined)?.roles
+  const user: unknown = context.currentUser
+  const roles =
+    typeof user === 'object' && user !== null && 'roles' in user
+      ? user.roles
+      : undefined
 
   if (typeof roles === 'string') {
     return [roles]
