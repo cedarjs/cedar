@@ -11,7 +11,7 @@ map says, and a field added later is closed to it unless its permission is on
 the list. Adding a role is one entry in the map instead of an edit to every
 field it should reach.
 
-Roles are still what's stored on a user (`currentUser.roles`), what people
+Roles are what's stored on a user (`currentUser.roles`), what people
 grant, what the UI shows, and the key into the map. Checks ask for a permission
 instead.
 
