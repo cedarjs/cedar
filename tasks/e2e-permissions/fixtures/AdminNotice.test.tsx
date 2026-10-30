@@ -14,6 +14,8 @@ describe('AdminNotice', () => {
     mockCurrentUser({ roles: 'EDITOR' })
     render(<AdminNotice />)
 
-    expect(screen.queryByText('You may delete contacts')).toBeNull()
+    expect(
+      screen.queryByText('You may delete contacts'),
+    ).not.toBeInTheDocument()
   })
 })

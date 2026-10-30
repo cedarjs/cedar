@@ -45,7 +45,7 @@ async function main() {
     usePermission(projectPath)
     await $`yarn workspace @my-org/permissions build`
     // In the app's style, as an editor would save these edits
-    await $`yarn cedar lint --fix api/src/graphql/contacts.sdl.ts web/src/Routes.tsx packages/permissions/src/index.ts`
+    await $`yarn cedar lint --fix api/src/graphql/contacts.sdl.ts api/src/lib/contactPermissions.test.ts web/src/Routes.tsx web/src/components/AdminNotice packages/permissions/src/index.ts`
     await $`yarn cedar generate types`
   })
 
@@ -141,8 +141,8 @@ function confirmSetup(projectPath: string) {
   }
 
   if (
-    !/@requireAuth\(roles: \["ADMIN"\]\)/.test(
-      read('api/src/graphql/contacts.sdl.ts'),
+    !read('api/src/graphql/contacts.sdl.ts').includes(
+      '@requireAuth(roles: ["ADMIN"])',
     )
   ) {
     throw new Error('Expected contacts.sdl.ts to keep its roles list')
@@ -162,7 +162,10 @@ function usePermission(projectPath: string) {
     const filePath = path.join(projectPath, file)
     const source = fs.readFileSync(filePath, 'utf-8')
 
-    if (!source.match(from)) {
+    const found =
+      typeof from === 'string' ? source.includes(from) : from.test(source)
+
+    if (!found) {
       throw new Error(`${file} doesn't look like the fixture's`)
     }
 
