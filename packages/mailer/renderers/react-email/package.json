@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@cedarjs/mailer-core": "workspace:*",
-    "@react-email/render": "2.1.1"
+    "@react-email/render": "2.2.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
