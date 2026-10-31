@@ -22,7 +22,7 @@ import { isTypeScriptProject } from '../../../lib/project.js'
 import { generateSecret } from '../../generate/secret/secret.js'
 import { setupServerFileTasks } from '../server-file/serverFileHandler.js'
 
-import { transformGitignore } from './gitignore.js'
+import { findIgnoredPaths, transformGitignore } from './gitignore.js'
 import { addUploadModel } from './schemaPrisma.js'
 import {
   addUploadsPlugin,
@@ -125,6 +125,12 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
 
   const serverFilePath = path.join(paths.api.src, `server.${ext}`)
 
+  // Paths of the files this command generates, collected as they're written
+  // so they can be checked against `.gitignore` once setup is done. A
+  // pre-existing, unanchored `uploads` rule from a `@cedarjs/storage`
+  // migration can silently hide these from git.
+  const generatedFilePaths: string[] = []
+
   const writeTemplateFile = async (
     templateFile: string,
     outputPath: string,
@@ -144,6 +150,8 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
     const content = projectIsTypescript
       ? templateContent
       : await transformTSToJS(outputPath, templateContent)
+
+    generatedFilePaths.push(outputPath)
 
     return writeFile(outputPath, content, { overwriteExisting: force })
   }
@@ -348,6 +356,30 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
           }
 
           fs.writeFileSync(gitignorePath, updated, 'utf-8')
+        },
+      },
+      {
+        title: 'Checking the generated files are tracked by git...',
+        task: async (_ctx, task) => {
+          const ignoredPaths = await findIgnoredPaths(
+            paths.base,
+            generatedFilePaths,
+          )
+
+          if (ignoredPaths.length === 0) {
+            return
+          }
+
+          const relativePaths = ignoredPaths
+            .map((ignoredPath) => path.relative(paths.base, ignoredPath))
+            .join('\n            ')
+
+          task.output = c.warning(
+            `A .gitignore rule is hiding generated file(s) from git:\n\n            ${relativePaths}\n\n          ` +
+              'This usually happens after migrating from @cedarjs/storage, which left ' +
+              'behind an unanchored `uploads` or `uploads/` rule. Anchor it (e.g. `/uploads/`) ' +
+              'or remove it, then make sure the file(s) above get committed.',
+          )
         },
       },
       {
