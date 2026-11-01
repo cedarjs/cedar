@@ -65,6 +65,31 @@ async function startUDServer(
   host: string,
   port: number,
 ): Promise<ReturnType<typeof serveSrvx>> {
+  // The OpenTelemetry SDK setup must be imported before the built Universal
+  // Deploy Fetchable is loaded, or the instrumentations can't patch it. The
+  // `--import` entries `getOTelImportArgs()` returns are for child processes;
+  // here the setup file is imported in-process. This CLI process may already
+  // have the CLI telemetry provider registered globally, in which case the
+  // app's setup can't become the global provider here and is skipped: its
+  // spans would be misrouted into the CLI's telemetry exporter.
+  const { getOTelSetupFileUrl, isCLITelemetryActive } =
+    await import('@cedarjs/project-config')
+  const otelSetupFileUrl = getOTelSetupFileUrl()
+
+  if (otelSetupFileUrl !== undefined) {
+    if (isCLITelemetryActive()) {
+      console.warn(
+        'OpenTelemetry: the CLI telemetry provider is already registered in ' +
+          "this process, so the app's OpenTelemetry setup file cannot be " +
+          'loaded here. Run `cedar serve --telemetry false` to disable CLI ' +
+          "telemetry and let the app's setup take over, or serve the API in " +
+          'a separate process.',
+      )
+    } else {
+      await import(otelSetupFileUrl)
+    }
+  }
+
   const mod = await import(pathToFileURL(entryPath).href)
   const fetchable = mod.default ?? mod
 

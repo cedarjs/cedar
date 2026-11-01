@@ -51,6 +51,15 @@ export async function startTelemetry() {
     })
     traceProvider.register()
 
+    // Mark this process as having the CLI's tracer provider registered
+    // globally, so in-process server launches know to skip importing the
+    // project's own OpenTelemetry setup file (it could not become the global
+    // provider here, and its spans would be misrouted into CLI telemetry).
+    // Set only after the provider registers, so a failed startup does not
+    // block the app's own setup with no CLI provider in place.
+    // See `isCLITelemetryActive()` in `@cedarjs/project-config`.
+    globalThis.__CEDAR_CLI_TELEMETRY__ = true
+
     // Without any listeners for these signals, nodejs will terminate the process and will not
     // trigger the exit event when doing so. This means our process.on('exit') handler will not run.
     // We add a listner which either calls process.exit or if some other handler has been added,
