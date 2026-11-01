@@ -3,7 +3,11 @@ import path from 'path'
 import { gql } from 'graphql-tag'
 import { test, expect } from 'vitest'
 
-import { listQueryTypeFieldsInProject, parseDocumentAST } from '../gql.js'
+import {
+  listQueryTypeFieldsInProject,
+  parseDocumentAST,
+  parseGqlFragmentPropName,
+} from '../gql.js'
 
 test('parses a document AST', () => {
   const QUERY = gql`
@@ -97,6 +101,28 @@ test('handles fragments', () => {
     ]
   `)
 })
+
+// TODO(fragment-underscore): Remove the first two rows when the underscore rule
+// is removed
+test.each([
+  ['AuthorCell_author', 'AuthorCell', 'author'],
+  ['PostCellFragmentAuthor_writer', 'PostCell', 'writer'],
+  ['PostCellFragmentAuthor', 'PostCell', 'author'],
+  ['PostCellFragmentAuthorBio', 'PostCell', 'authorBio'],
+  ['AuthorCellFragment', 'AuthorCell', 'user'],
+  ['AuthorBio', 'AuthorCell', 'user'],
+  ['UserFragmentDetails', 'AuthorCell', 'user'],
+  ['PostCellFragmentauthor', 'PostCell', 'user'],
+  ['_author', 'AuthorCell', 'user'],
+  ['author_', 'AuthorCell', 'user'],
+])(
+  'parseGqlFragmentPropName derives the prop name of %s in %s',
+  (fragmentName, cellName, propName) => {
+    const fragment = `fragment ${fragmentName} on User { id }`
+
+    expect(parseGqlFragmentPropName(fragment, cellName)).toEqual(propName)
+  },
+)
 
 test('listQueryTypeFieldsInProject', async () => {
   const FIXTURE_PATH = path.resolve(
