@@ -595,7 +595,7 @@ A few things to know about fragment Cells:
     `AuthorCellFragmentAuthor` in `AuthorCell` gives an `author` prop.
   - A fragment name with an underscore, like `AuthorCell_author`, gives the part
     after the last underscore (`author`). This takes precedence over the other
-    rules.
+    rules. {/* TODO(fragment-underscore): Remove this bullet when the underscore rule is removed */}
   - Any other fragment name gives the camelCased type name.
 
   The parent passes the data in with that prop, and `Success` (and `Empty`)

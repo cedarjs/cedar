@@ -102,6 +102,8 @@ test('handles fragments', () => {
   `)
 })
 
+// TODO(fragment-underscore): Remove the first two rows when the underscore rule
+// is removed
 test.each([
   ['AuthorCell_author', 'AuthorCell', 'author'],
   ['PostCellFragmentAuthor_writer', 'PostCell', 'writer'],

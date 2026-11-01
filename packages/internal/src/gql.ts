@@ -132,6 +132,12 @@ export const parseGqlFragmentPropName = (
   }
 
   const fragmentName = fragmentDefinition.name.value
+  // TODO(fragment-underscore): Remove the underscore rule (rule 1 above) in a
+  // future major version. `<CellName>Fragment<Prop>` (rule 2) covers the same
+  // use case without an underscore. Remove it together with the same rule in
+  // getFragmentPropName in
+  // packages/web/src/components/cell/createFragmentCell.tsx, and update everything else tagged
+  // `TODO(fragment-underscore)`.
   const underscoreIndex = fragmentName.lastIndexOf('_')
 
   if (underscoreIndex > 0 && underscoreIndex < fragmentName.length - 1) {

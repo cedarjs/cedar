@@ -28,6 +28,9 @@ const mockUseApolloClient = useApolloClient as unknown as Mock
 const mockApolloUseFragment = useFragment as unknown as Mock
 const mockUseQuery = useQuery as unknown as Mock
 
+// TODO(fragment-underscore): When the underscore rule is removed, rename this
+// fragment to `AuthorCellFragmentAuthor` (and pass `displayName: 'AuthorCell'`
+// in the tests that use it), so the Cell keeps its `author` prop
 const AUTHOR_FRAGMENT = parse(`
   fragment AuthorCell_author on User {
     email
@@ -191,6 +194,8 @@ describe('createFragmentCell', () => {
     screen.getByText(/^By Story Teller$/)
   })
 
+  // TODO(fragment-underscore): Remove this test when the underscore rule is
+  // removed
   test('prefers the underscore over the `<CellName>Fragment` prefix', () => {
     const TestCell = createCell({
       FRAGMENT: parse(`

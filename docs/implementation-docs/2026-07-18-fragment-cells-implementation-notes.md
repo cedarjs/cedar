@@ -85,7 +85,10 @@ mutations/other queries; without it, the Cell is snapshot-only.
 
 The first rule that applies wins:
 
-1. `AuthorCell_author` → `author` (substring after the last underscore)
+1. `AuthorCell_author` → `author` (substring after the last underscore). Rule 2
+   covers the same use case, so this rule is meant to be removed in a future
+   major version. Everything to update then is tagged
+   `TODO(fragment-underscore)`.
 2. `PostCellFragmentAuthor` in `PostCell` → `author` (camelCased rest after
    `<CellName>Fragment`, when it starts with an uppercase letter)
 3. camelCased type condition (`AuthorCellFragment on User` → `user`)
