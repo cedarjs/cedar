@@ -33,7 +33,7 @@
   @apply mx-4 pb-4;
 }
 .rw-segment {
-  @apply w-full scrollbar-thumb-zinc-400 scrollbar-track-transparent overflow-hidden rounded-lg border border-gray-200;
+  @apply scrollbar-thumb-zinc-400 scrollbar-track-transparent w-full overflow-hidden rounded-lg border border-gray-200;
 }
 .rw-segment::-webkit-scrollbar {
   height: initial;

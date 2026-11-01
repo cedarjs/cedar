@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "type": "commonjs",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
   "browserslist": {
@@ -16,18 +16,23 @@
     "@cedarjs/forms": "7.1.0",
     "@cedarjs/router": "7.1.0",
     "@cedarjs/web": "7.1.0",
-    "graphql-tag": "2.12.7",
+    "graphql-tag": "2.12.6",
     "humanize-string": "2.1.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "react-hook-form": "7.91.0",
+    "react-hook-form": "7.74.0",
     "@my-org/validators": "workspace:*"
   },
   "devDependencies": {
+    "@cedarjs/testing": "7.1.0",
     "@cedarjs/vite": "7.1.0",
     "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.3",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   }
 }

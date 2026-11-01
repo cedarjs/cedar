@@ -1,14 +1,13 @@
-import { render } from '@cedarjs/testing/web'
+import { render, screen } from '@cedarjs/testing/web'
 
 import HomePage from './HomePage'
 
-//   Improve this test with help from the CedarJS Testing Doc:
-//   https://cedarjs.com/docs/testing#testing-pages-layouts
-
 describe('HomePage', () => {
-  it('renders successfully', () => {
-    expect(() => {
-      render(<HomePage />)
-    }).not.toThrow()
+  it('renders the blog posts from the cell mock', async () => {
+    render(<HomePage />)
+
+    const titles = await screen.findAllByText('Mocked title')
+
+    expect(titles).toHaveLength(3)
   })
 })
