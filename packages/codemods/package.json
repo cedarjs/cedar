@@ -25,8 +25,8 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/parser": "7.29.11",
-    "@babel/traverse": "7.29.10",
+    "@babel/parser": "7.29.12",
+    "@babel/traverse": "7.29.12",
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@svgr/core": "8.1.0",

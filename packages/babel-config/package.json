@@ -26,12 +26,12 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/parser": "7.29.11",
+    "@babel/parser": "7.29.12",
     "@babel/plugin-transform-react-jsx": "7.29.7",
     "@babel/preset-env": "7.29.7",
     "@babel/preset-react": "7.29.7",
     "@babel/register": "7.29.7",
-    "@babel/traverse": "7.29.10",
+    "@babel/traverse": "7.29.12",
     "@cedarjs/project-config": "workspace:*",
     "babel-plugin-auto-import": "1.1.0",
     "babel-plugin-graphql-tag": "3.3.0",

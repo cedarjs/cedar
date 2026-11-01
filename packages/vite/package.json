@@ -49,10 +49,10 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/generator": "7.29.8",
-    "@babel/parser": "7.29.11",
+    "@babel/generator": "7.29.12",
+    "@babel/parser": "7.29.12",
     "@babel/preset-typescript": "7.29.7",
-    "@babel/traverse": "7.29.10",
+    "@babel/traverse": "7.29.12",
     "@babel/types": "7.29.11",
     "@cedarjs/api": "workspace:*",
     "@cedarjs/api-server": "workspace:*",
