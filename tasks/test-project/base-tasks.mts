@@ -916,6 +916,36 @@ async function addDbAuth(
     )
   }
 
+  const useLocalNpmDbAuthSetup = localDbAuth && packageManager === 'npm'
+
+  if (useLocalNpmDbAuthSetup) {
+    // tarsync adds an override for every Cedar package, and npm rejects
+    // installing a package whose spec differs from its override (EOVERRIDE).
+    // `cedar setup auth` installs the setup package with `npm install -D
+    // <package>@<version>`, so it would fail. `npm install ./<tarball>` fails
+    // as well, because npm rewrites the path to a relative `file:` spec that
+    // differs from the absolute one in the override. Declaring the dependency
+    // with exactly the override's spec makes the CLI see the package as
+    // installed and skip its own install. The package.json restored below
+    // drops this dependency again
+    const npmPackageJson = JSON.parse(
+      fs.readFileSync(projectPackageJsonPath, 'utf-8'),
+    )
+
+    npmPackageJson.devDependencies = {
+      ...npmPackageJson.devDependencies,
+      '@cedarjs/auth-dbauth-setup':
+        npmPackageJson.overrides['@cedarjs/auth-dbauth-setup'],
+    }
+
+    fs.writeFileSync(
+      projectPackageJsonPath,
+      JSON.stringify(npmPackageJson, null, 2),
+    )
+
+    await exec('npm install', [], execaOptions)
+  }
+
   await exec(
     `${cedarBin} cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages`,
     [],
