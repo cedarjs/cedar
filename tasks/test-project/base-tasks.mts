@@ -899,6 +899,23 @@ async function addDbAuth(
     await exec(`${packageManager} install`, [], execaOptions)
   }
 
+  const useLocalPnpmDbAuthSetup = localDbAuth && packageManager === 'pnpm'
+
+  if (useLocalPnpmDbAuthSetup) {
+    // `cedar setup auth` installs the setup package with `pnpm add -D
+    // <package>@<version>`. With an explicit version, pnpm records that
+    // version as is instead of applying the matching override from
+    // pnpm-workspace.yaml, so it would install the published package.
+    // Declaring the tarball that tarsync built as a dependency first makes the
+    // CLI see the package as installed and skip its own install. The
+    // package.json restored below drops this dependency again
+    await exec(
+      'pnpm add -D -w ./tarballs/cedarjs-auth-dbauth-setup.tgz',
+      [],
+      execaOptions,
+    )
+  }
+
   await exec(
     `${cedarBin} cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages`,
     [],
