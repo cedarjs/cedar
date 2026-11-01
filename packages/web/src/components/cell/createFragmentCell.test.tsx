@@ -131,6 +131,86 @@ describe('createFragmentCell', () => {
     screen.getByText(/^Writes things$/)
   })
 
+  test('derives the prop name from what follows `<CellName>Fragment`', () => {
+    const TestCell = createCell({
+      FRAGMENT: parse(`
+        fragment PostCellFragmentAuthor on User {
+          fullName
+        }
+      `),
+      Success: ({ author }) => <>By {author.fullName}</>,
+      displayName: 'PostCell',
+    })
+
+    render(
+      <TestCell
+        author={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+      />,
+    )
+
+    screen.getByText(/^By Story Teller$/)
+  })
+
+  test('derives the prop name from the fragment type for `<CellName>Fragment`', () => {
+    const TestCell = createCell({
+      FRAGMENT: parse(`
+        fragment AuthorCellFragment on User {
+          fullName
+        }
+      `),
+      Success: ({ user }) => <>By {user.fullName}</>,
+      displayName: 'AuthorCell',
+    })
+
+    render(
+      <TestCell
+        user={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+      />,
+    )
+
+    screen.getByText(/^By Story Teller$/)
+  })
+
+  test('derives the prop name from the fragment type when the Fragment prefix names another Cell', () => {
+    const TestCell = createCell({
+      FRAGMENT: parse(`
+        fragment UserFragmentDetails on User {
+          fullName
+        }
+      `),
+      Success: ({ user }) => <>By {user.fullName}</>,
+      displayName: 'AuthorCell',
+    })
+
+    render(
+      <TestCell
+        user={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+      />,
+    )
+
+    screen.getByText(/^By Story Teller$/)
+  })
+
+  test('prefers the underscore over the `<CellName>Fragment` prefix', () => {
+    const TestCell = createCell({
+      FRAGMENT: parse(`
+        fragment PostCellFragmentAuthor_writer on User {
+          fullName
+        }
+      `),
+      Success: ({ writer }) => <>By {writer.fullName}</>,
+      displayName: 'PostCell',
+    })
+
+    render(
+      <TestCell
+        writer={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+      />,
+    )
+
+    screen.getByText(/^By Story Teller$/)
+  })
+
   test('renders Empty when isEmpty says so', () => {
     const TestCell = createCell({
       FRAGMENT: AUTHOR_FRAGMENT,

@@ -22,7 +22,7 @@ function getFragmentDefinition(
     throw new Error(
       `The FRAGMENT export in ${displayName} must contain a GraphQL ` +
         'fragment definition, like ' +
-        '`fragment AuthorCell_author on User { fullName }`',
+        '`fragment AuthorCellFragment on User { fullName }`',
     )
   }
 
@@ -34,20 +34,39 @@ function getFragmentDefinition(
  * fragment data in with, and the prop `Success` (and `Empty`) receive the
  * data as.
  *
- * For a fragment named with an underscore, like `AuthorCell_author`, the part
- * after the last underscore is used (`author`). Otherwise the type the
- * fragment is defined on is used, camelCased (`on User` -> `user`).
+ * The first of these rules that applies picks the name:
+ *
+ * 1. For a fragment named with an underscore, like `AuthorCell_author`, the
+ *    part after the last underscore is used (`author`).
+ * 2. For a fragment named after the Cell, followed by `Fragment` and a
+ *    PascalCased prop name, like `PostCellFragmentAuthor` in `PostCell`, the
+ *    camelCased prop name is used (`author`).
+ * 3. Otherwise the type the fragment is defined on is used, camelCased
+ *    (`fragment AuthorCellFragment on User` -> `user`).
  *
  * Keep this in sync with parseGqlFragmentPropName in
  * packages/internal/src/gql.ts, which is used when generating the mirror
  * types for fragment Cells.
  */
-function getFragmentPropName(fragmentDefinition: FragmentDefinitionNode) {
+function getFragmentPropName(
+  fragmentDefinition: FragmentDefinitionNode,
+  cellName: string,
+) {
   const fragmentName = fragmentDefinition.name.value
   const underscoreIndex = fragmentName.lastIndexOf('_')
 
   if (underscoreIndex > 0 && underscoreIndex < fragmentName.length - 1) {
     return fragmentName.slice(underscoreIndex + 1)
+  }
+
+  const cellFragmentPrefix = cellName + 'Fragment'
+  const propNameSuffix = fragmentName.slice(cellFragmentPrefix.length)
+
+  if (
+    fragmentName.startsWith(cellFragmentPrefix) &&
+    /^[A-Z]/.test(propNameSuffix)
+  ) {
+    return propNameSuffix.charAt(0).toLowerCase() + propNameSuffix.slice(1)
   }
 
   const typename = fragmentDefinition.typeCondition.name.value
@@ -65,7 +84,7 @@ function isDataRef(value: unknown): value is Record<string, unknown> {
  *
  * Fragment Cells don't fire queries of their own. A parent Cell spreads the
  * fragment in its QUERY and passes the matching slice of the query result
- * down via a prop named after the fragment (`AuthorCell_author` -> `author`).
+ * down via a prop named after the fragment (see `getFragmentPropName`).
  * `Success` receives the data as that same prop. The data is read
  * synchronously, so fragment Cells never render `Loading`.
  *
@@ -99,7 +118,7 @@ export function createFragmentCell<
 
   const fragmentDefinition = getFragmentDefinition(fragment, displayName)
   const fragmentName = fragmentDefinition.name.value
-  const propName = getFragmentPropName(fragmentDefinition)
+  const propName = getFragmentPropName(fragmentDefinition, displayName)
 
   // Registering the fragment makes it possible for parent Cells to spread it
   // in their QUERY by name, without having to interpolate the fragment

@@ -112,13 +112,13 @@ export const files = async ({
   let fragmentPropName: string | undefined
 
   if (fragment) {
-    // The data prop (and fragment name suffix) is derived from the GraphQL
-    // type the fragment selects from, matching createFragmentCell's own
-    // fallback naming (see getFragmentPropName in createFragmentCell.tsx).
+    // The fragment is named `<CellName>Fragment`, so createFragmentCell
+    // derives the data prop from the GraphQL type the fragment selects from
+    // (see getFragmentPropName in createFragmentCell.tsx)
     const fragmentTypeVariants = nameVariants(fragment)
     fragmentOnType = fragmentTypeVariants.pascalName
     fragmentPropName = fragmentTypeVariants.camelName
-    fragmentName = `${nameVariants(cellName).pascalName}Cell_${fragmentPropName}`
+    fragmentName = `${nameVariants(cellName).pascalName}CellFragment`
   } else if (operationName) {
     const userSpecifiedOperationNameIsUnique =
       await operationNameIsUnique(operationName)

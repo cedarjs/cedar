@@ -303,7 +303,7 @@ describe('CustomIdFieldCell', () => {
 `;
 
 exports[`Fragment cells > generates a FRAGMENT cell for the given GraphQL type 1`] = `
-"import type { AuthorBioCell_user } from 'types/graphql'
+"import type { AuthorBioCellFragment } from 'types/graphql'
 
 import type { CellSuccessProps } from '@cedarjs/web'
 
@@ -314,13 +314,13 @@ import type { CellSuccessProps } from '@cedarjs/web'
 //   query FindSomething($id: Int!) {
 //     something(id: $id) {
 //       id
-//       ...AuthorBioCell_user
+//       ...AuthorBioCellFragment
 //     }
 //   }
 //
 //   <AuthorBioCell user={something} />
 export const FRAGMENT = gql\`
-  fragment AuthorBioCell_user on User {
+  fragment AuthorBioCellFragment on User {
     id
   }
 \`
@@ -329,7 +329,7 @@ export const Empty = () => <div>Empty</div>
 
 export const Success = ({
   user,
-}: CellSuccessProps<{ user: AuthorBioCell_user }>) => {
+}: CellSuccessProps<{ user: AuthorBioCellFragment }>) => {
   return <div>{JSON.stringify(user)}</div>
 }
 "
@@ -408,7 +408,7 @@ export const standard = (/* vars, { ctx, req } */) => ({
 `;
 
 exports[`Fragment cells > includes afterQuery and isEmpty stubs when passed 1`] = `
-"import type { AuthorBioCell_user } from 'types/graphql'
+"import type { AuthorBioCellFragment } from 'types/graphql'
 
 import type { CellSuccessProps, DataObject } from '@cedarjs/web'
 
@@ -419,13 +419,13 @@ import type { CellSuccessProps, DataObject } from '@cedarjs/web'
 //   query FindSomething($id: Int!) {
 //     something(id: $id) {
 //       id
-//       ...AuthorBioCell_user
+//       ...AuthorBioCellFragment
 //     }
 //   }
 //
 //   <AuthorBioCell user={something} />
 export const FRAGMENT = gql\`
-  fragment AuthorBioCell_user on User {
+  fragment AuthorBioCellFragment on User {
     id
   }
 \`
@@ -445,7 +445,7 @@ export const Empty = () => <div>Empty</div>
 
 export const Success = ({
   user,
-}: CellSuccessProps<{ user: AuthorBioCell_user }>) => {
+}: CellSuccessProps<{ user: AuthorBioCellFragment }>) => {
   return <div>{JSON.stringify(user)}</div>
 }
 "
@@ -459,13 +459,13 @@ exports[`Fragment cells > strips types from a FRAGMENT cell when generating Java
 //   query FindSomething($id: Int!) {
 //     something(id: $id) {
 //       id
-//       ...AuthorBioCell_user
+//       ...AuthorBioCellFragment
 //     }
 //   }
 //
 //   <AuthorBioCell user={something} />
 export const FRAGMENT = gql\`
-  fragment AuthorBioCell_user on User {
+  fragment AuthorBioCellFragment on User {
     id
   }
 \`

@@ -83,9 +83,20 @@ mutations/other queries; without it, the Cell is snapshot-only.
 
 ## The data prop name is derived in two places
 
-`AuthorCell_author` → `author` (substring after the last underscore), else
-camelCased type condition (`on User` → `user`). This derivation exists twice and
-must stay in sync (both sites carry cross-referencing comments):
+The first rule that applies wins:
+
+1. `AuthorCell_author` → `author` (substring after the last underscore)
+2. `PostCellFragmentAuthor` in `PostCell` → `author` (camelCased rest after
+   `<CellName>Fragment`, when it starts with an uppercase letter)
+3. camelCased type condition (`AuthorCellFragment on User` → `user`)
+
+Rule 2 needs the Cell's name. At runtime that's the `displayName` the Cell
+transforms (the vite plugin and the prerender rollup plugin) set from the file
+name; at generate time it's the file name itself. The cell generator emits
+`<CellName>Fragment`, so generated Cells use rule 3.
+
+This derivation exists twice and must stay in sync (both sites carry
+cross-referencing comments):
 
 - `getFragmentPropName` in
   `packages/web/src/components/cell/createFragmentCell.tsx` (runtime)

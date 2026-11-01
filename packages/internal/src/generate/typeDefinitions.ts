@@ -188,7 +188,7 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
     ? parseGqlFragmentName(cellFragment)
     : undefined
   const cellFragmentPropName = cellFragment
-    ? parseGqlFragmentPropName(cellFragment)
+    ? parseGqlFragmentPropName(cellFragment, name)
     : undefined
 
   let typeDefContents: string
