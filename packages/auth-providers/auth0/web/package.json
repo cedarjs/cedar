@@ -42,7 +42,7 @@
     "@cedarjs/auth": "workspace:*"
   },
   "devDependencies": {
-    "@auth0/auth0-spa-js": "2.29.0",
+    "@auth0/auth0-spa-js": "2.30.0",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/react": "^19.2.0",
     "concurrently": "9.2.5",
@@ -53,7 +53,7 @@
     "vitest": "5.0.5"
   },
   "peerDependencies": {
-    "@auth0/auth0-spa-js": "2.29.0"
+    "@auth0/auth0-spa-js": "2.30.0"
   },
   "engines": {
     "node": ">=24"
