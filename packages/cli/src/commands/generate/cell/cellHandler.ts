@@ -114,10 +114,12 @@ export const files = async ({
   if (fragment) {
     // The fragment is named `<CellName>Fragment`, so createFragmentCell
     // derives the data prop from the GraphQL type the fragment selects from
-    // (see getFragmentPropName in createFragmentCell.tsx)
-    const fragmentTypeVariants = nameVariants(fragment)
-    fragmentOnType = fragmentTypeVariants.pascalName
-    fragmentPropName = fragmentTypeVariants.camelName
+    // (see getFragmentPropName in createFragmentCell.tsx). The prop is derived
+    // from `fragmentOnType` the same way here. `nameVariants().camelName` can
+    // differ from that, e.g. `foo2D` for the type `Foo2d`
+    fragmentOnType = nameVariants(fragment).pascalName
+    fragmentPropName =
+      fragmentOnType.charAt(0).toLowerCase() + fragmentOnType.slice(1)
     fragmentName = `${nameVariants(cellName).pascalName}CellFragment`
   } else if (operationName) {
     const userSpecifiedOperationNameIsUnique =
