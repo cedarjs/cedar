@@ -3,10 +3,17 @@
  * with telemetry.
  *
  * Only the first line is kept, because some errors include the full stack
- * trace in the message. URLs (including connection strings like
- * `postgres://user:pass@host/db`) are replaced with `[url]`, and POSIX,
- * Windows and relative file paths are replaced with `[path]`. Hostnames in DNS
- * errors and IPv4 addresses are replaced with `[host]`.
+ * trace in the message. Then every word that could identify a user, their
+ * project or their infrastructure is replaced: anything containing `/`, `\`,
+ * `@` or `:`, and IPv4 addresses. Replacements are labelled `[url]`, `[host]`,
+ * `[path]` or `[redacted]`. Quoted paths are replaced as a whole, since they
+ * can contain spaces, and so are hostnames in DNS errors.
+ *
+ * Words that describe the failure without identifying anyone are kept:
+ * scoped package names (`@cedarjs/vite`), known specifiers (`node:fs`),
+ * version numbers, clock times and words that only end in a colon (`Error:`).
+ * What is left is the shape of the error, e.g.
+ * `ENOENT: no such file or directory, open '[path]'`.
  *
  * The same function is exported from `@cedarjs/cli-helpers/telemetry`.
  * `@cedarjs/cli-helpers` depends on this package, so this package keeps its
@@ -22,26 +29,107 @@ export function redactErrorMessage(error: unknown): string {
 
   return (
     (message.split('\n')[0] || 'Unknown error')
-      // URLs and connection strings, e.g. `https://…` or `postgres://…`.
-      // The lookbehind only lets a scheme start where a run of scheme
-      // characters starts, which keeps matching linear on long runs of them
+      // Quoted strings that contain a path separator, e.g.
+      // `'C:\Users\Ada Lovelace\x.db'`. The part before the first separator
+      // can't contain a separator, so there is only one way to match and
+      // matching stays linear
       .replace(
-        /(?<![A-Za-z0-9+.-])[A-Za-z][A-Za-z0-9+.-]*:\/\/[^\s'"`]*/g,
-        '[url]',
+        /(['"`])([^'"`\\/\n]*[\\/][^'"`\n]*)\1/g,
+        (_match, quote: string, inner: string) =>
+          `${quote}${isSafeWord(inner) ? inner : placeholderFor(inner)}${quote}`,
       )
-      // Quoted paths, which can contain spaces, e.g. `'C:\Users\Ada L\x.db'`.
-      // The part before the first separator can't contain a separator, so
-      // there is only one way to match and matching stays linear
-      .replace(/(['"`])[^'"`\\/\n]*[\\/][^'"`\n]*\1/g, '$1[path]$1')
-      // UNC paths, e.g. `\\fileserver\share\…`
-      .replace(/\\\\[^\s'"`]+/g, '[path]')
-      // Windows paths, e.g. `C:\Users\…`
-      .replace(/[A-Za-z]:\\[^\s'"`]*/g, '[path]')
-      // Hosts in Node DNS errors, e.g. `getaddrinfo ENOTFOUND db.corp`
+      // Hosts in Node DNS errors, e.g. `getaddrinfo ENOTFOUND db.corp`. Bare
+      // hostnames have no character that marks them as identifying
       .replace(/\b(ENOTFOUND|EAI_AGAIN)\s+[^\s'"`]+/g, '$1 [host]')
-      // IPv4 addresses with an optional port, e.g. `10.0.3.7:5432`
-      .replace(/\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b/g, '[host]')
-      // POSIX and relative paths, e.g. `/Users/…`, `~/…`, `./…` and `../…`
-      .replace(/(?:~|\.{1,2})?(?:\/[^\s/'"`]+)+\/?/g, '[path]')
+      .replace(/\S+/g, redactWord)
   )
+}
+
+const SCOPED_PACKAGE =
+  /^@[a-z0-9~-][\w.~-]*\/[a-z0-9~-][\w.~-]*(?:\/[\w.-]+)*(?:@[\w.^~*<>=-]+)?$/i
+const KNOWN_SPECIFIER = /^(?:node|npm|workspace|catalog):[\w.^~*<>=-]*$/
+const CLOCK_TIME = /^\d{1,2}:\d{2}(?::\d{2})?$/
+// Four groups of 1-3 digits that aren't part of a longer dotted number
+const IPV4 = /(?:^|[^\d.])\d{1,3}(?:\.\d{1,3}){3}(?![.\d])/
+const IPV6 = /^\[?[\da-f]*:[\da-f]*:[\da-f:]*\]?(?::\d+)?$/i
+const HOST_AND_PORT = /^[\w.-]+:\d+$/
+
+const LEADING_PUNCTUATION = new Set(['(', "'", '"', '`', '<', '[', '{'])
+const TRAILING_PUNCTUATION = new Set([
+  ')',
+  "'",
+  '"',
+  '`',
+  '>',
+  ']',
+  '}',
+  ',',
+  ';',
+  '.',
+  '!',
+  '?',
+])
+
+function isSafeWord(word: string) {
+  if (!/[/\\@:]/.test(word) && !IPV4.test(word)) {
+    return true
+  }
+
+  return (
+    SCOPED_PACKAGE.test(word) ||
+    KNOWN_SPECIFIER.test(word) ||
+    (word.startsWith('npm:') && SCOPED_PACKAGE.test(word.slice(4))) ||
+    CLOCK_TIME.test(word)
+  )
+}
+
+function placeholderFor(word: string) {
+  if (word.includes('://')) {
+    return '[url]'
+  }
+
+  if (IPV4.test(word) || IPV6.test(word) || HOST_AND_PORT.test(word)) {
+    return '[host]'
+  }
+
+  if (/[/\\]/.test(word)) {
+    return '[path]'
+  }
+
+  return '[redacted]'
+}
+
+/**
+ * Redacts one whitespace-separated word. Punctuation around the word, like
+ * quotes, brackets and a sentence's final period, is kept and not checked.
+ */
+function redactWord(word: string) {
+  let start = 0
+  let end = word.length
+
+  while (end > start && TRAILING_PUNCTUATION.has(word[end - 1])) {
+    end--
+  }
+
+  // A bracketed IPv6 address, e.g. `[::1]:5432`, starts with what would
+  // otherwise be treated as punctuation
+  const withoutTrailing = word.slice(0, end)
+
+  if (!CLOCK_TIME.test(withoutTrailing) && IPV6.test(withoutTrailing)) {
+    return '[host]' + word.slice(end)
+  }
+
+  while (start < end && LEADING_PUNCTUATION.has(word[start])) {
+    start++
+  }
+
+  const core = word.slice(start, end)
+  // A single trailing colon, like in `Error:` or `C:`, doesn't identify anyone
+  const checked = core.endsWith(':') ? core.slice(0, -1) : core
+
+  if (checked === '' || isSafeWord(checked)) {
+    return word
+  }
+
+  return word.slice(0, start) + placeholderFor(core) + word.slice(end)
 }

@@ -63,6 +63,72 @@ describe('redactErrorMessage', () => {
     expect(redactErrorMessage(message)).toEqual("'[path]")
   })
 
+  it('redacts every word of an unquoted path with spaces', () => {
+    expect(
+      redactErrorMessage('Cannot read /Users/Ada Lovelace/project/x.ts'),
+    ).toEqual('Cannot read [path] [path]')
+  })
+
+  it('redacts IPv6 addresses and hosts with ports', () => {
+    expect(redactErrorMessage('connect ECONNREFUSED 2001:db8:4::7')).toEqual(
+      'connect ECONNREFUSED [host]',
+    )
+    expect(redactErrorMessage('connect ECONNREFUSED [::1]:5432')).toEqual(
+      'connect ECONNREFUSED [host]',
+    )
+    expect(redactErrorMessage("Can't reach database at db.corp:5432")).toEqual(
+      "Can't reach database at [host]",
+    )
+  })
+
+  it('redacts other words containing @ or :', () => {
+    expect(redactErrorMessage('No account for ada@acme.com')).toEqual(
+      'No account for [redacted]',
+    )
+  })
+
+  it('keeps words that describe the failure', () => {
+    expect(
+      redactErrorMessage("Cannot find module '@cedarjs/vite/client'"),
+    ).toEqual("Cannot find module '@cedarjs/vite/client'")
+    expect(
+      redactErrorMessage('Cannot find package @acme/payroll@1.2.0'),
+    ).toEqual('Cannot find package @acme/payroll@1.2.0')
+    expect(redactErrorMessage('Failed to load node:fs/promises')).toEqual(
+      'Failed to load [path]',
+    )
+    expect(redactErrorMessage('Failed to load node:sqlite')).toEqual(
+      'Failed to load node:sqlite',
+    )
+    expect(redactErrorMessage('Invalid range workspace:* in npm:@a/b')).toEqual(
+      'Invalid range workspace:* in npm:@a/b',
+    )
+    expect(
+      redactErrorMessage('Requires Node >= 24.0.0, found 22.11.0.'),
+    ).toEqual('Requires Node >= 24.0.0, found 22.11.0.')
+    expect(redactErrorMessage('Error: timed out at 12:30:05 on C:')).toEqual(
+      'Error: timed out at 12:30:05 on C:',
+    )
+  })
+
+  it('only treats four groups of 1-3 digits as an IPv4 address', () => {
+    expect(redactErrorMessage('Unsupported version 1.2.3.4567')).toEqual(
+      'Unsupported version 1.2.3.4567',
+    )
+    expect(redactErrorMessage('Unsupported version 1.2.3.4.5')).toEqual(
+      'Unsupported version 1.2.3.4.5',
+    )
+    expect(redactErrorMessage('Timed out reaching (10.0.3.7).')).toEqual(
+      'Timed out reaching ([host]).',
+    )
+  })
+
+  it('handles long runs of punctuation in linear time', () => {
+    const message = ')'.repeat(200_000) + 'a/b'
+
+    expect(redactErrorMessage(message)).toEqual('[path]')
+  })
+
   it('redacts hosts in DNS errors and IPv4 addresses', () => {
     expect(
       redactErrorMessage('getaddrinfo ENOTFOUND db.acme-internal.corp'),
