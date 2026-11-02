@@ -25,6 +25,7 @@ import {
   generateTypeDefGraphQLWeb,
 } from './graphqlCodeGen.js'
 import { generateGraphQLSchema } from './graphqlSchema.js'
+import { getServiceFieldResolvers } from './serviceFieldResolvers.js'
 import {
   generateMirrorCell,
   generateMirrorDirectoryNamedModule,
@@ -55,6 +56,18 @@ const action = {
 }
 
 let routesWarningMessage = ''
+
+// The API types depend on which fields services provide field resolvers for.
+// Re-running GraphQL codegen is slow, so it's only done when these change
+let serviceFieldResolvers = JSON.stringify(getServiceFieldResolvers())
+
+const isServiceFile = (p: string) => {
+  return (
+    p.startsWith(rwjsPaths.api.services + path.sep) &&
+    /\.(js|ts)$/.test(p) &&
+    !/\.(test|scenarios|fixtures|d)\.(js|ts)$/.test(p)
+  )
+}
 
 process.stdin.on('data', async (data) => {
   const str = data.toString().trim().toLowerCase()
@@ -139,6 +152,20 @@ watcher
     ) {
       await generateGqlormArtifacts()
       finished('Prisma Schema')
+    }
+
+    // Services are also directory named modules, so this isn't part of the
+    // if/else chain above
+    if (isServiceFile(absPath)) {
+      const nextServiceFieldResolvers = JSON.stringify(
+        getServiceFieldResolvers(),
+      )
+
+      if (nextServiceFieldResolvers !== serviceFieldResolvers) {
+        serviceFieldResolvers = nextServiceFieldResolvers
+        await generateTypeDefGraphQLApi()
+        finished('Service field resolvers')
+      }
     }
 
     if (routesWarningMessage) {
