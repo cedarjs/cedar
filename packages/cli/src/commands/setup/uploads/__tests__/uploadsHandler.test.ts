@@ -280,13 +280,18 @@ describe('uploadsHandler', () => {
     )
     expect(execa).toHaveBeenCalledWith(
       'git',
-      expect.arrayContaining([
-        'check-ignore',
-        '-z',
-        servicePath,
-        path.join(BASE_PATH, 'api/src/server.ts'),
-      ]),
-      { cwd: BASE_PATH, reject: false },
+      ['check-ignore', '-z', '--stdin'],
+      expect.objectContaining({
+        cwd: BASE_PATH,
+        input: expect.stringContaining(servicePath),
+      }),
+    )
+    expect(vi.mocked(execa).mock.calls[0][2]).toEqual(
+      expect.objectContaining({
+        input: expect.stringContaining(
+          path.join(BASE_PATH, 'api/src/server.ts'),
+        ),
+      }),
     )
   })
 

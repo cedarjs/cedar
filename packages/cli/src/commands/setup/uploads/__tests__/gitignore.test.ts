@@ -58,8 +58,12 @@ describe('findIgnoredPaths', () => {
     ])
     expect(execa).toHaveBeenCalledWith(
       'git',
-      ['check-ignore', '-z', '/project/api/src/services/uploads/uploads.ts'],
-      { cwd: '/project', reject: false },
+      ['check-ignore', '-z', '--stdin'],
+      {
+        cwd: '/project',
+        input: '/project/api/src/services/uploads/uploads.ts\0',
+        reject: false,
+      },
     )
   })
 
