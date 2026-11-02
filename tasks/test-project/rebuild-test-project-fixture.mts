@@ -946,6 +946,51 @@ async function rebuildTestProject() {
       await rimraf(`${OUTPUT_PROJECT_PATH}/.nx`)
       await rimraf(`${OUTPUT_PROJECT_PATH}/tarballs`)
 
+      if (packageManager === 'npm') {
+        // tarsync points the direct Cedar dependencies of the api and web
+        // workspaces at the tarballs removed above. Pinning them to the
+        // framework version leaves no reference to files that don't exist
+        const frameworkVersion = JSON.parse(
+          fs.readFileSync(
+            path.join(
+              import.meta.dirname,
+              '..',
+              '..',
+              'packages',
+              'core',
+              'package.json',
+            ),
+            'utf8',
+          ),
+        ).version
+
+        for (const side of ['api', 'web']) {
+          const sidePackageJsonPath = path.join(
+            OUTPUT_PROJECT_PATH,
+            side,
+            'package.json',
+          )
+          const sidePackageJson = JSON.parse(
+            fs.readFileSync(sidePackageJsonPath, 'utf8'),
+          )
+
+          for (const depsKey of ['dependencies', 'devDependencies']) {
+            const deps: Record<string, string> = sidePackageJson[depsKey] ?? {}
+
+            for (const [name, spec] of Object.entries(deps)) {
+              if (spec.startsWith('file:')) {
+                deps[name] = frameworkVersion
+              }
+            }
+          }
+
+          fs.writeFileSync(
+            sidePackageJsonPath,
+            JSON.stringify(sidePackageJson, null, 2) + '\n',
+          )
+        }
+      }
+
       // Copy over package.json from template, so we remove the extra dev
       // dependencies that we added in "Adding framework dependencies to
       // project"
