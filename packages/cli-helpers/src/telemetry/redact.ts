@@ -22,8 +22,13 @@ export function redactErrorMessage(error: unknown): string {
 
   return (
     (message.split('\n')[0] || 'Unknown error')
-      // URLs and connection strings, e.g. `https://…` or `postgres://…`
-      .replace(/[A-Za-z][A-Za-z0-9+.-]*:\/\/[^\s'"`]*/g, '[url]')
+      // URLs and connection strings, e.g. `https://…` or `postgres://…`.
+      // The lookbehind only lets a scheme start where a run of scheme
+      // characters starts, which keeps matching linear on long runs of them
+      .replace(
+        /(?<![A-Za-z0-9+.-])[A-Za-z][A-Za-z0-9+.-]*:\/\/[^\s'"`]*/g,
+        '[url]',
+      )
       // Windows paths, e.g. `C:\Users\…`
       .replace(/[A-Za-z]:\\[^\s'"`]*/g, '[path]')
       // POSIX and relative paths, e.g. `/Users/…`, `~/…`, `./…` and `../…`

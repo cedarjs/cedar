@@ -32,6 +32,12 @@ describe('redactErrorMessage', () => {
     ).toEqual('Build failed')
   })
 
+  it('handles long runs of scheme characters in linear time', () => {
+    const message = 'A'.repeat(200_000)
+
+    expect(redactErrorMessage(message)).toEqual(message)
+  })
+
   it('handles non-Error values', () => {
     expect(redactErrorMessage(42)).toEqual('42')
     expect(redactErrorMessage('')).toEqual('Unknown error')
