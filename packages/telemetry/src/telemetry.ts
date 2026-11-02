@@ -3,6 +3,9 @@ import type { SpawnOptions } from 'child_process'
 import os from 'os'
 import path from 'path'
 
+import { hideBin } from 'yargs/helpers'
+
+import { commandForTelemetry } from './commandForTelemetry.js'
 import { redactErrorMessage } from './redact.js'
 
 /**
@@ -94,6 +97,22 @@ const spawnProcess = (...args: string[]) => {
   }
 }
 
+/**
+ * The running command, as described by `commandForTelemetry`. Set by
+ * `telemetryMiddleware`, which yargs runs before every command handler.
+ */
+let currentCommand: string | undefined
+
+/**
+ * Arguments that tell the telemetry script which command to report. The
+ * described command is used when it's known. Otherwise the script gets `argv`
+ * and only keeps the command and option names.
+ */
+const commandArgs = (argv: string[]) =>
+  currentCommand === undefined
+    ? ['--argv', JSON.stringify(argv)]
+    : ['--command', JSON.stringify(currentCommand)]
+
 // wrap a function in this call to get a telemetry hit including how long it took
 export const timedTelemetry = async (
   argv: string[],
@@ -112,8 +131,7 @@ export const timedTelemetry = async (
   const duration = new Date().getTime() - start.getTime()
 
   spawnProcess(
-    '--argv',
-    JSON.stringify(argv),
+    ...commandArgs(argv),
     '--duration',
     duration.toString(),
     '--type',
@@ -136,15 +154,21 @@ export const errorTelemetry = async (argv: string[], error: unknown) => {
   }
 
   spawnProcess(
-    '--argv',
-    JSON.stringify(argv),
+    ...commandArgs(argv),
     '--error',
     JSON.stringify(redactErrorMessage(error)),
   )
 }
 
-// used as yargs middleware when any command is invoked
-export const telemetryMiddleware = async () => {
+/**
+ * Used as yargs middleware when any command is invoked. Sends a telemetry
+ * event for the command, described from its yargs definition so that no
+ * values the user typed are sent.
+ */
+export const telemetryMiddleware = async (
+  argv: Record<string, unknown>,
+  yargs: unknown,
+) => {
   if (
     process.env.CEDAR_DISABLE_TELEMETRY ||
     process.env.REDWOOD_DISABLE_TELEMETRY
@@ -152,5 +176,7 @@ export const telemetryMiddleware = async () => {
     return
   }
 
-  spawnProcess('--argv', JSON.stringify(process.argv))
+  currentCommand = commandForTelemetry(argv, yargs, hideBin(process.argv))
+
+  spawnProcess(...commandArgs(process.argv))
 }

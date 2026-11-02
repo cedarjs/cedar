@@ -69,7 +69,9 @@ const SHORT_OPTION_NAME = /^-[a-zA-Z]/
 const COMMAND_NAME = /^[a-z][\w:-]*$/i
 
 /**
- * Turns `process.argv` into the `command` string sent with telemetry.
+ * Turns `process.argv` into the `command` string sent with telemetry, for
+ * events sent before the CLI has described the running command (see
+ * `commandForTelemetry`).
  *
  * Only the command and the names of the options are kept, e.g.
  * `generate --force --typescript`. Option values, positional arguments and
@@ -143,7 +145,14 @@ const buildPayload = async () => {
   const errorFlag =
     typeof rawArgv.error === 'string' ? rawArgv.error : undefined
 
-  const command = argvFlag ? sanitizeArgv(JSON.parse(argvFlag)) : ''
+  const commandFlag =
+    typeof rawArgv.command === 'string' ? rawArgv.command : undefined
+
+  const command = commandFlag
+    ? String(JSON.parse(commandFlag))
+    : argvFlag
+      ? sanitizeArgv(JSON.parse(argvFlag))
+      : ''
   payload = {
     type: typeFlag || 'command',
     command,
