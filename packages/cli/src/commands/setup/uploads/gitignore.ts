@@ -1,3 +1,5 @@
+import execa from 'execa'
+
 export const UPLOADS_GITIGNORE_ENTRY = 'api/.uploads'
 
 /**
@@ -27,4 +29,40 @@ export function transformGitignore(source: string): string {
   // Fall back to appending at the end, on a line of its own
   const prefix = source === '' || source.endsWith('\n') ? source : source + '\n'
   return prefix + UPLOADS_GITIGNORE_ENTRY + '\n'
+}
+
+/**
+ * Returns the subset of `paths` that a pre-existing `.gitignore` rule hides
+ * from git — most commonly a leftover, unanchored `uploads` or `uploads/`
+ * line from a `@cedarjs/storage` migration, which also matches the new
+ * `api/src/services/uploads/` directory this setup command generates.
+ *
+ * Resolves to an empty array if `git check-ignore` can't run (not a git
+ * repository, git isn't installed, and so on) — there's nothing meaningful
+ * to warn about in that case.
+ */
+export async function findIgnoredPaths(
+  cwd: string,
+  paths: string[],
+): Promise<string[]> {
+  if (paths.length === 0) {
+    return []
+  }
+
+  try {
+    // Exit code 1 just means none of the paths are ignored; only a thrown
+    // error (not a git repo, git missing, and so on) is unexpected here.
+    // `-z` makes git print the paths verbatim, NUL-separated, instead of
+    // quoting and escaping paths with non-ASCII characters. Git only accepts
+    // it together with `--stdin`.
+    const { stdout } = await execa('git', ['check-ignore', '-z', '--stdin'], {
+      cwd,
+      input: paths.join('\0') + '\0',
+      reject: false,
+    })
+
+    return stdout.split('\0').filter(Boolean)
+  } catch {
+    return []
+  }
 }
