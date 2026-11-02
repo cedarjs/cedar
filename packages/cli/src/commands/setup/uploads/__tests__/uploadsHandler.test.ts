@@ -306,7 +306,9 @@ describe('uploadsHandler', () => {
     await uploadsHandler.handler({ targets: ['db'], force: false })
 
     expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('api/src/services/uploads/uploads.ts'),
+      expect.stringContaining(
+        path.join('api', 'src', 'services', 'uploads', 'uploads.ts'),
+      ),
     )
     warn.mockRestore()
   })
