@@ -58,6 +58,12 @@ jobs:
           fi
         working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
 
+      - name: Check the generated type definitions
+        shell: bash
+        run: |
+          node "$GITHUB_WORKSPACE/tasks/test-project/check-generated-types.mts" . "${{ matrix.packageManager }}"
+        working-directory: ${{ steps.set-up-test-project.outputs.test-project-path }}
+
       - name: Run `cedar test web`
         shell: bash
         run: |

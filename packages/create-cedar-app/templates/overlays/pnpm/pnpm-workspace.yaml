@@ -1,5 +1,11 @@
 autoInstallPeers: false
 
+# The type definitions Cedar generates in `.cedar/types` import and augment
+# `@cedarjs/*` packages. TypeScript resolves those imports from the project
+# root's `node_modules`, where pnpm only links hoisted packages
+publicHoistPattern:
+  - '@cedarjs/*'
+
 packages:
   - api
   - web
