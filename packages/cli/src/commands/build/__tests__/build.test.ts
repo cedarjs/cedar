@@ -139,6 +139,8 @@ vi.mock('@cedarjs/prerender/detection', () => {
   return { detectPrerenderRoutes: () => [] }
 })
 
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
+
 import { handler } from '../buildHandler.js'
 
 beforeEach(() => {
@@ -265,4 +267,24 @@ test('Generating gqlorm schema task is included when experimental.gqlorm.enabled
       "Building Web...",
     ]
   `)
+})
+
+test('telemetry does not include package names or the api root path', async () => {
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+
+  await handler({
+    workspace: ['web', '@acme/payroll-utils'],
+    ud: true,
+    apiRootPath: '/acme-api',
+  })
+
+  expect(recordTelemetryAttributes).toHaveBeenCalledWith(
+    expect.objectContaining({
+      workspace: JSON.stringify(['web', 'package']),
+      apiRootPath: true,
+    }),
+  )
+  expect(
+    JSON.stringify(vi.mocked(recordTelemetryAttributes).mock.calls),
+  ).not.toMatch(/acme/)
 })

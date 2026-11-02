@@ -1,7 +1,7 @@
 import os from 'node:os'
 
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api'
-import opentelemetry, { SpanStatusCode } from '@opentelemetry/api'
+import opentelemetry from '@opentelemetry/api'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import {
   defaultResource,
@@ -18,6 +18,8 @@ import {
 import ci from 'ci-info'
 import envinfo from 'envinfo'
 import { v4 as uuidv4 } from 'uuid'
+
+import { recordTelemetryError } from '@cedarjs/cli-helpers/telemetry'
 
 import pkgJson from '../package.json' with { type: 'json' }
 const { name: packageName, version: packageVersion } = pkgJson
@@ -124,12 +126,10 @@ export async function shutdownTelemetry(): Promise<void> {
   }
 }
 
+/**
+ * Records a redacted version of `error` on the active span. See
+ * `redactErrorMessage` in `@cedarjs/cli-helpers/telemetry`.
+ */
 export function recordErrorViaTelemetry(error: unknown): void {
-  opentelemetry.trace.getActiveSpan()?.setStatus({
-    code: SpanStatusCode.ERROR,
-    message: String(error).split('\n')[0],
-  })
-  opentelemetry.trace
-    .getActiveSpan()
-    ?.recordException(error instanceof Error ? error : new Error(String(error)))
+  recordTelemetryError(error)
 }

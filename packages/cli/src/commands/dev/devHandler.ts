@@ -20,6 +20,7 @@ import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
 import { getPaths } from '../../lib/index.js'
 import { getFreePort } from '../../lib/ports.js'
 import { serverFileExists } from '../../lib/project.js'
+import { workspacesForTelemetry } from '../../lib/telemetryWorkspaces.js'
 
 import { getApiDebugFlag } from './apiDebugFlag.js'
 import { getPackageWatchCommands } from './packageWatchCommands.js'
@@ -118,7 +119,7 @@ export const handler = async ({
 }: DevHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'dev',
-    workspace: JSON.stringify(workspace),
+    workspace: workspacesForTelemetry(workspace),
     generate,
   })
 

@@ -1,6 +1,10 @@
 import type { AttributeValue, Span } from '@opentelemetry/api'
 import opentelemetry, { SpanStatusCode } from '@opentelemetry/api'
 
+import { redactError } from './redact.js'
+
+export { redactError, redactErrorMessage } from './redact.js'
+
 type TelemetryAttributes = {
   [key: string]: AttributeValue | undefined
 }
@@ -31,22 +35,24 @@ export function recordTelemetryAttributes(
 /**
  * Safely records an error to the opentelemetry span
  *
+ * Only a redacted version of the error is recorded: the first line of the
+ * message, with URLs and file paths replaced by placeholders, and no stack
+ * trace. See `redactErrorMessage`.
+ *
  * @param error An error to record to the span
  * @param span An optional span to record the error to. If not provided, the current active span will be used
  */
-export function recordTelemetryError(error: any, span?: Span) {
+export function recordTelemetryError(error: unknown, span?: Span) {
   const spanToRecord = span ?? opentelemetry.trace.getActiveSpan()
   if (spanToRecord === undefined) {
     return
   }
-  const message = error?.message ?? error?.toString() ?? 'Unknown error'
 
-  // Some errors had the full stack trace in the message, so we only want the first line
-  const firstLineOfError = message.split('\n')[0]
+  const redacted = redactError(error ?? 'Unknown error')
 
   spanToRecord.setStatus({
     code: SpanStatusCode.ERROR,
-    message: firstLineOfError,
+    message: redacted.message,
   })
-  spanToRecord.recordException(error ?? new Error(firstLineOfError))
+  spanToRecord.recordException(redacted)
 }

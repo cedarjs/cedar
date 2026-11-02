@@ -11,6 +11,8 @@ import yargsParser from 'yargs/yargs'
 import { getRawConfig, getPaths } from '@cedarjs/project-config'
 import { RWProject } from '@cedarjs/structure/dist/model/RWProject'
 
+import { redactErrorMessage } from './redact.js'
+
 interface SensitiveArgPositions {
   exec: {
     positions: number[]
@@ -215,9 +217,7 @@ const buildPayload = async () => {
 
   if (errorFlag) {
     payload.type = 'error'
-    payload.error = errorFlag
-      .split('\n')[0]
-      .replace(/(\/[@\-\.\w]+)/g, '[path]')
+    payload.error = redactErrorMessage(errorFlag)
   }
 
   const project = new RWProject()

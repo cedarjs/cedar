@@ -10,6 +10,7 @@ import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { generatePrismaClient } from '../lib/generatePrismaClient.js'
 // @ts-expect-error - Types not available for JS files
 import { getPaths } from '../lib/index.js'
+import { workspacesForTelemetry } from '../lib/telemetryWorkspaces.js'
 
 export type TypeCheckHandlerArgs = Record<string, unknown> & {
   sides?: string[]
@@ -40,7 +41,7 @@ export const handler = async ({
 
   recordTelemetryAttributes({
     command: 'type-check',
-    sides: JSON.stringify(selectedSides),
+    sides: workspacesForTelemetry(selectedSides),
     verbose,
     prisma,
     generate,
