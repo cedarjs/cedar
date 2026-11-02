@@ -160,6 +160,21 @@ describe('commandForTelemetry', () => {
     ).toEqual('data-migrate up -v -d [dist-path]')
   })
 
+  it('stops reading a short-option group at an undeclared option', async () => {
+    expect(await describe_(['prisma', 'migrate', 'dev', '-pSecret'])).toEqual(
+      'prisma [commands] -p',
+    )
+    expect(await describe_(['data-migrate', 'up', '-vxSecret'])).toEqual(
+      'data-migrate up -v -x',
+    )
+  })
+
+  it('keeps short aliases of options exec declares', async () => {
+    expect(await describe_(['exec', 'seed', '-s', '-xSecret'])).toEqual(
+      'exec [name] -s',
+    )
+  })
+
   it('replaces values attached to short options', async () => {
     expect(
       await describe_(['data-migrate', 'up', '-dtenant-acme/dist']),

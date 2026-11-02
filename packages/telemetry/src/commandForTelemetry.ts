@@ -140,21 +140,25 @@ export function commandForTelemetry(
 
     if (dashes === '-') {
       // A group of short options, e.g. `-dv`. The first option that isn't a
-      // flag takes the rest of the group as its value, e.g. `-dweb/dist`
+      // flag takes the rest of the group as its value, e.g. `-dweb/dist`.
+      // yargs parses every letter of an undeclared group as a flag, so
+      // `-pSecret` could be a value too. The group is only followed past
+      // letters that are declared
       for (const letter of matchedName) {
         if (!/[a-zA-Z]/.test(letter)) {
           break
         }
 
         const flag = isFlag(letter)
+        const known = letter in declared
 
-        if (!forwardsToUserCode || letter in declared) {
+        if (!forwardsToUserCode || known) {
           parts.push(
             flag ? `-${letter}` : `-${letter} ${placeholderFor(letter)}`,
           )
         }
 
-        if (!flag) {
+        if (!flag || !known) {
           break
         }
       }
