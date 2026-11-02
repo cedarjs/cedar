@@ -62,7 +62,10 @@ const getInfo = async (presets: Args = {}) => {
   }
 }
 
-const OPTION_NAME = /^--?[a-zA-Z][\w-]*/
+const LONG_OPTION_NAME = /^--[a-zA-Z][\w-]*/
+// A short option can have its value attached, e.g. `-dweb/dist`, so only the
+// first letter is the option's name
+const SHORT_OPTION_NAME = /^-[a-zA-Z]/
 const COMMAND_NAME = /^[a-z][\w:-]*$/i
 
 /**
@@ -75,6 +78,9 @@ const COMMAND_NAME = /^[a-z][\w:-]*$/i
  *
  * The command is the first argument after the script path. It is only kept
  * if it looks like a command name, like `build` or `data-migrate`.
+ *
+ * `exec` passes its options on to the user's script, so for `exec` only the
+ * command is kept.
  */
 export const sanitizeArgv = (argv: string[]) => {
   const args = argv.slice(2)
@@ -82,9 +88,14 @@ export const sanitizeArgv = (argv: string[]) => {
   const ownArgs =
     passthroughIndex === -1 ? args : args.slice(0, passthroughIndex)
 
+  if (ownArgs[0] === 'exec') {
+    return 'exec'
+  }
+
   return ownArgs
     .flatMap((arg, index) => {
-      const optionName = arg.match(OPTION_NAME)?.[0]
+      const optionName =
+        arg.match(LONG_OPTION_NAME)?.[0] ?? arg.match(SHORT_OPTION_NAME)?.[0]
 
       if (optionName) {
         return [optionName]

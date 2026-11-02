@@ -61,6 +61,31 @@ describe('sanitizeArgv', () => {
     )
   })
 
+  it('drops values attached to short options', () => {
+    expect(
+      sanitizeArgv([
+        'node',
+        'cedar',
+        'data-migrate',
+        'up',
+        '-dtenant-acme/dist',
+      ]),
+    ).toEqual('data-migrate -d')
+  })
+
+  it('only keeps the command for exec, since its options belong to the script', () => {
+    expect(
+      sanitizeArgv([
+        'node',
+        'cedar',
+        'exec',
+        'seed',
+        '--tenant-acme',
+        '--silent',
+      ]),
+    ).toEqual('exec')
+  })
+
   it('drops the command when an option comes first', () => {
     expect(
       sanitizeArgv(['node', 'cedar', '--cwd', '/Users/ada/acme', 'build']),
