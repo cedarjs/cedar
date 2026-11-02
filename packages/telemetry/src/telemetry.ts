@@ -3,6 +3,8 @@ import type { SpawnOptions } from 'child_process'
 import os from 'os'
 import path from 'path'
 
+import { redactErrorMessage } from './redact.js'
+
 /**
  * Quotes a single argument for a Windows shell command string.
  *
@@ -121,7 +123,11 @@ export const timedTelemetry = async (
   return result
 }
 
-export const errorTelemetry = async (argv: string[], error: any) => {
+/**
+ * Sends an error telemetry event. Only a redacted version of the error message
+ * is sent, see `redactErrorMessage`.
+ */
+export const errorTelemetry = async (argv: string[], error: unknown) => {
   if (
     process.env.CEDAR_DISABLE_TELEMETRY ||
     process.env.REDWOOD_DISABLE_TELEMETRY
@@ -129,7 +135,12 @@ export const errorTelemetry = async (argv: string[], error: any) => {
     return
   }
 
-  spawnProcess('--argv', JSON.stringify(argv), '--error', JSON.stringify(error))
+  spawnProcess(
+    '--argv',
+    JSON.stringify(argv),
+    '--error',
+    JSON.stringify(redactErrorMessage(error)),
+  )
 }
 
 // used as yargs middleware when any command is invoked

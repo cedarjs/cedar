@@ -151,8 +151,8 @@ export const builder = async (yargs: Argv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
-          host: argv.host,
-          socket: argv.socket,
+          host: argv.host !== undefined,
+          socket: argv.socket !== undefined,
         })
 
         if (argv.ud) {
@@ -339,9 +339,12 @@ export const builder = async (yargs: Argv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
-          host: argv.host,
-          socket: argv.socket,
-          apiRootPath: argv.apiRootPath,
+          host: argv.host !== undefined,
+          socket: argv.socket !== undefined,
+          // `--apiRootPath` defaults to '/', so a custom root path is anything
+          // else
+          apiRootPath:
+            argv.apiRootPath !== undefined && argv.apiRootPath !== '/',
         })
 
         // Serving the api on its own makes it the side taking public traffic,
@@ -406,9 +409,9 @@ export const builder = async (yargs: Argv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
-          host: argv.host,
-          socket: argv.socket,
-          apiHost: argv.apiHost,
+          host: argv.host !== undefined,
+          socket: argv.socket !== undefined,
+          apiHost: argv.apiHost !== undefined,
         })
 
         if (streamingEnabled) {

@@ -5,6 +5,7 @@ import yargs from 'yargs/yargs'
 
 import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
+import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 
 import { builder } from '../serve.ts'
 
@@ -53,6 +54,19 @@ vi.mock('@cedarjs/api-server/bothCliConfig', async (importOriginal) => {
     handler: vi.fn(),
   }
 })
+vi.mock('@cedarjs/web-server', async (importOriginal) => {
+  const originalWebServer = await importOriginal()
+  return {
+    description: originalWebServer.description,
+    builder: originalWebServer.builder,
+    handler: vi.fn(),
+  }
+})
+
+vi.mock('@cedarjs/cli-helpers/telemetry', () => ({
+  recordTelemetryAttributes: vi.fn(),
+}))
+
 vi.mock('execa', () => ({
   default: vi.fn((cmd, params) => ({
     cmd,
@@ -115,6 +129,76 @@ describe('yarn cedar serve', () => {
         socket: 'abc',
       }),
     )
+  })
+
+  describe('telemetry', () => {
+    it('records whether host, socket and apiRootPath were given, not their values (api)', async () => {
+      const parser = yargs().command('serve [side]', false, builder)
+
+      await parser.parse(
+        'serve api --port 5555 --host db.corp.example --apiRootPath /acme --no-ud',
+      )
+
+      expect(recordTelemetryAttributes).toHaveBeenCalledWith({
+        command: 'serve',
+        port: 5555,
+        host: true,
+        socket: false,
+        apiRootPath: true,
+      })
+      expect(
+        JSON.stringify(vi.mocked(recordTelemetryAttributes).mock.calls),
+      ).not.toMatch(/db\.corp|acme/)
+    })
+
+    it('records the default apiRootPath as not given', async () => {
+      const parser = yargs().command('serve [side]', false, builder)
+
+      await parser.parse('serve api --no-ud')
+
+      expect(recordTelemetryAttributes).toHaveBeenCalledWith(
+        expect.objectContaining({
+          host: false,
+          socket: false,
+          apiRootPath: false,
+        }),
+      )
+    })
+
+    it('records whether host and socket were given, not their values (both sides)', async () => {
+      const parser = yargs().command('serve [side]', false, builder)
+
+      await parser.parse('serve --port 9898 --socket /var/run/acme.sock')
+
+      expect(recordTelemetryAttributes).toHaveBeenCalledWith({
+        command: 'serve',
+        port: 9898,
+        host: false,
+        socket: true,
+      })
+      expect(
+        JSON.stringify(vi.mocked(recordTelemetryAttributes).mock.calls),
+      ).not.toMatch(/acme/)
+    })
+
+    it('records whether apiHost was given, not its value (web)', async () => {
+      const parser = yargs().command('serve [side]', false, builder)
+
+      await parser.parse(
+        'serve web --port 8910 --apiHost http://api.corp.example:8911',
+      )
+
+      expect(recordTelemetryAttributes).toHaveBeenCalledWith({
+        command: 'serve',
+        port: 8910,
+        host: false,
+        socket: false,
+        apiHost: true,
+      })
+      expect(
+        JSON.stringify(vi.mocked(recordTelemetryAttributes).mock.calls),
+      ).not.toMatch(/corp\.example/)
+    })
   })
 
   it('Should reject --port flag when --ud is used on both sides', async () => {
