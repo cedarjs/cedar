@@ -228,9 +228,10 @@ describe('user provided codegen scalars', () => {
 
   // The scalars Cedar maps itself, which must not fall back to `any`
   function expectBuiltInScalars(gqlTypes: string, side: 'api' | 'web') {
-    expect(gqlTypes).toContain('BigInt: { input: number; output: number; }')
-
     if (side === 'api') {
+      expect(gqlTypes).toContain(
+        'BigInt: { input: bigint | number; output: bigint | number; }',
+      )
       expect(gqlTypes).toContain(
         'JSON: { input: Prisma.InputJsonValue; output: Prisma.JsonValue; }',
       )
@@ -238,6 +239,7 @@ describe('user provided codegen scalars', () => {
         'JSONObject: { input: Prisma.InputJsonObject; output: Prisma.JsonObject; }',
       )
     } else {
+      expect(gqlTypes).toContain('BigInt: { input: number; output: number; }')
       expect(gqlTypes).toContain(
         'JSON: { input: Prisma.JsonValue; output: Prisma.JsonValue; }',
       )
