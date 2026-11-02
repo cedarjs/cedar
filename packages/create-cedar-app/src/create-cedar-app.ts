@@ -274,7 +274,7 @@ async function createCedarApp() {
       default: true,
       type: 'boolean',
       describe:
-        'Enables sending telemetry events for this create command and all Cedar CLI commands https://telemetry.redwoodjs.com',
+        'Enables sending telemetry events for this create command. Set CEDAR_DISABLE_TELEMETRY=1 to turn it off for Cedar CLI commands too',
     })
     .option('package-manager', {
       alias: 'pm',

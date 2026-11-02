@@ -26,7 +26,8 @@ vi.mock('@cedarjs/structure/dist/model/RWProject', () => ({
 
 const { startTelemetry, shutdownTelemetry, getTelemetryDir } =
   await import('../cli.js')
-const { sendPendingTelemetry, getTelemetryUid } = await import('../send.js')
+const { sendPendingTelemetry } = await import('../send.js')
+const { getTelemetryUid } = await import('../uid.js')
 const { recordTelemetryAttributes, recordTelemetryError } =
   await import('../record.js')
 const { spawnSender } = await import('../telemetry.js')
@@ -61,6 +62,7 @@ function writeEvent(file: string, event: Partial<PendingTelemetryEvent>) {
 
 const pendingEvent: PendingTelemetryEvent = {
   type: 'command',
+  uid: '2f7c8c50-5f3e-4d43-9a8a-4c6f2d0f6a1e',
   timestamp: '2026-10-26T12:00:00.000Z',
   command: 'build',
   durationMs: 1234,
@@ -89,6 +91,7 @@ describe('startTelemetry and shutdownTelemetry', () => {
 
     expect(event).toMatchObject({
       type: 'command',
+      uid: getTelemetryUid(),
       command: 'generate page',
       attributes: { force: true },
       error: 'Could not write [path]',
@@ -119,7 +122,6 @@ describe('sendPendingTelemetry', () => {
     const payload = JSON.parse(String(init.body))
     expect(payload).toEqual({
       ...pendingEvent,
-      uid: getTelemetryUid(),
       environment: { osType: 'macOS', cpuCount: 8 },
       project: {
         complexity: '2.1.2.1.3',
@@ -132,6 +134,13 @@ describe('sendPendingTelemetry', () => {
       '_1000.json',
       '_900.json',
     ])
+
+    // The saved file is exactly what was sent
+    expect(
+      JSON.parse(
+        fs.readFileSync(path.join(getTelemetryDir(), '_1000.json'), 'utf-8'),
+      ),
+    ).toEqual(payload)
   })
 
   it('keeps events that fail to send for the next run', async () => {

@@ -11,6 +11,7 @@ import type { TelemetryPayload } from './payload.js'
 import { collectTelemetry } from './record.js'
 import type { TelemetryCollector } from './record.js'
 import { spawnSender } from './telemetry.js'
+import { getTelemetryUid } from './uid.js'
 
 /**
  * A telemetry event as the CLI writes it to `.cedar/telemetry/`. The
@@ -18,7 +19,7 @@ import { spawnSender } from './telemetry.js'
  */
 export type PendingTelemetryEvent = Omit<
   TelemetryPayload,
-  'uid' | 'environment' | 'project'
+  'environment' | 'project'
 >
 
 let collector: TelemetryCollector | undefined
@@ -101,6 +102,7 @@ export function shutdownTelemetry() {
 
     const event: PendingTelemetryEvent = {
       type: 'command',
+      uid: getTelemetryUid(),
       timestamp: new Date(startTime).toISOString(),
       // The command a handler records is only used when the middleware
       // didn't run, e.g. for `--version` and `--help`
@@ -115,11 +117,16 @@ export function shutdownTelemetry() {
 
     const telemetryDir = getTelemetryDir()
     fs.mkdirSync(telemetryDir, { recursive: true })
-    fs.writeFileSync(
-      // The pid keeps CLI runs that start in the same millisecond apart
-      path.join(telemetryDir, `${startTime}-${process.pid}.json`),
-      JSON.stringify(event, null, 2),
+    // The pid keeps CLI runs that start in the same millisecond apart
+    const eventPath = path.join(
+      telemetryDir,
+      `${startTime}-${process.pid}.json`,
     )
+    // Senders only read `.json` files, so the event is written under another
+    // name first. That way a sender never reads a partly written event
+    const tempPath = `${eventPath}.tmp`
+    fs.writeFileSync(tempPath, JSON.stringify(event, null, 2))
+    fs.renameSync(tempPath, eventPath)
 
     spawnSender()
   } catch (error) {

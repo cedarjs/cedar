@@ -74,7 +74,17 @@ export function collectTelemetry(): TelemetryCollector {
     },
   }
 
+  // Subscribers run inside `channel.publish()`, and Node rethrows what they
+  // throw as an uncaught exception, so nothing may escape this function
   function onRecord(message: unknown) {
+    try {
+      collect(message)
+    } catch {
+      // A record that can't be collected is left out
+    }
+  }
+
+  function collect(message: unknown) {
     if (!isTelemetryRecord(message)) {
       return
     }
