@@ -14,7 +14,7 @@ import type { GlobalContext } from '@cedarjs/context'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { coerceRootPath } from '@cedarjs/fastify-web/dist/helpers.js'
 import { createGraphQLServer } from '@cedarjs/graphql-server'
-import type { GraphQLYogaOptions } from '@cedarjs/graphql-server'
+import type { GraphQLYogaOptions } from '@cedarjs/graphql-server/types'
 import { getPaths } from '@cedarjs/project-config'
 
 import { lambdaEventForFastifyRequest } from '../requestHandlers/awsLambdaFastify.js'

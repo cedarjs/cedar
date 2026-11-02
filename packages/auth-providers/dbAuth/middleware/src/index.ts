@@ -3,7 +3,7 @@ import type { APIGatewayProxyEvent, Context } from 'aws-lambda'
 import type { DbAuthResponse } from '@cedarjs/auth-dbauth-api' with {
   'resolution-mode': 'import',
 }
-import type { GetCurrentUser } from '@cedarjs/graphql-server'
+import type { GetCurrentUser } from '@cedarjs/graphql-server/types'
 import { MiddlewareResponse } from '@cedarjs/web/middleware'
 import type { Middleware, MiddlewareRequest } from '@cedarjs/web/middleware'
 

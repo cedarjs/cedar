@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
+import ts from 'typescript'
 import { beforeAll, afterAll, test, expect } from 'vitest'
 
 import { ensurePosixPath, getPaths } from '@cedarjs/project-config'
@@ -329,6 +330,68 @@ test('generates realtime types when the api side uses @cedarjs/realtime', () => 
 
     expect(generateTypeDefRealtime()).toEqual([])
     expect(fs.existsSync(typeDefPath)).toBe(false)
+  } finally {
+    process.env.CEDAR_CWD = FIXTURE_PATH
+    fs.rmSync(projectDir, { recursive: true, force: true })
+  }
+})
+
+test('realtime types reach the RealtimeOptions createGraphQLHandler() takes', () => {
+  // Inside the fixture, so that the generated file's imports resolve to the
+  // framework packages in this repo
+  const cedarDir = path.join(FIXTURE_PATH, '.cedar')
+  fs.mkdirSync(cedarDir, { recursive: true })
+  const projectDir = fs.mkdtempSync(path.join(cedarDir, 'realtime-check-'))
+  fs.writeFileSync(path.join(projectDir, 'cedar.toml'), '')
+  fs.mkdirSync(path.join(projectDir, 'api'))
+  fs.writeFileSync(
+    path.join(projectDir, 'api', 'package.json'),
+    JSON.stringify({ dependencies: { '@cedarjs/realtime': '1.0.0' } }),
+  )
+
+  process.env.CEDAR_CWD = projectDir
+
+  try {
+    const [typeDefPath] = generateTypeDefRealtime()
+    const checkFile = path.join(projectDir, 'realtimeCheck.ts')
+
+    fs.writeFileSync(
+      checkFile,
+      `import type { RealtimeOptions } from '@cedarjs/graphql-server'
+import type { CedarRealtimeOptions } from '@cedarjs/realtime'
+
+type Equal<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+    ? true
+    : false
+
+export const augmented: Equal<RealtimeOptions, CedarRealtimeOptions> = true
+`,
+    )
+
+    const program = ts.createProgram([typeDefPath, checkFile], {
+      target: ts.ScriptTarget.ES2023,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      strict: true,
+      noEmit: true,
+      skipLibCheck: false,
+      types: [],
+    })
+
+    const messages = [typeDefPath, checkFile].flatMap((file) => {
+      const sourceFile = program.getSourceFile(file)
+
+      return sourceFile
+        ? program
+            .getSemanticDiagnostics(sourceFile)
+            .map((diagnostic) =>
+              ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'),
+            )
+        : []
+    })
+
+    expect(messages).toEqual([])
   } finally {
     process.env.CEDAR_CWD = FIXTURE_PATH
     fs.rmSync(projectDir, { recursive: true, force: true })

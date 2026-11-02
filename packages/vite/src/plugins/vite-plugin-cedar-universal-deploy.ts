@@ -12,10 +12,8 @@ import type {
   LegacyHandler,
 } from '@cedarjs/api/runtime'
 import type * as graphqlServerModule from '@cedarjs/graphql-server'
-import type {
-  CedarGraphQLServer,
-  GraphQLYogaOptions,
-} from '@cedarjs/graphql-server'
+import type { CedarGraphQLServer } from '@cedarjs/graphql-server'
+import type { GraphQLYogaOptions } from '@cedarjs/graphql-server/types'
 import { findApiServerFunctions } from '@cedarjs/internal/dist/files.js'
 import { getPaths } from '@cedarjs/project-config'
 

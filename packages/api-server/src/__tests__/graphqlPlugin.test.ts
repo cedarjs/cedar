@@ -16,10 +16,8 @@ import {
 import { buildCedarContext } from '@cedarjs/api/runtime'
 import { createGraphQLServer } from '@cedarjs/graphql-server'
 import type * as GraphqlServerModule from '@cedarjs/graphql-server'
-import type {
-  CedarGraphQLServer,
-  GraphQLYogaOptions,
-} from '@cedarjs/graphql-server'
+import type { CedarGraphQLServer } from '@cedarjs/graphql-server'
+import type { GraphQLYogaOptions } from '@cedarjs/graphql-server/types'
 
 import type { createServer } from '../createServer.js'
 import type { CreateServerOptions } from '../createServerHelpers.js'

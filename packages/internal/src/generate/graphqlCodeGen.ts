@@ -546,7 +546,7 @@ async function getPluginConfig(side: CodegenSide) {
       query: true,
       mutation: true,
     },
-    contextType: `@cedarjs/graphql-server/dist/types#CedarGraphQLContext`,
+    contextType: `@cedarjs/graphql-server/types#CedarGraphQLContext`,
   }
 
   return pluginConfig
