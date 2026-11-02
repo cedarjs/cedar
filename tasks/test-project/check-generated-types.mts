@@ -42,25 +42,64 @@ const assertionsFile = '__generated-types-check.ts'
 
 const isAny = 'type IsAny<T> = 0 extends 1 & T ? true : false\n'
 
+// Whether the api side depends on `@cedarjs/realtime`. Cedar then generates the
+// full type of the GraphQL handler's `realtime` option, which is otherwise
+// `MinimalRealtimeOptions`
+function apiUsesRealtime() {
+  const apiPackageJson = JSON.parse(
+    fs.readFileSync(path.join(projectPath, 'api', 'package.json'), 'utf8'),
+  )
+
+  return Boolean(
+    apiPackageJson.dependencies?.['@cedarjs/realtime'] ||
+    apiPackageJson.devDependencies?.['@cedarjs/realtime'],
+  )
+}
+
 // What each side's generated types have to provide. Each assertion fails to
 // compile if its type is missing, and the `IsAny` ones fail if it is `any`
-const assertions = {
-  api: [
+function getAssertions(side: 'api' | 'web') {
+  if (side === 'web') {
+    return [
+      "import type { AvailableRoutes } from '@cedarjs/router'",
+      '',
+      'export const routesAreTyped: keyof AvailableRoutes extends never',
+      '  ? never',
+      '  : true = true',
+    ]
+  }
+
+  const realtimeType = apiUsesRealtime()
+    ? 'CedarRealtimeOptions'
+    : 'MinimalRealtimeOptions'
+  const realtimeImport = apiUsesRealtime()
+    ? "import type { CedarRealtimeOptions } from '@cedarjs/realtime'"
+    : "import type { MinimalRealtimeOptions } from '@cedarjs/graphql-server'"
+
+  return [
+    "import type { createGraphQLHandler } from '@cedarjs/graphql-server'",
+    realtimeImport,
+    '',
     isAny,
+    'type RealtimeOption = NonNullable<',
+    "  Parameters<typeof createGraphQLHandler>[0]['realtime']",
+    '>',
+    '',
     'export const contextIsTyped: IsAny<typeof context> extends false',
     '  ? true',
     '  : never = true',
     'export const currentUserIsTyped: IsAny<typeof context.currentUser> extends false',
     '  ? true',
     '  : never = true',
-  ],
-  web: [
-    "import type { AvailableRoutes } from '@cedarjs/router'",
-    '',
-    'export const routesAreTyped: keyof AvailableRoutes extends never',
-    '  ? never',
-    '  : true = true',
-  ],
+    'export const realtimeOptionIsNotAny: IsAny<RealtimeOption> extends false',
+    '  ? true',
+    '  : never = true',
+    `export const realtimeOptionIsTyped: [RealtimeOption] extends [${realtimeType}]`,
+    `  ? [${realtimeType}] extends [RealtimeOption]`,
+    '    ? true',
+    '    : never',
+    '  : never = true',
+  ]
 }
 
 const errorPattern = /^(.+?)\((\d+),(\d+)\): error (TS\d+): (.*)$/
@@ -84,7 +123,7 @@ for (const side of ['api', 'web'] as const) {
   const sidePath = path.join(projectPath, side)
   const assertionsPath = path.join(sidePath, 'src', assertionsFile)
 
-  fs.writeFileSync(assertionsPath, assertions[side].join('\n') + '\n')
+  fs.writeFileSync(assertionsPath, getAssertions(side).join('\n') + '\n')
 
   let output: string
 
