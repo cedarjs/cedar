@@ -1,10 +1,31 @@
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
+import { Parser } from 'yargs/helpers'
 
-// It's easy for the api side to exceed Render's free-plan limit.
-// Because telemetryMiddleware is added to Yargs as middleware,
-// we need to set the env var here outside the handler to correctly disable it.
-if (process.argv.slice(2).includes('api')) {
+/**
+ * Returns true when the CLI arguments are for `cedar deploy render api`.
+ *
+ * The arguments are parsed with the global and render options declared, so
+ * option values (`--cwd ../app`, `--load-env-files api`) aren't mistaken for
+ * the command or the side.
+ */
+export function isRenderApiDeploy(args: string[]) {
+  const { _: positionals } = Parser(args, {
+    boolean: ['telemetry', 'prisma', 'data-migrate'],
+    array: ['load-env-files'],
+    alias: { 'data-migrate': ['dm'] },
+  })
+  const [cliCommand, provider, side] = positionals.map(String)
+
+  return cliCommand === 'deploy' && provider === 'render' && side === 'api'
+}
+
+// It's easy for the api side to exceed Render's free-plan memory limit, so
+// telemetry is disabled for `cedar deploy render api`.
+// The CLI imports every command module at startup and decides whether to
+// start telemetry and add telemetryMiddleware before any handler runs, so the
+// env var has to be set here, at module level, rather than in the handler.
+if (isRenderApiDeploy(process.argv.slice(2))) {
   process.env.CEDAR_DISABLE_TELEMETRY = '1'
 }
 
