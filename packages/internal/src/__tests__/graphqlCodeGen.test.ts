@@ -131,6 +131,41 @@ test('Generate gql typedefs api', async () => {
   expect(data).toContain(`type AllMappedModels = MaybeOrArrayOfMaybe<Todo>`)
 })
 
+test('passes service field resolvers to the mapped model types', async () => {
+  const serviceFile = path.join(
+    FIXTURE_PATH,
+    'api/src/services/todos/todoFields.ts',
+  )
+
+  fs.writeFileSync(
+    serviceFile,
+    `export const Todo = {
+  status: () => 'done',
+  body() {
+    return 'body'
+  },
+}
+`,
+  )
+
+  // Wrapping in `try` to make sure the service file is always deleted, even if
+  // the test fails
+  try {
+    await generateGraphQLSchema()
+    const {
+      typeDefFiles: [outputPath],
+    } = await generateTypeDefGraphQLApi()
+
+    const gqlTypesOutput = fs.readFileSync(outputPath, 'utf-8')
+
+    expect(gqlTypesOutput).toContain(
+      'Todo: MergePrismaWithSdlTypes<PrismaTodo, MakeRelationsOptional<Todo, AllMappedModels>, AllMappedModels, "body" | "status">;',
+    )
+  } finally {
+    fs.rmSync(serviceFile)
+  }
+})
+
 test('respects user provided codegen config', async () => {
   const customCodegenConfigPath = path.join(FIXTURE_PATH, 'codegen.yml')
 

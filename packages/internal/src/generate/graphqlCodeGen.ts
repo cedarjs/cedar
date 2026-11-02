@@ -29,6 +29,7 @@ import { getPackageManager } from '@cedarjs/project-config/packageManager'
 import { getTsConfigs } from '../project.js'
 
 import * as rwTypescriptResolvers from './plugins/rw-typescript-resolvers/index.js'
+import { getServiceFieldResolvers } from './serviceFieldResolvers.js'
 enum CodegenSide {
   API,
   WEB,
@@ -454,15 +455,28 @@ async function getPrismaModels() {
 
 async function getPluginConfig(side: CodegenSide) {
   const prismaModels: Record<string, string> = await getPrismaModels()
+  // Resolver types are only used on the api side
+  const fieldResolvers =
+    side === CodegenSide.API ? getServiceFieldResolvers() : {}
+
   Object.keys(prismaModels).forEach((key) => {
     /** creates an object like this
      * {
-     *  Post: MergePrismaWithSdlTypes<PrismaPost, MakeRelationsOptional<Post, AllMappedModels>, AllMappedModels>>
+     *  Post: MergePrismaWithSdlTypes<PrismaPost, MakeRelationsOptional<Post, AllMappedModels>, AllMappedModels>
+     *  Organization: MergePrismaWithSdlTypes<PrismaOrganization, MakeRelationsOptional<Organization, AllMappedModels>, AllMappedModels, "smsSenderDefault">
      *  ...
      * }
+     *
+     * The last type argument lists the fields that the type's field resolvers
+     * provide, so that resolvers returning the type don't have to
      */
+    const resolvedFields = fieldResolvers[key] ?? []
+    const resolvedFieldsArg = resolvedFields.length
+      ? `, ${resolvedFields.map((field) => JSON.stringify(field)).join(' | ')}`
+      : ''
+
     prismaModels[key] =
-      `MergePrismaWithSdlTypes<Prisma${key}, MakeRelationsOptional<${key}, AllMappedModels>, AllMappedModels>`
+      `MergePrismaWithSdlTypes<Prisma${key}, MakeRelationsOptional<${key}, AllMappedModels>, AllMappedModels${resolvedFieldsArg}>`
   })
 
   interface ScalarInputOutput {
