@@ -13,65 +13,6 @@ import { RWProject } from '@cedarjs/structure/dist/model/RWProject'
 
 import { redactErrorMessage } from './redact.js'
 
-interface SensitiveArgPositions {
-  exec: {
-    positions: number[]
-    options?: never
-    redactWith: string[]
-    allowOnly: string[]
-  }
-  g: {
-    positions: number[]
-    options?: never
-    redactWith: string[]
-    allowOnly?: string[]
-  }
-  generate: {
-    positions: number[]
-    options?: never
-    redactWith: string[]
-    allowOnly?: string[]
-  }
-  prisma: {
-    positions?: never
-    options: string[]
-    redactWith: string[]
-    allowOnly?: string[]
-  }
-  lint: {
-    positions?: number[]
-    options?: never
-    redactWith: string[]
-    allowOnly: string[]
-  }
-}
-
-// Tracks any commands that could contain sensitive info and their position in
-// the argv array, as well as the text to replace them with
-const SENSITIVE_ARG_POSITIONS: SensitiveArgPositions = {
-  exec: {
-    positions: [1],
-    redactWith: ['[script]'],
-    allowOnly: ['exec'],
-  },
-  g: {
-    positions: [2, 3],
-    redactWith: ['[name]', '[path]'],
-  },
-  generate: {
-    positions: [2, 3],
-    redactWith: ['[name]', '[path]'],
-  },
-  prisma: {
-    options: ['--name'],
-    redactWith: ['[name]'],
-  },
-  lint: {
-    allowOnly: ['lint', '--fix'],
-    redactWith: ['[path]'],
-  },
-}
-
 interface Args {
   cedarVersion?: string
   command?: string
@@ -121,49 +62,50 @@ const getInfo = async (presets: Args = {}) => {
   }
 }
 
-// removes potentially sensitive information from an array of argv strings
-export const sanitizeArgv = (
-  argv: [string, string, keyof SensitiveArgPositions, ...string[]],
-) => {
-  const name = argv[2]
-  const sensitiveCommand = SENSITIVE_ARG_POSITIONS[name]
+const LONG_OPTION_NAME = /^--[a-zA-Z][\w-]*/
+// A short option can have its value attached, e.g. `-dweb/dist`, so only the
+// first letter is the option's name
+const SHORT_OPTION_NAME = /^-[a-zA-Z]/
+const COMMAND_NAME = /^[a-z][\w:-]*$/i
+
+/**
+ * Turns `process.argv` into the `command` string sent with telemetry, for
+ * events sent before the CLI has described the running command (see
+ * `commandForTelemetry`).
+ *
+ * Only the command and the names of the options are kept, e.g.
+ * `generate --force --typescript`. Option values, positional arguments and
+ * everything after `--` can contain names, paths, hosts and other values
+ * that identify a user or their project, so they are left out.
+ *
+ * The command is the first argument after the script path. It is only kept
+ * if it looks like a command name, like `build` or `data-migrate`.
+ *
+ * `exec` passes its options on to the user's script, so for `exec` only the
+ * command is kept.
+ */
+export const sanitizeArgv = (argv: string[]) => {
   const args = argv.slice(2)
+  const passthroughIndex = args.indexOf('--')
+  const ownArgs =
+    passthroughIndex === -1 ? args : args.slice(0, passthroughIndex)
 
-  if (sensitiveCommand) {
-    // redact positional arguments
-    if (sensitiveCommand.positions) {
-      sensitiveCommand.positions.forEach((pos: number, index: number) => {
-        // only redact if the text in the given position is not a --flag
-        if (args[pos] && !args[pos].includes('--')) {
-          args[pos] = sensitiveCommand.redactWith[index]
-        }
-      })
-    }
-
-    // redact --option arguments
-    if (sensitiveCommand.options) {
-      sensitiveCommand.options.forEach((option: string, index: number) => {
-        const argIndex = args.indexOf(option)
-        if (argIndex !== -1) {
-          args[argIndex + 1] = sensitiveCommand.redactWith[index]
-        }
-      })
-    }
-
-    // allow only clause
-    if (sensitiveCommand.allowOnly) {
-      args.forEach((arg: string, index: number) => {
-        if (
-          !sensitiveCommand.allowOnly?.includes(arg) &&
-          !sensitiveCommand.redactWith.includes(arg)
-        ) {
-          args[index] = sensitiveCommand.redactWith[0]
-        }
-      })
-    }
+  if (ownArgs[0] === 'exec') {
+    return 'exec'
   }
 
-  return args.join(' ')
+  return ownArgs
+    .flatMap((arg, index) => {
+      const optionName =
+        arg.match(LONG_OPTION_NAME)?.[0] ?? arg.match(SHORT_OPTION_NAME)?.[0]
+
+      if (optionName) {
+        return [optionName]
+      }
+
+      return index === 0 && COMMAND_NAME.test(arg) ? [arg] : []
+    })
+    .join(' ')
 }
 
 const buildPayload = async () => {
@@ -203,7 +145,14 @@ const buildPayload = async () => {
   const errorFlag =
     typeof rawArgv.error === 'string' ? rawArgv.error : undefined
 
-  const command = argvFlag ? sanitizeArgv(JSON.parse(argvFlag)) : ''
+  const commandFlag =
+    typeof rawArgv.command === 'string' ? rawArgv.command : undefined
+
+  const command = commandFlag
+    ? String(JSON.parse(commandFlag))
+    : argvFlag
+      ? sanitizeArgv(JSON.parse(argvFlag))
+      : ''
   payload = {
     type: typeFlag || 'command',
     command,
