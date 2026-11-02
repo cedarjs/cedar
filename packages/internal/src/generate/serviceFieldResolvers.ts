@@ -18,17 +18,25 @@ export type ServiceFieldResolvers = Record<string, string[]>
 
 const ROOT_TYPES = ['Query', 'Mutation', 'Subscription']
 
+/**
+ * Whether GraphQL server loads this file as a service. This matches the
+ * filters of the `src/services/**\/*.{js,ts}` glob import, in both
+ * vite-plugin-cedar-import-dir and babel-plugin-redwood-import-dir, so field
+ * resolvers in files that aren't loaded don't affect the generated types.
+ */
+export const isLoadedServiceFile = (filePath: string) => {
+  return (
+    /\.(js|ts)$/.test(filePath) &&
+    !filePath.includes('.test.') &&
+    !filePath.includes('.scenarios.') &&
+    !filePath.includes('.d.ts')
+  )
+}
+
 const findServiceFiles = (cwd: string = getPaths().api.services) => {
-  return fg.sync('**/*.{js,ts}', {
-    cwd,
-    absolute: true,
-    ignore: [
-      '**/*.test.{js,ts}',
-      '**/*.scenarios.{js,ts}',
-      '**/*.fixtures.{js,ts}',
-      '**/*.d.ts',
-    ],
-  })
+  return fg
+    .sync('**/*.{js,ts}', { cwd, absolute: true })
+    .filter(isLoadedServiceFile)
 }
 
 // Strips wrappers like `{ … } satisfies PostRelationResolvers` and

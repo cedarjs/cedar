@@ -25,7 +25,10 @@ import {
   generateTypeDefGraphQLWeb,
 } from './graphqlCodeGen.js'
 import { generateGraphQLSchema } from './graphqlSchema.js'
-import { getServiceFieldResolvers } from './serviceFieldResolvers.js'
+import {
+  getServiceFieldResolvers,
+  isLoadedServiceFile,
+} from './serviceFieldResolvers.js'
 import {
   generateMirrorCell,
   generateMirrorDirectoryNamedModule,
@@ -63,9 +66,7 @@ let serviceFieldResolvers = JSON.stringify(getServiceFieldResolvers())
 
 const isServiceFile = (p: string) => {
   return (
-    p.startsWith(rwjsPaths.api.services + path.sep) &&
-    /\.(js|ts)$/.test(p) &&
-    !/\.(test|scenarios|fixtures|d)\.(js|ts)$/.test(p)
+    p.startsWith(rwjsPaths.api.services + path.sep) && isLoadedServiceFile(p)
   )
 }
 
@@ -162,9 +163,20 @@ watcher
       )
 
       if (nextServiceFieldResolvers !== serviceFieldResolvers) {
-        serviceFieldResolvers = nextServiceFieldResolvers
-        await generateTypeDefGraphQLApi()
-        finished('Service field resolvers')
+        const { errors } = await generateTypeDefGraphQLApi()
+
+        if (errors.length > 0) {
+          for (const { message, error } of errors) {
+            console.error(message)
+            console.error(error)
+            console.log()
+          }
+        } else {
+          // Only remembered once the types are generated, so that the next
+          // service change retries a failed generation
+          serviceFieldResolvers = nextServiceFieldResolvers
+          finished('Service field resolvers')
+        }
       }
     }
 

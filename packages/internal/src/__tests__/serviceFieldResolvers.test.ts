@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import {
   getFieldResolversFromAst,
   getServiceFieldResolvers,
+  isLoadedServiceFile,
 } from '../generate/serviceFieldResolvers.js'
 
 const parseTs = (code: string) => {
@@ -101,5 +102,34 @@ describe('getServiceFieldResolvers', () => {
       Comment: ['post'],
       Post: ['author', 'comments', 'title'],
     })
+  })
+})
+
+describe('isLoadedServiceFile', () => {
+  test('matches the files the service glob import loads', () => {
+    expect(isLoadedServiceFile('/app/api/src/services/posts/posts.ts')).toBe(
+      true,
+    )
+    expect(isLoadedServiceFile('/app/api/src/services/posts/posts.js')).toBe(
+      true,
+    )
+    expect(
+      isLoadedServiceFile('/app/api/src/services/posts/posts.fixtures.ts'),
+    ).toBe(true)
+  })
+
+  test('skips the files the service glob import skips', () => {
+    for (const file of [
+      'posts.test.ts',
+      'posts.test.helpers.ts',
+      'posts.scenarios.ts',
+      'posts.scenarios.data.js',
+      'posts.d.ts',
+      'posts.json',
+    ]) {
+      expect(isLoadedServiceFile(`/app/api/src/services/posts/${file}`)).toBe(
+        false,
+      )
+    }
   })
 })
