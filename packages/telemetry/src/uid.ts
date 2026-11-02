@@ -10,9 +10,9 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000
 /**
  * The project's anonymous telemetry ID, stored in `.cedar/telemetry.txt`.
  * It's replaced with a new random ID once it's more than 24 hours old, so
- * events can't be linked across days. The CLI stores it in each event when
- * the event is created, so an event that is sent on a later day keeps the
- * ID of the day it was created.
+ * events can only be linked within that 24 hour window. The CLI stores it in
+ * each event when the event is created, so an event that is sent later keeps
+ * the ID it was created with.
  */
 export function getTelemetryUid() {
   const uidFile = path.join(getPaths().generated.base, 'telemetry.txt')

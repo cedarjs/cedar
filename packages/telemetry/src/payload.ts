@@ -58,8 +58,8 @@ export interface TelemetryProject {
 export interface TelemetryPayload {
   type: 'command' | 'create'
   /**
-   * A random ID that changes every 24 hours. It only lets events from the
-   * same project on the same day be grouped together
+   * A random ID that is replaced once it's 24 hours old. It only lets events
+   * from the same project within that 24 hour window be grouped together
    */
   uid: string
   /** When the command started, as an ISO 8601 string */

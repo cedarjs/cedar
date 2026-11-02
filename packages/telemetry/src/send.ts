@@ -125,12 +125,16 @@ export async function sendPendingTelemetry() {
 
       if (sent) {
         // Sent events are kept with a `_` prefix, exactly as they were sent,
-        // so users can see what was sent
-        fs.writeFileSync(
-          path.join(telemetryDir, `_${file}`),
-          JSON.stringify(payload, null, 2),
-        )
-        fs.rmSync(claimPath, { force: true })
+        // so users can see what was sent. The payload is written to the
+        // claimed file, which senders don't read, and then renamed, so a
+        // `_` file is never partly written. A sent event is never left
+        // pending, even if saving it fails
+        try {
+          fs.writeFileSync(claimPath, JSON.stringify(payload, null, 2))
+          fs.renameSync(claimPath, path.join(telemetryDir, `_${file}`))
+        } catch {
+          fs.rmSync(claimPath, { force: true })
+        }
       } else {
         // Unsent events are retried by the next sender
         fs.renameSync(claimPath, filePath)
