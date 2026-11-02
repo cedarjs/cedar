@@ -5,7 +5,8 @@
  * Only the first line is kept, because some errors include the full stack
  * trace in the message. URLs (including connection strings like
  * `postgres://user:pass@host/db`) are replaced with `[url]`, and POSIX,
- * Windows and relative file paths are replaced with `[path]`. What is left is
+ * Windows and relative file paths are replaced with `[path]`. Hostnames in DNS
+ * errors and IPv4 addresses are replaced with `[host]`. What is left is
  * the shape of the error, without user names, project names, hostnames or
  * credentials.
  *
@@ -31,6 +32,10 @@ export function redactErrorMessage(error: unknown): string {
       )
       // Windows paths, e.g. `C:\Users\…`
       .replace(/[A-Za-z]:\\[^\s'"`]*/g, '[path]')
+      // Hosts in Node DNS errors, e.g. `getaddrinfo ENOTFOUND db.corp`
+      .replace(/\b(ENOTFOUND|EAI_AGAIN)\s+[^\s'"`]+/g, '$1 [host]')
+      // IPv4 addresses with an optional port, e.g. `10.0.3.7:5432`
+      .replace(/\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b/g, '[host]')
       // POSIX and relative paths, e.g. `/Users/…`, `~/…`, `./…` and `../…`
       .replace(/(?:~|\.{1,2})?(?:\/[^\s/'"`]+)+\/?/g, '[path]')
   )

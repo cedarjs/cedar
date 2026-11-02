@@ -270,14 +270,21 @@ describe('baremetal setup handler', () => {
   })
 
   it('rejects an unknown monitor', async () => {
-    await handler({ force: false, monitor: 'forever' })
+    // Stop the handler at the exit, like the real process.exit does
+    processExitSpy.mockImplementationOnce(() => {
+      throw new Error('process.exit')
+    })
+
+    await expect(handler({ force: false, monitor: 'forever' })).rejects.toThrow(
+      'process.exit',
+    )
 
     expect(processExitSpy).toHaveBeenCalledWith(1)
     expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining('Unknown monitor "forever"'),
     )
     // The typed value is free-form user input, so it isn't sent
-    expect(recordTelemetryAttributes).toHaveBeenNthCalledWith(1, {
+    expect(recordTelemetryAttributes).toHaveBeenCalledExactlyOnceWith({
       command: 'setup deploy baremetal',
       force: false,
     })

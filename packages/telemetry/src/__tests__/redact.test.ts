@@ -32,6 +32,21 @@ describe('redactErrorMessage', () => {
     ).toEqual('Build failed')
   })
 
+  it('redacts hosts in DNS errors and IPv4 addresses', () => {
+    expect(
+      redactErrorMessage('getaddrinfo ENOTFOUND db.acme-internal.corp'),
+    ).toEqual('getaddrinfo ENOTFOUND [host]')
+    expect(redactErrorMessage('getaddrinfo EAI_AGAIN api.corp')).toEqual(
+      'getaddrinfo EAI_AGAIN [host]',
+    )
+    expect(redactErrorMessage('connect ECONNREFUSED 10.0.3.7:5432')).toEqual(
+      'connect ECONNREFUSED [host]',
+    )
+    expect(redactErrorMessage('Timed out reaching 192.168.1.20')).toEqual(
+      'Timed out reaching [host]',
+    )
+  })
+
   it('handles long runs of scheme characters in linear time', () => {
     const message = 'A'.repeat(200_000)
 
