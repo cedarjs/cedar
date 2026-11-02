@@ -24,7 +24,7 @@ describe('cedar serve', () => {
                                                   defined in files specified later
                                                   override earlier ones.       [array]
             --telemetry                           Whether to send anonymous usage
-                                                  telemetry to RedwoodJS     [boolean]
+                                                  telemetry to CedarJS       [boolean]
             --version                             Show version number        [boolean]
             --webPort, --web-port                 The port for the web server to
                                                   listen on                   [number]
@@ -74,7 +74,7 @@ describe('cedar serve', () => {
                                                     defined in files specified later
                                                     override earlier ones.       [array]
               --telemetry                           Whether to send anonymous usage
-                                                    telemetry to RedwoodJS     [boolean]
+                                                    telemetry to CedarJS       [boolean]
               --version                             Show version number        [boolean]
               --webPort, --web-port                 The port for the web server to
                                                     listen on                   [number]
