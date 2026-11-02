@@ -3,7 +3,6 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { trace, SpanStatusCode } from '@opentelemetry/api'
 import { hideBin, Parser } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
@@ -11,7 +10,11 @@ import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { loadEnvFiles } from '@cedarjs/cli-helpers/loadEnvFiles'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { findUp, getConfigPath } from '@cedarjs/project-config'
-import { telemetryMiddleware } from '@cedarjs/telemetry'
+import {
+  startTelemetry,
+  shutdownTelemetry,
+  telemetryMiddleware,
+} from '@cedarjs/telemetry/cli'
 
 import * as buildCommand from './commands/build.js'
 import * as checkCommand from './commands/check.js'
@@ -37,7 +40,6 @@ import * as upgradeCommand from './commands/upgrade/upgrade.js'
 import { exitWithError } from './lib/exit.js'
 import * as updateCheck from './lib/updateCheck.js'
 import { loadPlugins } from './plugin.js'
-import { startTelemetry, shutdownTelemetry } from './telemetry/index.js'
 
 // # Setting the CWD
 //
@@ -114,47 +116,42 @@ if (process.cwd() !== cwd) {
 loadEnvFiles()
 
 async function main() {
-  // Start telemetry if it hasn't been disabled
-  if (telemetry) {
-    startTelemetry()
-  }
-
-  // Execute CLI within a span, this will be the root span
-  const tracer = trace.getTracer('redwoodjs')
-  await tracer.startActiveSpan('cli', async (span) => {
-    // Ensure telemetry ends after a maximum of 5 minutes
-    const telemetryTimeoutTimer = setTimeout(() => {
-      shutdownTelemetry()
-    }, 5 * 60_000)
-
-    // Record if --version or --help was given because we will never hit a handler which could specify the command
-    if (version) {
-      recordTelemetryAttributes({ command: '--version' })
-    }
-    if (help) {
-      recordTelemetryAttributes({ command: '--help' })
-    }
-
-    // FIXME: There's currently a BIG RED BOX on exiting feServer
-    // Is yargs or the RW cli not passing SigInt on to the child process?
-    try {
-      // Run the command via yargs
-      await runYargs()
-    } catch (error) {
-      exitWithError(error)
-    }
-
-    // Span housekeeping
-    if (span?.isRecording()) {
-      span?.setStatus({ code: SpanStatusCode.OK })
-      span?.end()
-    }
-
-    // Clear the timeout timer since we haven't timed out
-    clearTimeout(telemetryTimeoutTimer)
+  const pkgJson = await import('../package.json', {
+    with: { type: 'json' },
   })
 
-  // Shutdown telemetry, ensures data is sent before the process exits
+  // Start telemetry if it hasn't been disabled
+  if (telemetry) {
+    startTelemetry({ cedarVersion: pkgJson.default['version'] })
+  }
+
+  // Long running commands, like `cedar dev`, send their telemetry event
+  // after at most 5 minutes
+  const telemetryTimeoutTimer = setTimeout(() => {
+    shutdownTelemetry()
+  }, 5 * 60_000)
+  telemetryTimeoutTimer.unref()
+
+  // Record if --version or --help was given because we will never hit a handler which could specify the command
+  if (version) {
+    recordTelemetryAttributes({ command: '--version' })
+  }
+  if (help) {
+    recordTelemetryAttributes({ command: '--help' })
+  }
+
+  // FIXME: There's currently a BIG RED BOX on exiting feServer
+  // Is yargs or the RW cli not passing SigInt on to the child process?
+  try {
+    // Run the command via yargs
+    await runYargs()
+  } catch (error) {
+    exitWithError(error)
+  }
+
+  clearTimeout(telemetryTimeoutTimer)
+
+  // Writes the telemetry event and starts sending it in the background
   if (telemetry) {
     shutdownTelemetry()
   }
@@ -194,7 +191,7 @@ async function runYargs() {
       "Run a script, also loading env vars from '.env.stripe' and '.env.nakama'",
     )
     .option('telemetry', {
-      describe: 'Whether to send anonymous usage telemetry to RedwoodJS',
+      describe: 'Whether to send anonymous usage telemetry to CedarJS',
       boolean: true,
       // hidden: true,
     })

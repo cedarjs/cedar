@@ -8,6 +8,21 @@
   },
   "license": "MIT",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
+    },
+    "./record": {
+      "types": "./dist/record.d.ts",
+      "default": "./dist/record.js"
+    },
+    "./package.json": "./package.json"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -24,7 +39,6 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/structure": "workspace:*",
-    "@whatwg-node/fetch": "0.12.1",
     "ci-info": "4.4.0",
     "envinfo": "7.21.0",
     "uuid": "11.1.1",

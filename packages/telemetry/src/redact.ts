@@ -15,9 +15,8 @@
  * What is left is the shape of the error, e.g.
  * `ENOENT: no such file or directory, open '[path]'`.
  *
- * The same function is exported from `@cedarjs/cli-helpers/telemetry`.
- * `@cedarjs/cli-helpers` depends on this package, so this package keeps its
- * own copy instead of importing it from there.
+ * This module has no imports so it can be bundled into create-cedar-app
+ * without pulling in anything else.
  */
 export function redactErrorMessage(error: unknown): string {
   const message =
