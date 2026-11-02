@@ -495,7 +495,15 @@ async function getPluginConfig(side: CodegenSide) {
     | 'File'
   const scalars: Partial<Record<ScalarKeys, string | ScalarInputOutput>> = {
     // We need these, otherwise these scalars are mapped to any
-    BigInt: 'number',
+    // On the api side resolvers can return a `bigint` (which is what Prisma
+    // returns for BigInt columns) or a `number`. graphql-scalars'
+    // BigIntResolver parses incoming values to a `number` when they fit in a
+    // safe integer and `BigInt.prototype.toJSON` isn't patched, and to a
+    // `bigint` otherwise, so inputs can be either
+    BigInt:
+      side === CodegenSide.WEB
+        ? 'number'
+        : { input: 'bigint | number', output: 'bigint | number' },
     // @Note: DateTime fields can be valid Date-strings, or the Date object in the api side. They're strings on the web side, unless `graphql.parsedScalars.DateTime` is set. Then they are Date objects when the web side reads them, and Apollo Client accepts a Date or a string when they're sent.
     DateTime:
       side === CodegenSide.WEB
