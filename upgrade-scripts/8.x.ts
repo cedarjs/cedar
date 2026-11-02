@@ -354,6 +354,54 @@ function findJestTypesConfigs() {
   return configs
 }
 
+/**
+ * Whether this is a pnpm project that doesn't hoist `@cedarjs/*` packages to
+ * the root `node_modules`.
+ *
+ * The type definitions Cedar generates in `.cedar/types` import and augment
+ * those packages. TypeScript resolves the imports from the project root,
+ * where pnpm only links hoisted packages.
+ *
+ * Reads the settings with regular expressions rather than a YAML parser. The
+ * patterns can also come from `.npmrc`, or be implied by `shamefullyHoist`.
+ */
+function isMissingCedarPublicHoist() {
+  const workspacePath = path.join(projectPaths.base, 'pnpm-workspace.yaml')
+
+  if (!fs.existsSync(workspacePath)) {
+    return false
+  }
+
+  const workspace = fs.readFileSync(workspacePath, 'utf8')
+  const npmrcPath = path.join(projectPaths.base, '.npmrc')
+  const npmrc = fs.existsSync(npmrcPath)
+    ? fs.readFileSync(npmrcPath, 'utf8')
+    : ''
+
+  if (
+    /^shamefullyHoist:\s*true\b/m.test(workspace) ||
+    /^shamefully-hoist\s*=\s*true\b/m.test(npmrc)
+  ) {
+    return false
+  }
+
+  const yamlList = /^publicHoistPattern:[ \t]*\n((?:[ \t]+-.*\n?)*)/m.exec(
+    workspace,
+  )
+  const patterns = [
+    ...Array.from(
+      yamlList?.[1].matchAll(/^\s*-\s*['"]?([^'"\s]+)['"]?/gm) ?? [],
+      (match) => match[1],
+    ),
+    ...Array.from(
+      npmrc.matchAll(/^public-hoist-pattern(?:\[\])?\s*=\s*(\S+)/gm),
+      (match) => match[1],
+    ),
+  ]
+
+  return !patterns.some((pattern) => ['@cedarjs/*', '*'].includes(pattern))
+}
+
 async function main() {
   // Set by any check that has found something the user must fix before
   // upgrading. Checked once at the end so every problem gets reported in one
@@ -490,6 +538,19 @@ async function main() {
       'Make sure `vitest` is in the devDependencies of api/package.json and\n' +
         'web/package.json, so `vitest/globals` can be resolved from each side.\n' +
         'New projects declare it in both.',
+    ])
+  }
+
+  if (isMissingCedarPublicHoist()) {
+    warn('Cedar packages are not hoisted by pnpm', [
+      'pnpm only links your direct dependencies into the root `node_modules`.\n' +
+        'The type definitions Cedar generates in `.cedar/types` import\n' +
+        '`@cedarjs/*` packages from there, so TypeScript cannot resolve them.\n' +
+        'Types they augment, like `AvailableRoutes`, silently become `any` or\n' +
+        'go missing.',
+      'Add this to pnpm-workspace.yaml and run `pnpm install`:\n\n' +
+        '    publicHoistPattern:\n' +
+        "      - '@cedarjs/*'",
     ])
   }
 

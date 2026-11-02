@@ -334,3 +334,77 @@ describe('8.x: Jest types in tsconfig and jsconfig', () => {
     }
   })
 })
+
+describe('8.x: Cedar packages hoisted by pnpm', () => {
+  function createProject(files: Record<string, string>) {
+    const projectPath = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'cedar-8x-pnpm-hoist-'),
+    )
+
+    fs.writeFileSync(path.join(projectPath, 'cedar.toml'), '')
+
+    for (const [file, content] of Object.entries(files)) {
+      fs.writeFileSync(path.join(projectPath, file), content)
+    }
+
+    return projectPath
+  }
+
+  function run(files: Record<string, string>) {
+    const projectPath = createProject(files)
+
+    try {
+      return runScriptIn(projectPath)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  }
+
+  test('warns without aborting when a pnpm project does not hoist them', () => {
+    const { status, stdout, stderr } = run({
+      'pnpm-workspace.yaml': 'packages:\n  - api\n  - web\n',
+    })
+
+    assert.equal(stderr, '')
+    assert.equal(status, 0)
+    assert.match(stdout, /Cedar packages are not hoisted by pnpm/)
+    assert.match(stdout, /publicHoistPattern:/)
+  })
+
+  test('warns when the hoist pattern does not cover them', () => {
+    const { stdout } = run({
+      'pnpm-workspace.yaml':
+        "publicHoistPattern:\n  - '*eslint*'\n\npackages:\n  - api\n",
+    })
+
+    assert.match(stdout, /Cedar packages are not hoisted by pnpm/)
+  })
+
+  test('accepts a workspace file that hoists @cedarjs/*', () => {
+    const { stdout } = run({
+      'pnpm-workspace.yaml':
+        "packages:\n  - api\n\npublicHoistPattern:\n  - '@cedarjs/*'\n",
+    })
+
+    assert.doesNotMatch(stdout, /not hoisted by pnpm/)
+  })
+
+  test('accepts the pattern in .npmrc, and shamefully hoisting', () => {
+    const fromNpmrc = run({
+      'pnpm-workspace.yaml': 'packages:\n  - api\n',
+      '.npmrc': 'public-hoist-pattern[]=@cedarjs/*\n',
+    })
+    const shamefully = run({
+      'pnpm-workspace.yaml': 'shamefullyHoist: true\npackages:\n  - api\n',
+    })
+
+    assert.doesNotMatch(fromNpmrc.stdout, /not hoisted by pnpm/)
+    assert.doesNotMatch(shamefully.stdout, /not hoisted by pnpm/)
+  })
+
+  test('ignores projects that do not use pnpm', () => {
+    const { stdout } = run({})
+
+    assert.doesNotMatch(stdout, /not hoisted by pnpm/)
+  })
+})

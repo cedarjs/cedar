@@ -161,6 +161,13 @@ export async function setUpTestProject({
         // is why only pnpm was affected
         'autoInstallPeers: false',
         '',
+        // The type definitions Cedar generates in `.cedar/types` import and
+        // augment `@cedarjs/*` packages. TypeScript resolves those imports
+        // from the project root's `node_modules`, where pnpm only links
+        // hoisted packages
+        'publicHoistPattern:',
+        "  - '@cedarjs/*'",
+        '',
         'packages:',
         '  - api',
         '  - web',
@@ -295,6 +302,18 @@ export async function setUpTestProject({
           'or yarn install may have partially failed.',
       )
     }
+  }
+
+  if (packageManager === 'pnpm') {
+    // On a first install pnpm links the packages matched by `publicHoistPattern`
+    // from the dependency graph as it was before the tarball overrides were
+    // applied. Those links point at packages that aren't installed. Installing
+    // again from the lockfile that the first install wrote links the right ones
+    await fs.promises.rm(path.join(testProjectPath, 'node_modules'), {
+      recursive: true,
+      force: true,
+    })
+    await execInProject('pnpm install')
   }
 
   const cedar = cedarPrefix(packageManager)
