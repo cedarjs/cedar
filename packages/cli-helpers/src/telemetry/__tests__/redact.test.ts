@@ -37,6 +37,32 @@ describe('redactErrorMessage', () => {
     ).toEqual('Build failed')
   })
 
+  it('redacts whole quoted paths, including spaces', () => {
+    expect(
+      redactErrorMessage(
+        "ENOENT: open 'C:\\Users\\Ada Lovelace\\clients\\acme\\db.sqlite'",
+      ),
+    ).toEqual("ENOENT: open '[path]'")
+    expect(
+      redactErrorMessage('Cannot read "/Users/Ada Lovelace/My Projects/x.ts"'),
+    ).toEqual('Cannot read "[path]"')
+    expect(redactErrorMessage("Unexpected token '}' in JSON")).toEqual(
+      "Unexpected token '}' in JSON",
+    )
+  })
+
+  it('redacts UNC paths', () => {
+    expect(
+      redactErrorMessage('Cannot find \\\\fileserver\\share\\acme\\app'),
+    ).toEqual('Cannot find [path]')
+  })
+
+  it('redacts quoted strings without a closing quote in linear time', () => {
+    const message = "'" + '/a'.repeat(100_000)
+
+    expect(redactErrorMessage(message)).toEqual("'[path]")
+  })
+
   it('redacts hosts in DNS errors and IPv4 addresses', () => {
     expect(
       redactErrorMessage('getaddrinfo ENOTFOUND db.acme-internal.corp'),

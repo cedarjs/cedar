@@ -29,6 +29,12 @@ export function redactErrorMessage(error: unknown): string {
         /(?<![A-Za-z0-9+.-])[A-Za-z][A-Za-z0-9+.-]*:\/\/[^\s'"`]*/g,
         '[url]',
       )
+      // Quoted paths, which can contain spaces, e.g. `'C:\Users\Ada L\x.db'`.
+      // The part before the first separator can't contain a separator, so
+      // there is only one way to match and matching stays linear
+      .replace(/(['"`])[^'"`\\/\n]*[\\/][^'"`\n]*\1/g, '$1[path]$1')
+      // UNC paths, e.g. `\\fileserver\share\…`
+      .replace(/\\\\[^\s'"`]+/g, '[path]')
       // Windows paths, e.g. `C:\Users\…`
       .replace(/[A-Za-z]:\\[^\s'"`]*/g, '[path]')
       // Hosts in Node DNS errors, e.g. `getaddrinfo ENOTFOUND db.corp`
