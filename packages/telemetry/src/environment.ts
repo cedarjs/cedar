@@ -52,7 +52,7 @@ export async function getTelemetryEnvironment(): Promise<TelemetryEnvironment> {
     vscodeVersion: info.IDEs?.VSCode?.version,
     cpuCount: os.availableParallelism(),
     memoryGb: Math.round(os.totalmem() / 1073741824),
-    nodeEnv: process.env.NODE_ENV || undefined,
+    nodeEnv: describeNodeEnv(process.env.NODE_ENV),
     ci: ci.isCI,
     cedarCi: !!process.env.CEDAR_CI,
     devEnvironment: Object.keys(process.env).some((key) =>
@@ -61,4 +61,18 @@ export async function getTelemetryEnvironment(): Promise<TelemetryEnvironment> {
       ? 'gitpod'
       : undefined,
   }
+}
+
+const KNOWN_NODE_ENVS = new Set(['development', 'production', 'test'])
+
+/**
+ * `NODE_ENV` can be set to anything, like the name of a project's staging
+ * environment, so only the common values are sent as they are
+ */
+function describeNodeEnv(nodeEnv: string | undefined) {
+  if (!nodeEnv) {
+    return undefined
+  }
+
+  return KNOWN_NODE_ENVS.has(nodeEnv) ? nodeEnv : 'other'
 }

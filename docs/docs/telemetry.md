@@ -38,10 +38,12 @@ five minutes. The event is written to `.cedar/telemetry/` in your project and
 sent by a background process, so the CLI never waits on the network. Events
 that can't be sent are retried the next time you run a command.
 
-The newest eight events stay in `.cedar/telemetry/`, so you can see exactly
-what was sent. Sent events have a `_` prefix in their file name.
+The newest eight CLI events stay in `.cedar/telemetry/`, so you can see
+exactly what was sent. Sent events have a `_` prefix in their file name.
 
-`create-cedar-app` sends one event when it finishes creating an app.
+`create-cedar-app` sends one event when it finishes creating an app. It's
+sent directly and isn't saved, so use `CEDAR_VERBOSE_TELEMETRY` (see
+[Troubleshooting](#troubleshooting)) to see it.
 
 ## What's sent
 
@@ -87,7 +89,7 @@ Here's an example event for `yarn cedar generate page Payroll /payroll`:
 | `attributes`   | The flags and option values the command uses, like `force` or `typescript`. Only booleans, numbers and fixed option values are recorded: never names, paths, hosts or other values you type                                                                                                                                                                                                                                                                       |
 | `error`        | Only included when the command failed. The first line of the error message. Paths, URLs, hosts, email addresses and the command line of a failed command are replaced by placeholders such as `[path]` and `[command]`. Other words in the message are kept                                                                                                                                                                                                       |
 | `cedarVersion` | The version of the Cedar CLI, or of `create-cedar-app`                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `environment`  | Your OS type and version, the name of your shell, the versions of Node.js, Yarn, npm and VS Code, CPU count, memory in GB, `NODE_ENV`, whether the command ran in CI, and whether it ran in Gitpod                                                                                                                                                                                                                                                                |
+| `environment`  | Your OS type and version, the name of your shell, the versions of Node.js, Yarn, npm and VS Code, CPU count, memory in GB, `NODE_ENV` if it's `development`, `production` or `test` (any other value is sent as `other`), whether the command ran in CI, and whether it ran in Gitpod                                                                                                                                                                             |
 | `project`      | Not included for `create` events. `complexity` counts your routes, prerendered routes, services, cells and pages. `sides` lists your project's sides, and `experiments` the `[experimental]` sections in `cedar.toml`                                                                                                                                                                                                                                             |
 
 ## Troubleshooting

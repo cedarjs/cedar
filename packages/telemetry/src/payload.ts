@@ -32,6 +32,7 @@ export interface TelemetryEnvironment {
   vscodeVersion: string | undefined
   cpuCount: number
   memoryGb: number
+  /** `development`, `production`, `test` or `other` */
   nodeEnv: string | undefined
   /** Whether this ran in a CI environment */
   ci: boolean
