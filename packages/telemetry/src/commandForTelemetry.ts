@@ -124,6 +124,11 @@ export function commandForTelemetry(
   const ownArgs =
     passthroughIndex === -1 ? rawArgs : rawArgs.slice(0, passthroughIndex)
 
+  const isFlag = (key: string) =>
+    booleans.includes(key) || typeof argv[key] === 'boolean'
+  const placeholderFor = (key: string) =>
+    `[${Object.keys(aliases).find((alias) => aliases[alias]?.includes(key)) ?? key}]`
+
   for (const arg of ownArgs) {
     const match = arg.match(OPTION)
 
@@ -132,24 +137,45 @@ export function commandForTelemetry(
     }
 
     const [, dashes, matchedName] = match
-    // A short option can have its value attached, e.g. `-dweb/dist`, so only
-    // the first letter is the option's name
-    const name = dashes === '-' ? matchedName[0] : matchedName
+
+    if (dashes === '-') {
+      // A group of short options, e.g. `-dv`. The first option that isn't a
+      // flag takes the rest of the group as its value, e.g. `-dweb/dist`
+      for (const letter of matchedName) {
+        if (!/[a-zA-Z]/.test(letter)) {
+          break
+        }
+
+        const flag = isFlag(letter)
+
+        if (!forwardsToUserCode || letter in declared) {
+          parts.push(
+            flag ? `-${letter}` : `-${letter} ${placeholderFor(letter)}`,
+          )
+        }
+
+        if (!flag) {
+          break
+        }
+      }
+
+      continue
+    }
+
     const key =
-      name.startsWith('no-') && !(name in declared) ? name.slice(3) : name
+      matchedName.startsWith('no-') && !(matchedName in declared)
+        ? matchedName.slice(3)
+        : matchedName
 
     if (forwardsToUserCode && !(key in declared)) {
       continue
     }
 
-    if (booleans.includes(key) || typeof argv[key] === 'boolean') {
-      parts.push(`${dashes}${name}`)
-    } else {
-      const longName =
-        Object.keys(aliases).find((alias) => aliases[alias]?.includes(key)) ??
-        key
-      parts.push(`${dashes}${name} [${longName}]`)
-    }
+    parts.push(
+      isFlag(key)
+        ? `--${matchedName}`
+        : `--${matchedName} ${placeholderFor(key)}`,
+    )
   }
 
   return parts.join(' ')

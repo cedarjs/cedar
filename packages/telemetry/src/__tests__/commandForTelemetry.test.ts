@@ -72,7 +72,11 @@ async function describe_(args: string[]) {
       y.command(
         'up',
         'up',
-        (y) => y.option('dist-path', { alias: 'd', type: 'string' }),
+        (y) =>
+          y
+            .option('dist-path', { alias: 'd', type: 'string' })
+            .option('verbose', { alias: 'v', type: 'boolean' })
+            .option('force', { alias: 'f', type: 'boolean' }),
         () => {},
       ),
     )
@@ -145,6 +149,15 @@ describe('commandForTelemetry', () => {
     expect(await describe_(['exec', 'seed', '--no-prisma'])).toEqual(
       'exec [name] --no-prisma',
     )
+  })
+
+  it('keeps every flag in a group of short options', async () => {
+    expect(await describe_(['data-migrate', 'up', '-vf'])).toEqual(
+      'data-migrate up -v -f',
+    )
+    expect(
+      await describe_(['data-migrate', 'up', '-vdtenant-acme/dist']),
+    ).toEqual('data-migrate up -v -d [dist-path]')
   })
 
   it('replaces values attached to short options', async () => {
