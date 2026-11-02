@@ -318,7 +318,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/checksums@npm:^3.1002.0":
+"@aws-sdk/checksums@npm:^3.1002.1":
   version: 3.1002.1
   resolution: "@aws-sdk/checksums@npm:3.1002.1"
   dependencies:
@@ -331,26 +331,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/client-s3@npm:3.1160.0":
-  version: 3.1160.0
-  resolution: "@aws-sdk/client-s3@npm:3.1160.0"
+"@aws-sdk/client-s3@npm:3.1161.0":
+  version: 3.1161.0
+  resolution: "@aws-sdk/client-s3@npm:3.1161.0"
   dependencies:
-    "@aws-sdk/checksums": "npm:^3.1002.0"
-    "@aws-sdk/core": "npm:^3.979.0"
-    "@aws-sdk/credential-provider-node": "npm:^3.972.91"
-    "@aws-sdk/middleware-sdk-s3": "npm:^3.972.84"
-    "@aws-sdk/signature-v4-multi-region": "npm:^3.996.50"
+    "@aws-sdk/checksums": "npm:^3.1002.1"
+    "@aws-sdk/core": "npm:^3.979.1"
+    "@aws-sdk/credential-provider-node": "npm:^3.972.92"
+    "@aws-sdk/middleware-sdk-s3": "npm:^3.972.85"
+    "@aws-sdk/signature-v4-multi-region": "npm:^3.996.51"
     "@aws-sdk/types": "npm:^3.975.0"
-    "@smithy/core": "npm:^3.37.0"
+    "@smithy/core": "npm:^3.38.0"
     "@smithy/fetch-http-handler": "npm:^5.8.0"
-    "@smithy/node-http-handler": "npm:^4.13.0"
+    "@smithy/node-http-handler": "npm:^4.14.0"
     "@smithy/types": "npm:^4.19.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/6bbd582e8394d2866400ed67df717a546fc9cd404039aca059b5566af4335b83635e36728680156f49416652679a5200a66fe059074bf7d6e2bca41d71db30a7
+  checksum: 10c0/6e6ea2ae9dda987f337e1c94e6f22745a3db42ceca8ff169e7be3f5f7af02cc5c3c0c11f41d194934062461d5b41095966ce8ddc65777db8bea1594b9a564085
   languageName: node
   linkType: hard
 
-"@aws-sdk/core@npm:^3.979.0, @aws-sdk/core@npm:^3.979.1":
+"@aws-sdk/core@npm:^3.979.1":
   version: 3.979.1
   resolution: "@aws-sdk/core@npm:3.979.1"
   dependencies:
@@ -429,7 +429,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/credential-provider-node@npm:^3.972.91":
+"@aws-sdk/credential-provider-node@npm:^3.972.92":
   version: 3.972.92
   resolution: "@aws-sdk/credential-provider-node@npm:3.972.92"
   dependencies:
@@ -490,7 +490,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/middleware-sdk-s3@npm:^3.972.84":
+"@aws-sdk/middleware-sdk-s3@npm:^3.972.85":
   version: 3.972.85
   resolution: "@aws-sdk/middleware-sdk-s3@npm:3.972.85"
   dependencies:
@@ -520,21 +520,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/s3-request-presigner@npm:3.1160.0":
-  version: 3.1160.0
-  resolution: "@aws-sdk/s3-request-presigner@npm:3.1160.0"
+"@aws-sdk/s3-request-presigner@npm:3.1161.0":
+  version: 3.1161.0
+  resolution: "@aws-sdk/s3-request-presigner@npm:3.1161.0"
   dependencies:
-    "@aws-sdk/core": "npm:^3.979.0"
-    "@aws-sdk/signature-v4-multi-region": "npm:^3.996.50"
+    "@aws-sdk/core": "npm:^3.979.1"
+    "@aws-sdk/signature-v4-multi-region": "npm:^3.996.51"
     "@aws-sdk/types": "npm:^3.975.0"
-    "@smithy/core": "npm:^3.37.0"
+    "@smithy/core": "npm:^3.38.0"
     "@smithy/types": "npm:^4.19.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/06171733aa271434f9ecaa6356847f91ba1f3aee7189bbe6281795fe8d11b859f9c784a73d344813db87082b4b5f083a610eba064bd8e3d6b6d964f8f2a2e184
+  checksum: 10c0/4e1c2cc0002fef74588dbcd116f9ffbad233d94d5be0093cba58a6aa30d67cce2efde91ac97100c50ed46113b83a72ffde5429ea0a59281b69d1677e30614b6c
   languageName: node
   linkType: hard
 
-"@aws-sdk/signature-v4-multi-region@npm:^3.996.50, @aws-sdk/signature-v4-multi-region@npm:^3.996.51":
+"@aws-sdk/signature-v4-multi-region@npm:^3.996.51":
   version: 3.996.51
   resolution: "@aws-sdk/signature-v4-multi-region@npm:3.996.51"
   dependencies:
@@ -3945,8 +3945,8 @@ __metadata:
   dependencies:
     "@apollo/client": "npm:4.3.5"
     "@arethetypeswrong/cli": "npm:0.18.5"
-    "@aws-sdk/client-s3": "npm:3.1160.0"
-    "@aws-sdk/s3-request-presigner": "npm:3.1160.0"
+    "@aws-sdk/client-s3": "npm:3.1161.0"
+    "@aws-sdk/s3-request-presigner": "npm:3.1161.0"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/context": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
@@ -10959,7 +10959,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@smithy/core@npm:^3.33.2, @smithy/core@npm:^3.33.3, @smithy/core@npm:^3.37.0, @smithy/core@npm:^3.38.0, @smithy/core@npm:^3.38.1":
+"@smithy/core@npm:^3.33.2, @smithy/core@npm:^3.33.3, @smithy/core@npm:^3.38.0, @smithy/core@npm:^3.38.1":
   version: 3.38.1
   resolution: "@smithy/core@npm:3.38.1"
   dependencies:
@@ -10991,7 +10991,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@smithy/node-http-handler@npm:^4.13.0, @smithy/node-http-handler@npm:^4.14.0":
+"@smithy/node-http-handler@npm:^4.14.0":
   version: 4.14.1
   resolution: "@smithy/node-http-handler@npm:4.14.1"
   dependencies:
