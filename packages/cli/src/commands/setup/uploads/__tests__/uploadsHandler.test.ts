@@ -280,9 +280,30 @@ describe('uploadsHandler', () => {
     )
     expect(execa).toHaveBeenCalledWith(
       'git',
-      expect.arrayContaining(['check-ignore', servicePath]),
+      expect.arrayContaining([
+        'check-ignore',
+        '-z',
+        servicePath,
+        path.join(BASE_PATH, 'api/src/server.ts'),
+      ]),
       { cwd: BASE_PATH, reject: false },
     )
+  })
+
+  it('prints a persistent warning when generated files are ignored', async () => {
+    const servicePath = path.join(
+      BASE_PATH,
+      'api/src/services/uploads/uploads.ts',
+    )
+    vi.mocked(execa).mockResolvedValue({ stdout: servicePath } as never)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await uploadsHandler.handler({ targets: ['db'], force: false })
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('api/src/services/uploads/uploads.ts'),
+    )
+    warn.mockRestore()
   })
 
   it('does not fail setup when git check-ignore can not run', async () => {

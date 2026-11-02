@@ -52,12 +52,14 @@ export async function findIgnoredPaths(
   try {
     // Exit code 1 just means none of the paths are ignored; only a thrown
     // error (not a git repo, git missing, and so on) is unexpected here.
-    const { stdout } = await execa('git', ['check-ignore', ...paths], {
+    // `-z` makes git print the paths verbatim, NUL-separated, instead of
+    // quoting and escaping paths with non-ASCII characters.
+    const { stdout } = await execa('git', ['check-ignore', '-z', ...paths], {
       cwd,
       reject: false,
     })
 
-    return stdout.split('\n').filter(Boolean)
+    return stdout.split('\0').filter(Boolean)
   } catch {
     return []
   }

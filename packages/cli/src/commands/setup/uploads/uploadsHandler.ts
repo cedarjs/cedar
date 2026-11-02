@@ -131,6 +131,11 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
   // migration can silently hide these from git.
   const generatedFilePaths: string[] = []
 
+  // Set by the .gitignore check and printed once the task list is done. The
+  // Listr renderer discards task output when a task finishes, so a warning
+  // set on `task.output` would not stay visible.
+  let ignoredFilesWarning: string | undefined
+
   const writeTemplateFile = async (
     templateFile: string,
     outputPath: string,
@@ -360,11 +365,11 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
       },
       {
         title: 'Checking the generated files are tracked by git...',
-        task: async (_ctx, task) => {
-          const ignoredPaths = await findIgnoredPaths(
-            paths.base,
-            generatedFilePaths,
-          )
+        task: async () => {
+          const ignoredPaths = await findIgnoredPaths(paths.base, [
+            ...generatedFilePaths,
+            serverFilePath,
+          ])
 
           if (ignoredPaths.length === 0) {
             return
@@ -372,14 +377,13 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
 
           const relativePaths = ignoredPaths
             .map((ignoredPath) => path.relative(paths.base, ignoredPath))
-            .join('\n            ')
+            .join('\n')
 
-          task.output = c.warning(
-            `A .gitignore rule is hiding generated file(s) from git:\n\n            ${relativePaths}\n\n          ` +
-              'This usually happens after migrating from @cedarjs/storage, which left ' +
-              'behind an unanchored `uploads` or `uploads/` rule. Anchor it (e.g. `/uploads/`) ' +
-              'or remove it, then make sure the file(s) above get committed.',
-          )
+          ignoredFilesWarning =
+            `A .gitignore rule is hiding generated file(s) from git:\n\n${relativePaths}\n\n` +
+            'This usually happens after migrating from @cedarjs/storage, which left ' +
+            'behind an unanchored `uploads` or `uploads/` rule. Anchor it (e.g. `/uploads/`) ' +
+            'or remove it, then make sure the file(s) above get committed.'
         },
       },
       {
@@ -456,6 +460,10 @@ export const handler = async ({ targets, force }: UploadsOptions) => {
 
   try {
     await tasks.run()
+
+    if (ignoredFilesWarning) {
+      console.warn(`\n${c.warning(ignoredFilesWarning)}\n`)
+    }
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e)
     const exitCode =

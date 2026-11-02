@@ -44,20 +44,21 @@ describe('findIgnoredPaths', () => {
 
   it('returns the paths git check-ignore reports as ignored', async () => {
     vi.mocked(execa).mockResolvedValue({
-      stdout: '/project/api/src/services/uploads/uploads.ts',
+      stdout:
+        '/project/api/src/services/uploads/uploads.ts\0/project/api/src/ü/a.ts\0',
     } as never)
 
     const result = await findIgnoredPaths('/project', [
       '/project/api/src/services/uploads/uploads.ts',
     ])
 
-    expect(result).toEqual(['/project/api/src/services/uploads/uploads.ts'])
+    expect(result).toEqual([
+      '/project/api/src/services/uploads/uploads.ts',
+      '/project/api/src/ü/a.ts',
+    ])
     expect(execa).toHaveBeenCalledWith(
       'git',
-      [
-        'check-ignore',
-        '/project/api/src/services/uploads/uploads.ts',
-      ],
+      ['check-ignore', '-z', '/project/api/src/services/uploads/uploads.ts'],
       { cwd: '/project', reject: false },
     )
   })
