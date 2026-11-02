@@ -609,8 +609,12 @@ async function rebuildTestProject() {
         ),
       )
 
-      apiPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
-      webPackageJson.dependencies['@my-org/validators'] = 'workspace:*'
+      // npm doesn't support the `workspace:` protocol. A plain `*` range is
+      // satisfied by the local workspace package, so npm links it
+      const validatorsSpec = packageManager === 'npm' ? '*' : 'workspace:*'
+
+      apiPackageJson.dependencies['@my-org/validators'] = validatorsSpec
+      webPackageJson.dependencies['@my-org/validators'] = validatorsSpec
 
       if (live) {
         webPackageJson.dependencies['@cedarjs/gqlorm'] =
