@@ -7,7 +7,40 @@ export * from './functions/graphql.js'
 export * from './functions/useRequireAuth.js'
 export * from './makeMergedSchema.js'
 export * from './createGraphQLServer.js'
-export * from './types.js'
+
+// These types are also exported from `@cedarjs/graphql-server/types`
+export type {
+  Resolver,
+  Services,
+  ResolverArgs,
+  SdlGlobImports,
+  ServicesGlobImports,
+  MakeServicesInterface,
+  MakeServices,
+  GraphQLTypeWithFields,
+  UseCedarDirectiveReturn,
+  useRedwoodDirectiveReturn,
+  DirectivePluginOptions,
+  CedarTrustedDocumentOptions,
+  RedwoodTrustedDocumentOptions,
+  GetCurrentUser,
+  GenerateGraphiQLHeader,
+  Context,
+  ContextFunction,
+  ArmorConfig,
+  CedarGraphQLContext,
+  RedwoodGraphQLContext,
+  CedarOpenTelemetryConfig,
+  RedwoodOpenTelemetryConfig,
+  CedarScalarConfig,
+  RedwoodScalarConfig,
+  RealtimeTypeMap,
+  MinimalRealtimeOptions,
+  RealtimeOptions,
+  GraphQLYogaOptions,
+  GraphQLHandlerOptions,
+  GraphiQLOptions,
+} from './types.js'
 
 export {
   createValidatorDirective,
