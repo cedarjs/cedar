@@ -170,13 +170,8 @@ export const handler = async ({
   force: boolean
   monitor?: string
 }) => {
-  recordTelemetryAttributes({
-    command: 'setup deploy baremetal',
-    force,
-    monitor: monitorOption,
-  })
-
   if (monitorOption !== undefined && !isMonitor(monitorOption)) {
+    recordTelemetryAttributes({ command: 'setup deploy baremetal', force })
     console.error(
       c.error(
         `Unknown monitor "${monitorOption}". Use one of ${MONITORS.join(', ')}.`,
@@ -184,6 +179,12 @@ export const handler = async ({
     )
     process.exit(1)
   }
+
+  recordTelemetryAttributes({
+    command: 'setup deploy baremetal',
+    force,
+    monitor: monitorOption,
+  })
 
   const monitor = monitorOption ?? (await promptForMonitor())
 
