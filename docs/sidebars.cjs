@@ -227,6 +227,7 @@ module.exports = {
         'signed-tokens',
         'storybook',
         'studio',
+        'telemetry',
         'tenancy',
         'testing',
         'toast-notifications',

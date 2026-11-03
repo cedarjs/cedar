@@ -145,6 +145,30 @@ describe('redactErrorMessage', () => {
     expect(redactErrorMessage(message)).toEqual(message)
   })
 
+  it('redacts the command line of a failed command', () => {
+    expect(
+      redactErrorMessage(
+        "Command failed with exit code 1: git commit -m 'Payroll for Acme'",
+      ),
+    ).toBe('Command failed with exit code 1: [command]')
+    expect(
+      redactErrorMessage(
+        'Command was killed with SIGTERM (Termination): yarn prisma migrate dev --name add-payroll',
+      ),
+    ).toBe('Command was killed with SIGTERM (Termination): [command]')
+    expect(
+      redactErrorMessage(
+        'Command timed out after 5000 milliseconds: yarn install',
+      ),
+    ).toBe('Command timed out after 5000 milliseconds: [command]')
+  })
+
+  it('handles errors with a message that is not a string', () => {
+    const error = new Error()
+    Object.defineProperty(error, 'message', { value: 42 })
+    expect(redactErrorMessage(error)).toBe('42')
+  })
+
   it('handles non-Error values', () => {
     expect(redactErrorMessage(42)).toEqual('42')
     expect(redactErrorMessage('')).toEqual('Unknown error')

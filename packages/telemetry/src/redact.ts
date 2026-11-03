@@ -7,7 +7,10 @@
  * project or their infrastructure is replaced: anything containing `/`, `\`,
  * `@` or `:`, and IPv4 addresses. Replacements are labelled `[url]`, `[host]`,
  * `[path]` or `[redacted]`. Quoted paths are replaced as a whole, since they
- * can contain spaces, and so are hostnames in DNS errors.
+ * can contain spaces, and so are hostnames in DNS errors. The command line in
+ * a failed command's error, e.g. `Command failed with exit code 1: git commit
+ * -m 'Ada's app'`, is replaced by `[command]`, since its arguments can be
+ * anything the user typed.
  *
  * Words that describe the failure without identifying anyone are kept:
  * scoped package names (`@cedarjs/vite`), known specifiers (`node:fs`),
@@ -15,20 +18,25 @@
  * What is left is the shape of the error, e.g.
  * `ENOENT: no such file or directory, open '[path]'`.
  *
- * The same function is exported from `@cedarjs/cli-helpers/telemetry`.
- * `@cedarjs/cli-helpers` depends on this package, so this package keeps its
- * own copy instead of importing it from there.
+ * This module has no imports so it can be bundled into create-cedar-app
+ * without pulling in anything else.
  */
 export function redactErrorMessage(error: unknown): string {
   const message =
     error instanceof Error
-      ? error.message
+      ? String(error.message)
       : typeof error === 'string'
         ? error
         : String(error)
 
   return (
     (message.split('\n')[0] || 'Unknown error')
+      // Errors from execa and similar process runners end with the command
+      // line that failed
+      .replace(
+        /^(Command (?:failed|was killed|timed out)\b[^:]*): .*$/,
+        '$1: [command]',
+      )
       // Quoted strings that contain a path separator, e.g.
       // `'C:\Users\Ada Lovelace\x.db'`. The part before the first separator
       // can't contain a separator, so there is only one way to match and

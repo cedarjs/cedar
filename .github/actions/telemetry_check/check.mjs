@@ -12,35 +12,26 @@ console.log(`Telemetry is being redirected to ${redirectUrl}`)
 
 const mode = process.argv[process.argv.indexOf('--mode') + 1]
 
-// The two modes exercise two different telemetry senders with different
-// payload shapes:
-//  - `cca` (create-cedar-app) sends an OpenTelemetry OTLP trace payload
-//    (packages/create-cedar-app/src/telemetry.ts) — there's no top-level
-//    "command" field, the closest equivalent is a span name.
-//  - `cli` (the CLI) sends the legacy, hand-rolled JSON payload built by
-//    packages/telemetry/src/sendTelemetry.ts, which does have a "command"
-//    field.
+// Both create-cedar-app and the CLI send one plain JSON event per run, built
+// by `@cedarjs/telemetry`. `cca` mode expects a `create` event and `cli` mode
+// a `command` event
 function validatePayload(payload) {
   if (typeof payload !== 'object' || payload === null) {
     return `Telemetry payload is not an object. Got: ${JSON.stringify(payload)} (type: ${typeof payload})`
   }
 
-  if (mode === 'cca') {
-    const spanNames = (payload.resourceSpans ?? []).flatMap((resourceSpan) =>
-      (resourceSpan.scopeSpans ?? []).flatMap((scopeSpan) =>
-        (scopeSpan.spans ?? []).map((span) => span.name),
-      ),
-    )
+  const expectedType = mode === 'cca' ? 'create' : 'command'
 
-    if (!spanNames.some((name) => typeof name === 'string' && name)) {
-      return `Telemetry payload is missing a non-empty span name. Got: ${JSON.stringify(payload)}`
-    }
-
-    return null
+  if (payload.type !== expectedType) {
+    return `Telemetry payload should have type "${expectedType}". Got: ${JSON.stringify(payload)}`
   }
 
   if (!payload.command || typeof payload.command !== 'string') {
     return `Telemetry payload is missing a non-empty "command" field. Got: ${JSON.stringify(payload)}`
+  }
+
+  if (!payload.uid || typeof payload.uid !== 'string') {
+    return `Telemetry payload is missing a non-empty "uid" field. Got: ${JSON.stringify(payload)}`
   }
 
   return null

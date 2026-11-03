@@ -1,51 +1,38 @@
 # Telemetry
 
-CedarJS collects completely anonymous telemetry data about general usage.
+Anonymous usage telemetry for the Cedar CLI and `create-cedar-app`.
 
-Here is an example JSON packet containing the telemetry data for running yarn rw info:
+See the [Telemetry docs](https://cedarjs.com/docs/telemetry) for what's sent,
+when, and how to turn it off.
 
-```json
-{
-  "type": "command",
-  "command": "info", // actual CLI command that was invoked, including flags
-  "ci": false, // whether or not this is running in a CI environment
-  "duration": 2353, // how long the process took, in milliseconds
-  "NODE_ENV": "development", // the value of NODE_ENV, if set
-  "complexity": "4.2.6.3", // a measure of how complex the app is (route, service, cell and page counts)
-  "system": "8.32", // cpu core count, memory in GB
-  "sides": "web,api", // sides that are in use
-  "shell": "zsh",
-  "nodeVersion": "14.17.1",
-  "yarnVersion": "14.17.1",
-  "npmVersion": "14.17.1",
-  "vsCodeVersion": "1.58.0",
-  "cedarVersion": "0.35.1",
-  "os": "macOS",
-  "osVersion": "11.4",
-  "system": "8.32" // number of cpu cores and system memory
-}
+## Recording
+
+CLI commands and plugins record attributes and errors for the current CLI
+run:
+
+```ts
+import {
+  recordTelemetryAttributes,
+  recordTelemetryError,
+} from '@cedarjs/cli-helpers/telemetry'
+
+recordTelemetryAttributes({ command: 'generate page', force: true })
+recordTelemetryError(error)
 ```
 
-## How do I turn it off?
+Records are published on the `cedar:telemetry` diagnostics channel. They do
+nothing unless the CLI is collecting telemetry, which it does unless it's
+been disabled. Only record values that can't identify a user or their
+project: command names, flags and fixed option values, never names, paths or
+hosts.
 
-Set an environment variable, either in your app's .env file, or anywhere that
-creates variables for your user space, like `.bashrc` or `.bash_profile`:
+## Sending
 
-```terminal
-CEDAR_DISABLE_TELEMETRY=1
-```
-
-## About
-
-See: https://telemetry.redwoodjs.com
+When the CLI run finishes, `shutdownTelemetry()` (from
+`@cedarjs/telemetry/cli`) writes one event to `.cedar/telemetry/` and starts
+a background process that sends it as JSON to `https://telemetry.cedarjs.com`.
 
 ## Troubleshooting
 
-If you suspect problems with telemetry when running CCA, you can set the verbose
-flag to help diagnose issues.
-
-For example,
-
-```terminal
-CEDAR_VERBOSE_TELEMETRY=true yarn create-cedar-app bazinga
-```
+`CEDAR_VERBOSE_TELEMETRY=1` prints each event as it's sent, and any error from
+sending it. `CEDAR_REDIRECT_TELEMETRY=<url>` sends events to another server.
