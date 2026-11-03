@@ -148,7 +148,7 @@ describe('useArmor secures the GraphQLHandler endpoint for depth, aliases, cost,
         expect(response.statusCode).toBe(200)
         expect(data).toBeUndefined()
         expect(errors[0].message).toMatchInlineSnapshot(
-          '"Cannot query field "toootle" on type "Post". [Suggestion hidden]?"',
+          '"Cannot query field "toootle" on type "Post". [Suggestion hidden]"',
         )
       })
     })
@@ -182,7 +182,7 @@ describe('useArmor secures the GraphQLHandler endpoint for depth, aliases, cost,
         expect(response.statusCode).toBe(200)
         expect(data).toBeUndefined()
         expect(errors[0].message).toMatchInlineSnapshot(
-          '"Cannot query field "toootle" on type "Post". <REDACTED>?"',
+          '"Cannot query field "toootle" on type "Post". <REDACTED>"',
         )
       })
     })
