@@ -8,6 +8,8 @@ import process from 'node:process'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs/yargs'
 
+import { getOTelSetupFileUrl } from '@cedarjs/project-config'
+
 import { PROCESS_TITLE_PREFIX } from '../consts.js'
 import type { Worker } from '../core/Worker.js'
 import { WorkerConfigIndexNotFoundError } from '../errors.js'
@@ -143,6 +145,16 @@ export const getWorker = async ({
 
 const main = async () => {
   const { index, id, clear, workoff } = await parseArgs(process.argv)
+
+  // The OpenTelemetry SDK setup must be imported before the jobs config and
+  // the app's own modules are loaded, or the instrumentations can't patch
+  // them. The worker imports it itself, so it's loaded however the worker is
+  // started: forked by `cedar-jobs`, or run directly by a process manager
+  const otelSetupFileUrl = getOTelSetupFileUrl()
+
+  if (otelSetupFileUrl !== undefined) {
+    await import(otelSetupFileUrl)
+  }
 
   const worker = await getWorker({ index, id, clear, workoff })
 

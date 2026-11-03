@@ -6,11 +6,6 @@ import { getConfig } from './config.js'
 import { getConfigPath } from './configPath.js'
 import { getPaths } from './paths.js'
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __CEDAR_CLI_TELEMETRY__: boolean | undefined
-}
-
 /**
  * The file URL of the project's built OpenTelemetry SDK setup file, or
  * `undefined` when OpenTelemetry is disabled, the current directory is not
@@ -106,24 +101,4 @@ export function quoteOTelImportArgs(
   }
 
   return args.map((arg) => `'${arg.replaceAll("'", `'\\''`)}'`)
-}
-
-/**
- * Whether the Cedar CLI's own telemetry has registered a global tracer
- * provider in this process.
- *
- * `cedar serve ...` and friends can run the app's server inside the `cedar`
- * CLI process. When CLI telemetry is active there (the default), the CLI
- * has already called `provider.register()` on a `NodeTracerProvider`, so
- * the app's own setup file cannot become the global provider in the same
- * process: the OTel API rejects the duplicate registration, and the app's
- * spans would end up in the CLI's telemetry exporter instead of the user's
- * collector. In-process importing of the setup file has to be skipped in
- * that case.
- *
- * The flag is only ever set inside the `cedar` CLI process itself, so the
- * child-process paths (`--import` on a fresh `node`) never see it.
- */
-export function isCLITelemetryActive(): boolean {
-  return globalThis.__CEDAR_CLI_TELEMETRY__ === true
 }
