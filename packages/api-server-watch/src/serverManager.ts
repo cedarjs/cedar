@@ -1,6 +1,5 @@
 import type { ChildProcess } from 'child_process'
 import { fork } from 'child_process'
-import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'path'
 
@@ -8,7 +7,12 @@ import ansis from 'ansis'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
-import { getConfig, getPaths, resolveFile } from '@cedarjs/project-config'
+import {
+  getConfig,
+  getOTelImportArgs,
+  getPaths,
+  resolveFile,
+} from '@cedarjs/project-config'
 
 const require = createRequire(import.meta.url)
 
@@ -32,32 +36,7 @@ export class ServerManager {
 
   private async startApiServer() {
     const forkOpts = {
-      execArgv: process.execArgv,
-    }
-
-    // OpenTelemetry SDK Setup
-    if (getConfig().experimental.opentelemetry.enabled) {
-      // We expect the OpenTelemetry SDK setup file to be in a specific location
-      const opentelemetrySDKScriptPath = path.join(
-        rwjsPaths.api.dist,
-        'opentelemetry.js',
-      )
-      const opentelemetrySDKScriptPathRelative = path.relative(
-        rwjsPaths.base,
-        opentelemetrySDKScriptPath,
-      )
-      console.log(
-        `Setting up OpenTelemetry using the setup file: ${opentelemetrySDKScriptPathRelative}`,
-      )
-      if (fs.existsSync(opentelemetrySDKScriptPath)) {
-        forkOpts.execArgv = forkOpts.execArgv.concat([
-          `--require=${opentelemetrySDKScriptPath}`,
-        ])
-      } else {
-        console.error(
-          `OpenTelemetry setup file does not exist at ${opentelemetrySDKScriptPathRelative}`,
-        )
-      }
+      execArgv: process.execArgv.concat(getOTelImportArgs()),
     }
 
     const debugPort = argv['debug-port']

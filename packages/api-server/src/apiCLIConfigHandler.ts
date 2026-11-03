@@ -1,8 +1,7 @@
 import ansis from 'ansis'
 
-import { coerceRootPath } from '@cedarjs/fastify-web'
+import { getOTelSetupFileUrl } from '@cedarjs/project-config'
 
-import { createServer } from './createServer.js'
 import { apiDistServerFileExists, runApiDistServerFile } from './serverFile.js'
 import type { APIParsedOptions } from './types.js'
 
@@ -14,6 +13,20 @@ export async function handler(options: APIParsedOptions = {}) {
     await runApiDistServerFile(options)
     return
   }
+
+  // The OpenTelemetry SDK setup must be imported before Fastify, Prisma and
+  // the app's own modules are loaded, or the instrumentations can't patch
+  // them. Fastify and the server factory are imported after it for the same
+  // reason. When the process was started with the setup in an `--import`
+  // flag, importing it again here does nothing
+  const otelSetupFileUrl = getOTelSetupFileUrl()
+
+  if (otelSetupFileUrl !== undefined) {
+    await import(otelSetupFileUrl)
+  }
+
+  const { coerceRootPath } = await import('@cedarjs/fastify-web')
+  const { createServer } = await import('./createServer.js')
 
   const timeStart = Date.now()
   console.log(ansis.dim.italic('Starting API Server...'))
