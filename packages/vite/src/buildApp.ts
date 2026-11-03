@@ -142,9 +142,11 @@ export async function buildCedarApp({
           outDir: path.join(cedarPaths.api.dist, 'ud'),
           emptyOutDir: true,
           rollupOptions: {
-            input: catchAllEntry,
+            // Named, so a plugin in the app's Vite config can add entries
+            // of its own next to it, each in a file of its own
+            input: { index: catchAllEntry },
             output: {
-              entryFileNames: 'index.js',
+              entryFileNames: '[name].js',
             },
             external: (id: string) => {
               if (id.startsWith('virtual:')) {

@@ -12,6 +12,6 @@ type Story = StoryObj<typeof AggregatedBlogPostPage>
 
 export const Primary: Story = {
   render: (args) => {
-    return <AggregatedBlogPostPage id={42} {...args} />
+    return <AggregatedBlogPostPage {...args} id={42} />
   },
 }

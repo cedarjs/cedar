@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import 'dotenv-defaults/config.js'
 import execa from 'execa'
-import type { Environment } from 'vitest/environments'
+import type { Environment } from 'vitest/runtime'
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'

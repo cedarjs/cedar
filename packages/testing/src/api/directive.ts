@@ -1,6 +1,8 @@
 import type { A } from 'ts-toolbelt'
 
+import type { CurrentUser } from '@cedarjs/auth'
 import { setContext, context as globalContext } from '@cedarjs/context'
+import type { GlobalContext } from '@cedarjs/context'
 import type {
   DirectiveParams,
   ValidatorDirective,
@@ -10,17 +12,27 @@ import { DirectiveType } from '@cedarjs/graphql-server'
 
 export { getDirectiveName } from '@cedarjs/graphql-server'
 
-// @NOTE: overloaded interface
-interface DirectiveMocker {
-  (
-    directive: ValidatorDirective,
-    executionMock: A.Compute<Omit<Partial<DirectiveParams>, 'resolvedValue'>>,
-  ): any
+/**
+ * The context to run a directive with. Like `mockCurrentUser`, it takes any
+ * part of the current user: a mocked user only needs the fields the test
+ * uses.
+ */
+type MockContext = Omit<GlobalContext, 'currentUser'> & {
+  currentUser?: Partial<CurrentUser>
 }
 
-type TransformerMock = A.Compute<
-  Omit<Partial<DirectiveParams>, 'resolvedValue'>
-> & {
+type ExecutionMock = A.Compute<
+  Omit<Partial<DirectiveParams>, 'resolvedValue' | 'context'> & {
+    context?: MockContext
+  }
+>
+
+// @NOTE: overloaded interface
+interface DirectiveMocker {
+  (directive: ValidatorDirective, executionMock: ExecutionMock): any
+}
+
+type TransformerMock = ExecutionMock & {
   mockedResolvedValue: any
 }
 

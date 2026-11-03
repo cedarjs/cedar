@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cookie-jar",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -23,14 +23,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "cookie": "1.1.1",
-    "esbuild": "0.28.2",
-    "fast-glob": "3.3.3"
+    "cookie": "1.1.1"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": ">=24"

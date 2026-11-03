@@ -175,3 +175,89 @@ describe('RWRoute isPrivate/unauthenticated/roles ancestor walk', () => {
     expect(route.roles).toContain('superuser')
   })
 })
+
+describe('RWRoute tenancy guards', () => {
+  function routeIn(open: string, close = '') {
+    const src = `
+      const Routes = () => (
+        <Router>
+          ${open}
+            <Route path="/x" page={XPage} name="x" />
+          ${close}
+        </Router>
+      )
+    `
+    return new RWRoute(getRouteNode(src, 'x'), fakeRouter)
+  }
+
+  it('records nothing for a route without the props', () => {
+    const route = routeIn(
+      '<PrivateSet unauthenticated="login">',
+      '</PrivateSet>',
+    )
+
+    expect(route.unauthorized).toBeUndefined()
+    expect(route.roles).toBeUndefined()
+    expect(route.permission).toBeUndefined()
+  })
+
+  it('records nothing for a route outside a <PrivateSet>', () => {
+    const route = routeIn('<Set wrap={Layout}>', '</Set>')
+
+    expect(route.unauthorized).toBeUndefined()
+    expect(route.roles).toBeUndefined()
+    expect(route.permission).toBeUndefined()
+  })
+
+  it('reads unauthorized, roles and permission', () => {
+    const route = routeIn(
+      '<PrivateSet unauthenticated="login" unauthorized="projects" roles="admin" permission="members.manage">',
+      '</PrivateSet>',
+    )
+
+    expect(route.unauthorized).toBe('projects')
+    expect(route.roles).toBe('admin')
+    expect(route.permission).toBe('members.manage')
+  })
+
+  it('reads the array form of roles', () => {
+    const route = routeIn(
+      `<PrivateSet unauthenticated="login" roles={['a', 'b']}>`,
+      '</PrivateSet>',
+    )
+
+    expect(route.roles).toEqual(['a', 'b'])
+  })
+
+  it('takes unauthorized and permission from the innermost ancestor', () => {
+    const route = routeIn(
+      `<PrivateSet unauthenticated="login" unauthorized="outer" permission="a.read">
+        <PrivateSet unauthorized="inner" permission="b.write">`,
+      '</PrivateSet></PrivateSet>',
+    )
+
+    expect(route.unauthorized).toBe('inner')
+    expect(route.permission).toBe('b.write')
+  })
+
+  it('takes unauthorized and permission from an outer ancestor when the inner has none', () => {
+    const route = routeIn(
+      `<PrivateSet unauthenticated="login" unauthorized="outer" permission="a.read">
+        <Set wrap={Layout}><PrivateSet roles="owner">`,
+      '</PrivateSet></Set></PrivateSet>',
+    )
+
+    expect(route.unauthorized).toBe('outer')
+    expect(route.permission).toBe('a.read')
+  })
+
+  it('has no value for a prop that is not a string literal', () => {
+    const route = routeIn(
+      '<PrivateSet unauthenticated="login" unauthorized={name} permission={perm}>',
+      '</PrivateSet>',
+    )
+
+    expect(route.unauthorized).toBeUndefined()
+    expect(route.permission).toBeUndefined()
+  })
+})

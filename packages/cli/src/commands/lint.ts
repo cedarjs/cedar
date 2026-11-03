@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import path from 'node:path'
 
 import { terminalLink } from 'termi-link'
 import type { Argv } from 'yargs'
@@ -49,6 +50,8 @@ export const handler = async ({
   recordTelemetryAttributes({ command: 'lint', fix, format })
 
   try {
+    await generateMissingGraphQLSchema()
+
     const sbPath = getPaths().web.storybook
     const eslintArgs: (string | false)[] = [
       fix && '--fix',
@@ -84,5 +87,50 @@ export const handler = async ({
     }
 
     process.exitCode = 1
+  }
+}
+
+/**
+ * The GraphQL rules in @cedarjs/eslint-config read the generated schema, and
+ * are left out while it doesn't exist (as on a fresh clone, or in CI before
+ * types are generated). Generate it here, so `cedar lint` always runs them.
+ * Only the schema: it's read from the SDL files, without the slower type
+ * generation
+ */
+async function generateMissingGraphQLSchema() {
+  const paths = getPaths()
+
+  if (
+    fs.existsSync(paths.generated.schema) ||
+    !fs.existsSync(paths.api.graphql) ||
+    !fs.existsSync(paths.web.src)
+  ) {
+    return
+  }
+
+  let messages: string[]
+
+  try {
+    const { generateGraphQLSchema } =
+      await import('@cedarjs/internal/dist/generate/graphqlSchema')
+
+    fs.mkdirSync(path.dirname(paths.generated.schema), { recursive: true })
+    const { errors } = await generateGraphQLSchema()
+    messages = errors.map(({ message }) => message)
+  } catch (error) {
+    // It can throw too, e.g. on a Prisma schema it can't read while
+    // explaining an SDL error. Linting the rest still goes ahead
+    messages = [error instanceof Error ? error.message : String(error)]
+  }
+
+  if (messages.length > 0) {
+    console.warn(
+      'Could not generate the GraphQL schema, so the GraphQL documents in ' +
+        'web/src are not linted against it:',
+    )
+
+    for (const message of messages) {
+      console.warn(message)
+    }
   }
 }

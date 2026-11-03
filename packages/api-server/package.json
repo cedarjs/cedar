@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "CedarJS's HTTP server for Serverless Functions",
   "repository": {
     "type": "git",
@@ -98,23 +98,23 @@
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
     "@fastify/multipart": "9.4.0",
-    "@fastify/url-data": "6.0.4",
+    "@fastify/url-data": "6.0.5",
     "ansis": "4.4.0",
     "dotenv-defaults": "5.0.2",
     "fast-glob": "3.3.3",
     "fast-json-parse": "1.0.3",
-    "fastify": "5.12.5",
+    "fastify": "5.12.7",
     "fastify-raw-body": "5.0.0",
     "picoquery": "2.5.0",
     "pretty-bytes": "5.6.0",
     "pretty-ms": "7.0.1",
     "split2": "4.2.0",
     "termi-link": "1.1.0",
-    "yargs": "17.7.3"
+    "yargs": "18.2.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@fastify/compress": "9.2.1",
+    "@fastify/compress": "9.3.0",
     "@types/aws-lambda": "8.10.164",
     "@types/dotenv-defaults": "^5.0.0",
     "@types/split2": "4.2.3",
@@ -126,7 +126,8 @@
     "pino-abstract-transport": "3.0.0",
     "publint": "0.3.25",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "peerDependencies": {
     "@cedarjs/graphql-server": "workspace:*"

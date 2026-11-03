@@ -173,6 +173,25 @@ npx @tailwindcss/upgrade --config ./web/config/tailwind.config.cjs
 See Tailwind's [upgrade guide](https://tailwindcss.com/docs/upgrade-guide) for
 the changes v4 makes to utilities and configuration.
 
+## TypeScript strict mode in new projects
+
+New TypeScript projects created with `yarn create cedar-app` have TypeScript's
+`strict` mode turned on in `web/tsconfig.json`, `api/tsconfig.json` and
+`scripts/tsconfig.json`. The code Cedar's generators and setup commands write
+type-checks with `strict` on.
+
+It's recommended to turn strict mode on in your existing project by adding
+`"strict": true` to `compilerOptions` in each of your tsconfig files. Then run
+`yarn cedar g types` and `yarn cedar type-check`. Code generated before v8 may
+need a few changes; see
+[TypeScript Strict Mode](https://cedarjs.com/docs/typescript/strict-mode) for
+the common ones.
+
+Strict mode relies on the types described in "More precise generated types"
+below. The SDL generator also writes Prisma scalar and enum lists with
+non-nullable items (`tags: [String!]!`), because Prisma lists never contain
+`null`.
+
 ## More precise generated types
 
 To better support TypeScript's strict mode a few of the types Cedar generates
@@ -248,6 +267,26 @@ export default PostsScaffoldLayout
 `WrapperProps` is available in Cedar v7.x too, so you can make this change
 before upgrading.
 
+## `<PrivateSet>` redirects: `unauthorized` and route params
+
+`<PrivateSet>` takes an `unauthorized` route, for users who are signed in but
+don't have the set's `roles`. Without it, they're redirected to
+`unauthenticated` as before.
+
+```tsx
+<PrivateSet unauthenticated="login" unauthorized="forbidden" roles="admin">
+```
+
+The `unauthenticated` and `unauthorized` routes can have path params, as long
+as the route the user tried to visit has params with the same names: the
+router fills them in from it. Before, a redirect to a route with params threw
+"would require route parameters, which currently is not supported". It still
+throws, with a clearer message, if a param is missing.
+
+Also, `$&`, `$1` and similar in a route param value, such as
+`routes.post({ slug: 'a$&b' })`, stay as they are. They used to be expanded
+like replacement patterns.
+
 ## `removeNulls` is typed and only changes top-level fields
 
 `removeNulls` from `@cedarjs/api` returns a copy of its input where every
@@ -259,3 +298,103 @@ Nested objects and arrays are passed through as they are, so `null`s inside a
 `Json` field value are kept. The input object is left unchanged. If your code
 relies on `removeNulls` also converting `null`s in nested objects, call
 `removeNulls` on those objects yourself.
+
+## `currentUser` is typed as exactly what `getCurrentUser` returns
+
+`CurrentUser` and `LoggedInUser` from `@cedarjs/auth` have exactly the fields
+of your `getCurrentUser` return type, with no extra `[key: string]: unknown`
+fields. Misspelled fields like `currentUser.emial` are type errors, and an
+`interface` you use as the return type of `getCurrentUser` is accepted
+anywhere a `CurrentUser` is expected.
+
+Reading a field that `getCurrentUser` doesn't return is a type error:
+
+```
+Property 'organizationId' does not exist on type 'LoggedInUser'.
+```
+
+To fix it, add the field to what `getCurrentUser` returns (for example to
+the `select` in your `db.user.findUnique` call), or stop reading it. The same
+applies to `mockCurrentUser()` in tests: the object you pass must match the
+`getCurrentUser` return type.
+
+## Your app owns its copy of Prisma
+
+Cedar uses the `prisma` and `@prisma/client` your app installs instead of
+installing its own copies, so every app has exactly one copy of each. Your
+app needs:
+
+- `prisma` in the `devDependencies` of the root `package.json`
+- `@prisma/client` in the `dependencies` of `api/package.json`
+
+Both must be on the version Cedar supports, which `@cedarjs/cli` declares as
+its `prisma` peer dependency. Apps created before these entries were part of
+the app template, including apps migrated from Redwood, often don't have
+them yet.
+
+When either is missing, `yarn cedar upgrade` stops before changing anything
+and lists what to add, with the Prisma version to use. Add them and run the
+upgrade again. From then on, every `yarn cedar upgrade` sets `prisma`,
+`@prisma/client` and any `@prisma/adapter-*` packages to the version Cedar
+supports, and adds `prisma` and `@prisma/client` if they go missing. If you
+upgrade your Cedar packages without `yarn cedar upgrade`, add them yourself.
+
+## Lint rule: GraphQL selections must include `id`
+
+`@cedarjs/eslint-config` lints the `gql` documents in `web/src` against your
+app's GraphQL schema, with
+[`@graphql-eslint/require-selections`](https://the-guild.dev/graphql/eslint/rules/require-selections)
+as an error: every selection of an object type that has an `id` field must
+select `id`.
+
+Apollo's cache can only normalize an object when the query selects its
+`id`. When one query selects `currentOrganization { timezone }` and another
+selects `currentOrganization { id features }`, the two copies replace each
+other in the cache and the queries refetch each other. Apollo stops the loop
+on its own and logs "Cache data may be lost when replacing the … field" in
+development, but GraphQL validation, type generation and tests all accept
+the queries.
+
+Fragment spreads are checked too: a spread of a fragment that doesn't select
+`id`, a fragment Cell's `FRAGMENT` for example, is reported where it's
+spread.
+
+The schema the rule reads is `.cedar/schema.graphql`, which
+`yarn cedar generate types` and `yarn cedar dev` write. `yarn cedar lint`
+generates it when it's missing, so the rule runs in CI too. ESLint on its
+own (an editor, or `yarn eslint`) skips the rule until the file exists.
+
+### Upgrading
+
+If your app already set up `@graphql-eslint` in `eslint.config.mjs`, remove
+that setup first: the plugin, its processor and its parser. Cedar's config
+now registers the plugin itself, and ESLint stops with
+`Cannot redefine plugin "@graphql-eslint"` when it's registered twice.
+`@cedarjs/eslint-config` depends on `@graphql-eslint/eslint-plugin`, so you
+can remove it from your `package.json` too, unless something else imports it.
+To keep other `@graphql-eslint` rules, set them in a block after Cedar's
+config, with `files: ['web/src/**/*.graphql']` and no `plugins`, like the one
+at the end of this section.
+
+Run `yarn cedar lint` and add `id` where it's reported. The Cells Cedar generates already select `id`, so most of
+what's reported is in hand-written or since-extended queries. After adding
+the ids:
+
+- Run `yarn cedar generate types` again. The generated types now include
+  `id`, so test data and mocks typed with them need an `id` too
+- Give mocked responses (`mockGraphQLQuery`, Cell `.mock` files) the newly
+  selected `id`s. Apollo treats a result that's missing a selected field as
+  incomplete and fetches it again, which shows up in tests that count
+  requests
+
+To keep the rule as a warning while you work through the list, add this
+after Cedar's config in `eslint.config.mjs`:
+
+```js
+{
+  files: ['web/src/**/*.graphql'],
+  rules: {
+    '@graphql-eslint/require-selections': 'warn',
+  },
+},
+```

@@ -16,6 +16,7 @@ export const QUERY: TypedDocumentNode<BlogPostsQuery, BlogPostsQueryVariables> =
         title
         body
         author {
+          id
           email
           fullName
         }

@@ -45,15 +45,15 @@ Create a Cedar project using the yarn create command:
 yarn create cedar-app <project directory> [option]
 ```
 
-| Arguments & Options    | Description                                                                                                                                             |
-| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `project directory`    | Specify the project directory [Required]                                                                                                                |
-| `--yarn-install`       | Enables the yarn install step and version-requirement checks. You can pass `--no-yarn-install` to disable this behavior                                 |
-| `--typescript`, `--ts` | Generate a TypeScript project. JavaScript by default                                                                                                    |
-| `--overwrite`          | Create the project even if the specified project directory isn't empty                                                                                  |
-| `--no-telemetry`       | Disable sending telemetry events for this create command and all Cedar CLI commands: [https://telemetry.redwoodjs.com](https://telemetry.redwoodjs.com) |
-| `--yarn1`              | Use yarn 1 instead of yarn 3                                                                                                                            |
-| `--git-init`, `--git`  | Initialize a git repo during the install process, disabled by default                                                                                   |
+| Arguments & Options    | Description                                                                                                                                           |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `project directory`    | Specify the project directory [Required]                                                                                                              |
+| `--yarn-install`       | Enables the yarn install step and version-requirement checks. You can pass `--no-yarn-install` to disable this behavior                               |
+| `--typescript`, `--ts` | Generate a TypeScript project. JavaScript by default                                                                                                  |
+| `--overwrite`          | Create the project even if the specified project directory isn't empty                                                                                |
+| `--no-telemetry`       | Disable telemetry for this create command. Set `CEDAR_DISABLE_TELEMETRY=1` to turn it off for Cedar CLI commands too. See [Telemetry](./telemetry.md) |
+| `--yarn1`              | Use yarn 1 instead of yarn 3                                                                                                                          |
+| `--git-init`, `--git`  | Initialize a git repo during the install process, disabled by default                                                                                 |
 
 If you run into trouble during the yarn install step, which may happen if you're developing on an external drive and in other miscellaneous scenarios, try the `--yarn1` flag:
 
@@ -1658,6 +1658,19 @@ yarn cedar lint
 - always use parenthesis around arrow functions
 - enforced import sorting
 
+It also lints the `gql` documents in `web/src` against your GraphQL schema:
+every selection of an object type that has an `id` must select `id`, so
+Apollo's cache can normalize it. The schema is `.cedar/schema.graphql`, which
+`yarn cedar lint` generates from your SDL files when it's missing.
+
+In an app with the permissions package that `yarn cedar setup permissions` or
+`yarn cedar setup tenancy` adds,
+it also checks the SDL files in `api/src`: every
+`@requirePermission(permission: "...")` must name a permission listed in
+`packages/permissions/src/index.ts`, so a typo fails the lint instead of
+throwing the first time the field is requested. Apps without that package
+are not checked.
+
 | Option  | Description       |
 | :------ | :---------------- |
 | `--fix` | Try to fix errors |
@@ -2236,10 +2249,27 @@ yarn cedar setup ui <library>
 | `library`           | Library to configure. Choices are `chakra-ui`, `tailwindcss`, and `mantine` |
 | `--force, -f`       | Overwrite existing configuration                                            |
 
+### setup permissions
+
+Set up permissions for an app without tenancy: a map in `packages/permissions`
+of what each role may do, the `@requirePermission` directive,
+`hasPermission`/`requirePermission` in `api/src/lib/permissions`, and
+`withPermissions` in `getCurrentUser`, so `useAuth().hasPermission()` and
+`<PrivateSet permission>` work on the web. Each role the app's role lists name
+gets an entry with no permissions yet. See [Permissions](permissions.md).
+
+```
+yarn cedar setup permissions
+```
+
+| Arguments & Options | Description                      |
+| :------------------ | :------------------------------- |
+| `--force, -f`       | Overwrite existing configuration |
+
 ### setup tenancy
 
 Set up multi-tenancy: organizations, memberships, a tenant-scoped Prisma client
-extension, and the services, directive and web components an app needs to scope
+extension, and the services, directives and web components an app needs to scope
 data by organization. See the [multi-tenancy how-to](how-to/multi-tenancy.md)
 for the full walkthrough.
 

@@ -30,6 +30,8 @@ export const schema = gql`
   type Invitation {
     membership: Membership!
     invitationToken: String!
+    "When the invitation stops being claimable."
+    invitationExpiresAt: DateTime!
   }
 
   input CreateOrganizationInput {
@@ -46,7 +48,8 @@ export const schema = gql`
     myMemberships: [Membership!]! @requireAuth
 
     "The current organization, resolved by resolveCurrentOrg for this request."
-    organization(id: String!): Organization @requireMembership
+    organization(id: String!): Organization
+      @requirePermission(permission: "organization.read")
   }
 
   type Mutation {
@@ -56,24 +59,25 @@ export const schema = gql`
 
     """
     Creates a pending membership (an invitation) in the current organization,
-    for a role the caller's own role may grant (see ROLE_GRANTS in
-    organizations.ts) -- an admin can invite an admin or a member, but not an
-    owner. The app is responsible for emailing input.email a link built from
+    for a role whose permissions the caller all holds -- an admin can invite
+    an admin or a member, but not an owner. The app is responsible for emailing input.email a link built from
     the returned invitationToken; Membership has no email column of its own.
+    The invitation can be claimed until the returned invitationExpiresAt.
     Web callers must call reauthenticate() from useAuth() in onCompleted so
     the invite shows up if the inviter is also the invitee.
     """
     inviteMember(input: InviteMemberInput!): Invitation!
-      @requireMembership(roles: ["owner", "admin"])
+      @requirePermission(permission: "members.manage")
 
     """
     Attaches the pending membership matching token to the signed-in user, or
     is a no-op if it is already attached to them. Throws if the token is
-    invalid or was already claimed by someone else.
+    invalid, expired or was already claimed by someone else.
     Web callers must call reauthenticate() from useAuth() in onCompleted so
     the new membership is reflected in currentUser.memberships.
     """
-    acceptInvitation(token: String!): Organization! @requireAuth
+    acceptInvitation(token: String!): Organization!
+      @requireAuth
 
     """
     Removes a membership from the current organization, for a role the
@@ -84,6 +88,6 @@ export const schema = gql`
     removing their own membership.
     """
     removeMember(membershipId: String!): Membership!
-      @requireMembership(roles: ["owner", "admin"])
+      @requirePermission(permission: "members.manage")
   }
 `

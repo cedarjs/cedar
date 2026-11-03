@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "The CedarJS Command Line",
   "repository": {
     "type": "git",
@@ -32,10 +32,10 @@
   },
   "dependencies": {
     "@babel/core": "^7.26.10",
-    "@babel/parser": "7.29.9",
+    "@babel/parser": "7.29.12",
     "@babel/preset-typescript": "7.29.7",
-    "@babel/traverse": "7.29.10",
-    "@babel/types": "7.29.8",
+    "@babel/traverse": "7.29.12",
+    "@babel/types": "7.29.11",
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/babel-config": "workspace:*",
     "@cedarjs/cli-helpers": "workspace:*",
@@ -47,14 +47,8 @@
     "@cedarjs/utils": "workspace:*",
     "@cedarjs/vite": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
-    "@listr2/prompt-adapter-enquirer": "4.3.3",
-    "@opentelemetry/api": "1.9.1",
-    "@opentelemetry/core": "2.12.0",
-    "@opentelemetry/exporter-trace-otlp-http": "0.223.0",
-    "@opentelemetry/resources": "2.12.0",
-    "@opentelemetry/sdk-trace-node": "2.12.0",
-    "@opentelemetry/semantic-conventions": "1.43.0",
-    "@prisma/internals": "7.10.0",
+    "@listr2/prompt-adapter-enquirer": "4.4.3",
+    "@prisma/internals": "7.10.1",
     "ansis": "4.4.0",
     "archiver": "7.0.1",
     "boxen": "5.1.2",
@@ -76,32 +70,36 @@
     "latest-version": "9.0.0",
     "listr2": "10.2.2",
     "lodash": "4.18.1",
+    "package-json": "10.0.1",
     "pascalcase": "1.0.0",
     "pluralize": "8.0.0",
     "portfinder": "1.0.38",
-    "prettier": "3.9.9",
-    "prisma": "7.10.0",
+    "prettier": "3.9.10",
     "prompts": "2.4.2",
     "smol-toml": "1.9.1",
     "srvx": "0.12.8",
     "string-env-interpolation": "1.0.1",
-    "systeminformation": "5.33.15",
     "termi-link": "1.1.0",
     "title-case": "3.0.3",
     "unionfs": "4.6.0",
     "uuid": "11.1.1",
     "verkit": "0.5.0",
-    "yargs": "17.7.3"
+    "yargs": "18.2.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/dmmf": "7.10.0",
+    "@prisma/dmmf": "7.10.1",
     "@types/archiver": "^7.0.0",
     "memfs": "4.80.0",
     "node-ssh": "13.2.1",
+    "prisma": "7.10.1",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
+  },
+  "peerDependencies": {
+    "prisma": "7.10.1"
   },
   "engines": {
     "node": ">=24"

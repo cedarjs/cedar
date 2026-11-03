@@ -28,3 +28,7 @@ For the complete deployment process on Netlify, see the [Tutorial Deployment sec
 :::tip
 Netlify deploys set up through [universal deploy](universal-deploy.md) get [skew protection](universal-deploy.md#skew-protection), which keeps tabs that are open during a deploy working.
 :::
+
+:::note
+Netlify ships only the files it can trace from your API's imports. If your app runs child scripts with [`@cedarjs/locked-child`](https://github.com/cedarjs/locked-child), which nothing imports, `netlify.toml` needs `included_files = ["api/dist/ud/locked-children/**"]` under `[functions]`.
+:::

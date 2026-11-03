@@ -29,7 +29,14 @@ export const createPost: MutationResolvers['createPost'] = ({ input }) => {
 
 export const updatePost: MutationResolvers['updatePost'] = ({ id, input }) => {
   return db.post.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      title: input.title ?? undefined,
+      body: input.body ?? undefined,
+      authorId: input.authorId ?? undefined,
+    },
     where: { id },
   })
 }
@@ -42,6 +49,6 @@ export const deletePost: MutationResolvers['deletePost'] = ({ id }) => {
 
 export const Post: PostRelationResolvers = {
   author: (_obj, { root }) => {
-    return db.post.findUnique({ where: { id: root?.id } }).author()
+    return db.post.findUniqueOrThrow({ where: { id: root.id } }).author()
   },
 }

@@ -1,6 +1,10 @@
 import type { ReactElement, ReactNode } from 'react'
 import React, { useMemo, memo } from 'react'
 
+import type { AuthTenancy } from '@cedarjs/auth' with {
+  'resolution-mode': 'import',
+}
+
 import { ActiveRouteLoader } from './active-route-loader.js'
 import { analyzeRoutes } from './analyzeRoutes.js'
 import type { Wrappers } from './analyzeRoutes.js'
@@ -11,24 +15,51 @@ import { normalizePage } from './page.js'
 import { PageLoadingContextProvider } from './PageLoadingContext.js'
 import { ParamsProvider } from './params.js'
 import { Redirect } from './redirect.js'
-import type { RouterContextProviderProps } from './router-context.js'
+import type { RouterContextProviderProps, Tenancy } from './router-context.js'
 import { RouterContextProvider } from './router-context.js'
 import { wrapWithSetWrappers } from './Set.js'
 import { SplashPage } from './splash-page.js'
 import { matchPath, parseSearch, replaceParams, validatePath } from './util.js'
 import type { TrailingSlashesTypes } from './util.js'
 
-export interface RouterProps extends Omit<
-  RouterContextProviderProps,
-  'routes' | 'activeRouteName'
-> {
+/**
+ * `tenancy`, only in an app with tenancy (see `AuthTenancy`)
+ */
+type RouterTenancy = AuthTenancy extends { enabled: true }
+  ? {
+      /**
+       * How the router handles organizations: finding the one of the current
+       * route, checking a set's `permission` in it, and providing
+       * it to the layouts and page of a `PrivateSet`. Pass the `tenancy` from
+       * `createTenancy` in `@cedarjs/tenancy/web`:
+       *
+       *   <Router useAuth={useAuth} tenancy={tenancy}>
+       */
+      tenancy?: Tenancy
+    }
+  : Record<never, never>
+
+export interface RouterProps
+  extends
+    Omit<RouterContextProviderProps, 'routes' | 'activeRouteName' | 'tenancy'>,
+    RouterTenancy {
   trailingSlashes?: TrailingSlashesTypes
   pageLoadingDelay?: number
   children: ReactNode
 }
 
-export const Router: React.FC<RouterProps> = ({
+/**
+ * The props the router reads. In an app without tenancy `RouterProps` has no
+ * `tenancy`, but the router's own code is compiled as one, so it reads it
+ * through this type, which `RouterProps` always fits.
+ */
+interface RouterImplementationProps extends RouterProps {
+  tenancy?: Tenancy
+}
+
+const RouterImplementation: React.FC<RouterImplementationProps> = ({
   useAuth,
+  tenancy,
   paramTypes,
   pageLoadingDelay,
   trailingSlashes = 'never',
@@ -40,6 +71,7 @@ export const Router: React.FC<RouterProps> = ({
     <LocationProvider trailingSlashes={trailingSlashes}>
       <LocationAwareRouter
         useAuth={useAuth}
+        tenancy={tenancy}
         paramTypes={paramTypes}
         pageLoadingDelay={pageLoadingDelay}
       >
@@ -49,8 +81,14 @@ export const Router: React.FC<RouterProps> = ({
   )
 }
 
-const LocationAwareRouter: React.FC<RouterProps> = ({
+// So React DevTools and error messages show the name apps use
+RouterImplementation.displayName = 'Router'
+
+export const Router: React.FC<RouterProps> = RouterImplementation
+
+const LocationAwareRouter: React.FC<RouterImplementationProps> = ({
   useAuth,
+  tenancy,
   paramTypes,
   pageLoadingDelay,
   children,
@@ -104,6 +142,7 @@ const LocationAwareRouter: React.FC<RouterProps> = ({
       return (
         <RouterContextProvider
           useAuth={useAuth}
+          tenancy={tenancy}
           paramTypes={paramTypes}
           routes={analyzeRoutesResult}
         >
@@ -163,6 +202,7 @@ const LocationAwareRouter: React.FC<RouterProps> = ({
   return (
     <RouterContextProvider
       useAuth={useAuth}
+      tenancy={tenancy}
       paramTypes={paramTypes}
       routes={analyzeRoutesResult}
       activeRouteName={name}
@@ -196,7 +236,9 @@ interface WrappedPageProps {
     props: {
       private?: boolean
       unauthenticated?: string
+      unauthorized?: string
       roles?: string | string[]
+      permission?: string
       whileLoadingAuth?: () => ReactElement | null
     }
   }[]
@@ -244,7 +286,9 @@ const WrappedPage = memo(({ sets, children }: WrappedPageProps) => {
       wrapped = (
         <AuthenticatedRoute
           unauthenticated={unauthenticated}
+          unauthorized={set.props.unauthorized}
           roles={set.props.roles}
+          permission={set.props.permission}
           whileLoadingAuth={set.props.whileLoadingAuth}
         >
           {wrapped}

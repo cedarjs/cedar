@@ -1,6 +1,7 @@
 ${useClientDirective}import type {
   Edit${singularPascalName}By${pascalIdName},
   Update${singularPascalName}Input,
+  Update${singularPascalName}Mutation,
   Update${singularPascalName}MutationVariables
 } from 'types/graphql'
 
@@ -24,7 +25,7 @@ export const QUERY: TypedDocumentNode<Edit${singularPascalName}By${pascalIdName}
 `
 
 const UPDATE_${singularConstantName}_MUTATION: TypedDocumentNode<
-  Edit${singularPascalName}ById,
+  Update${singularPascalName}Mutation,
   Update${singularPascalName}MutationVariables
 > = gql`
   mutation Update${singularPascalName}Mutation($${idName}: ${idType}!, $input: Update${singularPascalName}Input!) {
@@ -35,6 +36,8 @@ const UPDATE_${singularConstantName}_MUTATION: TypedDocumentNode<
 `
 
 export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>${singularPascalName} not found</div>
 
 export const Failure = ({ error }: CellFailureProps) => (
   <div className="rw-cell-error">{error?.message}</div>
@@ -54,17 +57,14 @@ export const Success = ({ ${singularCamelName} }: CellSuccessProps<Edit${singula
     }
   )
 
-  const onSave = (
-    input: Update${singularPascalName}Input,
-    id: Edit${singularPascalName}By${pascalIdName}['${singularCamelName}']['id']
-  ) => {
-    update${singularPascalName}({ variables: { id, input } })
+  const onSave = (input: Update${singularPascalName}Input) => {
+    update${singularPascalName}({ variables: { ${idName}: ${singularCamelName}.${idName}, input } })
   }
 
   return (
     <div className="rw-segment">
       <header className="rw-segment-header">
-        <h2 className="rw-heading rw-heading-secondary">Edit ${singularPascalName} {${singularCamelName}?.id}</h2>
+        <h2 className="rw-heading rw-heading-secondary">Edit ${singularPascalName} {${singularCamelName}.${idName}}</h2>
       </header>
       <div className="rw-segment-main">
         <${singularPascalName}Form ${singularCamelName}={${singularCamelName}} onSave={onSave} error={error} loading={loading} />

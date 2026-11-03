@@ -7,8 +7,9 @@
     ]
   },
   "devDependencies": {
-    "@cedarjs/core": "2.8.0",
-    "@cedarjs/project-config": "2.8.0"
+    "@cedarjs/core": "7.1.0",
+    "@cedarjs/project-config": "7.1.0",
+    "prisma": "7.10.1"
   },
   "eslintConfig": {
     "extends": "@cedarjs/eslint-config",
@@ -20,6 +21,6 @@
   "packageManager": "yarn@4.14.1",
   "resolutions": {
     "@apollo/client-react-streaming/superjson": "^1.12.2",
-    "react-is": "19.3.0"
+    "react-is": "19.3.1"
   }
 }

@@ -1,3 +1,5 @@
+import { vi } from 'vitest'
+
 import type { Contact } from 'src/lib/db'
 
 import {
@@ -13,11 +15,11 @@ import type { StandardScenario } from './contacts.scenarios.js'
 // and can fail without adjustments, e.g. Float.
 //           Please refer to the RedwoodJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
-// https://cedarjs.com/docs/testing#jest-expect-type-considerations
+// https://cedarjs.com/docs/testing#expect-type-considerations
 
 describe('contacts', () => {
   afterEach(() => {
-    jest.mocked(console).log.mockRestore?.()
+    vi.mocked(console).log.mockRestore?.()
   })
 
   scenario('returns all contacts', async (scenario: StandardScenario) => {
@@ -33,7 +35,7 @@ describe('contacts', () => {
   })
 
   scenario('creates a contact', async () => {
-    jest.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const result = await createContact({
       input: { name: 'String', email: 'foo@bar.com', message: 'String' },

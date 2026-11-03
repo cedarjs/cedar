@@ -2172,12 +2172,12 @@ const LoginPage = ({ type }) => {
   } = useAuth()
   const [shouldShowWebAuthn, setShouldShowWebAuthn] = useState(false)
   const [showWebAuthn, setShowWebAuthn] = useState(
-    webAuthn.isEnabled() && type !== 'password'
+    !!webAuthn?.isEnabled() && type !== 'password'
   )
 
   // should redirect right after login or wait to show the webAuthn prompts?
   useEffect(() => {
-    if (isAuthenticated && (!shouldShowWebAuthn || webAuthn.isEnabled())) {
+    if (isAuthenticated && (!shouldShowWebAuthn || webAuthn?.isEnabled())) {
       navigate(REDIRECT)
     }
   }, [isAuthenticated, shouldShowWebAuthn])
@@ -2190,13 +2190,13 @@ const LoginPage = ({ type }) => {
   }, [loading, isAuthenticated])
 
   // focus on the email field as soon as the page loads
-  const emailRef = useRef()
+  const emailRef = useRef(null)
   useEffect(() => {
-    emailRef.current && emailRef.current.focus()
+    emailRef.current?.focus()
   }, [])
 
   const onSubmit = async (data) => {
-    const webAuthnSupported = await webAuthn.isSupported()
+    const webAuthnSupported = !!(await webAuthn?.isSupported())
 
     if (webAuthnSupported) {
       setShouldShowWebAuthn(true)
@@ -2223,28 +2223,36 @@ const LoginPage = ({ type }) => {
   }
 
   const onAuthenticate = async () => {
+    if (!webAuthn) {
+      return
+    }
+
     try {
       await webAuthn.authenticate()
       await reauthenticate()
       toast.success(WELCOME_MESSAGE)
       navigate(REDIRECT)
     } catch (e) {
-      if (e.name === 'WebAuthnDeviceNotFoundError') {
+      if (e instanceof Error && e.name === 'WebAuthnDeviceNotFoundError') {
         toast.error('Device not found, log in with Email/Secret to continue')
         setShowWebAuthn(false)
       } else {
-        toast.error(e.message)
+        toast.error(e instanceof Error ? e.message : String(e))
       }
     }
   }
 
   const onRegister = async () => {
+    if (!webAuthn) {
+      return
+    }
+
     try {
       await webAuthn.register()
       toast.success(WELCOME_MESSAGE)
       navigate(REDIRECT)
     } catch (e) {
-      toast.error(e.message)
+      toast.error(e instanceof Error ? e.message : String(e))
     }
   }
 
@@ -2346,7 +2354,7 @@ const LoginPage = ({ type }) => {
 
   const formToRender = () => {
     if (showWebAuthn) {
-      if (webAuthn.isEnabled()) {
+      if (webAuthn?.isEnabled()) {
         return <AuthWebAuthnPrompt />
       } else {
         return <RegisterWebAuthnPrompt />
@@ -2358,7 +2366,7 @@ const LoginPage = ({ type }) => {
 
   const linkToRender = () => {
     if (showWebAuthn) {
-      if (webAuthn.isEnabled()) {
+      if (webAuthn?.isEnabled()) {
         return (
           <div className="rw-login-link">
             <span>or login with </span>{' '}
@@ -2782,12 +2790,12 @@ const LoginPage = ({ type }) => {
   } = useAuth()
   const [shouldShowWebAuthn, setShouldShowWebAuthn] = useState(false)
   const [showWebAuthn, setShowWebAuthn] = useState(
-    webAuthn.isEnabled() && type !== 'password'
+    !!webAuthn?.isEnabled() && type !== 'password'
   )
 
   // should redirect right after login or wait to show the webAuthn prompts?
   useEffect(() => {
-    if (isAuthenticated && (!shouldShowWebAuthn || webAuthn.isEnabled())) {
+    if (isAuthenticated && (!shouldShowWebAuthn || webAuthn?.isEnabled())) {
       navigate(REDIRECT)
     }
   }, [isAuthenticated, shouldShowWebAuthn])
@@ -2800,13 +2808,13 @@ const LoginPage = ({ type }) => {
   }, [loading, isAuthenticated])
 
   // focus on the email field as soon as the page loads
-  const emailRef = useRef()
+  const emailRef = useRef(null)
   useEffect(() => {
-    emailRef.current && emailRef.current.focus()
+    emailRef.current?.focus()
   }, [])
 
   const onSubmit = async (data) => {
-    const webAuthnSupported = await webAuthn.isSupported()
+    const webAuthnSupported = !!(await webAuthn?.isSupported())
 
     if (webAuthnSupported) {
       setShouldShowWebAuthn(true)
@@ -2833,28 +2841,36 @@ const LoginPage = ({ type }) => {
   }
 
   const onAuthenticate = async () => {
+    if (!webAuthn) {
+      return
+    }
+
     try {
       await webAuthn.authenticate()
       await reauthenticate()
       toast.success(WELCOME_MESSAGE)
       navigate(REDIRECT)
     } catch (e) {
-      if (e.name === 'WebAuthnDeviceNotFoundError') {
+      if (e instanceof Error && e.name === 'WebAuthnDeviceNotFoundError') {
         toast.error('Device not found, log in with Email/Secret to continue')
         setShowWebAuthn(false)
       } else {
-        toast.error(e.message)
+        toast.error(e instanceof Error ? e.message : String(e))
       }
     }
   }
 
   const onRegister = async () => {
+    if (!webAuthn) {
+      return
+    }
+
     try {
       await webAuthn.register()
       toast.success(WELCOME_MESSAGE)
       navigate(REDIRECT)
     } catch (e) {
-      toast.error(e.message)
+      toast.error(e instanceof Error ? e.message : String(e))
     }
   }
 
@@ -2956,7 +2972,7 @@ const LoginPage = ({ type }) => {
 
   const formToRender = () => {
     if (showWebAuthn) {
-      if (webAuthn.isEnabled()) {
+      if (webAuthn?.isEnabled()) {
         return <AuthWebAuthnPrompt />
       } else {
         return <RegisterWebAuthnPrompt />
@@ -2968,7 +2984,7 @@ const LoginPage = ({ type }) => {
 
   const linkToRender = () => {
     if (showWebAuthn) {
-      if (webAuthn.isEnabled()) {
+      if (webAuthn?.isEnabled()) {
         return (
           <div className="rw-login-link">
             <span>or login with </span>{' '}

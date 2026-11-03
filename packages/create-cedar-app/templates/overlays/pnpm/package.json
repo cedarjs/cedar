@@ -9,15 +9,16 @@
     "start:web": "cedarjs-server web"
   },
   "dependencies": {
-    "@cedarjs/api-server": "7.0.0"
+    "@cedarjs/api-server": "7.1.0"
   },
   "devDependencies": {
-    "@cedarjs/core": "7.0.0",
-    "@cedarjs/eslint-config": "7.0.0",
-    "@cedarjs/project-config": "7.0.0",
-    "@cedarjs/testing": "7.0.0",
-    "prisma": "7.10.0",
-    "vitest": "4.1.11"
+    "@cedarjs/core": "7.1.0",
+    "@cedarjs/eslint-config": "7.1.0",
+    "@cedarjs/project-config": "7.1.0",
+    "@cedarjs/testing": "7.1.0",
+    "prisma": "7.10.1",
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": "24.x",
@@ -26,7 +27,7 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "11.28.5",
+      "version": "11.28.9",
       "onFail": "download"
     }
   }

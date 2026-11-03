@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -32,6 +32,14 @@
     "./dist/AuthProvider/ServerAuthProvider.js": {
       "types": "./dist/AuthProvider/ServerAuthProvider.d.ts",
       "default": "./dist/AuthProvider/ServerAuthProvider.js"
+    },
+    "./currentUserHasRole": {
+      "types": "./dist/currentUserHasRole.d.ts",
+      "default": "./dist/currentUserHasRole.js"
+    },
+    "./currentUserHasPermission": {
+      "types": "./dist/currentUserHasPermission.d.ts",
+      "default": "./dist/currentUserHasPermission.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -58,12 +66,13 @@
     "concurrently": "9.2.5",
     "msw": "2.15.0",
     "publint": "0.3.25",
-    "react": "19.3.0",
+    "react": "19.3.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "peerDependencies": {
-    "react": "19.3.0"
+    "react": "19.3.1"
   },
   "engines": {
     "node": ">=24"

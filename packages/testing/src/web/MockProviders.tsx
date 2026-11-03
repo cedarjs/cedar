@@ -6,6 +6,7 @@ import { CedarApolloProvider } from '@cedarjs/web/apollo/CedarApolloProvider'
 
 import { UserRoutes as VitestUserRoutes } from './globRoutesImporter.js'
 import { useAuth } from './mockAuth.js'
+import { MockOrgProvider } from './MockOrgProvider.js'
 import { MockParamsProvider } from './MockParamsProvider.js'
 
 // Import the user's Routes from `./web/src/Routes.{tsx,jsx}`,
@@ -38,7 +39,9 @@ export const MockProviders: React.FunctionComponent<{
         <UserRoutes />
         <VitestUserRoutes />
         <LocationProvider>
-          <MockParamsProvider>{children}</MockParamsProvider>
+          <MockParamsProvider>
+            <MockOrgProvider>{children}</MockOrgProvider>
+          </MockParamsProvider>
         </LocationProvider>
       </CedarApolloProvider>
     </CedarProvider>

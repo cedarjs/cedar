@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/tenancy",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -40,17 +40,18 @@
   "dependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/context": "workspace:*",
-    "@cedarjs/graphql-server": "workspace:*"
+    "@cedarjs/graphql-server": "workspace:*",
+    "@cedarjs/permissions": "workspace:*"
   },
   "devDependencies": {
-    "@apollo/client": "4.3.3",
+    "@apollo/client": "4.3.5",
     "@arethetypeswrong/cli": "0.18.5",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "@prisma/adapter-better-sqlite3": "7.10.0",
-    "@prisma/client": "7.10.0",
+    "@prisma/adapter-better-sqlite3": "7.10.1",
+    "@prisma/client": "7.10.1",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",
@@ -63,21 +64,23 @@
     "esbuild": "0.28.2",
     "graphql": "16.14.2",
     "jsdom": "27.4.0",
-    "prisma": "7.10.0",
+    "prisma": "7.10.1",
     "publint": "0.3.25",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
-    "vitest": "4.1.11",
+    "vite": "7.3.7",
+    "vitest": "5.0.5",
     "zx": "8.8.5"
   },
   "peerDependencies": {
-    "@apollo/client": "4.3.3",
+    "@apollo/client": "4.3.5",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "react": "19.3.0"
+    "@prisma/client": "7.10.1",
+    "react": "19.3.1"
   },
   "peerDependenciesMeta": {
     "@apollo/client": {
@@ -90,6 +93,9 @@
       "optional": true
     },
     "@cedarjs/web": {
+      "optional": true
+    },
+    "@prisma/client": {
       "optional": true
     },
     "react": {

@@ -893,7 +893,61 @@ export function acceptedContentType(
   claimedType?: string,
   options: DetectContentTypeOptions = {},
 ): string | null {
+  const result = checkContentType(bytes, accept, claimedType, options)
+
+  return 'contentType' in result ? result.contentType : null
+}
+
+/** Why `checkContentType()` refused a file. */
+export interface ContentTypeRejection {
+  /**
+   * What `detectContentType()` says the bytes are, or `null` when it doesn't
+   * recognise them.
+   */
+  detected: string | null
+  /**
+   * The claimed type, canonical (`image/jpeg` for `image/jpg`), or `null`
+   * when none was claimed.
+   */
+  claimed: string | null
+}
+
+/** The result of `checkContentType()`: the type to record, or why not. */
+export type ContentTypeCheck =
+  { contentType: string } | { rejected: ContentTypeRejection }
+
+/**
+ * `acceptedContentType()`, saying why a file is refused: the same rules,
+ * but returns `{ contentType }` for an accepted file and
+ * `{ rejected: { detected, claimed } }` for a refused one, so an error can
+ * name both types.
+ *
+ * The two differing is the case worth explaining. An iPhone photo whose
+ * major brand is `hevc` is detected as `image/heic-sequence`, while the
+ * browser claims `image/heic`, so a profile that only lists `image/heic`
+ * refuses it.
+ *
+ * @example
+ * import { checkContentType } from '@cedarjs/uploads'
+ *
+ * const result = checkContentType(data, ['image/heic'], 'image/heic')
+ *
+ * if ('rejected' in result) {
+ *   const { detected, claimed } = result.rejected
+ *   throw new Error(`Sent as ${claimed}, but the file is ${detected}`)
+ * }
+ *
+ * await storeFile(target, { db, filename, mimeType: result.contentType, data })
+ */
+export function checkContentType(
+  bytes: Uint8Array,
+  accept: string[],
+  claimedType?: string,
+  options: DetectContentTypeOptions = {},
+): ContentTypeCheck {
   const detected = detectContentType(bytes, options)
+  const claimed = claimedType ? canonicalContentType(claimedType) : ''
+  const rejected = { detected, claimed: claimed || null }
 
   if (detected) {
     // A macro-enabled file needs naming exactly, whatever the wildcards say
@@ -901,20 +955,16 @@ export function acceptedContentType(
       ? isContentTypeListed(accept, detected)
       : isMimeTypeAllowed(accept, detected)
 
-    return allowed ? detected : null
+    return allowed ? { contentType: detected } : { rejected }
   }
 
-  if (!claimedType) {
-    return null
+  // No claimed type means not accepted. And a type the detector knows would
+  // have been recognised, so the claim is false.
+  if (!claimed || DETECTABLE_CONTENT_TYPES.has(claimed)) {
+    return { rejected }
   }
 
-  const claimed = canonicalContentType(claimedType)
-
-  // A type the detector knows would have been recognised, so the claim is
-  // false
-  if (DETECTABLE_CONTENT_TYPES.has(claimed)) {
-    return null
-  }
-
-  return isClaimedContentTypeAllowed(accept, claimed) ? claimed : null
+  return isClaimedContentTypeAllowed(accept, claimed)
+    ? { contentType: claimed }
+    : { rejected }
 }

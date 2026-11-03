@@ -899,6 +899,53 @@ async function addDbAuth(
     await exec(`${packageManager} install`, [], execaOptions)
   }
 
+  const useLocalPnpmDbAuthSetup = localDbAuth && packageManager === 'pnpm'
+
+  if (useLocalPnpmDbAuthSetup) {
+    // `cedar setup auth` installs the setup package with `pnpm add -D
+    // <package>@<version>`. With an explicit version, pnpm records that
+    // version as is instead of applying the matching override from
+    // pnpm-workspace.yaml, so it would install the published package.
+    // Declaring the tarball that tarsync built as a dependency first makes the
+    // CLI see the package as installed and skip its own install. The
+    // package.json restored below drops this dependency again
+    await exec(
+      'pnpm add -D -w ./tarballs/cedarjs-auth-dbauth-setup.tgz',
+      [],
+      execaOptions,
+    )
+  }
+
+  const useLocalNpmDbAuthSetup = localDbAuth && packageManager === 'npm'
+
+  if (useLocalNpmDbAuthSetup) {
+    // tarsync adds an override for every Cedar package, and npm rejects
+    // installing a package whose spec differs from its override (EOVERRIDE).
+    // `cedar setup auth` installs the setup package with `npm install -D
+    // <package>@<version>`, so it would fail. `npm install ./<tarball>` fails
+    // as well, because npm rewrites the path to a relative `file:` spec that
+    // differs from the absolute one in the override. Declaring the dependency
+    // with exactly the override's spec makes the CLI see the package as
+    // installed and skip its own install. The package.json restored below
+    // drops this dependency again
+    const npmPackageJson = JSON.parse(
+      fs.readFileSync(projectPackageJsonPath, 'utf-8'),
+    )
+
+    npmPackageJson.devDependencies = {
+      ...npmPackageJson.devDependencies,
+      '@cedarjs/auth-dbauth-setup':
+        npmPackageJson.overrides['@cedarjs/auth-dbauth-setup'],
+    }
+
+    fs.writeFileSync(
+      projectPackageJsonPath,
+      JSON.stringify(npmPackageJson, null, 2),
+    )
+
+    await exec('npm install', [], execaOptions)
+  }
+
   await exec(
     `${cedarBin} cedar setup auth dbAuth --force --no-webauthn --no-createUserModel --no-generateAuthPages`,
     [],
@@ -942,7 +989,7 @@ async function addDbAuth(
   const resultsContactsSdl = contentContactsSdl
     .replace(
       'createContact(input: CreateContactInput!): Contact! @requireAuth',
-      `createContact(input: CreateContactInput!): Contact @skipAuth`,
+      `createContact(input: CreateContactInput!): Contact! @skipAuth`,
     )
     .replace(
       /deleteContact\(id: Int!\): Contact! @requireAuth(?=\s)/,
@@ -1019,7 +1066,7 @@ async function addDbAuth(
     .replace('userAttributes: _userAttributes', 'userAttributes')
     .replace(
       '// name: userAttributes.name',
-      "fullName: userAttributes['full-name']",
+      "fullName: userAttributes?.['full-name'] ?? ''",
     )
 
   fs.writeFileSync(pathAuthTs, resultsAuthTs)

@@ -7,7 +7,7 @@ import type { UseRequireAuth } from '../useRequireAuth.js'
 
 import { getCurrentUser } from './fixtures/auth.js'
 
-type RedwoodUser = Record<string, unknown> & { roles?: string[] }
+type CedarUser = Record<string, unknown> & { roles?: string[] }
 
 export const mockedAuthenticationEvent = ({
   headers = {},
@@ -134,7 +134,7 @@ const handlerWithError = async () => {
   }
 }
 
-const getCurrentUserWithError = async (): Promise<RedwoodUser> => {
+const getCurrentUserWithError = async (): Promise<CedarUser> => {
   throw Error('Something went wrong getting the user info')
 }
 

@@ -91,8 +91,8 @@ const parseGqlFragmentDefinition = (gqlFragment: string) => {
 
 /**
  * Returns the name of the first fragment definition in the given GraphQL
- * source, e.g. `AuthorCell_author` for
- * `fragment AuthorCell_author on User { fullName }`
+ * source, e.g. `AuthorCellFragment` for
+ * `fragment AuthorCellFragment on User { fullName }`
  */
 export const parseGqlFragmentName = (gqlFragment: string) => {
   return parseGqlFragmentDefinition(gqlFragment)?.name.value
@@ -103,15 +103,28 @@ export const parseGqlFragmentName = (gqlFragment: string) => {
  * parent Cell passes the fragment data in with, and the prop `Success`
  * receives the data as.
  *
- * For a fragment named with an underscore, like `AuthorCell_author`, the part
- * after the last underscore is used (`author`). Otherwise the type the
- * fragment is defined on is used, camelCased (`on User` -> `user`).
+ * The first of these rules that applies picks the name:
+ *
+ * 1. For a fragment named with an underscore, like `AuthorCell_author`, the
+ *    part after the last underscore is used (`author`).
+ * 2. For a fragment named after the Cell, followed by `Fragment` and a
+ *    PascalCased prop name, like `PostCellFragmentAuthor` in `PostCell`, the
+ *    camelCased prop name is used (`author`).
+ * 3. Otherwise the type the fragment is defined on is used, camelCased
+ *    (`fragment AuthorCellFragment on User` -> `user`).
+ *
+ * `cellName` is the Cell's file name without the extension, like
+ * `PostCell`. It's the same name the Cell transforms pass to `createCell` as
+ * `displayName`.
  *
  * Keep this in sync with getFragmentPropName in
  * packages/web/src/components/cell/createFragmentCell.tsx, which is what the
  * fragment Cell runtime uses.
  */
-export const parseGqlFragmentPropName = (gqlFragment: string) => {
+export const parseGqlFragmentPropName = (
+  gqlFragment: string,
+  cellName: string,
+) => {
   const fragmentDefinition = parseGqlFragmentDefinition(gqlFragment)
 
   if (!fragmentDefinition) {
@@ -119,10 +132,26 @@ export const parseGqlFragmentPropName = (gqlFragment: string) => {
   }
 
   const fragmentName = fragmentDefinition.name.value
+  // TODO(fragment-underscore): Remove the underscore rule (rule 1 above) in a
+  // future major version. `<CellName>Fragment<Prop>` (rule 2) covers the same
+  // use case without an underscore. Remove it together with the same rule in
+  // getFragmentPropName in
+  // packages/web/src/components/cell/createFragmentCell.tsx, and update everything else tagged
+  // `TODO(fragment-underscore)`.
   const underscoreIndex = fragmentName.lastIndexOf('_')
 
   if (underscoreIndex > 0 && underscoreIndex < fragmentName.length - 1) {
     return fragmentName.slice(underscoreIndex + 1)
+  }
+
+  const cellFragmentPrefix = cellName + 'Fragment'
+  const propNameSuffix = fragmentName.slice(cellFragmentPrefix.length)
+
+  if (
+    fragmentName.startsWith(cellFragmentPrefix) &&
+    /^[A-Z]/.test(propNameSuffix)
+  ) {
+    return propNameSuffix.charAt(0).toLowerCase() + propNameSuffix.slice(1)
   }
 
   const typename = fragmentDefinition.typeCondition.name.value

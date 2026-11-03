@@ -4,7 +4,8 @@
     "isolatedModules": true,
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "."
   },
   "include": ["."],
   "references": [{ "path": "../framework-tools" }]

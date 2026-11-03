@@ -1,10 +1,12 @@
 vi.mock('node:fs')
+vi.mock('execa', () => ({ default: vi.fn() }))
 
 import '../../../../lib/mockTelemetry'
 
 import type * as NodeFs from 'node:fs'
 import path from 'node:path'
 
+import execa from 'execa'
 import { vol, fs as memfsFs } from 'memfs'
 import { dedent } from 'ts-dedent'
 import {
@@ -175,6 +177,9 @@ const GITIGNORE = dedent`
 `
 
 beforeEach(() => {
+  vi.mocked(execa).mockReset()
+  vi.mocked(execa).mockResolvedValue({ stdout: '' } as never)
+
   vol.reset()
   vol.fromJSON(
     {
@@ -259,5 +264,64 @@ describe('uploadsHandler', () => {
     // The returned type is what's stored, not the claimed one
     expect(service).toMatch(/storeFile\(target, \{[^}]*\n\s*mimeType,\n/)
     expect(service).not.toContain('mimeType: input.mimeType')
+  })
+
+  it('checks the generated files against .gitignore via git check-ignore', async () => {
+    const servicePath = path.join(
+      BASE_PATH,
+      'api/src/services/uploads/uploads.ts',
+    )
+    vi.mocked(execa).mockResolvedValue({ stdout: servicePath } as never)
+
+    await uploadsHandler.handler({ targets: ['db'], force: false })
+
+    expect(Listr2Mock.executedTaskTitles).toContain(
+      'Checking the generated files are tracked by git...',
+    )
+    expect(execa).toHaveBeenCalledWith(
+      'git',
+      ['check-ignore', '-z', '--stdin'],
+      expect.objectContaining({
+        cwd: BASE_PATH,
+        input: expect.stringContaining(servicePath),
+      }),
+    )
+    expect(vi.mocked(execa).mock.calls[0][2]).toEqual(
+      expect.objectContaining({
+        input: expect.stringContaining(
+          path.join(BASE_PATH, 'api/src/server.ts'),
+        ),
+      }),
+    )
+  })
+
+  it('prints a persistent warning when generated files are ignored', async () => {
+    const servicePath = path.join(
+      BASE_PATH,
+      'api/src/services/uploads/uploads.ts',
+    )
+    vi.mocked(execa).mockResolvedValue({ stdout: servicePath } as never)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await uploadsHandler.handler({ targets: ['db'], force: false })
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        path.join('api', 'src', 'services', 'uploads', 'uploads.ts'),
+      ),
+    )
+    warn.mockRestore()
+  })
+
+  it('does not fail setup when git check-ignore can not run', async () => {
+    vi.mocked(execa).mockRejectedValue(new Error('git is not installed'))
+
+    await expect(
+      uploadsHandler.handler({ targets: ['db'], force: false }),
+    ).resolves.not.toThrow()
+
+    expect(Listr2Mock.executedTaskTitles).toContain(
+      'Checking the generated files are tracked by git...',
+    )
   })
 })

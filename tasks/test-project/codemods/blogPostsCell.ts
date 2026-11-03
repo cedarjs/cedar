@@ -5,6 +5,7 @@ const query = `
         title
         body
         author {
+          id
           email
           fullName
         }

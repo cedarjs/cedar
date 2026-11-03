@@ -423,6 +423,78 @@ describe('schedule()', () => {
   })
 })
 
+describe('unique keys', () => {
+  const job = {
+    id: 1,
+    name: 'JobName',
+    path: 'JobPath/JobPath',
+    queue: 'default',
+    perform: vi.fn(),
+  }
+
+  class KeyedAdapter extends MockAdapter {
+    override readonly supportsUniqueKeys = true
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('passes the key on to an adapter that supports keys', async () => {
+    const adapter = new KeyedAdapter()
+    const scheduler = new Scheduler({ adapter, logger: mockLogger })
+
+    await scheduler.schedule({ job, args: [], options: { key: 'job:1' } })
+
+    expect(adapter.schedule).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'job:1' }),
+    )
+  })
+
+  it("leaves `key` out of the payload when there's none", () => {
+    const scheduler = new Scheduler({
+      adapter: new KeyedAdapter(),
+      logger: mockLogger,
+    })
+
+    const payload = scheduler.buildPayload({ job, args: [] })
+
+    expect(payload).not.toHaveProperty('key')
+  })
+
+  it("throws, without scheduling, when the adapter doesn't support keys", async () => {
+    const adapter = new MockAdapter()
+    const scheduler = new Scheduler({ adapter, logger: mockLogger })
+
+    await expect(
+      scheduler.schedule({ job, args: [], options: { key: 'job:1' } }),
+    ).rejects.toThrow(errors.UniqueKeysNotSupportedError)
+    expect(adapter.schedule).not.toHaveBeenCalled()
+  })
+
+  it('throws for a key with the reserved `cedar:` prefix', () => {
+    const scheduler = new Scheduler({
+      adapter: new KeyedAdapter(),
+      logger: mockLogger,
+    })
+
+    expect(() =>
+      scheduler.buildPayload({
+        job,
+        args: [],
+        options: { key: 'cedar:schedule:JobName:default' },
+      }),
+    ).toThrow(errors.ReservedKeyError)
+    expect(() =>
+      scheduler.buildPayload({
+        job,
+        args: [],
+        options: { key: 'Cedar:Schedule:JobName:default' },
+      }),
+    ).toThrow(errors.ReservedKeyError)
+  })
+})
+
 describe('cancel()', () => {
   const mockAdapter = new MockAdapter()
 

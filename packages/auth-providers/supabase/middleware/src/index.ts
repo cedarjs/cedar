@@ -1,6 +1,6 @@
 import { AUTH_PROVIDER_HEADER } from '@cedarjs/api'
 import { authDecoder } from '@cedarjs/auth-supabase-api'
-import type { GetCurrentUser } from '@cedarjs/graphql-server'
+import type { GetCurrentUser } from '@cedarjs/graphql-server/types'
 import type {
   Middleware,
   MiddlewareRequest,

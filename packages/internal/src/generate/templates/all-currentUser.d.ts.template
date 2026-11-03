@@ -34,6 +34,13 @@ declare module '@cedarjs/context' {
   }
 }
 
+// When getCurrentUser() only throws, like it does in apps without auth,
+// InferredLoggedInUser is never. An interface can't extend never, so
+// LoggedInUser gets no fields in that case
+type LoggedInUserFields = [InferredLoggedInUser] extends [never]
+  ? {}
+  : InferredLoggedInUser
+
 declare module '@cedarjs/auth' {
-  interface LoggedInUser extends InferredLoggedInUser {}
+  interface LoggedInUser extends LoggedInUserFields {}
 }

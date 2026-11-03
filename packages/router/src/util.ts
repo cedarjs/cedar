@@ -14,8 +14,9 @@
  * Only exported to be able to test it
  */
 export function paramsForRoute(route: string) {
-  // Match the strings between `{` and `}`.
-  const params = [...route.matchAll(/\{([^}]+)\}/g)]
+  // Match the strings between `{` and `}`. Not across a `{`, so a run of
+  // `{`s without a `}` can't make it backtrack.
+  const params = [...route.matchAll(/\{([^{}]+)\}/g)]
 
   return params
     .map((match) => match[1])
@@ -147,6 +148,36 @@ export function matchPath(
   }
 
   return { match: true }
+}
+
+/**
+ * The path params of `pathname` for the route `routeDefinition`, as the text
+ * in the path, without parsing them with their param types. For putting into
+ * another route's path, where a parsed value (whatever a custom type's `parse`
+ * returns, say) wouldn't be the same text.
+ *
+ *  pathParamsText('/post/{id:Int}', '/post/7')
+ *  => { id: '7' }
+ */
+export function pathParamsText(
+  routeDefinition: string,
+  pathname: string,
+  userParamTypes: Record<string, ParamType> = {},
+) {
+  const { matchRegex, routeParams } = getRouteRegexAndParams(routeDefinition, {
+    allParamTypes: { ...coreParamTypes, ...userParamTypes },
+  })
+
+  const match = matchRegex.exec(pathname)
+  const params: Record<string, string> = {}
+
+  if (match) {
+    routeParams.forEach(([name], index) => {
+      params[name] = match[index + 1]
+    })
+  }
+
+  return params
 }
 
 interface GetRouteRegexOptions {
@@ -295,7 +326,8 @@ export function replaceParams(
     const [name, _type, match] = param
     const value = args[name]
     if (value !== undefined) {
-      path = path.replace(match, value as string)
+      // A callback, so `$&`, `$1` and the like in the value stay as they are
+      path = path.replace(match, () => String(value))
     } else {
       throw new Error(
         `Missing parameter '${name}' for route '${route}' when generating a navigation URL.`,

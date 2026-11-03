@@ -167,7 +167,7 @@ export const handler = async (
           email: username,
           hashedPassword: hashedPassword,
           salt: salt,
-          fullName: userAttributes['full-name'],
+          fullName: userAttributes?.['full-name'] ?? '',
         },
       })
     },

@@ -2,6 +2,7 @@
 import React from 'react'
 
 import { skipToken } from '@apollo/client/react'
+import type { DocumentNode } from 'graphql'
 import { gql } from 'graphql-tag'
 import { describe, expect, test } from 'tstyche'
 
@@ -13,6 +14,7 @@ import type {
   CellSuccessProps,
   TypedDocumentNode,
 } from '@cedarjs/web'
+import type { CellQueryTypes } from '@cedarjs/web/cellTypes'
 
 type ExampleQueryVariables = {
   category: string
@@ -437,5 +439,99 @@ describe('CellProps mapper type', () => {
         }),
       ).type.toRaiseError()
     })
+  })
+})
+
+describe('CellQueryTypes', () => {
+  type UserQuery = { user: { id: number; name: string } }
+  type UserVariables = { id: number }
+
+  type TypedDocument = TypedDocumentNode<UserQuery, UserVariables>
+  // gql.tada documents carry this optional decoration without implementing
+  // the complete TypedDocumentNode interface
+  type DecoratedDocument = DocumentNode & {
+    __apiType?: (variables: UserVariables) => UserQuery
+  }
+
+  type UserCell = {
+    Success: (
+      props: CellSuccessProps<UserQuery, UserVariables>,
+    ) => React.JSX.Element
+  }
+
+  // The props of a Cell's default export, exactly as the generated mirror
+  // types (mirror-typed-cell.d.ts.template in @cedarjs/internal) compute them
+  type MirrorCellInputs<Cell extends UserCell & { QUERY: unknown }> = CellProps<
+    Cell['Success'],
+    CellQueryTypes<Cell['QUERY']>[0],
+    Cell,
+    CellQueryTypes<Cell['QUERY']>[1]
+  >
+
+  test('infers the result and variables of a TypedDocumentNode', () => {
+    expect<CellQueryTypes<TypedDocument>>().type.toBe<
+      [UserQuery, UserVariables]
+    >()
+  })
+
+  test('infers the result and variables of a decorated document', () => {
+    expect<CellQueryTypes<DecoratedDocument>>().type.toBe<
+      [UserQuery, UserVariables]
+    >()
+  })
+
+  test('infers the result and variables of a function returning a typed document', () => {
+    expect<CellQueryTypes<() => TypedDocument>>().type.toBe<
+      [UserQuery, UserVariables]
+    >()
+  })
+
+  test('falls back to any for an untyped document', () => {
+    expect<CellQueryTypes<DocumentNode>>().type.toBe<[any, any]>()
+  })
+
+  test('Cell props from a typed TypedDocumentNode QUERY', () => {
+    type Inputs = MirrorCellInputs<UserCell & { QUERY: TypedDocument }>
+
+    expect<Inputs>().type.toBeAssignableFrom({ id: 1 })
+    // The query variables are required
+    expect<Inputs>().type.not.toBeAssignableFrom({})
+    // and keep their declared types
+    expect<Inputs>().type.not.toBeAssignableFrom({ id: 'wrong' })
+    // The query result is supplied by the Cell, not by its caller
+    expect<Inputs>().type.not.toBeAssignableFrom({
+      id: 1,
+      user: { id: 1, name: 'Ada' },
+    })
+  })
+
+  test('Cell props from a typed decorated document QUERY', () => {
+    type Inputs = MirrorCellInputs<UserCell & { QUERY: DecoratedDocument }>
+
+    expect<Inputs>().type.toBeAssignableFrom({ id: 1 })
+    expect<Inputs>().type.not.toBeAssignableFrom({})
+    expect<Inputs>().type.not.toBeAssignableFrom({ id: 'wrong' })
+    expect<Inputs>().type.not.toBeAssignableFrom({
+      id: 1,
+      user: { id: 1, name: 'Ada' },
+    })
+  })
+
+  test('Cell props from a function QUERY returning a typed document', () => {
+    type Inputs = MirrorCellInputs<UserCell & { QUERY: () => TypedDocument }>
+
+    expect<Inputs>().type.toBeAssignableFrom({ id: 1 })
+    expect<Inputs>().type.not.toBeAssignableFrom({})
+    expect<Inputs>().type.not.toBeAssignableFrom({ id: 'wrong' })
+    expect<Inputs>().type.not.toBeAssignableFrom({
+      id: 1,
+      user: { id: 1, name: 'Ada' },
+    })
+  })
+
+  test('Cell props from an untyped QUERY accept anything', () => {
+    type Inputs = MirrorCellInputs<UserCell & { QUERY: DocumentNode }>
+
+    expect<Inputs>().type.toBe<any>()
   })
 })

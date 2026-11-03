@@ -202,3 +202,103 @@ export class WorkerConfigIndexNotFoundError extends CedarJSJobsError {
     super(`Worker index ${index} not found in jobs config`)
   }
 }
+
+/**
+ * Thrown when pausing, resuming or listing jobs through an adapter that
+ * doesn't implement `pause()`, `resume()` or `list()`
+ */
+export class PauseNotImplementedError extends CedarJSJobsError {
+  constructor(method: 'pause' | 'resume' | 'list') {
+    super(
+      `The configured adapter does not implement \`${method}()\`, so it ` +
+        'does not support pausing, resuming or listing jobs',
+    )
+  }
+}
+
+/** Thrown when pausing or resuming a job id that no job has */
+export class JobIdNotFoundError extends CedarJSJobsError {
+  constructor(jobId: string | number) {
+    super(`No job with the id ${jobId} was found`)
+  }
+}
+
+/**
+ * Thrown when pausing or resuming a job that has completed or failed for
+ * good (which includes cancelled jobs)
+ */
+export class JobNotActiveError extends CedarJSJobsError {
+  constructor(jobId: string | number, state: 'completed' | 'failed') {
+    super(
+      state === 'failed'
+        ? `Job ${jobId} has failed for good (or was cancelled), so it can't ` +
+            'be paused or resumed'
+        : `Job ${jobId} has completed, so it can't be paused or resumed`,
+    )
+  }
+}
+
+/**
+ * Thrown when it's unclear which adapter to use: the `JobManager` has
+ * several and none was named
+ */
+export class AdapterNameRequiredError extends CedarJSJobsError {
+  constructor(names: string[]) {
+    super(
+      `Name the adapter to use, the JobManager has several: ${names.join(', ')}`,
+    )
+  }
+}
+
+/**
+ * Thrown when scheduling a job with a unique `key` through an adapter that
+ * doesn't support unique keys
+ */
+export class UniqueKeysNotSupportedError extends CedarJSJobsError {
+  constructor() {
+    super(
+      'The configured adapter does not support unique job keys, so the job ' +
+        'was not scheduled. Schedule it without `key`, or use an adapter ' +
+        'that supports keys, like the PrismaAdapter',
+    )
+  }
+}
+
+/**
+ * Thrown when a job is scheduled with a key that starts with the prefix
+ * Cedar reserves for its own keys
+ */
+export class ReservedKeyError extends CedarJSJobsError {
+  constructor(key: string, prefix: string) {
+    super(
+      `The job key \`${key}\` starts with \`${prefix}\`, which is reserved ` +
+        'for keys Cedar creates itself, like the keys of declared schedules',
+    )
+  }
+}
+
+/**
+ * Thrown when jobs declare `schedules` but the adapter that should store them
+ * doesn't implement `syncSchedules()`
+ */
+export class SchedulesNotSupportedError extends CedarJSJobsError {
+  constructor(adapterName: string) {
+    super(
+      `Jobs declare \`schedules\`, but the \`${adapterName}\` adapter does ` +
+        'not support syncing declared schedules. Use an adapter that does, ' +
+        'like the PrismaAdapter, and point `scheduleAdapter` in your ' +
+        'JobManager config at it',
+    )
+  }
+}
+
+/**
+ * Thrown when the jobs' declared `schedules` can't be synced as declared: a
+ * schedule is missing its key, two schedules share an identity, a cron
+ * expression doesn't parse, or it's unclear which adapter stores them
+ */
+export class ScheduleConfigError extends CedarJSJobsError {
+  constructor(message: string) {
+    super(`[CedarJS Jobs] ${message}`)
+  }
+}

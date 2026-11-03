@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/testing",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "Tools, wrappers and configuration for testing a Cedar project.",
   "repository": {
     "type": "git",
@@ -56,14 +56,16 @@
   "dependencies": {
     "@cedarjs/context": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
+    "@cedarjs/permissions": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
+    "@prisma/internals": "7.10.1",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",
-    "@testing-library/user-event": "14.6.7",
+    "@testing-library/user-event": "14.6.8",
     "@types/aws-lambda": "8.10.164",
     "@types/jest": "29.5.14",
-    "@types/node": "24.10.4",
+    "@types/node": "24.19.2",
     "ansis": "4.4.0",
     "fast-glob": "3.3.3",
     "jsdom": "27.4.0",
@@ -80,13 +82,14 @@
     "concurrently": "9.2.5",
     "publint": "0.3.25",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "vitest": "4.1.11"
+    "vitest": "5.0.5"
   },
   "peerDependenciesMeta": {
     "vitest": {

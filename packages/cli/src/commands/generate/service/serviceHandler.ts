@@ -6,7 +6,14 @@ import { pluralize, singularize } from '@cedarjs/utils/cedarPluralize'
 
 import { transformTSToJS } from '../../../lib/index.js'
 import { getSchema, verifyModelName } from '../../../lib/schemaHelpers.js'
-import { redactedModelFields, relationsForModel } from '../helpers.js'
+import {
+  DEFAULT_IGNORE_FIELDS_FOR_INPUT,
+  nullableJsonFieldsInInput,
+  nullableRelationsForModel,
+  redactedModelFields,
+  relationsForModel,
+  requiredFieldsInUpdateInput,
+} from '../helpers.js'
 import { createHandler, templateForFile } from '../yargsHandlerHelpers.js'
 
 interface ServiceModel {
@@ -47,6 +54,7 @@ export interface PrismaField {
   isId: boolean
   isUnique?: boolean
   hasDefaultValue?: boolean
+  isUpdatedAt?: boolean
   relationName?: string
   relationFromFields?: string[]
   enumValues?: { name: string; dbName?: string }[]
@@ -119,12 +127,16 @@ export function scenarioFieldValue(field: PrismaField) {
       return randInt
     case 'Json':
       return { foo: 'bar' }
-    case 'String':
+    case 'String': {
+      // Ids without a default value need unique values too
+      const isUnique = field.isUnique || field.isId
+
       if (field.name?.toLowerCase().includes('email')) {
-        return field.isUnique ? `foo${randInt}@bar.com` : 'foo@bar.com'
+        return isUnique ? `foo${randInt}@bar.com` : 'foo@bar.com'
       }
 
-      return field.isUnique ? `String${randInt}` : 'String'
+      return isUnique ? `String${randInt}` : 'String'
+    }
     case 'Bytes':
       return `new Uint8Array([${randIntArray}])`
     default: {
@@ -266,17 +278,26 @@ export const fieldsToInput = async (model: string) => {
 
   // `scalarFields` only contains required fields without defaults, so if any
   // of them is a field the SDL generator excludes from the GraphQL input
-  // types (see `redactedModelFields`), creating a record through the
-  // generated create input can't succeed. Skip the create test entirely.
+  // types (see `redactedModelFields` and `DEFAULT_IGNORE_FIELDS_FOR_INPUT`),
+  // creating a record through the generated create input can't succeed. Skip
+  // the create test entirely. `@updatedAt` fields are fine, Prisma sets them
   if (
-    scalarFields.some((field: PrismaField) =>
-      redactedFields.includes(field.name),
+    scalarFields.some(
+      (field: PrismaField) =>
+        redactedFields.includes(field.name) ||
+        (DEFAULT_IGNORE_FIELDS_FOR_INPUT.includes(field.name) &&
+          !field.isUpdatedAt),
     )
   ) {
     return false
   }
 
   scalarFields.forEach((field: PrismaField) => {
+    // The SDL generator leaves these fields out of the GraphQL input types
+    if (DEFAULT_IGNORE_FIELDS_FOR_INPUT.includes(field.name)) {
+      return
+    }
+
     if (foreignKeys.includes(field.name)) {
       inputObj[field.name] = `scenario.${modelName}.two.${field.name}`
     } else {
@@ -301,10 +322,12 @@ export const fieldsToUpdate = async (model: string) => {
     fieldName: string | string[]
 
   // never pick a field the SDL generator excludes from the GraphQL input
-  // types (see `redactedModelFields`) — it won't exist in the generated
-  // UpdateInput type
+  // types (see `redactedModelFields` and `DEFAULT_IGNORE_FIELDS_FOR_INPUT`)
+  // — it won't exist in the generated UpdateInput type
   const updatableFields = scalarFields.filter(
-    (scalar: PrismaField) => !redactedFields.includes(scalar.name),
+    (scalar: PrismaField) =>
+      !redactedFields.includes(scalar.name) &&
+      !DEFAULT_IGNORE_FIELDS_FOR_INPUT.includes(scalar.name),
   )
 
   // find an editable scalar field, ideally one that isn't a foreign key
@@ -454,15 +477,22 @@ export const files = async ({
   const prismaImportSource = 'src/lib/db'
 
   let modelRelations: string[] | undefined
+  let updateInputRequiredFields: string[] = []
+  let nullableJsonFields: string[] = []
+  let nullableRelations: string[] = []
+
+  const schemaResult = await getSchema(model)
+
+  if (isServiceModel(schemaResult)) {
+    updateInputRequiredFields = requiredFieldsInUpdateInput(schemaResult)
+    nullableJsonFields = nullableJsonFieldsInInput(schemaResult)
+    nullableRelations = nullableRelationsForModel(schemaResult)
+  }
 
   if (relations) {
     modelRelations = relations
-  } else {
-    const schemaResult = await getSchema(model)
-
-    if (isServiceModel(schemaResult)) {
-      modelRelations = relationsForModel(schemaResult)
-    }
+  } else if (isServiceModel(schemaResult)) {
+    modelRelations = relationsForModel(schemaResult)
   }
 
   const serviceFile = await templateForFile({
@@ -476,6 +506,9 @@ export const files = async ({
       relations: modelRelations,
       idName,
       prismaImportSource,
+      updateInputRequiredFields,
+      nullableJsonFields,
+      nullableRelations,
       ...rest,
     },
   })

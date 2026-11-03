@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/babel-config",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -26,12 +26,12 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/parser": "7.29.9",
+    "@babel/parser": "7.29.12",
     "@babel/plugin-transform-react-jsx": "7.29.7",
     "@babel/preset-env": "7.29.7",
     "@babel/preset-react": "7.29.7",
     "@babel/register": "7.29.7",
-    "@babel/traverse": "7.29.10",
+    "@babel/traverse": "7.29.12",
     "@cedarjs/project-config": "workspace:*",
     "babel-plugin-auto-import": "1.1.0",
     "babel-plugin-graphql-tag": "3.3.0",
@@ -47,9 +47,10 @@
     "@types/babel-plugin-tester": "11.0.0",
     "@types/babel__core": "7.20.5",
     "@types/babel__register": "7.17.3",
-    "@types/node": "24.10.4",
+    "@types/node": "24.19.2",
     "babel-plugin-tester": "11.0.4",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "peerDependencies": {
     "@babel/core": "^7.26.10",

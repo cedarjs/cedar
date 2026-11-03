@@ -12,15 +12,16 @@ export default (file, api) => {
       }
 
       // Update id to be a string
+      // (ObjectProperty is what the TS parser gives, Property the others)
       const idProp = node.properties.find(
         (prop) =>
-          prop.type === 'Property' &&
+          (prop.type === 'Property' || prop.type === 'ObjectProperty') &&
           prop.key.type === 'Identifier' &&
           prop.key.name === 'id',
       )
 
       if (idProp) {
-        idProp.value.value = '4c3d3e8e-2b1a-4f5c-8c7d-000000000042'
+        idProp.value = j.stringLiteral('4c3d3e8e-2b1a-4f5c-8c7d-000000000042')
       }
 
       node.properties.push(

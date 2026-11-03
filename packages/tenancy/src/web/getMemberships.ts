@@ -5,7 +5,7 @@ import type { OrgMembership } from './types.js'
  * comes from the app's own `useAuth()` and is typed as `unknown` shape at
  * this boundary.
  */
-function isOrgMembership(value: unknown): value is OrgMembership {
+export function isOrgMembership(value: unknown): value is OrgMembership {
   if (!value || typeof value !== 'object') {
     return false
   }
@@ -18,8 +18,12 @@ function isOrgMembership(value: unknown): value is OrgMembership {
   }
 
   const org = organization as Record<string, unknown>
+  const permissions = membership['permissions']
 
   return (
+    (permissions === undefined ||
+      (Array.isArray(permissions) &&
+        permissions.every((permission) => typeof permission === 'string'))) &&
     typeof membership['id'] === 'string' &&
     typeof membership['organizationId'] === 'string' &&
     typeof membership['role'] === 'string' &&

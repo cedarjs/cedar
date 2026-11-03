@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/api-server-watch",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "CedarJS's dev-time watcher that rebuilds and restarts the api server on change",
   "repository": {
     "type": "git",
@@ -34,14 +34,15 @@
     "ansis": "4.4.0",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
-    "yargs": "17.7.3"
+    "yargs": "18.2.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/dotenv-defaults": "^5.0.0",
     "@types/yargs": "17.0.35",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": ">=24"

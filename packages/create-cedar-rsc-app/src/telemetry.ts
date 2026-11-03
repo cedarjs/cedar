@@ -4,7 +4,7 @@ import fetch from 'node-fetch'
 const TELEMETRY_URL =
   process.env.CEDAR_REDIRECT_TELEMETRY ??
   process.env.REDWOOD_REDIRECT_TELEMETRY ??
-  'https://telemetry.redwoodjs.com/api/v1/telemetry'
+  'https://telemetry.cedarjs.com'
 
 export interface TelemetryInfo {
   template?: string

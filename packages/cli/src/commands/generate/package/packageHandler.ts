@@ -248,7 +248,7 @@ export function updateWorkspaceTsconfigReferences(
     packageDir: string
   }[] = []
 
-  const packageDir = path.join(getPaths().base, 'packages', folderName)
+  const packageDir = path.join(getPaths().packages, folderName)
 
   if (targetWorkspaces === 'api' || targetWorkspaces === 'both') {
     const tsconfigPath = path.join(getPaths().api.base, 'tsconfig.json')
@@ -336,7 +336,7 @@ export function updateWorkspaceTsconfigReferences(
         }
 
         const wsPackageDir =
-          ws.packageDir || path.join(getPaths().base, 'packages', folderName)
+          ws.packageDir || path.join(getPaths().packages, folderName)
         const referencePath = path
           .relative(path.dirname(ws.tsconfigPath), wsPackageDir)
           .split(path.sep)

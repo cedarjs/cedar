@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/mailer-core",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -26,7 +26,8 @@
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": ">=24"

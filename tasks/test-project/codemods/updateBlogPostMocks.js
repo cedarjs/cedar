@@ -18,6 +18,11 @@ export default (file, api) => {
           j.tsTypeReference(j.identifier('const')),
         ),
       ),
+      j.property(
+        'init',
+        j.identifier('id'),
+        j.literal('005d3e8e-2b1a-4f5c-8c7d-000000000005'),
+      ),
       j.property('init', j.identifier('email'), j.literal('five@5.com')),
       j.property('init', j.identifier('fullName'), j.literal('Five Lastname')),
     ])

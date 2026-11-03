@@ -677,7 +677,9 @@ async function isPublished(packageName: string, version: string) {
 }
 
 async function waitForNpm(packageName: string, version: string) {
-  const maxWaitTime = 300_000 // 5 minutes
+  // With trusted publishing, npm processes each new version (provenance)
+  // before it serves it, and that alone can take more than five minutes
+  const maxWaitTime = 20 * 60 * 1000
   const startTime = Date.now()
   let packageAvailable = false
 

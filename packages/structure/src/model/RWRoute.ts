@@ -89,11 +89,55 @@ export class RWRoute extends BaseNode {
     return this.privateAncestors.length > 0
   }
 
+  /**
+   * The route to redirect to when the user isn't signed in: the
+   * `unauthenticated` prop of the innermost `<Private>`/`<PrivateSet>`
+   * ancestor that carries it.
+   */
   @lazy() get unauthenticated() {
-    // Use the innermost Private/PrivateSet ancestor that carries the
-    // attribute
+    return this.getInnermostStringAttr('unauthenticated')
+  }
+
+  /**
+   * The route to redirect to when the user is signed in but isn't allowed
+   * in: the `unauthorized` prop of the innermost `<Private>`/`<PrivateSet>`
+   * ancestor that carries it.
+   */
+  @lazy() get unauthorized() {
+    return this.getInnermostStringAttr('unauthorized')
+  }
+
+  /**
+   * The `roles` prop of a `<Private>`/`<PrivateSet>`: roles in
+   * `currentUser.roles`.
+   *
+   * Each ancestor independently guards the route, so this is the union of
+   * the roles of all of them. With a single ancestor that has roles, the
+   * value keeps its shape (a string stays a string).
+   */
+  @lazy()
+  get roles() {
+    return this.getRolesUnion('roles')
+  }
+
+  /**
+   * The `permission` prop of a `<Private>`/`<PrivateSet>`: the permission
+   * the user needs, their own or, with tenancy, their membership's in the
+   * route's organization. It is one name, so this is the one of the
+   * innermost ancestor that carries it.
+   */
+  @lazy() get permission() {
+    return this.getInnermostStringAttr('permission')
+  }
+
+  /**
+   * Reads a string literal prop off the innermost `<Private>`/`<PrivateSet>`
+   * ancestor that carries it. If that prop isn't a string literal, there is
+   * no value.
+   */
+  private getInnermostStringAttr(name: string): string | undefined {
     for (const ancestor of this.privateAncestors) {
-      const a = ancestor.getOpeningElement().getAttribute('unauthenticated')
+      const a = ancestor.getOpeningElement().getAttribute(name)
       if (!a) {
         continue
       }
@@ -108,20 +152,16 @@ export class RWRoute extends BaseNode {
     return undefined
   }
 
-  @lazy()
-  get roles() {
-    // Each Private/PrivateSet wrapper independently guards the route, so the
-    // effective requirement is the union of roles across all of them
+  private getRolesUnion(name: string): string | string[] | undefined {
     const rolesPerAncestor = this.privateAncestors
-      .map((ancestor) => this.getRolesAttr(ancestor.getOpeningElement()))
+      .map((ancestor) => this.getRolesAttr(ancestor.getOpeningElement(), name))
       .filter((val): val is string | string[] => val !== undefined)
 
     if (rolesPerAncestor.length === 0) {
       return undefined
     }
 
-    // Preserve today's single-wrapper behavior (and its return shape)
-    // exactly when there's only one ancestor with roles
+    // A single ancestor with roles keeps its value's shape
     if (rolesPerAncestor.length === 1) {
       return rolesPerAncestor[0]
     }
@@ -138,14 +178,16 @@ export class RWRoute extends BaseNode {
   }
 
   /**
-   * Reads the `roles` attribute off a `<Private>`/`<PrivateSet>` opening
-   * element, handling the string literal, quasi-JSON string
-   * (e.g. `"['a','b']"`), and JSX array-literal expression forms.
+   * Reads a role list attribute (`roles`) off a
+   * `<Private>`/`<PrivateSet>` opening element, handling the string literal,
+   * quasi-JSON string (e.g. `"['a','b']"`), and JSX array-literal expression
+   * forms.
    */
   private getRolesAttr(
     openingElement: tsm.JsxOpeningElement,
+    name: string,
   ): string | string[] | undefined {
-    const a = openingElement.getAttribute('roles')
+    const a = openingElement.getAttribute(name)
 
     if (!a) {
       return undefined

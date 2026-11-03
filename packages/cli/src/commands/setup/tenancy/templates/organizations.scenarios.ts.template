@@ -3,8 +3,9 @@ import type { ScenarioData } from '@cedarjs/testing/api'
 import type { Membership, Organization, Prisma } from 'src/lib/db'
 
 // This scenario assumes a dbAuth-style `User` model (`email`,
-// `hashedPassword`, `salt`). Adjust the `user` fixture below to match your
-// app's actual `User` fields if you use a different auth provider.
+// `hashedPassword`, `salt`), plus placeholders for any other fields your
+// `User` requires. Adjust the `user` fixtures below if you use a different
+// auth provider.
 export const standard = defineScenario<
   Prisma.OrganizationCreateArgs | Prisma.MembershipCreateArgs
 >({
@@ -26,7 +27,6 @@ export const standard = defineScenario<
             email: 'owner@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Org Owner',
           },
         },
       },
@@ -40,7 +40,6 @@ export const standard = defineScenario<
             email: 'admin@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Org Admin',
           },
         },
       },
@@ -49,6 +48,16 @@ export const standard = defineScenario<
       data: {
         role: 'admin',
         invitationToken: 'invite-token',
+        invitationExpiresAt: new Date('2999-01-01T00:00:00Z'),
+        organization: { connect: { slug: 'acme-inc' } },
+      },
+    },
+    // A pending invitation whose expiry has passed.
+    expired: {
+      data: {
+        role: 'member',
+        invitationToken: 'expired-token',
+        invitationExpiresAt: new Date('2000-01-01T00:00:00Z'),
         organization: { connect: { slug: 'acme-inc' } },
       },
     },
@@ -56,4 +65,8 @@ export const standard = defineScenario<
 })
 
 export type StandardScenario = ScenarioData<Organization, 'organization', 'acme'> &
-  ScenarioData<Membership, 'membership', 'owner' | 'admin' | 'pending'>
+  ScenarioData<
+    Membership,
+    'membership',
+    'owner' | 'admin' | 'pending' | 'expired'
+  >

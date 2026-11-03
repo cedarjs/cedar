@@ -5,7 +5,7 @@ import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
  * Represents the user attributes returned by the decoding the
  * Authentication provider's JWT together with an optional list of roles.
  */
-type RedwoodUser = Record<string, unknown> & { roles?: string[] }
+type CedarUser = Record<string, unknown> & { roles?: string[] }
 
 /**
  * getCurrentUser returns the user information together with
@@ -25,7 +25,7 @@ type RedwoodUser = Record<string, unknown> & { roles?: string[] }
  *
  * @see https://github.com/cedarjs/cedar/tree/main/packages/auth for examples
  *
- * @returns RedwoodUser
+ * @returns CedarUser
  */
 export const getCurrentUser = async (
   decoded,
@@ -33,7 +33,7 @@ export const getCurrentUser = async (
   { token, type },
   /* eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars */
   { event, context }
-): Promise<RedwoodUser> => {
+): Promise<CedarUser> => {
   if (!decoded) {
     return null
   }

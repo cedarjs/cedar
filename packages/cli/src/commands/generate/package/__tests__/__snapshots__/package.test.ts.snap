@@ -220,6 +220,7 @@ exports[`packageHandler > files > single word package name > infers package scop
     "target": "es2023",
     "module": "node20",
     "esModuleInterop": true,
+    "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "rootDir": "src",

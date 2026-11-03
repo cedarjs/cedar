@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/forms",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -33,27 +33,28 @@
   "dependencies": {
     "graphql": "16.14.2",
     "pascalcase": "1.0.0",
-    "react-hook-form": "7.89.0"
+    "react-hook-form": "7.91.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.3",
-    "@testing-library/user-event": "14.6.7",
+    "@testing-library/user-event": "14.6.8",
     "@types/pascalcase": "1.0.3",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "concurrently": "9.2.5",
     "nodemon": "3.1.14",
     "publint": "0.3.25",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "peerDependencies": {
-    "react": "19.3.0"
+    "react": "19.3.1"
   },
   "engines": {
     "node": ">=24"

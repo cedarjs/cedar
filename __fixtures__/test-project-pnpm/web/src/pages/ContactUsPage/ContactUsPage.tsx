@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { validateEmail } from '@my-org/validators'
 import { useForm } from 'react-hook-form'
+import type { CreateContactInput } from 'types/graphql'
 
 import {
   Form,
@@ -24,7 +25,7 @@ const CREATE_CONTACT = gql`
 `
 
 const ContactUsPage = () => {
-  const formMethods = useForm()
+  const formMethods = useForm<CreateContactInput>()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const blocker = useBlocker({
     when: formMethods.formState.isDirty && !isSubmitting,
@@ -39,7 +40,7 @@ const ContactUsPage = () => {
     },
   })
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: CreateContactInput) => {
     setIsSubmitting(true)
     try {
       await create({ variables: { input: data } })

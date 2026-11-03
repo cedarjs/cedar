@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "noEmit": true,
+    "strict": true,
     "esModuleInterop": true,
     "target": "es2023",
     "module": "ESNext",
@@ -23,12 +24,8 @@
         "../node_modules/@cedarjs/testing/api"
       ]
     },
-    "typeRoots": [
-      "../node_modules/@types",
-      "./node_modules/@types"
-    ],
     "types": [
-      "jest"
+      "vitest/globals"
     ],
     "jsx": "react-jsx"
   },

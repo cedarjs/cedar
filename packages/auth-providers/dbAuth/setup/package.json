@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-dbauth-setup",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -25,7 +25,7 @@
   "dependencies": {
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "@prisma/internals": "7.10.0",
+    "@prisma/internals": "7.10.1",
     "prompts": "2.4.2",
     "termi-link": "1.1.0"
   },
@@ -36,7 +36,8 @@
     "nodemon": "3.1.14",
     "ts-dedent": "2.3.0",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": ">=24"

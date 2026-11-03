@@ -1,5 +1,3 @@
-import { setContext } from '@cedarjs/context'
-
 import { db } from 'src/lib/db'
 
 import {
@@ -18,39 +16,37 @@ import type { StandardScenario } from './organizations.scenarios.js'
 // CedarJS Testing Docs:
 //       https://cedarjs.com/docs/testing#testing-services
 
-/**
- * `context.currentUser` is typed from this app's `getCurrentUser`, which
- * selects more fields than these tests need.
- */
-const asCurrentUser = (user: { id: string; memberships?: unknown[] }) =>
-  user as unknown as typeof context.currentUser
+/** The id of the user a scenario membership belongs to */
+const userIdOf = (membership: { userId: string | null }) => {
+  if (!membership.userId) {
+    throw new Error('Expected the scenario membership to have a user')
+  }
+
+  return membership.userId
+}
 
 /**
- * Sets `context.currentUser` and `context.currentOrg` the way the GraphQL
- * `context` function does for an authenticated, in-organization request.
+ * Signs in as `membership`'s user, in its organization, the way the GraphQL
+ * `context` function does for an in-organization request
  */
 const asMember = (
   scenario: StandardScenario,
   membership: { id: string; userId: string | null; role: string },
 ) => {
-  setContext({
-    currentUser: asCurrentUser({ id: membership.userId! }),
-    currentOrg: {
-      id: scenario.organization.acme.id,
-      slug: scenario.organization.acme.slug,
-      role: membership.role,
-      membershipId: membership.id,
-    },
-  })
+  mockCurrentUser({ id: userIdOf(membership) })
+  context.currentOrg = {
+    id: scenario.organization.acme.id,
+    slug: scenario.organization.acme.slug,
+    role: membership.role,
+    membershipId: membership.id,
+  }
 }
 
 describe('organizations service', () => {
   scenario(
     "myMemberships returns the signed-in user's memberships",
     async (scenario: StandardScenario) => {
-      setContext({
-        currentUser: asCurrentUser({ id: scenario.membership.owner.userId! }),
-      })
+      mockCurrentUser({ id: userIdOf(scenario.membership.owner) })
 
       const result = await myMemberships()
 
@@ -100,6 +96,40 @@ describe('organizations service', () => {
 
         expect(created?.role).toEqual('member')
         expect(created?.invitationToken).toEqual(result.invitationToken)
+      },
+    )
+
+    scenario(
+      'sets an expiry in the future',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.owner)
+
+        const result = await inviteMember({
+          input: { email: 'new-member@example.com', role: 'member' },
+        })
+
+        const created = await db.membership.findFirst({
+          where: { invitationToken: result.invitationToken },
+        })
+
+        expect(created?.invitationExpiresAt).toBeInstanceOf(Date)
+        expect(created!.invitationExpiresAt!.getTime()).toBeGreaterThan(
+          Date.now(),
+        )
+        expect(result.invitationExpiresAt).toEqual(created?.invitationExpiresAt)
+      },
+    )
+
+    scenario(
+      'an admin can invite an admin',
+      async (scenario: StandardScenario) => {
+        asMember(scenario, scenario.membership.admin)
+
+        const result = await inviteMember({
+          input: { email: 'new-admin@example.com', role: 'admin' },
+        })
+
+        expect(result.invitationToken).toBeTruthy()
       },
     )
 
@@ -199,7 +229,6 @@ describe('organizations service', () => {
             email: 'second-owner@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Second Owner',
           },
         })
         await db.membership.create({
@@ -233,11 +262,10 @@ describe('organizations service', () => {
             email: 'invitee@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Invitee',
           },
         })
 
-        setContext({ currentUser: asCurrentUser({ id: invitee.id }) })
+        mockCurrentUser({ id: invitee.id })
 
         const result = await acceptInvitation({
           token: scenario.membership.pending.invitationToken!,
@@ -255,11 +283,10 @@ describe('organizations service', () => {
             email: 'invitee@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Invitee',
           },
         })
 
-        setContext({ currentUser: asCurrentUser({ id: invitee.id }) })
+        mockCurrentUser({ id: invitee.id })
 
         const token = scenario.membership.pending.invitationToken!
 
@@ -278,7 +305,6 @@ describe('organizations service', () => {
             email: 'first@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'First User',
           },
         })
         const secondUser = await db.user.create({
@@ -286,16 +312,15 @@ describe('organizations service', () => {
             email: 'second@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Second User',
           },
         })
 
         const token = scenario.membership.pending.invitationToken!
 
-        setContext({ currentUser: asCurrentUser({ id: firstUser.id }) })
+        mockCurrentUser({ id: firstUser.id })
         await acceptInvitation({ token })
 
-        setContext({ currentUser: asCurrentUser({ id: secondUser.id }) })
+        mockCurrentUser({ id: secondUser.id })
         await expect(acceptInvitation({ token })).rejects.toThrow()
       },
     )
@@ -308,13 +333,12 @@ describe('organizations service', () => {
             email: 'invitee@example.com',
             hashedPassword: 'x',
             salt: 'x',
-            fullName: 'Invitee',
           },
         })
 
         const token = scenario.membership.pending.invitationToken!
 
-        setContext({ currentUser: asCurrentUser({ id: invitee.id }) })
+        mockCurrentUser({ id: invitee.id })
         await acceptInvitation({ token })
 
         const claimed = await db.membership.findUnique({
@@ -326,8 +350,36 @@ describe('organizations service', () => {
       },
     )
 
+    scenario(
+      'rejects an expired invitation and leaves it unclaimed',
+      async (scenario: StandardScenario) => {
+        const invitee = await db.user.create({
+          data: {
+            email: 'invitee@example.com',
+            hashedPassword: 'x',
+            salt: 'x',
+          },
+        })
+
+        const token = scenario.membership.expired.invitationToken!
+
+        mockCurrentUser({ id: invitee.id })
+
+        await expect(acceptInvitation({ token })).rejects.toThrow(
+          /has expired/,
+        )
+
+        const row = await db.membership.findUnique({
+          where: { id: scenario.membership.expired.id },
+        })
+
+        expect(row?.userId).toBeNull()
+        expect(row?.invitationToken).toEqual(token)
+      },
+    )
+
     it('rejects a token that never matched a pending invitation', async () => {
-      setContext({ currentUser: asCurrentUser({ id: 'some-user-id' }) })
+      mockCurrentUser({ id: 'some-user-id' })
 
       await expect(
         acceptInvitation({ token: 'not-a-real-token' }),
@@ -355,7 +407,6 @@ describe('organizations service', () => {
           email: 'invitee@example.com',
           hashedPassword: 'x',
           salt: 'x',
-          fullName: 'Invitee',
         },
       })
 
@@ -375,7 +426,6 @@ describe('organizations service', () => {
         email: 'brand-new@example.com',
         hashedPassword: 'x',
         salt: 'x',
-        fullName: 'Brand New',
       },
     })
 

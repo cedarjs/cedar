@@ -93,12 +93,32 @@ The plugin accepts these options:
 | Option         | Default            | Description                                                                                                            |
 | -------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | `cookieName`   | `cedar-skew-token` | Name of the cookie that carries the deploy token                                                                       |
-| `cookieMaxAge` | `86400` (24 hours) | How long, in seconds, an open tab can keep loading assets and calling the API of the deploy it last loaded a page from |
+| `cookieMaxAge` | `604800` (7 days)  | How long, in seconds, an open tab can keep loading assets and calling the API of the deploy it last loaded a page from |
 | `headerName`   | `cedar-skew-token` | Request header Netlify accepts the deploy token from                                                                   |
 | `queryName`    | `skew`             | Query parameter Netlify accepts the deploy token from                                                                  |
 
+Pass options in `web/vite.config.ts`:
+
+```ts
+cedarNetlifySkewProtectionPlugin({ cookieMaxAge: 60 * 60 * 24 * 3 }),
+```
+
 Netlify only provides the deploy token to builds it runs itself. Deploys made
 with `netlify deploy --no-build` don't get skew protection.
+
+:::caution Database migrations
+
+An open tab keeps calling the API of the deploy it was loaded from, but every
+deploy shares the same database. Migrations run when a new deploy is built, so
+an older deploy's API can run against the newest schema for up to
+`cookieMaxAge` after it stops being the live deploy.
+
+Keep migrations backwards compatible with the API code that's still pinned:
+add new columns as nullable or with a default, and only drop or rename a column
+once the last deploy that used it has been replaced for at least
+`cookieMaxAge`.
+
+:::
 
 ### Vercel
 

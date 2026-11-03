@@ -1,7 +1,6 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { trace, SpanStatusCode } from '@opentelemetry/api'
 import execa from 'execa'
 import gradient from 'gradient-string'
 import { hideBin, Parser } from 'yargs/helpers'
@@ -34,6 +33,7 @@ import {
   startTelemetry,
   shutdownTelemetry,
   recordErrorViaTelemetry,
+  recordTelemetryAttributes,
 } from './telemetry.js'
 import { tui } from './tui.js'
 
@@ -274,7 +274,7 @@ async function createCedarApp() {
       default: true,
       type: 'boolean',
       describe:
-        'Enables sending telemetry events for this create command and all Cedar CLI commands https://telemetry.redwoodjs.com',
+        'Enables sending telemetry events for this create command. Set CEDAR_DISABLE_TELEMETRY=1 to turn it off for Cedar CLI commands too',
     })
     .option('package-manager', {
       alias: 'pm',
@@ -335,8 +335,8 @@ async function createCedarApp() {
     (parsedFlags.yes ? INITIAL_COMMIT_MESSAGE : null)
 
   // Record some of the arguments for telemetry
-  trace.getActiveSpan()?.setAttribute('install', installFlag ?? false)
-  trace.getActiveSpan()?.setAttribute('overwrite', overwriteFlag)
+  recordTelemetryAttributes({ install: installFlag ?? false })
+  recordTelemetryAttributes({ overwrite: overwriteFlag })
 
   // Get the directory for installation from the args
   let targetDir = String(args).replace(/,/g, '-')
@@ -350,16 +350,16 @@ async function createCedarApp() {
   } else {
     tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped node version check`)
   }
-  trace.getActiveSpan()?.setAttribute('node-check', nodeCheck)
+  recordTelemetryAttributes({ 'node-check': nodeCheck })
 
   targetDir = await handleTargetDirPreference(targetDir)
 
   // Determine ts/js preference
   const useTypescript = await handleTypescriptPreference(typescriptFlag)
-  trace.getActiveSpan()?.setAttribute('typescript', useTypescript)
+  recordTelemetryAttributes({ typescript: useTypescript })
 
   const database = await handleDatabasePreference(databaseFlag)
-  trace.getActiveSpan()?.setAttribute('database', database)
+  recordTelemetryAttributes({ database: database })
 
   // Determine package manager preference
   const packageManager = await handlePackageManagerPreference(
@@ -367,12 +367,12 @@ async function createCedarApp() {
     // from the flag
     packageManagerFlag || 'yarn',
   )
-  trace.getActiveSpan()?.setAttribute('package-manager', packageManager)
+  recordTelemetryAttributes({ 'package-manager': packageManager })
 
   const templateDir = path.join(templatesDir, useTypescript ? 'ts' : 'js')
   // Determine git preference
   const useGit = await handleGitPreference(gitInitFlag)
-  trace.getActiveSpan()?.setAttribute('git', useGit)
+  recordTelemetryAttributes({ git: useGit })
 
   let commitMessage: string | undefined
   if (useGit) {
@@ -404,9 +404,7 @@ async function createCedarApp() {
   if (shouldInstall) {
     const installStart = Date.now()
     await installNodeModules(newAppDir, packageManager)
-    trace
-      .getActiveSpan()
-      ?.setAttribute('install-time', Date.now() - installStart)
+    recordTelemetryAttributes({ 'install-time': Date.now() - installStart })
   } else {
     tui.drawText(`${RedwoodStyling.info('ℹ')} Skipped ${installCommand} step`)
   }
@@ -466,15 +464,7 @@ if (telemetry) {
   }
 }
 
-// Execute create cedar app within a span
-const tracer = trace.getTracer('redwoodjs')
-await tracer.startActiveSpan('create-cedar-app', async (span) => {
-  await createCedarApp()
-
-  // Span housekeeping
-  span?.setStatus({ code: SpanStatusCode.OK })
-  span?.end()
-})
+await createCedarApp()
 
 // Shutdown telemetry, ensures data is sent before the process exits
 try {

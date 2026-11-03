@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/auth-supabase-web",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -44,16 +44,17 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@supabase/ssr": "0.12.7",
-    "@supabase/supabase-js": "2.117.3",
+    "@supabase/supabase-js": "2.118.0",
     "@types/react": "^19.2.0",
     "concurrently": "9.2.5",
     "publint": "0.3.25",
-    "react": "19.3.0",
+    "react": "19.3.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "peerDependencies": {
-    "@supabase/supabase-js": "2.117.3"
+    "@supabase/supabase-js": "2.118.0"
   },
   "engines": {
     "node": ">=24"

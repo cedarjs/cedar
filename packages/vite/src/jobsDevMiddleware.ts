@@ -21,16 +21,22 @@
 // every `api/src` change — no extra watching code needed here. Changes to
 // the jobs *topology* (worker counts/queues in `api/src/lib/jobs.ts`) are
 // not picked up without a dev server restart; that's a documented
-// limitation for now.
+// limitation for now. The same goes for the schedules jobs declare: they're
+// synced when the workers start.
 
+import fs from 'node:fs'
+import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import ansis from 'ansis'
 import type { ViteDevServer } from 'vite'
 
 import {
+  isJobModuleFile,
   JobNotFoundError,
   JobsLibNotFoundError,
+  jobsFromModules,
+  lockName,
   setJobLoaderOverrides,
 } from '@cedarjs/jobs'
 import type {
@@ -99,6 +105,33 @@ async function loadJobViaVite(
   return mod[jobName]
 }
 
+// Imports every module in `api/src/jobs` through the vite server and returns
+// the jobs they export, for syncing the schedules they declare
+async function loadAllJobsViaVite(viteServer: SsrModuleLoader) {
+  const jobsDir = getPaths().api.jobs
+
+  if (!fs.existsSync(jobsDir)) {
+    return []
+  }
+
+  const files = fs
+    .readdirSync(jobsDir, { recursive: true, encoding: 'utf-8' })
+    .filter(isJobModuleFile)
+    .sort()
+
+  const modules: Record<string, unknown>[] = []
+
+  for (const file of files) {
+    modules.push(
+      await viteServer.ssrLoadModule(
+        pathToFileURL(path.join(jobsDir, file)).href,
+      ),
+    )
+  }
+
+  return jobsFromModules(modules)
+}
+
 export interface JobsWorkerPool {
   stop: () => Promise<void>
 }
@@ -124,6 +157,7 @@ export async function startJobsDevWorkers(
     loadJobsManager: () => loadJobsManagerViaVite(viteServer),
     loadJob: (computedProperties: JobComputedProperties) =>
       loadJobViaVite(viteServer, computedProperties),
+    loadAllJobs: () => loadAllJobsViaVite(viteServer),
   })
 
   let jobsManager: JobManager<Adapters, QueueNames, BasicLogger>
@@ -146,6 +180,15 @@ export async function startJobsDevWorkers(
     return null
   }
 
+  // Like `cedar-jobs-worker`, sync the schedules jobs declare before the
+  // workers start. A failed sync is logged rather than thrown, so a typo in a
+  // schedule doesn't take the whole dev server down
+  try {
+    await jobsManager.syncSchedules()
+  } catch (e) {
+    logger.error('[CedarJS Jobs] Could not sync the declared schedules', e)
+  }
+
   logger.warn(
     `[CedarJS Jobs] Starting ${numWorkers.length} worker(s) in-process ` +
       '(Unified Dev)...',
@@ -153,7 +196,13 @@ export async function startJobsDevWorkers(
 
   const workers: Worker[] = numWorkers.map(([index, id]) => {
     const workerConfig = jobsManager.workers[index]
-    const processName = `ud-jobs.${[workerConfig.queue].flat().join('-')}.${id}`
+    // Shares `@cedarjs/jobs`'s `lockName()` with `cedar-jobs-worker.ts`'s
+    // workers, so the host name and process id suffix that keeps lock names
+    // unique per process can't drift between the two. Two dev servers on one
+    // database would otherwise share a lock name, and both run the same job
+    const processName = lockName(
+      `ud-jobs.${[workerConfig.queue].flat().join('-')}.${id}`,
+    )
 
     return jobsManager.createWorker({
       index,

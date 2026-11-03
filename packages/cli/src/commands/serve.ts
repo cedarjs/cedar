@@ -10,6 +10,7 @@ import * as apiServerCLIConfig from '@cedarjs/api-server/apiCliConfig'
 import * as bothServerCLIConfig from '@cedarjs/api-server/bothCliConfig'
 import { colors as c } from '@cedarjs/cli-helpers/colors'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
+import { writeApiProcessMeta } from '@cedarjs/project-config'
 import * as webServerCLIConfig from '@cedarjs/web-server'
 
 // @ts-expect-error - Types not available for JS files
@@ -111,6 +112,26 @@ async function startUDServer(
 
   await server.ready()
 
+  // The baremetal deploy's health check reads this file on the server to find
+  // the api, whose port can come from `--apiPort`, `CEDAR_API_PORT` or `PORT`
+  // rather than cedar.toml. The root path is set when the Fetchable is built,
+  // so it isn't known here. The address is read from the server, because port
+  // `0` makes it pick a free port
+  const address = server.node?.server?.address()
+
+  try {
+    writeApiProcessMeta(
+      address && typeof address !== 'string'
+        ? { port: address.port, host: address.address }
+        : { port, host },
+    )
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    console.warn(
+      c.warning(`Could not write the api process meta file: ${message}`),
+    )
+  }
+
   return server
 }
 
@@ -155,8 +176,8 @@ export const builder = async (yargs: Argv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
-          host: argv.host,
-          socket: argv.socket,
+          host: argv.host !== undefined,
+          socket: argv.socket !== undefined,
         })
 
         if (argv.ud) {
@@ -343,9 +364,12 @@ export const builder = async (yargs: Argv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
-          host: argv.host,
-          socket: argv.socket,
-          apiRootPath: argv.apiRootPath,
+          host: argv.host !== undefined,
+          socket: argv.socket !== undefined,
+          // `--apiRootPath` defaults to '/', so a custom root path is anything
+          // else
+          apiRootPath:
+            argv.apiRootPath !== undefined && argv.apiRootPath !== '/',
         })
 
         // Serving the api on its own makes it the side taking public traffic,
@@ -410,9 +434,9 @@ export const builder = async (yargs: Argv) => {
         recordTelemetryAttributes({
           command: 'serve',
           port: argv.port,
-          host: argv.host,
-          socket: argv.socket,
-          apiHost: argv.apiHost,
+          host: argv.host !== undefined,
+          socket: argv.socket !== undefined,
+          apiHost: argv.apiHost !== undefined,
         })
 
         if (streamingEnabled) {

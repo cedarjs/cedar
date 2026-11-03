@@ -12,6 +12,6 @@ type Story = StoryObj<typeof BlogPostPage>
 
 export const Primary: Story = {
   render: (args) => {
-    return <BlogPostPage id={42} {...args} />
+    return <BlogPostPage {...args} id={42} />
   },
 }

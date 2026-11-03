@@ -13,13 +13,21 @@ import {
   addWebPackages,
 } from '@cedarjs/cli-helpers/installHelpers'
 import { formatCedarCommand } from '@cedarjs/cli-helpers/packageManager/display'
-import { runTransitiveBin } from '@cedarjs/cli-helpers/packageManager/exec'
+import {
+  runBinSync,
+  runTransitiveBin,
+} from '@cedarjs/cli-helpers/packageManager/exec'
 import { getDataMigrationsPath, getSchemaPath } from '@cedarjs/project-config'
 import { errorTelemetry } from '@cedarjs/telemetry'
 
 import { getPaths, transformTSToJS, writeFile } from '../../../lib/index.js'
 import { isTypeScriptProject } from '../../../lib/project.js'
 import { runTransform } from '../../../lib/runTransform.js'
+import {
+  addPermissionsPackageTasks,
+  permissionsPackageName,
+} from '../permissions/permissionsPackage.js'
+import type { PermissionsPackageCtx } from '../permissions/permissionsPackage.js'
 
 import {
   authNotSetUpMessage,
@@ -27,18 +35,22 @@ import {
   noUserModelMessage,
 } from './preflight.js'
 import {
+  addRequiredUserFields,
   editSchema,
   hasModel,
   MEMBERSHIP_MODEL,
   ORGANIZATION_MODEL,
+  requiredUserFields,
 } from './schemaPrisma.js'
 import type { EditSchemaResult, ModelsExistOutcome } from './schemaPrisma.js'
 
 const DEFAULT_TENANT_FIELD = 'organizationId'
 
 const AUTH_SNIPPET = `
+  import { withPermissions } from 'src/lib/permissions'
+
   export const getCurrentUser = async (session) => {
-    return await db.user.findUnique({
+    return withPermissions(await db.user.findUnique({
       where: { id: session.id },
       select: {
         // ...your existing fields...
@@ -51,11 +63,8 @@ const AUTH_SNIPPET = `
           },
         },
       },
-    })
-  }
-
-  export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'
-`
+    }))
+  }`
 
 const SIGNUP_SNIPPET = `
   handler: async ({ username, hashedPassword, salt, userAttributes }) => {
@@ -77,9 +86,26 @@ interface TenancyOptions {
   force: boolean
 }
 
-interface TenancyCtx {
+interface TenancyCtx extends PermissionsPackageCtx {
   /** Set once the schema-editing task runs; read by the "Next steps" task. */
   modelsExistOutcome?: ModelsExistOutcome
+  /**
+   * Set when `tenancy` couldn't be passed to the app's `<Router>`, so
+   * the next steps say to do it by hand
+   */
+  routerNeedsTenancy?: boolean
+  /** Set when the app's permission map is kept without organization.read */
+  mapNeedsOrgPermissions?: boolean
+  /**
+   * Set when `api/src/lib/permissions` is the app's own version of the one
+   * `setup permissions` writes, which is kept and checks `currentUser.roles`
+   */
+  libPermissionsNeedsMembership?: boolean
+  /**
+   * Set when the `@requirePermission` test is the app's own version of the
+   * one `setup permissions` writes, which is kept and mocks the user's roles
+   */
+  directiveTestMocksRoles?: boolean
 }
 
 export const handler = async ({ tenantField, force }: TenancyOptions) => {
@@ -122,24 +148,50 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
     fs.existsSync(functionsAuthPath) &&
     fs.readFileSync(functionsAuthPath, 'utf-8').includes('DbAuthHandler')
 
+  // Everything this command writes from a template, to format and lint
+  const writtenFiles: string[] = []
+  // Template files that were already there, so weren't written
+  const keptFiles: string[] = []
+
   const writeTemplateFile = async (
     templateFile: string,
     outputPath: string,
     replacements: Record<string, string> = {},
+    transform: (content: string) => string = (content) => content,
+    // Whether an existing file is one to replace even without --force
+    replaces: (existing: string) => boolean = () => false,
   ) => {
     const dirname = import.meta.dirname
-    const templatePath = path.resolve(dirname, 'templates', templateFile)
+    // The directive is the same as `setup permissions` writes
+    const templatePath = templateFile.startsWith('requirePermission.ts')
+      ? path.resolve(dirname, '../permissions/templates', templateFile)
+      : path.resolve(dirname, 'templates', templateFile)
     let templateContent = fs.readFileSync(templatePath, 'utf-8')
 
     for (const [token, value] of Object.entries(replacements)) {
       templateContent = templateContent.replaceAll(token, value)
     }
 
+    templateContent = transform(templateContent)
+
     const content = projectIsTypescript
       ? templateContent
       : await transformTSToJS(outputPath, templateContent)
 
-    return writeFile(outputPath, content, { overwriteExisting: force })
+    // From an earlier run, or the app's own: kept unless --force
+    if (
+      fs.existsSync(outputPath) &&
+      !force &&
+      !replaces(fs.readFileSync(outputPath, 'utf-8'))
+    ) {
+      keptFiles.push(outputPath)
+      return
+    }
+
+    writtenFiles.push(outputPath)
+
+    // Only an existing file `replaces` picked, or any with --force, is here
+    return writeFile(outputPath, content, { overwriteExisting: true })
   }
 
   const tasks = new Listr<TenancyCtx>(
@@ -225,18 +277,12 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           // would break loudly at type-check in every generated app, but
           // verify anyway so a formatter that exits 0 without adding the
           // field stops here with instructions rather than a runtime crash.
-          // `Organization` already declares `memberships Membership[]`, so
-          // the count should rise by one when the formatter adds the
-          // back-relation to `User`.
-          const membershipsOccurrences = (schema: string): number =>
-            (schema.match(/memberships\s+Membership\[\]/g) ?? []).length
-
+          // On a re-run the field is already there, which is fine too.
           const formattedSchema = fs.readFileSync(schemaPath, 'utf-8')
+          const userModel =
+            formattedSchema.match(/\bmodel\s+User\s*\{[\s\S]*?\n\}/)?.[0] ?? ''
 
-          if (
-            membershipsOccurrences(formattedSchema) <=
-            membershipsOccurrences(editResult.schema)
-          ) {
+          if (!/^\s*memberships\s+Membership\[\]/m.test(userModel)) {
             if (editResult.outcome === 'forced') {
               task.output =
                 'The `memberships` relation was not added to the `User` model, likely because of the clash from --force. Continuing with the rest of the setup; see "Next steps" for how to merge the appended models by hand.'
@@ -282,8 +328,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
       },
       {
-        title:
-          'Adding memberships to getCurrentUser and re-exporting tenancy helpers...',
+        title: 'Adding memberships and their permissions to getCurrentUser...',
         task: async (_ctx, task) => {
           if (!fs.existsSync(authPath)) {
             task.skip('No api/src/lib/auth file found; skipping.')
@@ -344,21 +389,130 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           isDbAuthProject ? false : 'Not a dbAuth project; skipping.',
       },
       {
-        title: 'Adding the requireMembership directive...',
-        task: async () => {
+        title: 'Adding the permissions package...',
+        task: (ctx) => {
+          const indexPath = path.join(
+            paths.packages,
+            'permissions',
+            'src',
+            'index.ts',
+          )
+
+          // A map of the app's own, such as from `setup permissions`, which
+          // is kept, and needs the organization permissions the generated
+          // organizations service checks
+          ctx.mapNeedsOrgPermissions =
+            !force &&
+            fs.existsSync(indexPath) &&
+            !fs.readFileSync(indexPath, 'utf-8').includes('organization.read')
+
+          return addPermissionsPackageTasks({
+            cedarVersion,
+            indexSource: fs.readFileSync(
+              path.resolve(
+                import.meta.dirname,
+                'templates',
+                'permissionsPackage.index.ts.template',
+              ),
+              'utf-8',
+            ),
+            force,
+          })
+        },
+      },
+      {
+        title:
+          'Adding permission checks and the requirePermission directive...',
+        task: async (ctx) => {
+          const replacements = {
+            __PERMISSIONS_PACKAGE__: permissionsPackageName(),
+          }
+          const libPermissionsPath = path.join(
+            paths.api.lib,
+            `permissions.${ext}`,
+          )
+
+          // Formatting aside, as setup formats what it writes
+          const asCode = (source: string) =>
+            source.replace(/\s+|;/g, '').replaceAll('"', "'")
+
+          // Whether a file is the one `setup permissions` writes from
+          // `templateFile`, unchanged. A changed one is the app's own, and
+          // kept
+          const isSetupPermissionsFile = async (
+            templateFile: string,
+            outputPath: string,
+          ) => {
+            let source = fs.readFileSync(
+              path.resolve(
+                import.meta.dirname,
+                '../permissions/templates',
+                templateFile,
+              ),
+              'utf-8',
+            )
+
+            for (const [token, value] of Object.entries(replacements)) {
+              source = source.replaceAll(token, value)
+            }
+
+            const generated = projectIsTypescript
+              ? source
+              : await transformTSToJS(outputPath, source)
+
+            return (existing: string) => asCode(existing) === asCode(generated)
+          }
+
+          // `setup permissions`' checks, of the user's own roles, become
+          // checks of their role in the current organization
+          await writeTemplateFile(
+            'permissions.ts.template',
+            libPermissionsPath,
+            replacements,
+            undefined,
+            await isSetupPermissionsFile(
+              'permissions.ts.template',
+              libPermissionsPath,
+            ),
+          )
+
+          ctx.libPermissionsNeedsMembership =
+            !force &&
+            fs
+              .readFileSync(libPermissionsPath, 'utf-8')
+              .includes('@cedarjs/permissions/api')
+
           const directiveDir = path.join(
             paths.api.directives,
-            'requireMembership',
+            'requirePermission',
           )
 
           await writeTemplateFile(
-            'requireMembership.ts.template',
-            path.join(directiveDir, `requireMembership.${ext}`),
+            'requirePermission.ts.template',
+            path.join(directiveDir, `requirePermission.${ext}`),
+            replacements,
           )
+          const directiveTestPath = path.join(
+            directiveDir,
+            `requirePermission.test.${ext}`,
+          )
+
           await writeTemplateFile(
-            'requireMembership.test.ts.template',
-            path.join(directiveDir, `requireMembership.test.${ext}`),
+            'requirePermission.test.ts.template',
+            directiveTestPath,
+            {},
+            undefined,
+            await isSetupPermissionsFile(
+              'requirePermission.test.ts.template',
+              directiveTestPath,
+            ),
           )
+
+          ctx.directiveTestMocksRoles =
+            !force &&
+            fs
+              .readFileSync(directiveTestPath, 'utf-8')
+              .includes("one of the user's roles has it")
         },
       },
       {
@@ -366,17 +520,35 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         task: async () => {
           const serviceDir = path.join(paths.api.services, 'organizations')
 
+          // The tests and scenarios create users: give them every field
+          // the app's User requires, not just dbAuth's
+          const userFields = requiredUserFields(
+            fs.readFileSync(
+              await getSchemaPath(paths.api.prismaConfig),
+              'utf-8',
+            ),
+          )
+          // Numbered apart, as the scenario's users are there during the
+          // tests, which create more
+          const withUserFields = (firstNumber: number) => (content: string) =>
+            addRequiredUserFields(content, userFields, { firstNumber })
+
           await writeTemplateFile(
             'organizations.ts.template',
             path.join(serviceDir, `organizations.${ext}`),
+            { __PERMISSIONS_PACKAGE__: permissionsPackageName() },
           )
           await writeTemplateFile(
             'organizations.test.ts.template',
             path.join(serviceDir, `organizations.test.${ext}`),
+            {},
+            withUserFields(101),
           )
           await writeTemplateFile(
             'organizations.scenarios.ts.template',
             path.join(serviceDir, `organizations.scenarios.${ext}`),
+            {},
+            withUserFields(1),
           )
           await writeTemplateFile(
             'organizations.sdl.ts.template',
@@ -386,10 +558,24 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
       },
       {
         title: 'Adding a data migration to backfill existing users...',
-        task: async () => {
+        task: async (_ctx, task) => {
           const dataMigrationsPath = await getDataMigrationsPath(
             paths.api.prismaConfig,
           )
+
+          // Its name has a timestamp, so an earlier run's has another name
+          const existing =
+            fs.existsSync(dataMigrationsPath) &&
+            fs
+              .readdirSync(dataMigrationsPath)
+              .find((file) =>
+                /-ensure-default-organizations\.[jt]s$/.test(file),
+              )
+
+          if (existing) {
+            task.skip(`Already added: ${existing}`)
+            return
+          }
           const timestamp = new Date()
             .toISOString()
             .split('.')[0]
@@ -411,20 +597,20 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
                 'migrate',
                 'dev',
               ]),
+              __PRISMA_GENERATE_COMMAND__: formatCedarCommand([
+                'prisma',
+                'generate',
+              ]),
             },
           )
         },
       },
       {
-        title: 'Adding OrgScope and the invitation landing page...',
+        title: 'Adding the tenancy and the invitation landing page...',
         task: async () => {
           await writeTemplateFile(
-            'OrgScope.tsx.template',
-            path.join(
-              paths.web.components,
-              'OrgScope',
-              `OrgScope.${componentExt}`,
-            ),
+            'tenancy.tsx.template',
+            path.join(paths.web.src, `tenancy.${componentExt}`),
           )
           await writeTemplateFile(
             'InvitePage.tsx.template',
@@ -437,36 +623,75 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
         },
       },
       {
-        title: 'Prettifying changed files',
-        task: async (_ctx, task) => {
-          const prettifyPaths = [
-            path.join(paths.api.lib, 'db.js'),
-            path.join(paths.api.lib, 'db.ts'),
-            path.join(paths.api.lib, 'auth.js'),
-            path.join(paths.api.lib, 'auth.ts'),
-            path.join(paths.api.functions, 'graphql.js'),
-            path.join(paths.api.functions, 'graphql.ts'),
-            path.join(paths.api.functions, 'auth.js'),
-            path.join(paths.api.functions, 'auth.ts'),
-          ]
+        title: 'Passing the tenancy to the Router in web/src/Routes...',
+        task: async (ctx, task) => {
+          const routesPath = paths.web.routes
 
-          for (const prettifyPath of prettifyPaths) {
+          if (!routesPath || !fs.existsSync(routesPath)) {
+            ctx.routerNeedsTenancy = true
+            task.skip('No web/src/Routes file found; skipping.')
+            return
+          }
+
+          const source = fs.readFileSync(routesPath, 'utf-8')
+
+          const transformResult = await runTransform({
+            transformPath: path.join(import.meta.dirname, 'routerCodemod.js'),
+            targetPaths: [routesPath],
+          })
+
+          if (transformResult.error) {
+            ctx.routerNeedsTenancy = true
+            task.output =
+              "Could not find the app's <Router> in web/src/Routes, so left " +
+              'it as it is. See the next steps for what to add.'
+          } else if (fs.readFileSync(routesPath, 'utf-8') !== source) {
+            writtenFiles.push(routesPath)
+          }
+        },
+      },
+      {
+        title: 'Formatting and linting changed files...',
+        task: async (_ctx, task) => {
+          const changedFiles = [
+            ...writtenFiles,
+            ...['db', 'auth'].map((name) => path.join(paths.api.lib, name)),
+            ...['graphql', 'auth'].map((name) =>
+              path.join(paths.api.functions, name),
+            ),
+          ]
+            .flatMap((file) =>
+              path.extname(file) ? [file] : [`${file}.js`, `${file}.ts`],
+            )
+            .filter((file) => fs.existsSync(file))
+
+          const prettierOptions = await getPrettierOptions()
+
+          for (const file of changedFiles) {
             try {
-              if (!fs.existsSync(prettifyPath)) {
-                continue
-              }
-              const source = fs.readFileSync(prettifyPath, 'utf-8')
-              const prettierOptions = await getPrettierOptions()
-              const prettifiedApp = await format(source, {
+              const source = fs.readFileSync(file, 'utf-8')
+              const formatted = await format(source, {
                 ...prettierOptions,
                 parser: 'babel-ts',
               })
 
-              fs.writeFileSync(prettifyPath, prettifiedApp, 'utf-8')
+              fs.writeFileSync(file, formatted, 'utf-8')
             } catch {
               task.output =
                 "Couldn't prettify the changes. Please reformat the files manually if needed."
             }
+          }
+
+          // Sorts the imports the codemods added the way the app's lint
+          // rules want them, as `cedar generate package` does
+          try {
+            runBinSync('eslint', ['--fix', ...changedFiles], {
+              cwd: paths.base,
+            })
+          } catch {
+            task.output = `Some of the changed files still have lint errors. Run ${c.highlight(
+              formatCedarCommand(['lint']),
+            )} to see them.`
           }
         },
       },
@@ -478,6 +703,7 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
             'migrate',
             'dev',
           ])
+          const generateCommand = formatCedarCommand(['prisma', 'generate'])
           const dataMigrateCommand = formatCedarCommand(['data-migrate', 'up'])
 
           const modelsExistWarning =
@@ -496,30 +722,121 @@ export const handler = async ({ tenantField, force }: TenancyOptions) => {
           ${c.success('\nMulti-tenancy configured!\n')}
           ${modelsExistWarning}
           1. Run ${c.highlight(migrateCommand)} to create the Organization/Membership
-             tables, then ${c.highlight(dataMigrateCommand)} to give every existing
-             user a default organization.
+             tables and ${c.highlight(generateCommand)} to update the Prisma client,
+             then ${c.highlight(dataMigrateCommand)} to give every existing user a
+             default organization.
           2. \`db.ts\`'s tenancy extension scopes every model except
              User/Organization/Membership. For each existing model (e.g.
-             Contact) whose rows belong to one organization, add ${c.highlight('organizationId String')} plus ${c.highlight('@@index([organizationId])')}
-             to it in schema.prisma; for each one that stays global, add it
+             Contact) whose rows belong to one organization, add
+             ${c.highlight('organizationId String')} plus ${c.highlight('@@index([organizationId])')} to it in
+             schema.prisma, and switch its fields from ${c.highlight('@requireAuth')}
+             to ${c.highlight('@requirePermission(permission: "organization.read")')}, or
+             a permission of its own. For each one that stays global, add it
              to the ${c.highlight('allExcept')} list in api/src/lib/db instead.
-          3. Wrap your organization routes with the generated OrgScope in
-             web/src/Routes.tsx:
+          3. Put your organization routes in a PrivateSet in web/src/Routes.tsx.
+             The Router renders the organization for it, using the generated
+             web/src/tenancy, so there is nothing to wrap them with. A user
+             who isn't signed in is sent to log in:
 
-               <Set wrap={OrgScope}>
+               <PrivateSet wrap={OrgLayout} unauthenticated="login">
                  <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
-               </Set>
+               </PrivateSet>
 
              and add the invitation route outside it:
 
                <Route path="/invite/{token}" page={InvitePage} name="invite" />
 
+             Routes with {orgSlug} outside a PrivateSet are public pages
+             with no organization context.
+${
+  ctx.routerNeedsTenancy
+    ? `
+             Your ${c.highlight('<Router>')} couldn't be found, so pass it ${c.highlight('tenancy')} by
+             hand, so it renders the organization for the routes below:
+
+               import { tenancy } from 'src/tenancy'
+
+               <Router useAuth={useAuth} tenancy={tenancy}>
+`
+    : ''
+}
           4. Wrap any plain api/src/functions/* handler that touches
              tenant-owned models with ${c.highlight('withTenancy')} from ${c.highlight(
                '@cedarjs/tenancy',
              )}.
+          5. Your permissions, and what each role may do, are in
+             ${c.highlight('packages/permissions')}, shared by the api and web sides${
+               ctx.packagesWorkspaceTurnedOn
+                 ? ` (this
+             turned on ${c.highlight('experimental.packagesWorkspace')} in cedar.toml)`
+                 : ''
+             }. A role is a bundle of
+             permissions: guard organization fields with
+             ${c.highlight('@requirePermission(permission: "...")')}, never a role, and check
+             permissions on the web with ${c.highlight('useAuth().hasPermission()')}. Fields
+             any member may use ask for ${c.highlight('organization.read')}, which every
+             role lists.
+          6. ${c.highlight('@requireAuth')} is for fields about the signed-in user.
+             ${c.highlight('@requirePermission')} needs a current organization, and checks
+             what the user's role there may do.
+          7. Roles are the user's own: ${c.highlight('hasRole')} and ${c.highlight('<PrivateSet roles>')}
+             check ${c.highlight('currentUser.roles')}. In an organization, check a
+             permission instead: guard routes with ${c.highlight('<PrivateSet permission>')},
+             which checks their membership in the route's organization.
+             A member who lacks it is sent to ${c.highlight('unauthorized')}:
 
-          Check out the docs for more info:
+               <PrivateSet unauthenticated="login" unauthorized="projects" permission="organization.manage">
+                 <Route path="/org/{orgSlug}/settings" page={SettingsPage} name="settings" />
+               </PrivateSet>
+
+${
+  ctx.libPermissionsNeedsMembership
+    ? `
+          ${c.warning('Kept your api/src/lib/permissions.')}
+          Its checks use ${c.highlight('createPermissions')} from ${c.highlight('@cedarjs/permissions/api')},
+          which checks ${c.highlight('currentUser.roles')}. In an organization, a role belongs to
+          the membership: import ${c.highlight('createPermissions')} from ${c.highlight('@cedarjs/tenancy')} instead.
+
+`
+    : ''
+}${
+            ctx.directiveTestMocksRoles
+              ? `
+          ${c.warning('Kept your api/src/directives/requirePermission test.')}
+          It mocks users with ${c.highlight('roles')}. With tenancy, permissions come from
+          the user's membership in the current organization: mock
+          ${c.highlight('memberships')} and ${c.highlight('context.currentOrg')} instead.
+
+`
+              : ''
+          }${
+            ctx.mapNeedsOrgPermissions
+              ? `
+          ${c.warning('Kept your permission map in packages/permissions.')}
+          Its roles are now roles in an organization. Add the permissions the
+          generated organizations service checks, and give its member roles
+          these permissions, next to any they already have:
+
+            permissions: [...yours, 'organization.read', 'organization.manage', 'members.manage'],
+            roles: {
+              ...yours,
+              owner: [...(yours.owner ?? []), 'organization.read', 'organization.manage', 'members.manage'],
+              admin: [...(yours.admin ?? []), 'organization.read', 'members.manage'],
+              member: [...(yours.member ?? []), 'organization.read'],
+            },
+
+`
+              : ''
+          }${
+            keptFiles.length > 0
+              ? `
+          Kept these existing files rather than overwriting them (run with
+          ${c.highlight('--force')} to overwrite):
+${keptFiles.map((file) => `            ${path.relative(paths.base, file)}`).join('\n')}
+
+`
+              : ''
+          }          Check out the docs for more info:
           ${terminalLink('', 'https://cedarjs.com/docs/tenancy')}
 
         `

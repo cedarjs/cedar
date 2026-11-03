@@ -53,6 +53,8 @@ export async function buildRouteManifest() {
       isPrivate: route.isPrivate,
       unauthenticated: route.unauthenticated,
       roles: route.roles,
+      unauthorized: route.unauthorized,
+      permission: route.permission,
       pageIdentifier: route.pageIdentifier,
     }
 

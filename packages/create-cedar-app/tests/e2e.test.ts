@@ -80,8 +80,8 @@ describe('create-cedar-app', () => {
         -m, --commit-message           Commit message for the initial commit
                                                               [string] [default: null]
             --telemetry                Enables sending telemetry events for this
-                                       create command and all Cedar CLI commands
-                                       https://telemetry.redwoodjs.com
+                                       create command. Set CEDAR_DISABLE_TELEMETRY=1
+                                       to turn it off for Cedar CLI commands too
                                                              [boolean] [default: true]
             --install, --yarn-install  Install node modules. Skip via --no-install.
                                                              [boolean] [default: null]

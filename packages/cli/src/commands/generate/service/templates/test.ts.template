@@ -7,8 +7,10 @@
    // Looks for quoted strings, either by single (') or double (") quotes.
    // When found
    // - Removes the quotes around `scenario` variables.
-   // - Removes the quotes around `BigInt` fields.
-  const transformValue = (obj, type) => {
+   // - Removes the quotes around `BigInt` fields. GraphQL inputs type BigInt
+   //   values as numbers, so the `n` suffix is also removed when `asInput` is
+   //   set
+  const transformValue = (obj, type, asInput = false) => {
     if (type === 'DateTime') {
       return `new Date('${obj.toISOString()}')`
     } else if (type === 'Decimal') {
@@ -22,7 +24,7 @@
 
       // BigInt
       if (string.match(/^\"\d+n\"$/)) {
-        return string.slice(1, string.length - 1)
+        return string.slice(1, string.length - (asInput ? 2 : 1))
       }
 
       return string
@@ -57,7 +59,7 @@ describe('${pluralCamelName}', () => {
 
   <% if (create) { %>scenario('creates a ${singularCamelName}', async (${transformValue(create).includes('scenario.') ? 'scenario: StandardScenario' : ''}) => {
     const result = await create${singularPascalName}({
-      input: ${transformValue(create)},
+      input: ${transformValue(create, undefined, true)},
     })
 
     <% for (const [name, value] of Object.entries(create)) { %>
@@ -68,7 +70,7 @@ describe('${pluralCamelName}', () => {
     const original = await (${singularCamelName}({ ${idName}: scenario.${singularCamelName}.one.${idName} })) as ${prismaModel}
     const result = await update${singularPascalName}({
       ${idName}: original.${idName},
-      input: ${transformValue(update)},
+      input: ${transformValue(update, undefined, true)},
     })
 
     <% for (const [name, value] of Object.entries(update)) { %>

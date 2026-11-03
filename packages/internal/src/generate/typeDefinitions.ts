@@ -62,6 +62,9 @@ export const generateTypeDefs = async () => {
       ...generateTypeDefRouterPages(),
       ...generateTypeDefCurrentUser(),
       ...generateTypeDefGqlorm(),
+      ...generateTypeDefPermissions(),
+      ...generateTypeDefRealtime(),
+      ...generateTypeDefTenancy(),
       ...generateTypeDefRouterRoutes(),
       ...generateTypeDefGlobImports(),
       ...generateTypeDefGlobalContext(),
@@ -175,23 +178,33 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
   const { name } = path.parse(p)
 
   const fileContents = fileToAst(p)
+  const exportedComponents = getNamedExports(fileContents)
+  const hasQuery = exportedComponents.some(
+    (component) => component.name === 'QUERY',
+  )
   const cellQuery = getCellGqlQuery(fileContents)
-  const cellFragment = cellQuery ? undefined : getCellGqlFragment(fileContents)
+  const cellFragment = hasQuery ? undefined : getCellGqlFragment(fileContents)
   const cellFragmentName = cellFragment
     ? parseGqlFragmentName(cellFragment)
     : undefined
   const cellFragmentPropName = cellFragment
-    ? parseGqlFragmentPropName(cellFragment)
+    ? parseGqlFragmentPropName(cellFragment, name)
     : undefined
+
+  let typeDefContents: string
 
   if (cellQuery) {
     const gqlDoc = parseGqlQueryToAst(cellQuery)[0]
 
-    writeTemplate('templates/mirror-cell.d.ts.template', typeDefPath, {
-      name,
-      queryResultType: `${gqlDoc?.name}`,
-      queryVariablesType: `${gqlDoc?.name}Variables`,
-    })
+    typeDefContents = writeTemplate(
+      'templates/mirror-cell.d.ts.template',
+      typeDefPath,
+      {
+        name,
+        queryResultType: `${gqlDoc?.name}`,
+        queryVariablesType: `${gqlDoc?.name}Variables`,
+      },
+    )
   } else if (cellFragmentName && cellFragmentPropName) {
     // Fragment Cells don't have a QUERY. They receive their data through the
     // prop named after their fragment instead, typed by the fragment they
@@ -199,18 +212,34 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
     // graphql-codegen is configured with `namingConvention: 'keep'` and
     // `omitOperationSuffix: true`, so the generated type is named exactly
     // like the fragment
-    writeTemplate('templates/mirror-cell-fragment.d.ts.template', typeDefPath, {
-      name,
-      fragmentType: cellFragmentName,
-      fragmentPropName: cellFragmentPropName,
-    })
+    typeDefContents = writeTemplate(
+      'templates/mirror-cell-fragment.d.ts.template',
+      typeDefPath,
+      {
+        name,
+        fragmentType: cellFragmentName,
+        fragmentPropName: cellFragmentPropName,
+      },
+    )
+  } else if (hasQuery) {
+    typeDefContents = writeTemplate(
+      'templates/mirror-typed-cell.d.ts.template',
+      typeDefPath,
+      {
+        name,
+      },
+    )
   } else {
     // If for some reason we can't parse the query, generated the mirror cell anyway
-    writeTemplate('templates/mirror-cell.d.ts.template', typeDefPath, {
-      name,
-      queryResultType: 'any',
-      queryVariablesType: 'any',
-    })
+    typeDefContents = writeTemplate(
+      'templates/mirror-cell.d.ts.template',
+      typeDefPath,
+      {
+        name,
+        queryResultType: 'any',
+        queryVariablesType: 'any',
+      },
+    )
   }
 
   // We add a source map to allow "go to definition" to avoid ending in the .d.ts file
@@ -218,7 +247,6 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
   // to the Success component
   try {
     // Get the location of the Success component
-    const exportedComponents = getNamedExports(fileContents)
     const successComponent = exportedComponents.find(
       (x) => x.name === 'Success',
     )
@@ -230,9 +258,18 @@ export const generateMirrorCell = (p: string, rwjsPaths = getPaths()) => {
     const map = new SourceMapGenerator({
       file: 'index.d.ts',
     })
+    // The default export is what "go to definition" on the Cell lands on
+    const defaultExportIndex = typeDefContents
+      .split('\n')
+      .findIndex((line) => line.startsWith('export default function'))
+    if (defaultExportIndex === -1) {
+      throw new Error('No default export found in the generated mirror type')
+    }
+
     map.addMapping({
       generated: {
-        line: 12,
+        // Source map lines are 1-based
+        line: defaultExportIndex + 1,
         column: 0,
       },
       source: path.relative(path.dirname(typeDefPath), p),
@@ -388,6 +425,120 @@ export const generateTypeDefCurrentUser = () => {
 
 export const generateTypeDefGqlorm = () => {
   return writeTypeDefIncludeFile('all-gqlorm.d.ts.template')
+}
+
+/**
+ * The permission names for `useAuth().hasPermission()`, from the app's
+ * permission definitions: `packages/permissions`, when it's the package
+ * `cedar setup permissions` or `cedar setup tenancy` makes (it depends on
+ * `@cedarjs/permissions`). None otherwise, and a stale file goes.
+ */
+export const generateTypeDefPermissions = () => {
+  const paths = getPaths()
+  const typeDefPath = path.join(
+    paths.generated.types.includes,
+    'all-permissions.d.ts',
+  )
+  const packageJsonPath = path.join(
+    paths.packages,
+    'permissions',
+    'package.json',
+  )
+
+  let packageJson: { name?: unknown; dependencies?: Record<string, unknown> }
+
+  try {
+    packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+  } catch {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  if (
+    typeof packageJson.name !== 'string' ||
+    !packageJson.dependencies?.['@cedarjs/permissions']
+  ) {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  return writeTypeDefIncludeFile('all-permissions.d.ts.template', {
+    packageName: packageJson.name,
+  })
+}
+
+/**
+ * The full type of the GraphQL handler's `realtime` option, when the api side
+ * depends on `@cedarjs/realtime` (`cedar setup realtime` adds it). None
+ * otherwise, and a stale file goes.
+ */
+export const generateTypeDefRealtime = () => {
+  const paths = getPaths()
+  const typeDefPath = path.join(
+    paths.generated.types.includes,
+    'api-realtime.d.ts',
+  )
+
+  let packageJson: {
+    dependencies?: Record<string, unknown>
+    devDependencies?: Record<string, unknown>
+  }
+
+  try {
+    packageJson = JSON.parse(
+      fs.readFileSync(path.join(paths.api.base, 'package.json'), 'utf-8'),
+    )
+  } catch {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  if (
+    !packageJson.dependencies?.['@cedarjs/realtime'] &&
+    !packageJson.devDependencies?.['@cedarjs/realtime']
+  ) {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  return writeTypeDefIncludeFile('api-realtime.d.ts.template')
+}
+
+/**
+ * Marks `@cedarjs/auth`'s `AuthTenancy` as enabled when the web side depends
+ * on `@cedarjs/tenancy` (`cedar setup tenancy` adds it), which gives the
+ * Router `tenancy` in the app's types. None otherwise, and a stale file goes.
+ */
+export const generateTypeDefTenancy = () => {
+  const paths = getPaths()
+  const typeDefPath = path.join(
+    paths.generated.types.includes,
+    'web-tenancy.d.ts',
+  )
+
+  let packageJson: {
+    dependencies?: Record<string, unknown>
+    devDependencies?: Record<string, unknown>
+  }
+
+  try {
+    packageJson = JSON.parse(
+      fs.readFileSync(path.join(paths.web.base, 'package.json'), 'utf-8'),
+    )
+  } catch {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  if (
+    !packageJson.dependencies?.['@cedarjs/tenancy'] &&
+    !packageJson.devDependencies?.['@cedarjs/tenancy']
+  ) {
+    fs.rmSync(typeDefPath, { force: true })
+    return []
+  }
+
+  return writeTypeDefIncludeFile('web-tenancy.d.ts.template')
 }
 
 export const generateTypeDefScenarios = () => {

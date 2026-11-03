@@ -5,6 +5,7 @@ import {
   setupRequestHandlers,
   startMSW,
   mockCurrentUser,
+  mockRouteParams,
 } from '@cedarjs/testing/web'
 
 import { MockProviders } from './MockProviders.js'
@@ -35,8 +36,10 @@ export const StorybookProvider: React.FunctionComponent<{
   storyFn: () => ReactNode | ReactPortal
   id: string
 }> = ({ storyFn }) => {
-  // default to a non-existent user at the beginning of each story
+  // default to a non-existent user, and no route params, at the beginning
+  // of each story
   mockCurrentUser(null)
+  mockRouteParams({})
 
   return <MockProviders>{storyFn()}</MockProviders>
 }

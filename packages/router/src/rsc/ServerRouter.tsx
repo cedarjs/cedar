@@ -24,7 +24,16 @@ export interface RouterProps extends Omit<
   children: ReactNode
 }
 
-export const Router: React.FC<RouterProps> = ({ paramTypes, children }) => {
+export const Router: React.FC<RouterProps> = ({
+  paramTypes,
+  tenancy,
+  children,
+}) => {
+  // TODO (RSC): There's no organization on the server to provide
+  if (tenancy) {
+    throw new Error('`tenancy` is not supported with RSC yet')
+  }
+
   const location = getLocation()
 
   console.log('ServerRouter.tsx location', location)
@@ -148,9 +157,26 @@ function hasRole(requiredRoles: string | string[]): boolean {
   return requiredRolesArray.some((role) => roles.includes(role))
 }
 
+/**
+ * Whether `currentUser.permissions` has `permission`. There's no tenancy
+ * with RSC, so these are the user's own permissions.
+ */
+function hasPermission(permission: string): boolean {
+  const { currentUser } = getAuthState()
+  const permissions =
+    currentUser &&
+    typeof currentUser === 'object' &&
+    'permissions' in currentUser
+      ? currentUser.permissions
+      : undefined
+
+  return Array.isArray(permissions) && permissions.includes(permission)
+}
+
 interface AuthenticatedRouteProps {
   children: React.ReactNode
   roles?: string | string[]
+  permission?: string
   unauthenticated: string
   whileLoadingAuth?: () => React.ReactElement | null
 }
@@ -158,10 +184,14 @@ interface AuthenticatedRouteProps {
 const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   children,
   roles,
+  permission,
 }) => {
   const { isAuthenticated } = getAuthState()
 
-  const isAuthorized = isAuthenticated && (!roles || hasRole(roles))
+  const isAuthorized =
+    isAuthenticated &&
+    (!roles || hasRole(roles)) &&
+    (permission === undefined || hasPermission(permission))
 
   if (isAuthorized) {
     return <>{children}</>
@@ -173,7 +203,7 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({
   }
 
   // User is authenticated but not authorized because they don't have the
-  // required role(s)
+  // required role(s) or permission
   throw new Error('403 Forbidden')
 }
 
@@ -187,6 +217,7 @@ interface WrappedPageProps {
       private?: boolean
       unauthenticated?: string
       roles?: string | string[]
+      permission?: string
       whileLoadingAuth?: () => ReactElement | null
     }
   }[]
@@ -235,6 +266,7 @@ const WrappedPage = ({ routeLoaderElement, sets }: WrappedPageProps) => {
         <AuthenticatedRoute
           unauthenticated={unauthenticated}
           roles={set.props.roles}
+          permission={set.props.permission}
           whileLoadingAuth={set.props.whileLoadingAuth}
         >
           {wrapped}

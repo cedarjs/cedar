@@ -9,7 +9,15 @@ import type { RouterProps } from '../router.js'
 
 import { RscRoutes } from './RscRoutes.js'
 
-export const Router = ({ useAuth, paramTypes, children }: RouterProps) => {
+export const Router = (props: RouterProps) => {
+  const { useAuth, paramTypes, children } = props
+
+  // TODO (RSC): There's no organization to provide. `RouterProps` only has
+  // `tenancy` in an app with tenancy, so it is looked up by name.
+  if ('tenancy' in props && props.tenancy) {
+    throw new Error('`tenancy` is not supported with RSC yet')
+  }
+
   return (
     // Wrap it in the provider so that useLocation can be used
     <LocationProvider>

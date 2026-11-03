@@ -11,7 +11,6 @@ import type { GraphQLParams, Plugin } from 'graphql-yoga'
 
 import type { AuthContextPayload, CorsConfig, Decoder } from '@cedarjs/api'
 import type { CedarRequestContext } from '@cedarjs/api/runtime'
-import type { CedarRealtimeOptions } from '@cedarjs/realtime'
 
 import type { DirectiveGlobImports } from './directives/makeDirectives.js'
 import type { LoggerConfig } from './plugins/useCedarLogger.js'
@@ -24,6 +23,7 @@ import type {
   useRedwoodDirectiveReturn,
   DirectivePluginOptions,
 } from './plugins/useRedwoodDirective.js'
+import type { SubscriptionGlobImports } from './subscriptions/makeSubscriptions.js'
 
 export type Resolver = (...args: unknown[]) => unknown
 export type Services = {
@@ -138,6 +138,33 @@ export interface CedarScalarConfig {
 
 /** @deprecated Please use CedarScalarConfig */
 export type RedwoodScalarConfig = CedarScalarConfig
+
+/**
+ * The type of the `realtime` option, as `options`. Cedar generates it from
+ * `@cedarjs/realtime` when the api side depends on that package (see
+ * `cedar setup realtime`). Without it, `realtime` takes
+ * `MinimalRealtimeOptions`.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface RealtimeTypeMap {}
+
+/**
+ * The parts of the `realtime` option graphql-server reads itself. The full
+ * type is `CedarRealtimeOptions` from `@cedarjs/realtime`, which isn't a
+ * dependency of this package
+ */
+export type MinimalRealtimeOptions = {
+  subscriptions?: {
+    subscriptions?: SubscriptionGlobImports
+    [key: string]: unknown
+  }
+  [key: string]: unknown
+}
+
+/** The type the `realtime` option takes: see `RealtimeTypeMap` */
+export type RealtimeOptions = RealtimeTypeMap extends { options: infer T }
+  ? T
+  : MinimalRealtimeOptions
 
 /**
  * GraphQLYogaOptions
@@ -277,7 +304,7 @@ export type GraphQLYogaOptions = {
    *
    * Only supported in a server deploy and not allowed with GraphQLHandler config
    */
-  realtime?: CedarRealtimeOptions
+  realtime?: RealtimeOptions
 
   /**
    * @description Configure Trusted Documents options

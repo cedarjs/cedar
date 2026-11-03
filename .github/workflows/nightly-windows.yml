@@ -26,10 +26,14 @@ permissions: {}
 jobs:
   build-lint-test:
     if: github.repository == 'cedarjs/cedar'
-    name: 🏗 Build, lint, test / windows-latest
+    strategy:
+      matrix:
+        node-version: ['24', '26']
+    name: 🏗 Build, lint, test / windows-latest / node ${{ matrix.node-version }}
     uses: ./.github/workflows/build-lint-test.yml
     with:
       os: windows-latest
+      node-version: ${{ matrix.node-version }}
 
   smoke-tests:
     if: github.repository == 'cedarjs/cedar'

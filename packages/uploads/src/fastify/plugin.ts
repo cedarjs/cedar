@@ -4,8 +4,13 @@ import fastifyMultipart from '@fastify/multipart'
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 
 import type { UploadAuthenticator } from '../authenticator.js'
+import { isExplicitOnlyContentType } from '../contentTypes.js'
 import { deleteFile } from '../deleteFile.js'
-import { acceptedContentType, detectContentType } from '../detectContentType.js'
+import {
+  checkContentType,
+  DETECTABLE_CONTENT_TYPES,
+} from '../detectContentType.js'
+import type { ContentTypeRejection } from '../detectContentType.js'
 import { UploadError } from '../errors.js'
 import { generateStorageKey, trimTrailingSlashes } from '../keys.js'
 import {
@@ -141,33 +146,73 @@ function normalizeMimeType(mimeType: string): string {
 
 /**
  * The type a file is stored with under `verifyContentType`: what its bytes
- * are, when the token allows that. Throws `MIME_TYPE_NOT_ALLOWED` otherwise.
+ * are, when the token allows that. Throws `MIME_TYPE_NOT_ALLOWED` otherwise,
+ * saying why.
  */
 function verifiedContentType(
   payload: UploadTokenPayload,
   data: Uint8Array,
   claimedType: string,
+  filename: string,
 ): string {
-  const mimeType = acceptedContentType(
-    data,
-    payload.allowedMimeTypes,
-    claimedType,
-  )
+  const result = checkContentType(data, payload.allowedMimeTypes, claimedType)
 
-  if (mimeType) {
-    return mimeType
+  if ('contentType' in result) {
+    return result.contentType
   }
-
-  const detected = detectContentType(data)
-  const what = detected
-    ? `'${detected}'`
-    : `of a type that couldn't be recognised (claimed '${claimedType}')`
 
   throw new UploadError(
     'MIME_TYPE_NOT_ALLOWED',
-    `File is ${what}, which is not allowed for upload profile ` +
-      `'${payload.profile}'.`,
+    describeRejection(result.rejected, filename, payload.profile),
   )
+}
+
+/**
+ * Explains a refused file in terms a developer can act on. The case that
+ * needs it most is a file sent as one type whose bytes are another, like an
+ * iPhone photo sent as `image/heic` that is an `image/heic-sequence`.
+ */
+function describeRejection(
+  { detected, claimed }: ContentTypeRejection,
+  filename: string,
+  profile: string,
+): string {
+  const file = filename ? `File '${filename}'` : 'File'
+  const notAllowed = (type: string) =>
+    isExplicitOnlyContentType(type)
+      ? `which upload profile '${profile}' only accepts when its ` +
+        'allowedMimeTypes lists it by name'
+      : `which is not in the allowedMimeTypes of upload profile '${profile}'`
+
+  if (detected) {
+    // Only a type the bytes prove is worth suggesting adding
+    const fix = `Add '${detected}' to accept it.`
+
+    if (claimed && claimed !== detected) {
+      return (
+        `${file} was sent as '${claimed}', but its content is ` +
+        `'${detected}', ${notAllowed(detected)}. ${fix}`
+      )
+    }
+
+    return `${file} is '${detected}', ${notAllowed(detected)}. ${fix}`
+  }
+
+  if (!claimed) {
+    return (
+      `${file} was sent without a type, and its content isn't a type that ` +
+      'could be recognised.'
+    )
+  }
+
+  if (DETECTABLE_CONTENT_TYPES.has(claimed)) {
+    return (
+      `${file} was sent as '${claimed}', but its content isn't ` +
+      `'${claimed}' or any other type that could be recognised.`
+    )
+  }
+
+  return `${file} was sent as '${claimed}', ${notAllowed(claimed)}.`
 }
 
 function contentDispositionHeader(
@@ -326,7 +371,7 @@ export async function cedarUploadsPlugin(
 
         const size = BigInt(data.byteLength)
         const mimeType = verifyContentType
-          ? verifiedContentType(payload, data, part.mimetype)
+          ? verifiedContentType(payload, data, part.mimetype, part.filename)
           : part.mimetype
         assertTokenAllowsFile(payload, { contentType: mimeType, size })
 

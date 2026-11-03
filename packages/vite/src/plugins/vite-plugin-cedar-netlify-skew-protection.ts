@@ -18,7 +18,9 @@ export interface CedarNetlifySkewProtectionPluginOptions {
    * requests to the deploy it last loaded a page from. Page loads are never
    * pinned and always refresh the cookie, so a long value can't keep anyone
    * on an old version; it only bounds how long an open tab can keep loading
-   * lazy chunks from the deploy it started on. Defaults to 24 hours.
+   * lazy chunks and calling the API of the deploy it started on. That old
+   * API runs against the current database, so a longer value means older API
+   * code has to keep working with the latest schema. Defaults to 7 days.
    */
   cookieMaxAge?: number
 }
@@ -141,7 +143,7 @@ export function cedarNetlifySkewProtectionPlugin(
     headerName = 'cedar-skew-token',
     queryName = 'skew',
     cookieName = 'cedar-skew-token',
-    cookieMaxAge = 60 * 60 * 24,
+    cookieMaxAge = 60 * 60 * 24 * 7,
   } = options
 
   const skewToken = process.env.NETLIFY_SKEW_PROTECTION_TOKEN ?? ''

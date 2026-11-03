@@ -3,9 +3,16 @@ import path from 'node:path'
 
 import { afterAll, beforeEach, it, describe, vi, beforeAll } from 'vitest'
 
+import type { CurrentUser } from '@cedarjs/auth'
 import { getPaths, getPrismaSchemas } from '@cedarjs/project-config'
 import { defineScenario } from '@cedarjs/testing/api'
 import type { DefineScenario } from '@cedarjs/testing/api'
+
+import { loadAppPermissions } from '../../permissions/loadAppPermissions.js'
+import {
+  setMockPermissionDefinitions,
+  withMockPermissions,
+} from '../../permissions/mockPermissions.js'
 
 import { emptyTablesInWorkingOrder } from './teardown.js'
 
@@ -51,11 +58,18 @@ beforeEach(() => {
 
 declare global {
   // eslint-disable-next-line no-var
-  var mockCurrentUser: (currentUser: Record<string, unknown> | null) => void
+  var mockCurrentUser: (currentUser: Partial<CurrentUser>) => void
 }
 
-globalThis.mockCurrentUser = (currentUser: Record<string, unknown> | null) => {
-  mockContextStore.set('context', { currentUser })
+// In an app with permissions (`cedar setup permissions`), a mocked user with
+// `roles` gets the `permissions` the app's definitions give them, as
+// `getCurrentUser` does
+setMockPermissionDefinitions(await loadAppPermissions(getPaths().api.base))
+
+globalThis.mockCurrentUser = (currentUser: Partial<CurrentUser>) => {
+  mockContextStore.set('context', {
+    currentUser: withMockPermissions(currentUser),
+  })
 }
 
 // ====================================

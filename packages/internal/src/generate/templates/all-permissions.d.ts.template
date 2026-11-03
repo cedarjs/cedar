@@ -1,0 +1,9 @@
+import '@cedarjs/auth'
+
+import type { Permission } from '${packageName}'
+
+// The permission names from ${packageName}, so useAuth().hasPermission()
+// only takes those
+declare module '@cedarjs/auth' {
+  interface AvailablePermissions extends Record<Permission, true> {}
+}

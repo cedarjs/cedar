@@ -7,6 +7,12 @@ export interface OrgMembership {
   id: string
   organizationId: string
   role: string
+  /**
+   * What the membership may do: `withPermissions` from the app's
+   * permissions map adds these in `getCurrentUser`. Missing when the app
+   * doesn't use permissions.
+   */
+  permissions?: string[]
   organization: {
     id: string
     slug: string
@@ -15,7 +21,7 @@ export interface OrgMembership {
 }
 
 /**
- * The organization `OrgScope` has resolved for the current route, combining
+ * The organization the router has resolved for the current route, combining
  * the matching membership with the organization it belongs to.
  */
 export interface CurrentOrgSummary {
@@ -24,14 +30,15 @@ export interface CurrentOrgSummary {
   name: string
   role: string
   membershipId: string
+  /** The membership's permissions; empty when the app doesn't use them */
+  permissions: string[]
 }
 
 /**
- * The value `OrgContext` carries, read through `useCurrentOrg()`.
+ * What the organization provider provides below it, read through `useCurrentOrg()`.
  */
 export interface OrgContextValue {
   org: CurrentOrgSummary | undefined
   memberships: OrgMembership[]
-  hasOrgRole(roles: string | string[], organizationId?: string): boolean
   setOrg(idOrSlug: string): void
 }

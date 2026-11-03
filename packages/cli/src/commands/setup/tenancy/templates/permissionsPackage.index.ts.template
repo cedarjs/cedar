@@ -1,0 +1,37 @@
+import { definePermissions } from '@cedarjs/permissions'
+import type { PermissionName } from '@cedarjs/permissions'
+
+/**
+ * Every permission the app checks, and what each role may do. A role is a
+ * named bundle of permissions.
+ *
+ * Fields and services ask for a permission, never a role:
+ * `@requirePermission(permission: "members.manage")` on a field, and
+ * `requirePermission('members.manage')` in a service. So a role can do
+ * exactly what its list says, and adding a role is one entry here. A field
+ * added later is closed to a role until its permission is on that role's
+ * list.
+ *
+ * `organization.read` is "any member": every role lists it, and fields any
+ * member may use ask for it. `organization.manage` is the owner's alone,
+ * which also keeps admins from making someone an owner: a role can only be
+ * given by someone who holds every permission it has.
+ *
+ * `roles` are per organization: a membership's role decides what the user
+ * may do in that organization. Fields about the user rather than an
+ * organization (their own account, say) use `@requireAuth` instead.
+ *
+ * This package is shared: the api checks these permissions
+ * (api/src/lib/permissions), and the web can import the names. The web gets each
+ * membership's permissions from the api, through `getCurrentUser`.
+ */
+export const permissions = definePermissions({
+  permissions: ['organization.read', 'organization.manage', 'members.manage'],
+  roles: {
+    owner: ['organization.read', 'organization.manage', 'members.manage'],
+    admin: ['organization.read', 'members.manage'],
+    member: ['organization.read'],
+  },
+})
+
+export type Permission = PermissionName<typeof permissions>

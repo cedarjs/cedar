@@ -44,6 +44,42 @@ export default await cedarConfig()
 
 Note: The config is async because it needs to load your Cedar project configuration.
 
+## GraphQL Documents
+
+The `gql` documents in `web/src` are linted against your app's GraphQL
+schema with
+[`@graphql-eslint/require-selections`](https://the-guild.dev/graphql/eslint/rules/require-selections):
+every selection of an object type that has an `id` field must select `id`.
+Apollo's cache can only normalize an object when the query selects its `id`.
+Two queries that select the same object, one with its `id` and one without,
+replace each other's copy in the cache and refetch each other.
+
+A spread of a fragment that doesn't select `id` (a fragment Cell's
+`FRAGMENT`, say) is reported where it's spread, as well as in the fragment.
+
+The schema is `.cedar/schema.graphql`, which `yarn cedar generate types` and
+`yarn cedar dev` write, and `yarn cedar lint` generates when it's missing.
+ESLint on its own (an editor, or `yarn eslint`) skips the rule until that
+file exists.
+
+To make the rule a warning, or turn it off, override it for the extracted
+documents:
+
+```javascript
+// cedar-app/eslint.config.mjs
+import cedarConfig from '@cedarjs/eslint-config'
+
+export default [
+  ...(await cedarConfig()),
+  {
+    files: ['web/src/**/*.graphql'],
+    rules: {
+      '@graphql-eslint/require-selections': 'warn',
+    },
+  },
+]
+```
+
 ## Overriding Default Configuration
 
 To override rules in your CedarJS app, add additional config objects after the Cedar config:

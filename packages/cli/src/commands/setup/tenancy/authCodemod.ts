@@ -36,20 +36,119 @@ function buildMembershipsSelectProperty() {
   return property
 }
 
+const USER_LOOKUP = {
+  callee: {
+    type: 'MemberExpression',
+    object: {
+      type: 'MemberExpression',
+      object: { name: 'db' },
+      property: { name: 'user' },
+    },
+    property: { name: 'findUnique' },
+  },
+} as const
+
+/**
+ * Wraps `getCurrentUser`'s `db.user.findUnique(...)` in `withPermissions`
+ * from `api/src/lib/permissions`, so each membership the web gets carries
+ * its permissions (`useAuth().hasPermission()`). A lookup that's already wrapped is left
+ * alone.
+ */
+function addWithPermissions(
+  root: j.Collection,
+  lookups: ReadonlySet<unknown>,
+): boolean {
+  const isWithPermissionsCall = (node: unknown) =>
+    j.CallExpression.check(node) &&
+    j.Identifier.check(node.callee) &&
+    node.callee.name === 'withPermissions'
+
+  let wrapped = false
+
+  root.find(j.CallExpression, USER_LOOKUP).forEach((path) => {
+    // Only lookups that select the memberships `withPermissions` reads
+    if (!lookups.has(path.node)) {
+      return
+    }
+
+    const awaited = j.AwaitExpression.check(path.parent.node)
+      ? path.parent
+      : null
+
+    // `withPermissions(await ...)`, or `....then(withPermissions)` when the
+    // lookup isn't awaited
+    const thenCall = path.parent.parent?.node
+    const isThenWithPermissions =
+      j.MemberExpression.check(path.parent.node) &&
+      j.Identifier.check(path.parent.node.property) &&
+      path.parent.node.property.name === 'then' &&
+      j.CallExpression.check(thenCall) &&
+      j.Identifier.check(thenCall.arguments[0]) &&
+      thenCall.arguments[0].name === 'withPermissions'
+
+    if (
+      isWithPermissionsCall((awaited ?? path).parent.node) ||
+      isThenWithPermissions
+    ) {
+      return
+    }
+
+    wrapped = true
+
+    if (awaited) {
+      awaited.replace(
+        j.callExpression(j.identifier('withPermissions'), [awaited.node]),
+      )
+    } else {
+      // `return db.user.findUnique(...)`, a promise
+      path.replace(
+        j.callExpression(j.memberExpression(path.node, j.identifier('then')), [
+          j.identifier('withPermissions'),
+        ]),
+      )
+    }
+  })
+
+  return wrapped
+}
+
+/**
+ * Imports `withPermissions` on the line after the `db` import, from beside
+ * it. On the printed source rather than the AST, as recast would put a
+ * blank line around a single inserted import.
+ */
+function addPermissionsImport(source: string): string {
+  if (/import \{[^}]*\bwithPermissions\b[^}]*\} from/.test(source)) {
+    return source
+  }
+
+  // The file's own line endings: CRLF when git checks it out on Windows
+  const eol = source.includes('\r\n') ? '\r\n' : '\n'
+  const dbImport = /^import \{ db \} from (['"])(.*?)db(\.js)?\1;?\r?\n/m
+
+  if (dbImport.test(source)) {
+    return source.replace(
+      dbImport,
+      (line, quote, dir, ext = '') =>
+        `${line}import { withPermissions } from ${quote}${dir}permissions${ext}${quote}${eol}`,
+    )
+  }
+
+  return `import { withPermissions } from 'src/lib/permissions'${eol}${source}`
+}
+
 /**
  * Wires `api/src/lib/auth.ts` for tenancy:
  *
  * - Adds a `memberships` selection to `getCurrentUser`'s
  *   `db.user.findUnique({ ..., select: {...} })` call, so `currentUser`
  *   (both `context.currentUser` and the value sent to the web client) carries
- *   the memberships `OrgScope`, `hasOrgRole` and `resolveCurrentOrg` need.
- * - Re-exports `hasOrgRole` and `requireMembership` from `@cedarjs/tenancy`,
- *   so app code can `import { hasOrgRole, requireMembership } from
- *   'src/lib/auth'` the same way it already imports `requireAuth`.
+ *   the memberships the web side's tenancy and `resolveCurrentOrg` need.
+ * - Wraps the user lookup in `withPermissions`, so each membership carries
+ *   its permissions from `api/src/lib/permissions`.
  *
  * Throws `CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND` when `db.user.findUnique`'s
- * `select` object cannot be located, so the caller can print the snippet to
- * add by hand instead of guessing at an unfamiliar shape.
+ * `select` object cannot be located.
  */
 export default function transform(fileInfo: j.FileInfo) {
   // Parse with the TS-aware parser: real db.ts/auth.ts/graphql.ts files
@@ -59,6 +158,11 @@ export default function transform(fileInfo: j.FileInfo) {
   const root = j.withParser('tsx')(fileInfo.source)
 
   let selectFound = false
+  // The `db.user.findUnique` calls whose `select` has `memberships`
+  const membershipLookups = new Set<unknown>()
+  // Whether this run adds anything. When it doesn't, the file is returned
+  // as it was, rather than reprinted (which, e.g., changes CRLF line endings)
+  let changed = false
 
   root
     .find(j.CallExpression, {
@@ -103,24 +207,20 @@ export default function transform(fileInfo: j.FileInfo) {
 
       if (!alreadyHasMemberships) {
         selectProperty.value.properties.push(buildMembershipsSelectProperty())
+        changed = true
       }
 
       selectFound = true
+      membershipLookups.add(path.node)
     })
 
   if (!selectFound) {
     throw new Error('CEDAR_CODEMOD_ERR_AUTH_SHAPE_NOT_FOUND')
   }
 
-  const tenancyExportSnippet = `export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'\n`
-  const tenancyExport = j
-    .withParser('ts')(tenancyExportSnippet)
-    .find(j.ExportNamedDeclaration)
-    .nodes()[0]
+  if (addWithPermissions(root, membershipLookups)) {
+    changed = true
+  }
 
-  root.find(j.Program).forEach((path) => {
-    path.node.body.push(tenancyExport)
-  })
-
-  return root.toSource()
+  return addPermissionsImport(changed ? root.toSource() : fileInfo.source)
 }

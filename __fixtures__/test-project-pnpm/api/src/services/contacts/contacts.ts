@@ -35,7 +35,14 @@ export const updateContact: MutationResolvers['updateContact'] = ({
   input,
 }) => {
   return db.contact.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      name: input.name ?? undefined,
+      email: input.email ?? undefined,
+      message: input.message ?? undefined,
+    },
     where: { id },
   })
 }

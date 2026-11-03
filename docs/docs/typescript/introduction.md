@@ -47,10 +47,10 @@ You don't need to learn all the utility types up front, but they're documented i
 
 ### 3. Cedar won't force you to type everything
 
-The Cedar philosophy is to keep things as simple as possible at first. Cedar generates as much as possible, avoids forcing you to type every little detail, and doesn't have [strict mode](https://www.typescriptlang.org/tsconfig#strict) on by default.
+The Cedar philosophy is to keep things as simple as possible at first. Cedar generates as much as possible and avoids forcing you to type every little detail.
 Where needed (e.g. the [`DbAuthHandler`](/typescript/utility-types.md#dbauthhandleroptions)) you can make use of generics to be more specific with your types.
 
-But if you're comfortable with TypeScript and want that extra level of safety, take a look at our [Strict Mode](/typescript/strict-mode.md) doc.
+New projects have TypeScript's [strict mode](https://www.typescriptlang.org/tsconfig#strict) turned on, and the code Cedar generates is fully typed for it. See our [Strict Mode](/typescript/strict-mode.md) doc for how to turn it on in an existing project, and for tips on writing code in strict mode.
 
 ## A Few Useful Tips
 

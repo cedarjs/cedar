@@ -3,17 +3,51 @@ import React from 'react'
 /**
  * The user returned by your app's `getCurrentUser` function on the api side,
  * when someone is logged in. Cedar generates the fields from your
- * `getCurrentUser` function
+ * `getCurrentUser` function.
+ *
+ * This is a declaration-merging target: Cedar's generated
+ * `.cedar/types/includes/all-currentUser.d.ts` augments it with the app's
+ * `getCurrentUser` return type. It has no fields of its own, so
+ * `LoggedInUser` has exactly the fields `getCurrentUser` returns, and is `{}`
+ * in apps where `getCurrentUser` doesn't return a user.
  */
-export interface LoggedInUser {
-  [key: string]: unknown
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface LoggedInUser {}
 
 /**
  * What `getCurrentUser` returns: the logged-in user, or `null` when nobody is
  * logged in
  */
-export type CurrentUser = LoggedInUser | null
+// `& object` keeps primitives out. Plain `LoggedInUser` is `{}` until it's
+// augmented, and `{}` accepts any non-nullish value, strings included.
+export type CurrentUser = (LoggedInUser & object) | null
+
+/**
+ * The app's permission names, as keys. Cedar generates them from the app's
+ * permission definitions (`packages/permissions`, set up by
+ * `cedar setup permissions` or `cedar setup tenancy`). Empty when the app
+ * has none, and then `hasPermission` takes nothing: it could only ever
+ * answer `false`.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface AvailablePermissions {}
+
+/**
+ * A permission name `hasPermission` takes: see `AvailablePermissions`.
+ * `never` in an app without permissions, so calling it is a type error.
+ */
+export type PermissionName = [keyof AvailablePermissions] extends [never]
+  ? never
+  : Extract<keyof AvailablePermissions, string>
+
+/**
+ * Whether the app has tenancy (`cedar setup tenancy`). This is a
+ * declaration-merging target: `cedar generate types` writes
+ * `.cedar/types/includes/web-tenancy.d.ts`, which augments it with
+ * `{ enabled: true }` in an app with tenancy. Empty otherwise.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface AuthTenancy {}
 
 export interface AuthContextInterface<
   TUser,
@@ -71,12 +105,19 @@ export interface AuthContextInterface<
    */
   getCurrentUser(): Promise<CurrentUser>
   /**
-   * Checks if the "currentUser" from the api side
-   * is assigned a role or one of a list of roles.
-   * If the user is assigned any of the provided list of roles,
-   * the hasRole is considered to be true.
-   **/
+   * Checks if the "currentUser" from the api side is assigned a role or one
+   * of a list of roles. If the user is assigned any of the provided list of
+   * roles, then hasRole is considered to be true.
+   */
   hasRole(rolesToCheck: string | string[]): boolean
+  /**
+   * Whether the user has `permission` where they are in the app: in
+   * `currentUser.permissions`, or in a scope that provides permissions,
+   * such as an organization route with `tenancy` from
+   * `@cedarjs/tenancy/web` on the `Router`. With tenancy, `false` outside
+   * an organization.
+   */
+  hasPermission(permission: PermissionName): boolean
   /**
    * Redetermine authentication state and update the state.
    */

@@ -22,3 +22,16 @@ model Upload {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model DerivedFile {
+  id        String   @id @default(cuid())
+  source    String
+  variant   String
+  uploadId  String?
+  status    String   @default("pending")
+  claimId   String?
+  attempts  Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([source, variant])
+}

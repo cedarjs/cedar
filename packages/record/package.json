@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/record",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -27,15 +27,15 @@
   "dependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "@prisma/client": "7.10.0",
+    "@prisma/internals": "7.10.1",
     "camelcase": "6.3.0"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/internals": "7.10.0",
     "esbuild": "0.28.2",
     "publint": "0.3.25",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": ">=24"

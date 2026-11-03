@@ -211,3 +211,80 @@ export interface SerializedUpload {
   createdAt: string
   updatedAt: string
 }
+
+/**
+ * One row of the opt-in `DerivedFile` table: the bookkeeping for one derived
+ * file (a thumbnail, a preview, a poster frame) of one source. The made file
+ * itself is an ordinary `Upload` row, referenced by `uploadId`.
+ */
+export interface DerivedFileRecord {
+  id: string
+  /** The source's key, such as `upload:<id>` or `remote:<org>/<doc>`. */
+  source: string
+  /** Name of the derived file, such as `thumb-164` or `preview`. */
+  variant: string
+  /** The made file's `Upload` id, once it is made. */
+  uploadId: string | null
+  /** `pending` while being made or waiting to retry, then `completed` or `failed`. */
+  status: string
+  /** Id of the attempt making the file right now, or `null`. */
+  claimId: string | null
+  /** How many attempts have been started. */
+  attempts: number
+  updatedAt: Date
+}
+
+export interface DerivedFileWhere {
+  id?: string | { gt: string }
+  source?: string | { in: string[] }
+  variant?: string
+  status?: string
+  claimId?: string | null
+  uploadId?: string | null
+  attempts?: number
+  updatedAt?: Date | { lt: Date }
+}
+
+/**
+ * The subset of Prisma's generated `DerivedFile` delegate that derived files
+ * need. A generated client satisfies it once the schema has the
+ * `DerivedFile` model described in the uploads docs.
+ */
+export interface DerivedFileDelegate {
+  create(args: {
+    data: {
+      source: string
+      variant: string
+      status: string
+      claimId: string
+      attempts: number
+    }
+  }): Promise<DerivedFileRecord>
+  findFirst(args: {
+    where: DerivedFileWhere
+  }): Promise<DerivedFileRecord | null>
+  findMany(args: {
+    where: DerivedFileWhere
+    orderBy?: { id: 'asc' | 'desc' }
+    take?: number
+  }): Promise<DerivedFileRecord[]>
+  updateMany(args: {
+    where: DerivedFileWhere
+    data: {
+      status?: string
+      claimId?: string | null
+      uploadId?: string | null
+      attempts?: number
+    }
+  }): Promise<{ count: number }>
+  deleteMany(args: { where: DerivedFileWhere }): Promise<{ count: number }>
+}
+
+/**
+ * The subset of a Prisma client that derived files need: the `Upload`
+ * delegate for the made files, and the `DerivedFile` delegate for their
+ * bookkeeping.
+ */
+export interface DerivedFileDatabase extends UploadDatabase {
+  derivedFile: DerivedFileDelegate
+}

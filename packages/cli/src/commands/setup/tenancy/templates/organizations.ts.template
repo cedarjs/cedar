@@ -6,10 +6,19 @@ import type {
   MembershipRelationResolvers,
 } from 'types/graphql'
 
+import { permissions } from '__PERMISSIONS_PACKAGE__'
+
 import { ForbiddenError, ValidationError } from '@cedarjs/graphql-server'
 import { requireCurrentOrg } from '@cedarjs/tenancy'
 
 import { Prisma, db } from 'src/lib/db'
+import { canGrantRole } from 'src/lib/permissions'
+
+/**
+ * How long an invitation stays claimable after `inviteMember` creates it.
+ * Change it if seven days does not suit the app.
+ */
+const INVITATION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000
 
 interface MembershipSummary {
   id: string
@@ -32,32 +41,6 @@ const membershipsForUser = (userId: string): Promise<MembershipSummary[]> =>
   })
 
 /**
- * Roles this generated service knows how to check, and which of them a
- * membership with that role may grant to someone else (`inviteMember`) or
- * revoke (`removeMember`). `owner` may grant or revoke any known role;
- * `admin` may grant or revoke `admin` and `member`, but never `owner`, so
- * an admin can never create or remove an owner. `member` grants nothing;
- * it's listed anyway so `KNOWN_ROLES` below covers every role a membership
- * can actually hold, which is what makes the "unknown role" check on
- * `inviteMember` meaningful.
- *
- * Add a role here when your app adds one. A role missing from this map can
- * never be granted to, or removed from, anyone by `inviteMember` /
- * `removeMember` -- including by an owner.
- */
-export const ROLE_GRANTS: Readonly<Record<string, readonly string[]>> = {
-  owner: ['owner', 'admin', 'member'],
-  admin: ['admin', 'member'],
-  member: [],
-}
-
-const KNOWN_ROLES = Object.keys(ROLE_GRANTS)
-
-/** Whether a membership with `granterRole` may grant or revoke `targetRole`. */
-const canGrantRole = (granterRole: string, targetRole: string): boolean =>
-  ROLE_GRANTS[granterRole]?.includes(targetRole) ?? false
-
-/**
  * Every membership belonging to the signed-in user, across all
  * organizations. `Membership` is a global model, so this reads plain `db`.
  */
@@ -72,8 +55,8 @@ export const myMemberships: QueryResolvers['myMemberships'] = () => {
 /**
  * The current organization (the one `resolveCurrentOrg` resolved for this
  * request). `id` is required so callers state which organization they mean,
- * but it must match the current organization: `@requireMembership` only
- * checks that the caller belongs to *some* organization, not to `id`.
+ * but it must match the current organization: `@requirePermission` checks
+ * the caller's membership in the current organization, not in `id`.
  */
 export const organization: QueryResolvers['organization'] = async ({ id }) => {
   const currentOrg = requireCurrentOrg()
@@ -133,37 +116,40 @@ export const createOrganization: MutationResolvers['createOrganization'] =
 
 /**
  * Creates a pending membership (an invitation) in the current organization,
- * for a role the caller's own role may grant per `ROLE_GRANTS` -- an
- * `admin` can invite an `admin` or a `member`, but not an `owner`, even
- * though `@requireMembership(roles: ["owner", "admin"])` lets an admin call
- * this mutation at all. A role that isn't in `ROLE_GRANTS` is rejected
- * outright, so a typo in `input.role` can never create a membership nobody
- * can check against.
+ * for a role the caller may grant (`canGrantRole`): one whose permissions
+ * they all hold. An `admin` can invite an `admin` or a `member`, but not an
+ * `owner`, even though `@requirePermission(permission: "members.manage")`
+ * lets an admin call this mutation at all. A role that isn't in the
+ * permission definitions is rejected outright, so a typo in `input.role`
+ * can never create a membership with no permissions.
  *
  * `Membership` has no email column: the caller is responsible for emailing
  * `input.email` a link built from the returned `invitationToken`, with its
  * own mailer. The token is returned here and nowhere else -- see the SDL
- * doc comment on `Invitation` for why.
+ * doc comment on `Invitation` for why. The invitation can be claimed until
+ * `invitationExpiresAt`, which is returned with the token so the email can
+ * say when the link stops working.
  */
 export const inviteMember: MutationResolvers['inviteMember'] = async ({
   input,
 }) => {
   const currentOrg = requireCurrentOrg()
 
-  if (!KNOWN_ROLES.includes(input.role)) {
+  if (!Object.hasOwn(permissions.roles, input.role)) {
     throw new ValidationError(
-      `"${input.role}" is not a known role. Add it to ROLE_GRANTS in ` +
-        'organizations.ts before inviting with it.',
+      `"${input.role}" is not a known role. Add it to your permission ` +
+        'definitions before inviting with it.',
     )
   }
 
-  if (!canGrantRole(currentOrg.role, input.role)) {
+  if (!canGrantRole(input.role)) {
     throw new ForbiddenError(
       `A "${currentOrg.role}" cannot invite a "${input.role}".`,
     )
   }
 
   const invitationToken = crypto.randomUUID()
+  const invitationExpiresAt = new Date(Date.now() + INVITATION_LIFETIME_MS)
 
   const membership = await db.membership.create({
     data: {
@@ -171,10 +157,11 @@ export const inviteMember: MutationResolvers['inviteMember'] = async ({
       organizationId: currentOrg.id,
       invitedById: currentOrg.membershipId,
       invitationToken,
+      invitationExpiresAt,
     },
   })
 
-  return { membership, invitationToken }
+  return { membership, invitationToken, invitationExpiresAt }
 }
 
 /**
@@ -203,16 +190,23 @@ interface ClaimedInvitation {
  * `updateManyAndReturn` because Prisma only supports the latter on
  * PostgreSQL, CockroachDB and SQLite.
  *
+ * The same guard refuses an expired invitation: it only matches while
+ * `invitationExpiresAt` is in the future.
+ *
  * Returns the claimed membership's organization id when `userId` holds the
  * membership, whether this call claimed it or an earlier one did, or `null`
- * when the token is invalid or was claimed by a different user.
+ * when the token is invalid, expired, or was claimed by a different user.
  */
 const claimInvitation = async (
   token: string,
   userId: string,
 ): Promise<ClaimedInvitation | null> => {
   await db.membership.updateMany({
-    where: { invitationToken: token, userId: null },
+    where: {
+      invitationToken: token,
+      userId: null,
+      invitationExpiresAt: { gt: new Date() },
+    },
     data: { userId, invitationToken: spentInvitationToken(token) },
   })
 
@@ -224,10 +218,28 @@ const claimInvitation = async (
 }
 
 /**
+ * Whether `token` belongs to an invitation that is still unclaimed but past
+ * its expiry. Only used to pick the error message after a failed claim; the
+ * guard in `claimInvitation` is what decides.
+ */
+const isExpiredInvitation = async (token: string): Promise<boolean> => {
+  const pending = await db.membership.findFirst({
+    where: {
+      invitationToken: token,
+      userId: null,
+      invitationExpiresAt: { lte: new Date() },
+    },
+    select: { id: true },
+  })
+
+  return pending !== null
+}
+
+/**
  * Attaches the pending membership matching `token` to the signed-in user.
  * Idempotent when it is already attached to them; throws when the token
  * does not match a pending (unclaimed) membership, including when someone
- * else has already claimed it.
+ * else has already claimed it or the invitation has expired.
  */
 export const acceptInvitation: MutationResolvers['acceptInvitation'] = async ({
   token,
@@ -238,7 +250,11 @@ export const acceptInvitation: MutationResolvers['acceptInvitation'] = async ({
   const claim = await claimInvitation(token, userId)
 
   if (!claim) {
-    throw new ValidationError('This invitation is invalid or has expired.')
+    throw new ValidationError(
+      (await isExpiredInvitation(token))
+        ? 'This invitation has expired. Ask for a new one.'
+        : 'This invitation is invalid or has already been used.',
+    )
   }
 
   return db.organization.findUniqueOrThrow({
@@ -249,7 +265,7 @@ export const acceptInvitation: MutationResolvers['acceptInvitation'] = async ({
 /**
  * Removes a membership from the current organization. A caller may only
  * remove a membership whose role they could grant via `inviteMember` (the
- * same `ROLE_GRANTS` rule), so an admin can never remove an owner, and the
+ * same `canGrantRole` rule), so an admin can never remove an owner, and the
  * organization's last owner can never be removed -- including by
  * themselves -- so an organization always keeps at least one owner who has
  * accepted their invitation.
@@ -267,7 +283,7 @@ export const removeMember: MutationResolvers['removeMember'] = async ({
     throw new ForbiddenError("You don't have access to that membership.")
   }
 
-  if (!canGrantRole(currentOrg.role, membership.role)) {
+  if (!canGrantRole(membership.role)) {
     throw new ForbiddenError(
       `A "${currentOrg.role}" cannot remove a "${membership.role}" member.`,
     )

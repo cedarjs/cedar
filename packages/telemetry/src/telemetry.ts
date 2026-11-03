@@ -3,6 +3,9 @@ import type { SpawnOptions } from 'child_process'
 import os from 'os'
 import path from 'path'
 
+import { isVerboseTelemetry } from './payload.js'
+import { recordTelemetryAttributes, recordTelemetryError } from './record.js'
+
 /**
  * Quotes a single argument for a Windows shell command string.
  *
@@ -41,18 +44,23 @@ export function quoteForWindowsShell(arg: string) {
   return quoted + '\\'.repeat(backslashes * 2) + '"'
 }
 
-const spawnProcess = (...args: string[]) => {
+/**
+ * Starts the background process that sends the telemetry events in
+ * `.cedar/telemetry/`. It's detached, so the CLI can exit without waiting on
+ * the network.
+ */
+export function spawnSender() {
   // "os.type()" returns 'Windows_NT' on Windows.
   // See https://nodejs.org/docs/latest-v12.x/api/os.html#os_os_type.
   const isWindows = os.type() === 'Windows_NT'
+  const verbose = isVerboseTelemetry()
+  const stdio: SpawnOptions['stdio'] = verbose
+    ? ['ignore', 'inherit', 'inherit']
+    : 'ignore'
 
   const spawnOptions: Partial<SpawnOptions> = isWindows
     ? {
-        stdio:
-          process.env.CEDAR_VERBOSE_TELEMETRY ||
-          process.env.REDWOOD_VERBOSE_TELEMETRY
-            ? ['ignore', 'inherit', 'inherit']
-            : 'ignore',
+        stdio,
         // The following options run the process in the background without a console window, even though they don't look like they would.
         // See https://github.com/nodejs/node/issues/21825#issuecomment-503766781 for information
         detached: false,
@@ -60,23 +68,12 @@ const spawnProcess = (...args: string[]) => {
         shell: true,
       }
     : {
-        stdio:
-          process.env.CEDAR_VERBOSE_TELEMETRY ||
-          process.env.REDWOOD_VERBOSE_TELEMETRY
-            ? ['ignore', 'inherit', 'inherit']
-            : 'ignore',
-        detached:
-          process.env.CEDAR_VERBOSE_TELEMETRY ||
-          process.env.REDWOOD_VERBOSE_TELEMETRY
-            ? false
-            : true,
+        stdio,
+        detached: !verbose,
         windowsHide: true,
       }
 
-  const scriptArgs = [
-    path.join(import.meta.dirname, 'scripts', 'invoke.js'),
-    ...args,
-  ]
+  const scriptArgs = [path.join(import.meta.dirname, 'scripts', 'send.js')]
 
   if (isWindows) {
     // Use command string with empty args array to avoid DEP0190 warning when
@@ -92,54 +89,33 @@ const spawnProcess = (...args: string[]) => {
   }
 }
 
-// wrap a function in this call to get a telemetry hit including how long it took
-export const timedTelemetry = async (
-  argv: string[],
-  options: Record<string, unknown>,
-  func: (...args: any[]) => any,
-) => {
-  if (
-    process.env.CEDAR_DISABLE_TELEMETRY ||
-    process.env.REDWOOD_DISABLE_TELEMETRY
-  ) {
-    return func.call(this)
-  }
+/**
+ * Runs `func` and records how long it took as the `<type>Duration` attribute
+ * (in milliseconds) of the current telemetry event
+ *
+ * @param _argv Unused. Only the command the CLI handler records is sent
+ */
+export const timedTelemetry = async <T>(
+  _argv: string[],
+  options: { type: string },
+  func: () => T | Promise<T>,
+): Promise<T> => {
+  const start = Date.now()
+  const result = await func()
 
-  const start = new Date()
-  const result = await func.call(this)
-  const duration = new Date().getTime() - start.getTime()
-
-  spawnProcess(
-    '--argv',
-    JSON.stringify(argv),
-    '--duration',
-    duration.toString(),
-    '--type',
-    JSON.stringify(options.type),
-  )
+  recordTelemetryAttributes({
+    [`${options.type}Duration`]: Date.now() - start,
+  })
 
   return result
 }
 
-export const errorTelemetry = async (argv: string[], error: any) => {
-  if (
-    process.env.CEDAR_DISABLE_TELEMETRY ||
-    process.env.REDWOOD_DISABLE_TELEMETRY
-  ) {
-    return
-  }
-
-  spawnProcess('--argv', JSON.stringify(argv), '--error', JSON.stringify(error))
-}
-
-// used as yargs middleware when any command is invoked
-export const telemetryMiddleware = async () => {
-  if (
-    process.env.CEDAR_DISABLE_TELEMETRY ||
-    process.env.REDWOOD_DISABLE_TELEMETRY
-  ) {
-    return
-  }
-
-  spawnProcess('--argv', JSON.stringify(process.argv))
+/**
+ * Records an error for the current telemetry event. Same as
+ * `recordTelemetryError()`
+ *
+ * @param _argv Unused. Only the command the CLI handler records is sent
+ */
+export const errorTelemetry = async (_argv: string[], error: unknown) => {
+  recordTelemetryError(error)
 }

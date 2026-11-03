@@ -25,7 +25,7 @@ export const jsonDisplay = (obj: unknown) => {
   )
 }
 
-export const truncate = (value: string | number) => {
+export const truncate = (value: string | number | null | undefined) => {
   let output = value?.toString() ?? ''
 
   if (output.length > MAX_STRING_LENGTH) {
@@ -65,6 +65,6 @@ export function timeTag(dateTime: <%= parsedDateTime ? 'Date' : 'string' %> | un
   return output
 }
 
-export const checkboxInputTag = (checked: boolean) => {
-  return <input type="checkbox" checked={checked} disabled />
+export const checkboxInputTag = (checked: boolean | null | undefined) => {
+  return <input type="checkbox" checked={!!checked} disabled />
 }

@@ -24,6 +24,7 @@ const Routes = () => {
       <Route path="/signup" page={SignupPage} name="signup" />
       <Route path="/forgot-password" page={ForgotPasswordPage} name="forgotPassword" />
       <Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />
+      <Route path="/change-password" page={ChangePasswordPage} name="changePassword" />
       <Set wrap={ContactsScaffoldLayout}>
         <Route path="/contacts/new" page={ContactNewContactPage} name="newContact" prerender />
         <Route path="/contacts/{id:Int}/edit" page={ContactEditContactPage} name="editContact" />
@@ -37,6 +38,7 @@ const Routes = () => {
         <Route path="/posts" page={PostPostsPage} name="posts" />
       </Set>
       <Set wrap={BlogLayout}>
+        <Route path="/aggregated-blog-post/{id:Int}" page={AggregatedBlogPostPage} name="aggregatedBlogPost" />
         <Route path="/waterfall/{id:Int}" page={WaterfallPage} prerender name="waterfall" />
         <Private unauthenticated="login">
           <Route path="/profile" page={ProfilePage} name="profile" />

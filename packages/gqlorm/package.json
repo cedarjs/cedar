@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/gqlorm",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -107,12 +107,13 @@
     "publint": "0.3.25",
     "tstyche": "5.0.2",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "peerDependencies": {
     "@cedarjs/web": "workspace:*",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "engines": {
     "node": ">=24"

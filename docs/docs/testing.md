@@ -732,7 +732,7 @@ describe('HomePage', () => {
 })
 ```
 
-Here we call `mockCurrentUser()` before the `render()` call. Right now our code only references the `name` of the current user, but you would want this object to include everything a real user contains, maybe an `email` and an array of `roles`.
+Here we call `mockCurrentUser()` before the `render()` call. Right now our code only references the `name` of the current user, but you would want this object to include everything a real user contains, maybe an `email` and an array of `roles`. It doesn't have to, though: `mockCurrentUser()` takes any part of the user `getCurrentUser()` returns, so a test only needs the fields it uses.
 
 We introduced `waitFor()` which waits for a render update before passing/failing the expectation. Although `findByRole()` will wait for an update, it will raise an error if the element is not found (similar to `getByRole()`). So here we had to switch to `queryByRole()`, but that version isn't async, so we added `waitFor()` to get the async behavior back.
 
@@ -766,6 +766,27 @@ mockCurrentUser({ roles: [] })
 ```
 
 That's it!
+
+#### Mocking Permissions
+
+In an app with [permissions](permissions.md), a component checks
+`useAuth().hasPermission()`. In tests, mock the user's `roles`, and
+`mockCurrentUser()` gives them the permissions the app's map gives those roles:
+
+```jsx
+mockCurrentUser({ roles: ['admin'] })
+```
+
+In Storybook, mock the permissions themselves, as a story shows one state of
+the UI whichever role grants it:
+
+```jsx
+mockCurrentUser({ permissions: ['contacts.edit'] })
+```
+
+With [tenancy](tenancy.md), permissions come from the user's membership in an
+organization instead: mock the memberships and the route's organization as in
+[Testing](tenancy.md#testing) in the tenancy docs.
 
 #### mockRouteParams()
 
@@ -806,6 +827,9 @@ describe('ProjectsCell', () => {
 Call it before `render()`, the same as `mockCurrentUser()`. It's a plain
 substitute for the route params a matched route would otherwise provide, not
 a router mock &mdash; it doesn't affect `location` or navigation.
+
+The params are reset after each test, so call it in each test that needs
+them, or in a `beforeEach`. A `beforeAll` only covers the first test.
 
 ### Handling Duplication
 

@@ -28,7 +28,6 @@ export const handler = async (options: {
 }) => {
   recordTelemetryAttributes({
     command: 'setup tenancy',
-    tenantField: options.tenantField,
     force: options.force,
   })
 

@@ -1,5 +1,10 @@
 import { describe, it, expectTypeOf } from 'vitest'
 
+import type {
+  ListedJob,
+  PauseResult,
+  ResumeResult,
+} from '../../adapters/BaseAdapter/BaseAdapter.js'
 import type { JobDefinition } from '../../types.js'
 import { JobManager } from '../JobManager.js'
 
@@ -219,6 +224,122 @@ describe('JobManager Type Tests', () => {
         .parameter(0)
         .toEqualTypeOf<string | number>()
       expectTypeOf(scheduler.cancel).returns.toEqualTypeOf<Promise<boolean>>()
+    })
+  })
+
+  describe('declared schedules', () => {
+    it("should type check each schedule's args against perform()", () => {
+      manager.createJob({
+        queue: 'default',
+        schedules: [
+          { key: 'day', cron: '*/15 * * * *', args: ['day', 1] },
+          { key: 'night', cron: '45 4 * * *', args: ['night', 14] },
+        ],
+        perform: (_sweep: 'day' | 'night', _days: number) => {},
+      })
+
+      manager.createJob({
+        queue: 'default',
+        // @ts-expect-error - args must match perform()'s parameters
+        schedules: [{ cron: '0 * * * *', args: ['week', 1] }],
+        perform: (_sweep: 'day' | 'night', _days: number) => {},
+      })
+
+      manager.createJob({
+        queue: 'default',
+        // @ts-expect-error - args are required when perform() takes arguments
+        schedules: [{ cron: '0 * * * *' }],
+        perform: (_sweep: 'day' | 'night') => {},
+      })
+    })
+
+    it('should not use the schedules to infer the job arguments', () => {
+      const job = manager.createJob({
+        queue: 'default',
+        schedules: [{ cron: '0 * * * *', args: ['literal'] }],
+        perform: (_value: string) => {},
+      })
+
+      expectTypeOf(job.perform).parameters.toEqualTypeOf<[string]>()
+    })
+
+    it('should make args optional when perform() takes none', () => {
+      manager.createJob({
+        queue: 'default',
+        schedules: [{ cron: '0 * * * *' }],
+        perform: () => {},
+      })
+    })
+
+    it('should only accept adapter names as scheduleAdapter', () => {
+      const withScheduleAdapter = new JobManager({
+        adapters: { mock: mockAdapter },
+        queues: ['default'] as const,
+        logger: mockLogger,
+        workers: [],
+        scheduleAdapter: 'mock',
+      })
+      expectTypeOf(withScheduleAdapter.scheduleAdapter).toEqualTypeOf<
+        'mock' | undefined
+      >()
+
+      const withUnknownAdapter = new JobManager({
+        adapters: { mock: mockAdapter },
+        queues: ['default'] as const,
+        logger: mockLogger,
+        workers: [],
+        // @ts-expect-error - not one of the adapters
+        scheduleAdapter: 'prisma',
+      })
+      expectTypeOf(withUnknownAdapter).toBeObject()
+    })
+  })
+
+  describe('unique keys', () => {
+    const scheduler = manager.createScheduler({ adapter: 'mock' })
+    const job = manager.createJob({
+      queue: 'default',
+      perform: (_id: number) => {},
+    })
+
+    it('should accept a key with any timing option', () => {
+      scheduler(job, [1], { key: 'job:1' })
+      scheduler(job, [1], { key: 'job:1', wait: 30 })
+      scheduler(job, [1], { key: 'job:1', waitUntil: new Date() })
+      scheduler(job, [1], { key: 'job:1', cron: '0 * * * *' })
+    })
+
+    it('should still reject combining timing options', () => {
+      // @ts-expect-error - wait and cron are mutually exclusive
+      scheduler(job, [1], { key: 'job:1', wait: 30, cron: '0 * * * *' })
+    })
+  })
+
+  describe('pausing jobs', () => {
+    it('should take a job id and return what changed', () => {
+      expectTypeOf(manager.pauseJob(1)).toEqualTypeOf<Promise<PauseResult>>()
+      expectTypeOf(manager.resumeJob('job_1')).toEqualTypeOf<
+        Promise<ResumeResult>
+      >()
+      expectTypeOf(manager.listJobs({ limit: 10 })).toEqualTypeOf<
+        Promise<ListedJob[]>
+      >()
+      expectTypeOf<PauseResult>().toEqualTypeOf<{
+        alreadyPaused: boolean
+        pausedAt: Date
+      }>()
+      expectTypeOf<ResumeResult>().toEqualTypeOf<{
+        wasPaused: boolean
+        runAt: Date | null
+      }>()
+    })
+
+    it('should only accept adapter names', () => {
+      void manager.pauseJob(1, { adapter: 'mock' })
+      // @ts-expect-error - not one of the adapters
+      void manager.pauseJob(1, { adapter: 'prisma' })
+      // @ts-expect-error - a job id is a string or a number
+      void manager.resumeJob({ id: 1 })
     })
   })
 })

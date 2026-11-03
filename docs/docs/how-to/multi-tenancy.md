@@ -63,19 +63,21 @@ model Organization {
 }
 
 model Membership {
-  id              String       @id @default(cuid())
-  role            String
+  id                  String       @id @default(cuid())
+  role                String
   // Null while the membership is a pending invitation.
-  userId          String?
-  organizationId  String
-  invitedById     String?
-  invitationToken String?      @unique
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  user            User?        @relation(fields: [userId], references: [id])
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
-  invitees        Membership[] @relation("Inviter")
+  userId              String?
+  organizationId      String
+  invitedById         String?
+  invitationToken     String?      @unique
+  // When a pending invitation stops being claimable.
+  invitationExpiresAt DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  user                User?        @relation(fields: [userId], references: [id])
+  organization        Organization @relation(fields: [organizationId], references: [id])
+  invitedBy           Membership?  @relation("Inviter", fields: [invitedById], references: [id])
+  invitees            Membership[] @relation("Inviter")
 
   @@unique([userId, organizationId])
   @@index([organizationId])
@@ -107,7 +109,9 @@ are carried over from the article, stated as Cedar defaults:
   to build rather than something that falls out of the schema by accident.
 - **An invitation is a `Membership` with `userId = null`.** The
   `invitationToken` column is the credential. Signing up or logging in with
-  `?invitationToken=` attaches the authenticated user to that row.
+  `?invitationToken=` attaches the authenticated user to that row. The
+  invitation stops working once `invitationExpiresAt` has passed (seven days
+  after `inviteMember` by default).
 - **`role` is a string, not an enum**, so an app can add roles without a schema
   migration. See
   [section 7](#7-strict-variant-compound-primary-keys-and-postgres-rls) for
@@ -154,7 +158,7 @@ Dana logs in once. Switching from `/org/acme-hardware/products` to
 or route resolves `context.currentOrg` independently from the `cedar-org` header
 or the `orgSlug` route param (see
 [section 4](#4-request-flow-url-to-header-to-context)). Nothing about
-`hasOrgRole()`, `requireMembership()` or the Prisma extension needs to know that
+`requirePermission()`, `hasPermission()` or the Prisma extension needs to know that
 the same `userId` sits behind both memberships; each request only ever has one
 organization in scope.
 
@@ -184,19 +188,20 @@ no-op, `--force` or not.
 
 ### What `setup tenancy` changes
 
-| File                                                                | Change                                                                                                                                             |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `api/db/schema.prisma`                                              | Adds `Organization` and `Membership`, adds `memberships Membership[]` to `User`, adds `RW_DataMigration` if `data-migrate install` has not run yet |
-| `api/src/lib/db.ts`                                                 | Wraps `db` in `createTenancyExtension`                                                                                                             |
-| `api/src/lib/auth.ts`                                               | Adds `memberships` to the `getCurrentUser()` select, re-exports `hasOrgRole` / `requireMembership`                                                 |
-| `api/src/functions/graphql.ts`                                      | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
-| `api/src/functions/auth.ts`                                         | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
-| `api/src/directives/requireMembership/`                             | Generates the `@requireMembership` directive                                                                                                       |
-| `api/src/services/organizations/`                                   | Generates the organizations service and SDL                                                                                                        |
-| `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts` | Backfills memberships for existing users                                                                                                           |
-| `web/src/components/OrgScope/OrgScope.tsx`                          | Generates the app-owned `OrgScope` wrapper                                                                                                         |
-| `web/src/pages/InvitePage/InvitePage.tsx`                           | Generates the invitation landing page                                                                                                              |
-| `api/package.json`, `web/package.json`                              | Adds `@cedarjs/tenancy`                                                                                                                            |
+| File                                                                                           | Change                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api/db/schema.prisma`                                                                         | Adds `Organization` and `Membership`, adds `memberships Membership[]` to `User`, adds `RW_DataMigration` if `data-migrate install` has not run yet |
+| `api/src/lib/db.ts`                                                                            | Wraps `db` in `createTenancyExtension`                                                                                                             |
+| `api/src/lib/auth.ts`                                                                          | Adds `memberships` to the `getCurrentUser()` select, and wraps it in `withPermissions`                                                             |
+| `api/src/functions/graphql.ts`                                                                 | Adds a `context` function that resolves `currentOrg` per request                                                                                   |
+| `api/src/functions/auth.ts`                                                                    | (dbAuth only) Wraps `signup.handler` to call `ensureDefaultOrganization`                                                                           |
+| `packages/permissions/`, `api/src/lib/permissions.ts`, `api/src/directives/requirePermission/` | Generates the permissions map, the checks and the `@requirePermission` directive                                                                   |
+| `api/src/services/organizations/`                                                              | Generates the organizations service and SDL                                                                                                        |
+| `api/db/dataMigrations/<timestamp>-ensure-default-organizations.ts`                            | Backfills memberships for existing users                                                                                                           |
+| `web/src/Routes.tsx`                                                                           | Passes `tenancy` to the `<Router>`                                                                                                                 |
+| `web/src/tenancy.tsx`                                                                          | Generates the app's `tenancy` for the `<Router>`                                                                                                   |
+| `web/src/pages/InvitePage/InvitePage.tsx`                                                      | Generates the invitation landing page                                                                                                              |
+| `api/package.json`, `web/package.json`                                                         | Adds `@cedarjs/tenancy`                                                                                                                            |
 
 `db.ts` gains the tenancy extension, chained after any existing extensions (such
 as `@cedarjs/storage`'s):
@@ -216,12 +221,16 @@ as `@cedarjs/storage`'s):
 +)
 ```
 
-`auth.ts` gains `memberships` in the `getCurrentUser()` select and re-exports
-the org-aware helpers:
+`auth.ts` gains `memberships` in the `getCurrentUser()` select, wrapped in
+`withPermissions` so each membership carries its permissions:
 
 ```diff title="api/src/lib/auth.ts"
++import { withPermissions } from 'src/lib/permissions'
+
  export const getCurrentUser = async (session) => {
-   return db.user.findUnique({
+-  return db.user.findUnique({
++  return withPermissions(
++    await db.user.findUnique({
      where: { id: session.id },
 -    select: { id: true, email: true, roles: true },
 +    select: {
@@ -237,11 +246,34 @@ the org-aware helpers:
 +        },
 +      },
 +    },
-   })
+-  })
++    }),
++  )
  }
-
-+export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'
 ```
+
+`requireAuth` (and `@requireAuth`) is about the signed-in user rather than an
+organization, as the generated `myMemberships`, `createOrganization` and
+`acceptInvitation` are: it needs a signed-in user, and checks `roles` against
+`currentUser.roles`, as it did before. Fields about the current organization ask for a
+[permission](#permissions) instead, with `@requirePermission` and
+`requirePermission()` from `src/lib/permissions`: they need a current
+organization, and check what the user's role there may do. Fields any member
+may use ask for `organization.read`, which every role lists.
+
+Before tenancy there are no organizations, so every field your app already has
+is about the user, and `@requireAuth`, `requireAuth()` and `hasRole()` check
+the user's own roles in `currentUser.roles`. When you give a model an
+`organizationId`, switch its fields to
+`@requirePermission(permission: "organization.read")`, or a permission of its
+own. `cedar generate sdl` and `cedar generate scaffold` write
+`@requirePermission(permission: "organization.read")` for a model that belongs
+to an organization and `@requireAuth` for one that doesn't.
+
+With tenancy, `getCurrentUser` shouldn't copy a membership's role into
+`currentUser.roles`: `requirePermission` and `hasPermission` get the role from
+the membership in the current organization, and a copied role would leak one
+organization's role into checks made outside it.
 
 `graphql.ts` gains a `context` function that resolves the current organization
 before any resolver runs:
@@ -354,17 +386,19 @@ Finally, `Organization` and `Membership` are appended to `schema.prisma`, and
 +}
 +
 +model Membership {
-+  id              String       @id @default(cuid())
-+  role            String
-+  userId          String?
-+  organizationId  String
-+  invitedById     String?
-+  invitationToken String?      @unique
-+  createdAt       DateTime     @default(now())
-+  user            User?        @relation(fields: [userId], references: [id])
-+  organization    Organization @relation(fields: [organizationId], references: [id])
-+  invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
-+  invitees        Membership[] @relation("Inviter")
++  id                  String       @id @default(cuid())
++  role                String
++  userId              String?
++  organizationId      String
++  invitedById         String?
++  invitationToken     String?      @unique
++  // When a pending invitation stops being claimable.
++  invitationExpiresAt DateTime?
++  createdAt           DateTime     @default(now())
++  user                User?        @relation(fields: [userId], references: [id])
++  organization        Organization @relation(fields: [organizationId], references: [id])
++  invitedBy           Membership?  @relation("Inviter", fields: [invitedById], references: [id])
++  invitees            Membership[] @relation("Inviter")
 +
 +  @@unique([userId, organizationId])
 +  @@index([organizationId])
@@ -376,22 +410,26 @@ Setup also adds the `RW_DataMigration` model if it isn't already there (the one
 without it, and most projects run `setup tenancy` before they've ever written a
 data migration.
 
-Run the two commands the setup output prints, in order:
+Run the commands the setup output prints, in order:
 
 ```shell
 yarn cedar prisma migrate dev
+yarn cedar prisma generate
 yarn cedar data-migrate up
 ```
 
 The migration creates the tables (`Organization`, `Membership` and, if it was
-just added, `RW_DataMigration`); the data migration backfills a default
+just added, `RW_DataMigration`); `prisma generate` updates the Prisma client,
+which Prisma 7's `migrate dev` no longer does, so the data migration can use
+the new models; the data migration backfills a default
 organization and membership for every existing user, so nobody is left without a
 `currentOrg` to resolve into.
 
-The setup command does not touch `web/src/Routes.tsx` or `web/src/App.tsx`, and
-it does not decide which of your existing models are tenant-owned &mdash; it
-prints the next steps instead: scope or exempt every existing model as described
-above, wire up section 5's `<Set wrap={[OrgScope, OrgLayout]}>` shape and the
+In `web/src/Routes.tsx` the setup command only passes `tenancy` to your
+`<Router>`, it doesn't touch `web/src/App.tsx`, and it does not decide which of
+your existing models are tenant-owned &mdash; it prints the next steps instead:
+scope or exempt every existing model as described above, wire up section 5's
+`<PrivateSet wrap={OrgLayout} unauthenticated="login">` shape and the
 `/invite/{token}` route, and use `withTenancy` from `@cedarjs/tenancy` on any
 plain `api/src/functions/*` handler that touches tenant-owned models.
 
@@ -493,8 +531,9 @@ four steps:
 1. **URL or variable.** The web app is on a route like `/org/acme/projects`
    (an `orgSlug` route param), or, for the cases above, has an organization
    id/slug available some other way.
-2. **Header.** `OrgScope` (see
-   [section 5](#5-services-directives-and-web-hooks)) builds a per-organization
+2. **Header.** The router (see
+   [section 5](#5-services-directives-and-web-hooks)) renders a provider with a
+   per-organization
    Apollo client that sends a `cedar-org` header with every request. This is the
    default source `resolveCurrentOrg` looks at first.
 3. **`resolveCurrentOrg`.** On the API side, the generated `context` function
@@ -548,11 +587,13 @@ only the caller who just created the invitation.
 type Invitation {
   membership: Membership!
   invitationToken: String!
+  invitationExpiresAt: DateTime!
 }
 
 type Query {
   myMemberships: [Membership!]! @requireAuth
-  organization(id: String!): Organization @requireMembership
+  organization(id: String!): Organization
+    @requirePermission(permission: "organization.read")
 }
 
 input CreateOrganizationInput {
@@ -573,33 +614,25 @@ type Mutation {
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   inviteMember(input: InviteMemberInput!): Invitation!
-    @requireMembership(roles: ["owner", "admin"])
+    @requirePermission(permission: "members.manage")
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   acceptInvitation(token: String!): Organization! @requireAuth
 
   # Web callers must call `reauthenticate()` in `onCompleted`.
   removeMember(membershipId: String!): Membership!
-    @requireMembership(roles: ["owner", "admin"])
+    @requirePermission(permission: "members.manage")
 }
 ```
 
 ```ts title="api/src/services/organizations/organizations.ts"
+import { permissions } from '@my-app/permissions'
+
+import { ForbiddenError, ValidationError } from '@cedarjs/graphql-server'
+import { requireCurrentOrg } from '@cedarjs/tenancy'
+
 import { db } from 'src/lib/db'
-import { hasOrgRole, requireMembership, requireCurrentOrg } from 'src/lib/auth'
-
-// Which role a membership with a given role may grant (inviteMember) or
-// revoke (removeMember). An app adds a role here when it adds one to its
-// own `Membership.role` values; a role missing from this map can't be
-// granted to, or removed from, anyone.
-const ROLE_GRANTS = {
-  owner: ['owner', 'admin', 'member'],
-  admin: ['admin', 'member'],
-  member: [],
-}
-
-const canGrantRole = (granterRole, targetRole) =>
-  ROLE_GRANTS[granterRole]?.includes(targetRole) ?? false
+import { canGrantRole } from 'src/lib/permissions'
 
 export const myMemberships = () => {
   return db.membership.findMany({
@@ -613,20 +646,33 @@ export const organization = () => {
   return db.organization.findUnique({ where: { id: currentOrg.id } })
 }
 
-export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
+export const inviteMember: MutationResolvers['inviteMember'] = async ({
+  input,
+}) => {
   const currentOrg = requireCurrentOrg()
 
-  // @requireMembership(roles: ["owner", "admin"]) on the SDL only checks
-  // that the caller is an owner or admin of *some* organization; whether
-  // *this* role may be granted is checked here, against the caller's own
-  // role, so an admin can invite an admin or a member but never an owner.
-  if (!canGrantRole(currentOrg.role, input.role)) {
+  // A role the definitions don't list would be a membership with no
+  // permissions, so a typo in input.role is refused outright
+  if (!Object.hasOwn(permissions.roles, input.role)) {
+    throw new ValidationError(
+      `"${input.role}" is not a known role. Add it to your permission ` +
+        'definitions before inviting with it.'
+    )
+  }
+
+  // @requirePermission(permission: "members.manage") on the SDL only checks
+  // that the caller may manage members. Whether they may grant *this* role
+  // is checked here: they must hold every permission it has, so an admin
+  // can invite an admin or a member but never an owner.
+  if (!canGrantRole(input.role)) {
     throw new ForbiddenError(
       `A "${currentOrg.role}" cannot invite a "${input.role}".`
     )
   }
 
   const invitationToken = crypto.randomUUID()
+  // Seven days; see INVITATION_LIFETIME_MS in the generated service
+  const invitationExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
   const membership = await db.membership.create({
     data: {
@@ -634,15 +680,17 @@ export const inviteMember: MutationResolvers['inviteMember'] = ({ input }) => {
       role: input.role,
       invitedById: currentOrg.membershipId,
       invitationToken,
+      invitationExpiresAt,
     },
   })
 
-  return { membership, invitationToken }
+  return { membership, invitationToken, invitationExpiresAt }
 }
 ```
 
 `Organization` and `Membership` are global models, so these lookups use plain
-`db`, not `db.$forOrg`. `removeMember` reuses the same `canGrantRole` check,
+`db`, not `db.$forOrg`. `removeMember` uses the same check,
+`canGrantRole(membership.role)`,
 plus a check that the membership being removed isn't the organization's last
 `owner`, so an admin can never remove an owner and an organization can never end
 up with zero owners. `acceptInvitation` claims a pending invitation with a
@@ -651,66 +699,128 @@ two concurrent accepts of the same token can never both win, and it spends the
 token in that same write so it can't be replayed by anyone who observed it
 beforehand.
 
-### `@requireMembership`
+### `@requireAuth` and `@requirePermission`
 
-The generated directive works like `@requireAuth`, but checks organization
-membership and (optionally) role:
+`@requireAuth` passes its `roles` on to `requireAuth()` in `src/lib/auth`, and
+the setup command adds `@requirePermission`, which passes its permission on to `requirePermission()` in
+`src/lib/permissions`:
 
-```ts title="api/src/directives/requireMembership/requireMembership.ts"
-import { createValidatorDirective } from '@cedarjs/graphql-server'
-import { requireMembership } from 'src/lib/auth'
-
-const schema = /* GraphQL */ `
-  directive @requireMembership(roles: [String]) on FIELD_DEFINITION
+```ts title="api/src/directives/requirePermission/requirePermission.ts"
+export const schema = gql`
+  directive @requirePermission(permission: String!) on FIELD_DEFINITION
 `
 
-const requireMembershipValidate = ({ directiveArgs }) => {
-  const { roles } = directiveArgs
-  requireMembership({ roles })
+const validate = ({ directiveArgs }) => {
+  applicationRequirePermission(directiveArgs.permission)
 }
-
-const requireMembershipDirective = createValidatorDirective(
-  schema,
-  requireMembershipValidate
-)
-
-export default requireMembershipDirective
 ```
 
-`requireMembership()` throws `AuthenticationError` when there's no
-`context.currentUser`, and `ForbiddenError` when there's no `context.currentOrg`
-or the current org's role doesn't match `roles`. These are the same error types
-`requireAuth` throws, so any error handling you already have on the web side
-keeps working.
+Both throw `AuthenticationError` when there's no `context.currentUser`.
+`requirePermission()` throws `ForbiddenError` when there's no
+`context.currentOrg` or the user's role in it doesn't have the permission.
+`requireAuth()` throws `ForbiddenError` when `roles` are given and
+`currentUser.roles` has none of them.
 
-### Web hooks: `OrgScope`, `useCurrentOrg`, `hasOrgRole`
+### Permissions
 
-`OrgScope` wraps organization routes with `Set`'s `wrap` prop, next to your
-layout:
+A role is a named bundle of permissions. `setup tenancy` generates
+`packages/permissions`, a package shared by the api and web sides that defines
+every permission and what each role may do, `api/src/lib/permissions.ts`, which
+checks them, and the `@requirePermission` directive that asks for one of those
+permissions:
 
+```ts title="packages/permissions/src/index.ts"
+export const permissions = definePermissions({
+  permissions: ['organization.read', 'organization.manage', 'members.manage'],
+  roles: {
+    owner: ['organization.read', 'organization.manage', 'members.manage'],
+    admin: ['organization.read', 'members.manage'],
+    member: ['organization.read'],
+  },
+})
+```
+
+```ts title="api/src/lib/permissions.ts"
+export const {
+  hasPermission,
+  requirePermission,
+  canGrantRole,
+  permissionsOf,
+  withPermissions,
+} = createPermissions(permissions)
+```
+
+`organization.read` is "any member": every role lists it, and fields any
+member may use ask for it. `organization.manage` is the owner's alone. Roles
+are still what a membership stores, what people grant and what the UI shows,
+but checks ask for a permission, never a role.
+
+The generated organizations SDL uses it: `inviteMember` and `removeMember` are
+`@requirePermission(permission: "members.manage")`. Say you add a `viewer`
+role later that may only read: add `viewer: ['organization.read']` to `roles`,
+and every field guarded by `@requirePermission` lets it do exactly that,
+including fields added after it, without touching the SDL. A new role starts
+with nothing until its entry says otherwise. With role lists on each field
+you'd find and edit every field it should reach, and a field written later
+would be open or closed to it depending on whether its author remembered it.
+
+In a service, call `requirePermission` with the permission's name:
+
+```ts
+import { requirePermission } from 'src/lib/permissions'
+
+requirePermission('members.manage')
+```
+
+`canGrantRole(role)` is whether the signed-in user may give someone `role`, or
+take it away. They may if they hold every permission the role has. Nobody can
+hand out more than they may do themselves, so an admin, without
+`organization.manage`, can't make anyone an owner. A new role needs no grant
+table. Who may manage members at all is the field's
+`@requirePermission(permission: "members.manage")`.
+
+`getCurrentUser` returns each membership with its `permissions`
+(`withPermissions`), so the web asks the same question with
+`useAuth().hasPermission()`:
+
+```tsx
+import { useAuth } from 'src/auth'
+
+const MembersPage = () => {
+  const { hasPermission } = useAuth()
+  const canManage = hasPermission('members.manage')
+  // ...
+}
+```
+
+See [Permissions](../tenancy.md#permissions) in the reference.
+
+### Web: the Router's `tenancy`, `useCurrentOrg`, `hasPermission`
+
+Put organization routes in a `PrivateSet`. The router renders the organization
+for them, from the `tenancy` you pass it, around the set's `wrap` and the page,
+so there is nothing to wrap them with. A user who isn't signed in is sent to log
+in, and one who isn't a member of the organization sees the tenancy's
+not-a-member message:
+
+<!-- prettier-ignore -->
 ```tsx title="web/src/Routes.tsx"
-import { Set, Route, Router } from '@cedarjs/router'
+import { PrivateSet, Route, Router } from '@cedarjs/router'
 
-import OrgScope from 'src/components/OrgScope/OrgScope'
-import OrgLayout from 'src/layouts/OrgLayout/OrgLayout'
+import { useAuth } from 'src/auth'
+import OrgLayout from 'src/layouts/OrgLayout'
+import { tenancy } from 'src/tenancy'
 
 const Routes = () => {
   return (
-    <Router>
+    <Router useAuth={useAuth} tenancy={tenancy}>
+      <Route path="/login" page={LoginPage} name="login" />
       <Route path="/invite/{token}" page={InvitePage} name="invite" />
       {/* highlight-next-line */}
-      <Set wrap={[OrgScope, OrgLayout]}>
-        <Route
-          path="/org/{orgSlug}/projects"
-          page={ProjectsPage}
-          name="projects"
-        />
-        <Route
-          path="/org/{orgSlug}/settings"
-          page={OrgSettingsPage}
-          name="orgSettings"
-        />
-      </Set>
+      <PrivateSet wrap={OrgLayout} unauthenticated="login">
+        <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+        <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
+      </PrivateSet>
     </Router>
   )
 }
@@ -718,46 +828,88 @@ const Routes = () => {
 export default Routes
 ```
 
-`OrgScope` reads the `orgSlug` route param, matches it against
+`tenancy` comes from `web/src/tenancy.tsx`, which `setup tenancy` generates with
+`createTenancy`. For a route in an organization (`{orgSlug}` in its path), the
+router reads the `orgSlug` route param, matches it against
 `useAuth().currentUser.memberships`, and renders a nested `<ApolloProvider>`
-with an organization-scoped client under it, so every Cell, `useQuery` and
-`useMutation` inside the `Set` carries the `cedar-org` header automatically.
-When the slug doesn't match a membership it renders the app's not-a-member state
-instead of its children.
+with an organization-scoped client around the layout and page, so every Cell,
+`useQuery` and `useMutation` inside the set carries the `cedar-org` header
+automatically. When the slug doesn't match a membership it renders the
+not-a-member message instead of the layout and page. Nested `PrivateSet`s in the
+same organization share one provider, which stays mounted while the user moves
+between the organization's pages.
 
-:::note[Routes under `OrgScope` must not carry `prerender`]
+A route with `{orgSlug}` outside a `PrivateSet` is a public page with no
+organization context, and a `PrivateSet` whose routes have no `{orgSlug}` is an
+ordinary private set.
 
-`OrgScope`'s nested `ApolloProvider` shadows the per-route client that
-prerendering injects above `App`, so a prerendered page's queries wouldn't go
-through the in-process GraphQL link the prerenderer expects. Organization routes
-are per-user by nature anyway &mdash; don't add `prerender` to a `Route` or
-`Set` that lives inside `<Set wrap={[OrgScope, ...]}>`.
+:::note[Prerendering organization pages]
+
+Organization routes prerender like any private route: while prerendering, auth
+is loading, so the router renders the set's `whileLoadingAuth` shell and the
+organization's provider never mounts.
+
+A public page about an organization (`{orgSlug}` in a plain `Set`) prerenders
+like any dynamic route: a `routeHooks` file returns the slugs, for example from
+`db.organization.findMany()`, the page's fields use `@skipAuth`, and the page
+queries the organization by the slug from `useParams()`. There is no
+`cedar-org` header, as there's no provider. See
+[Prerendering organization pages](../tenancy.md#prerendering-organization-pages).
 
 :::
 
-Inside the `Set`, read the current organization with `useCurrentOrg()`:
+Inside the set, read the current organization with `useCurrentOrg()`:
 
 ```tsx title="web/src/components/ProjectList/ProjectList.tsx"
 import { useCurrentOrg } from '@cedarjs/tenancy/web'
 
+import { useAuth } from 'src/auth'
+
 const ProjectList = () => {
-  const { org, hasOrgRole } = useCurrentOrg()
+  const { org } = useCurrentOrg()
+  const { hasPermission } = useAuth()
 
   return (
     <div>
       <h1>{org?.name} projects</h1>
-      {hasOrgRole(['owner', 'admin']) && <NewProjectButton />}
+      {hasPermission('projects.edit') && <NewProjectButton />}
     </div>
   )
 }
 ```
 
-`hasOrgRole(roles, organizationId?)` behaves like `useAuth().hasRole()`, but
-scoped to an organization: with no `organizationId` argument it checks the
-current organization's role from `useCurrentOrg()`; passed an `organizationId`,
-it checks `currentUser.memberships` for a match, which is how you'd show a
-switcher entry as disabled for an organization the user isn't an admin of,
-without navigating there first.
+Here `projects.edit` is a permission the app added to its definitions.
+`useCurrentOrg().memberships` gives every membership with its `permissions`,
+which is how you'd show a switcher entry as disabled for an organization where
+the user may not do something, without navigating there first. To show the
+user's role in the organization, read `org.role`. `useAuth().hasRole` and
+`<PrivateSet roles>` check the user's own roles, in `currentUser.roles`, as
+without tenancy. A check in an organization uses a permission.
+
+For a page only some members may open, give its `PrivateSet` `permission` and
+`unauthorized` (see
+[Guarding routes by permission](../tenancy.md#guarding-routes-by-permission)):
+
+<!-- prettier-ignore -->
+```tsx title="web/src/Routes.tsx"
+<Router useAuth={useAuth} tenancy={tenancy}>
+  <PrivateSet wrap={OrgLayout} unauthenticated="login">
+    <Route path="/org/{orgSlug}/projects" page={ProjectsPage} name="projects" />
+  </PrivateSet>
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" permission="organization.manage">
+    <Route path="/org/{orgSlug}/settings" page={OrgSettingsPage} name="orgSettings" />
+  </PrivateSet>
+  <PrivateSet wrap={OrgLayout} unauthenticated="login" unauthorized="projects" permission="members.manage">
+    <Route path="/org/{orgSlug}/members" page={MembersPage} name="members" />
+  </PrivateSet>
+</Router>
+```
+
+A member who lacks the permission is redirected to the same organization's
+`projects` page. The router checks it against the membership it finds in the
+organization whose slug is the route's `orgSlug` param. With `tenancy` on the
+`Router`, `permission` needs a route in an organization: without one, it throws
+an error rather than let anyone in.
 
 ### `reauthenticate()` after membership-changing mutations
 
@@ -805,10 +957,10 @@ const AcceptInvitationForm = ({ token }: { token: string }) => {
 
 Skipping `reauthenticate()` doesn't corrupt any data &mdash; the API is
 authoritative and re-checks membership on every request &mdash; but it does mean
-the org switcher, `hasOrgRole()` on the web and the slugs `OrgScope` matches
+the org switcher, `useAuth().hasPermission()` on the web and the slugs the router matches
 routes against can all lag behind reality until the next full page load or
 login. A newly accepted invitation won't show up in the switcher; a role change
-won't be reflected in a `hasOrgRole()` check; a renamed organization's old slug
+won't be reflected in a `hasPermission()` check; a renamed organization's old slug
 will render the not-a-member state even though the membership is still there.
 
 ## 6. Jobs, scripts, seeds and `$forOrg` / `$withoutTenant`
@@ -996,11 +1148,15 @@ that organization.
 ### Access: `createClientOrganization`
 
 An agency-side service creates the child organization and fans out memberships
-for the agency's staff:
+for the agency's staff. Who may do it is a permission of its own,
+`clients.manage`, added to the definitions and to the roles that may create
+client organizations:
 
 ```ts title="api/src/services/organizations/organizations.ts"
+import { requireCurrentOrg } from '@cedarjs/tenancy'
+
 import { db } from 'src/lib/db'
-import { requireMembership, requireCurrentOrg } from 'src/lib/auth'
+import { requirePermission } from 'src/lib/permissions'
 
 export const createClientOrganization = async ({
   name,
@@ -1011,7 +1167,7 @@ export const createClientOrganization = async ({
   slug: string
   staffMemberships: Array<{ agencyMembershipId: string; role: string }>
 }) => {
-  requireMembership({ roles: ['owner', 'admin'] })
+  requirePermission('clients.manage')
   const agencyOrg = requireCurrentOrg()
 
   return db.organization.create({
@@ -1043,23 +1199,25 @@ membership was derived from:
 
 ```prisma title="api/db/schema.prisma"
 model Membership {
-  id              String       @id @default(cuid())
-  role            String
-  userId          String?
-  organizationId  String
-  invitedById     String?
-  invitationToken String?      @unique
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  user            User?        @relation(fields: [userId], references: [id])
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  invitedBy       Membership?  @relation("Inviter", fields: [invitedById], references: [id])
-  invitees        Membership[] @relation("Inviter")
+  id                  String       @id @default(cuid())
+  role                String
+  userId              String?
+  organizationId      String
+  invitedById         String?
+  invitationToken     String?      @unique
+  // When a pending invitation stops being claimable.
+  invitationExpiresAt DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  user                User?        @relation(fields: [userId], references: [id])
+  organization        Organization @relation(fields: [organizationId], references: [id])
+  invitedBy           Membership?  @relation("Inviter", fields: [invitedById], references: [id])
+  invitees            Membership[] @relation("Inviter")
 
   // highlight-start
-  viaMembershipId String?
-  viaMembership   Membership?  @relation("AgencyProvenance", fields: [viaMembershipId], references: [id], onDelete: Cascade)
-  derivedMemberships Membership[] @relation("AgencyProvenance")
+  viaMembershipId     String?
+  viaMembership       Membership?  @relation("AgencyProvenance", fields: [viaMembershipId], references: [id], onDelete: Cascade)
+  derivedMemberships  Membership[] @relation("AgencyProvenance")
   // highlight-end
 
   @@unique([userId, organizationId])
@@ -1142,4 +1300,6 @@ articles this how-to draws on both call out, restated for Cedar:
   reads it and passes it to a generated `routes.*()` call fails route param
   validation in the test. Use `mockRouteParams({ orgSlug: 'acme' })` before
   `render()` &mdash; see [`mockRouteParams()`](../testing.md#mockrouteparams)
-  in the testing docs.
+  in the testing docs. With the organization in the mocked user's
+  `memberships`, it's also the organization `useCurrentOrg()` returns: see
+  [Testing](../tenancy.md#testing) in the tenancy reference.

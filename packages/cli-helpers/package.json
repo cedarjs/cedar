@@ -1,6 +1,6 @@
 {
   "name": "@cedarjs/cli-helpers",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cedarjs/cedar.git",
@@ -127,8 +127,7 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
-    "@listr2/prompt-adapter-enquirer": "4.3.3",
-    "@opentelemetry/api": "1.9.1",
+    "@listr2/prompt-adapter-enquirer": "4.4.3",
     "ansis": "4.4.0",
     "dotenv": "16.6.1",
     "dotenv-defaults": "5.0.2",
@@ -137,7 +136,7 @@
     "listr2": "10.2.2",
     "lodash": "4.18.1",
     "pascalcase": "1.0.0",
-    "prettier": "3.9.9",
+    "prettier": "3.9.10",
     "prompts": "2.4.2",
     "smol-toml": "1.9.1",
     "sucrase": "3.35.1",
@@ -148,13 +147,14 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/dotenv-defaults": "^5.0.0",
-    "@types/lodash": "4.17.26",
+    "@types/lodash": "4.17.27",
     "@types/pascalcase": "1.0.3",
     "@types/yargs": "17.0.35",
     "@types/yargs-parser": "21.0.3",
     "prettier-plugin-tailwindcss": "0.8.1",
     "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "vite": "7.3.7",
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": ">=24"

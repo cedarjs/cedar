@@ -185,8 +185,9 @@ export const deployToml = ({
 # After restarting the processes, the deploy requests the api side's health
 # check endpoint on the server and fails if it doesn't respond in time:
 #
-# * healthCheckUrl - defaults to http://localhost:<[api].port>/graphql/health
-#   on servers that host the api side. Set to \`false\` to skip the check
+# * healthCheckUrl - defaults to http://localhost:<port>/graphql/health on
+#   servers that host the api side, at the port their api server listens on.
+#   Set to \`false\` to skip the check
 # * healthCheckTimeout - seconds to keep retrying, defaults to 30
 #
 # See https://cedarjs.com/docs/deploy/baremetal for more info

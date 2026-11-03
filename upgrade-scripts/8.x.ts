@@ -1,6 +1,7 @@
 // @dependency: oxc-parser@0.144.0
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import util from 'node:util'
 
 import { parseSync, Visitor } from 'oxc-parser'
@@ -38,6 +39,19 @@ function fail(title: string, lines: string[]) {
  */
 function warn(title: string, lines: string[]) {
   console.log(util.styleText('yellow', title) + '\n')
+
+  for (const line of lines) {
+    console.log(line + '\n')
+  }
+}
+
+/**
+ * Like `warn`, but for things that don't break anything and that the user can
+ * safely ignore. Deliberately not colored, so it doesn't compete with the
+ * warnings and failures above it for attention
+ */
+function info(title: string, lines: string[]) {
+  console.log(title + '\n')
 
   for (const line of lines) {
     console.log(line + '\n')
@@ -222,11 +236,198 @@ async function findSetsWithWrapperProps() {
   }
 }
 
+/**
+ * Returns the Prisma version the CedarJS release being upgraded to supports.
+ * The upgrade installs `@cedarjs/project-config` at that release's version to
+ * run this script, and its `@prisma/internals` dependency is always on the
+ * same version as the `prisma` peer dependency of `@cedarjs/cli`.
+ */
+function findSupportedPrismaVersion() {
+  let dir = path.dirname(
+    fileURLToPath(import.meta.resolve('@cedarjs/project-config')),
+  )
+
+  while (dir !== path.dirname(dir)) {
+    const pkgJsonPath = path.join(dir, 'package.json')
+
+    if (fs.existsSync(pkgJsonPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'))
+
+      if (pkg.name === '@cedarjs/project-config') {
+        const version = pkg.dependencies?.['@prisma/internals']
+        return typeof version === 'string' ? version : undefined
+      }
+    }
+
+    dir = path.dirname(dir)
+  }
+
+  return undefined
+}
+
+/**
+ * Returns the Prisma packages the project has to declare itself, as lines like
+ * "prisma in the devDependencies of package.json", for the ones it doesn't
+ * declare. `prisma` can be in either section. `@prisma/client` must be in the
+ * api side's `dependencies`, because the api side imports the generated client
+ * at runtime and production installs leave out `devDependencies`. Projects
+ * without an api side don't need either.
+ */
+function findMissingPrismaPackages() {
+  const apiPkgJsonPath = path.join(projectPaths.api.base, 'package.json')
+
+  if (!fs.existsSync(apiPkgJsonPath)) {
+    return []
+  }
+
+  const required = [
+    {
+      pkgJsonPath: path.join(projectPaths.base, 'package.json'),
+      field: 'devDependencies',
+      depName: 'prisma',
+      onlyInField: false,
+    },
+    {
+      pkgJsonPath: apiPkgJsonPath,
+      field: 'dependencies',
+      depName: '@prisma/client',
+      onlyInField: true,
+    },
+  ]
+
+  return required
+    .filter(({ pkgJsonPath, field, depName, onlyInField }) => {
+      const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'))
+
+      if (onlyInField) {
+        return !pkg[field]?.[depName]
+      }
+
+      return !pkg.dependencies?.[depName] && !pkg.devDependencies?.[depName]
+    })
+    .map(
+      ({ pkgJsonPath, field, depName }) =>
+        `${depName} in the ${field} of ` +
+        path.relative(projectPaths.base, pkgJsonPath).split(path.sep).join('/'),
+    )
+}
+
+/**
+ * Returns the TypeScript and JavaScript config files on the api and web sides
+ * that load Jest's global types through `compilerOptions.types`, instead of
+ * `vitest/globals`.
+ *
+ * Reads the `types` array with a regular expression rather than by parsing
+ * the file, because these config files are JSON with comments and trailing
+ * commas, which `JSON.parse` rejects.
+ */
+function findJestTypesConfigs() {
+  const configs: string[] = []
+
+  for (const side of ['api', 'web'] as const) {
+    for (const name of ['tsconfig.json', 'jsconfig.json']) {
+      const configPath = path.join(projectPaths[side].base, name)
+
+      if (!fs.existsSync(configPath)) {
+        continue
+      }
+
+      const typesArray = /"types"\s*:\s*\[([^\]]*)\]/.exec(
+        fs.readFileSync(configPath, 'utf8'),
+      )
+      const types = Array.from(
+        typesArray?.[1].matchAll(/"([^"]*)"/g) ?? [],
+        (match) => match[1],
+      )
+
+      if (types.includes('jest') && !types.includes('vitest/globals')) {
+        configs.push(
+          path
+            .relative(projectPaths.base, configPath)
+            .split(path.sep)
+            .join('/'),
+        )
+      }
+    }
+  }
+
+  return configs
+}
+
+/**
+ * Whether this is a pnpm project that doesn't hoist `@cedarjs/*` packages to
+ * the root `node_modules`.
+ *
+ * The type definitions Cedar generates in `.cedar/types` import and augment
+ * those packages. TypeScript resolves the imports from the project root,
+ * where pnpm only links hoisted packages.
+ *
+ * Reads the settings with regular expressions rather than a YAML parser. The
+ * patterns can also come from `.npmrc`, or be implied by `shamefullyHoist`.
+ */
+function isMissingCedarPublicHoist() {
+  const workspacePath = path.join(projectPaths.base, 'pnpm-workspace.yaml')
+
+  if (!fs.existsSync(workspacePath)) {
+    return false
+  }
+
+  const workspace = fs.readFileSync(workspacePath, 'utf8')
+  const npmrcPath = path.join(projectPaths.base, '.npmrc')
+  const npmrc = fs.existsSync(npmrcPath)
+    ? fs.readFileSync(npmrcPath, 'utf8')
+    : ''
+
+  if (
+    /^shamefullyHoist:\s*true\b/m.test(workspace) ||
+    /^shamefully-hoist\s*=\s*true\b/m.test(npmrc)
+  ) {
+    return false
+  }
+
+  const yamlList = /^publicHoistPattern:[ \t]*\n((?:[ \t]+-.*\n?)*)/m.exec(
+    workspace,
+  )
+  const patterns = [
+    ...Array.from(
+      yamlList?.[1].matchAll(/^\s*-\s*['"]?([^'"\s]+)['"]?/gm) ?? [],
+      (match) => match[1],
+    ),
+    ...Array.from(
+      npmrc.matchAll(/^public-hoist-pattern(?:\[\])?\s*=\s*(\S+)/gm),
+      (match) => match[1],
+    ),
+  ]
+
+  return !patterns.some((pattern) => ['@cedarjs/*', '*'].includes(pattern))
+}
+
 async function main() {
   // Set by any check that has found something the user must fix before
   // upgrading. Checked once at the end so every problem gets reported in one
   // pass, rather than the user fixing one and rerunning to find the next
   let shouldAbort = false
+
+  const missingPrismaPackages = findMissingPrismaPackages()
+
+  if (missingPrismaPackages.length > 0) {
+    shouldAbort = true
+
+    const prismaVersion = findSupportedPrismaVersion()
+    const versionText = prismaVersion
+      ? `version ${prismaVersion}, the Prisma version this CedarJS release\n` +
+        'supports'
+      : 'the Prisma version this CedarJS release supports (see the\n' +
+        'release notes)'
+
+    fail('Prisma packages your project needs to declare', [
+      'CedarJS uses the prisma and @prisma/client packages your project\n' +
+        'installs, so your project has to declare them. Add:\n\n' +
+        missingPrismaPackages.map((line) => `  ${line}`).join('\n'),
+      `Use ${versionText}. Then run the upgrade again. Later upgrades keep\n` +
+        'these packages on the version CedarJS supports.',
+    ])
+  }
 
   const { sets: setsWithWrapperProps, unparsedFiles } =
     await findSetsWithWrapperProps()
@@ -317,6 +518,42 @@ async function main() {
     ])
   }
 
+  const jestTypesConfigs = findJestTypesConfigs()
+
+  if (jestTypesConfigs.length > 0) {
+    warn('Test globals are typed by vitest/globals', [
+      'Cedar runs your tests with Vitest, and the types for `describe`, `it`,\n' +
+        '`expect` and `vi` now come from `vitest/globals`. These config files\n' +
+        'still load them from Jest through `"jest"` in `compilerOptions.types`:\n\n' +
+        jestTypesConfigs.map((file) => `  ${file}`).join('\n'),
+      'The generated test globals no longer declare `vi`, so type-checking\n' +
+        "your tests fails with `Cannot find name 'vi'` until you update them.\n" +
+        'Tests still run.',
+      'In each file, replace `"jest"` with `"vitest/globals"`, and remove the\n' +
+        '`typeRoots` option, which stops TypeScript from finding\n' +
+        '`vitest/globals`. In the web side config, also replace `"jest-dom"`\n' +
+        'with `"@testing-library/jest-dom/vitest"`. Keep any other entries in\n' +
+        '`types`. For the web side:\n\n' +
+        '    "types": ["vitest/globals", "@testing-library/jest-dom/vitest"],',
+      'Make sure `vitest` is in the devDependencies of api/package.json and\n' +
+        'web/package.json, so `vitest/globals` can be resolved from each side.\n' +
+        'New projects declare it in both.',
+    ])
+  }
+
+  if (isMissingCedarPublicHoist()) {
+    warn('Cedar packages are not hoisted by pnpm', [
+      'pnpm only links your direct dependencies into the root `node_modules`.\n' +
+        'The type definitions Cedar generates in `.cedar/types` import\n' +
+        '`@cedarjs/*` packages from there, so TypeScript cannot resolve them.\n' +
+        'Types they augment, like `AvailableRoutes`, silently become `any` or\n' +
+        'go missing.',
+      'Add this to pnpm-workspace.yaml and run `pnpm install`:\n\n' +
+        '    publicHoistPattern:\n' +
+        "      - '@cedarjs/*'",
+    ])
+  }
+
   const filesMissingChangePassword: string[] = []
 
   if (fs.existsSync(projectPaths.api.functions)) {
@@ -365,6 +602,36 @@ async function main() {
         '    },',
       'See https://cedarjs.com/docs/auth/dbauth#changepassword for all\n' +
         'options.',
+    ])
+  }
+
+  const filesWithRedwoodUserType: string[] = []
+
+  if (fs.existsSync(projectPaths.api.lib)) {
+    for await (const file of fs.promises.glob(apiFunctionPatterns, {
+      cwd: projectPaths.api.lib,
+      exclude,
+    })) {
+      const filePath = path.join(projectPaths.api.lib, file)
+      const content = await fs.promises.readFile(filePath, 'utf8')
+
+      if (/\bRedwoodUser\b/.test(content)) {
+        filesWithRedwoodUserType.push(
+          path.relative(projectPaths.base, filePath),
+        )
+      }
+    }
+  }
+
+  if (filesWithRedwoodUserType.length > 0) {
+    info('Outdated type name detected: RedwoodUser', [
+      'Found RedwoodUser in: ' + filesWithRedwoodUserType.join(', '),
+      'The auth setup templates now name the getCurrentUser return type\n' +
+        'CedarUser instead of RedwoodUser. This is just a local type alias\n' +
+        'in your own api/src/lib/auth.ts (not exported from any Cedar\n' +
+        'package), so nothing breaks if you keep the old name. Renaming it\n' +
+        'to CedarUser keeps your project in sync with the current Cedar\n' +
+        'templates.',
     ])
   }
 

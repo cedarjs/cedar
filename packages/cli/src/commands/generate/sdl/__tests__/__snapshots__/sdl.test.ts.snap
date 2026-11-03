@@ -127,7 +127,13 @@ export const createUser = ({ input }) => {
 
 export const updateUser = ({ id, input }) => {
   return db.user.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      email: input.email ?? undefined,
+      isAdmin: input.isAdmin ?? undefined,
+    },
     where: { id },
   })
 }
@@ -140,7 +146,7 @@ export const deleteUser = ({ id }) => {
 
 export const User = {
   profiles: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).profiles()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).profiles()
   },
 }
 ",
@@ -181,7 +187,7 @@ exports[`handler > can be called with PascalCase model name 6`] = `
 // Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
 // If you edit this file, the hash below will stop matching and you'll
 // need to pass \`--force\` to overwrite it.
-// @cedar-generator-stub-hash 27591029bcfaf860
+// @cedar-generator-stub-hash 8a8f9f3702ffa843
 
 import { db } from 'src/lib/db'
 
@@ -197,7 +203,7 @@ export const userProfile = ({ id }) => {
 
 export const UserProfile = {
   user: (_obj, { root }) => {
-    return db.userProfile.findUnique({ where: { id: root?.id } }).user()
+    return db.userProfile.findUniqueOrThrow({ where: { id: root.id } }).user()
   },
 }
 ",
@@ -336,7 +342,12 @@ export const createCustomData = ({ input }) => {
 
 export const updateCustomData = ({ id, input }) => {
   return db.customData.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      data: input.data ?? undefined,
+    },
     where: { id },
   })
 }
@@ -478,7 +489,13 @@ export const createUser = ({ input }) => {
 
 export const updateUser = ({ id, input }) => {
   return db.user.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      email: input.email ?? undefined,
+      isAdmin: input.isAdmin ?? undefined,
+    },
     where: { id },
   })
 }
@@ -491,7 +508,7 @@ export const deleteUser = ({ id }) => {
 
 export const User = {
   profiles: (_obj, { root }) => {
-    return db.user.findUnique({ where: { id: root?.id } }).profiles()
+    return db.user.findUniqueOrThrow({ where: { id: root.id } }).profiles()
   },
 }
 ",
@@ -532,7 +549,7 @@ exports[`handler > can be called with camelCase model name 6`] = `
 // Run \`cedar generate sdl UserProfile\` to replace this stub with the real thing.
 // If you edit this file, the hash below will stop matching and you'll
 // need to pass \`--force\` to overwrite it.
-// @cedar-generator-stub-hash 27591029bcfaf860
+// @cedar-generator-stub-hash 8a8f9f3702ffa843
 
 import { db } from 'src/lib/db'
 
@@ -548,7 +565,7 @@ export const userProfile = ({ id }) => {
 
 export const UserProfile = {
   user: (_obj, { root }) => {
-    return db.userProfile.findUnique({ where: { id: root?.id } }).user()
+    return db.userProfile.findUniqueOrThrow({ where: { id: root.id } }).user()
   },
 }
 ",
@@ -687,7 +704,12 @@ export const createCustomData = ({ input }) => {
 
 export const updateCustomData = ({ id, input }) => {
   return db.customData.update({
-    data: input,
+    data: {
+      ...input,
+      // Every field in the GraphQL input is nullable, but Prisma doesn't
+      // accept null for required fields. undefined leaves the field unchanged
+      data: input.data ?? undefined,
+    },
     where: { id },
   })
 }

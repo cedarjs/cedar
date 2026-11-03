@@ -1,6 +1,7 @@
 import type {
   EditPostById,
   UpdatePostInput,
+  UpdatePostMutation,
   UpdatePostMutationVariables,
 } from 'types/graphql'
 
@@ -28,7 +29,7 @@ export const QUERY: TypedDocumentNode<EditPostById> = gql`
 `
 
 const UPDATE_POST_MUTATION: TypedDocumentNode<
-  EditPostById,
+  UpdatePostMutation,
   UpdatePostMutationVariables
 > = gql`
   mutation UpdatePostMutation($id: Int!, $input: UpdatePostInput!) {
@@ -43,6 +44,8 @@ const UPDATE_POST_MUTATION: TypedDocumentNode<
 `
 
 export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Post not found</div>
 
 export const Failure = ({ error }: CellFailureProps) => (
   <div className="rw-cell-error">{error?.message}</div>
@@ -59,16 +62,14 @@ export const Success = ({ post }: CellSuccessProps<EditPostById>) => {
     },
   })
 
-  const onSave = (input: UpdatePostInput, id: EditPostById['post']['id']) => {
-    updatePost({ variables: { id, input } })
+  const onSave = (input: UpdatePostInput) => {
+    updatePost({ variables: { id: post.id, input } })
   }
 
   return (
     <div className="rw-segment">
       <header className="rw-segment-header">
-        <h2 className="rw-heading rw-heading-secondary">
-          Edit Post {post?.id}
-        </h2>
+        <h2 className="rw-heading rw-heading-secondary">Edit Post {post.id}</h2>
       </header>
       <div className="rw-segment-main">
         <PostForm post={post} onSave={onSave} error={error} loading={loading} />

@@ -283,9 +283,13 @@ Office types that can carry macros must be listed exactly too, whether detected 
 
 A file a profile accepts as one type is never accepted as another because its bytes say so: a `.docx` is a ZIP, but a profile that allows only `application/zip` refuses it, because its bytes say it is a Word document.
 
+To accept photos from phones, list `image/heic` and `image/heif`, and `image/heic-sequence` too: some HEIC files have a sequence brand (bursts, animations), and their bytes say `image/heic-sequence` even when the browser sent `image/heic`.
+
+`checkContentType(bytes, accept, claimedType)` applies the same rules and says why a file is refused: it returns `{ contentType }`, or `{ rejected: { detected, claimed } }` with the type the bytes are (`null` if they weren't recognised) and the type the client claimed. `POST /upload/fs` uses it to name both in its error, for example `File 'photo.heic' was sent as 'image/heic', but its content is 'image/heic-sequence', which is not in the allowedMimeTypes of upload profile 'photos'. Add 'image/heic-sequence' to accept it.`
+
 ### Where uploads check
 
-- **`POST /upload/fs`** checks every file with `acceptedContentType()` against the profile and stores it under the type returned.
+- **`POST /upload/fs`** checks every file with `checkContentType()` against the profile and stores it under the type returned.
 - **Direct uploads to S3** never pass through your api, so the bytes are checked when the upload is settled, by `confirmUpload` or the S3 webhook (see [Confirming S3 uploads](#confirming-s3-uploads)). The object's head (and, for a ZIP, its tail) is read with a ranged GET and must be the type the client declared when it asked for the upload URL. That type was checked against the profile then, with the same exceptions as above. The bytes are checked against the declared type, not the profile, because the `Upload` row doesn't record which profile it was made for. A mismatch fails the upload and deletes the object.
 - **Database targets** go through the `uploadFile` service the setup command generates, which calls `acceptedContentType()` on the decoded bytes and stores the type it returns.
 
@@ -362,6 +366,10 @@ export const MonthlyReportJob = async ({ month }: { month: string }) => {
 
 Pass `userId` when the file belongs to someone, so the ownership checks that guard user uploads apply to it too, and `organizationId` in multi-tenant apps.
 
+Thumbnails and previews are better kept as [derived files](#derived-files-thumbnails-previews-and-other-variants), which Cedar makes once, keeps track of, and deletes with their source.
+
+When you make a file from an upload, a thumbnail of a photo or a preview of a PDF, consider decoding the upload in a locked-down child process with [`@cedarjs/locked-child`](https://github.com/cedarjs/locked-child), so a crafted file that exploits a JavaScript decoder (pdf.js, say) can't reach your secrets. A native decoder (sharp's libvips) isn't limited by Node's file and network permissions: there the child process still keeps your environment variables out of reach, and full isolation needs an OS-level sandbox. See [Untrusted Files](security.md#untrusted-files).
+
 ## Deleting files
 
 Deleting an `Upload` row does nothing to the bytes, by design. `deleteFile()` deletes the object first and then the row, so a crash in between leaves a visible row rather than an unreachable object, and a missing object is tolerated, so it's safe to retry.
@@ -385,6 +393,185 @@ export const deleteReport = async ({ id }: { id: string }) => {
   return db.report.delete({ where: { id } })
 }
 ```
+
+## Derived files: thumbnails, previews and other variants
+
+:::caution Experimental
+
+Derived files are experimental. The API may change until a second app, or a different kind of file such as video, has used it.
+
+:::
+
+A photo's thumbnails, a PDF's drawn first page, a video's poster frame: files made from another file are **derived files**, and each kind (`thumb-164`, `preview`) is a **variant**. The file they're made from can be an upload, or a file that lives somewhere else entirely, such as a document your app fetches from a third-party API when it needs it. Your app writes the function that makes each variant; Cedar keeps the bookkeeping:
+
+- a derived file is made the first time it's asked for, by one process at a time
+- a generator that throws is tried again a few times over several hours; one that returns `null` is remembered as failed
+- `resetVariants('preview')` clears every `preview` after you fix its generator, so each is made again when next asked for
+- `deleteFor(source)` deletes a source file's derived files, and `deleteFile()` does it for you for uploads
+
+Each made file is an ordinary `Upload` row, stored on a target like any other file. `@cedarjs/uploads` makes no images itself: a generator can use sharp, pdf.js, ffmpeg or a third-party service, and the package depends on none of them. A generator decodes bytes someone else made, so the advice on [decoding in a sandbox](#server-generated-files) applies to it too.
+
+For image thumbnails and resizes, [`@cedarjs/uploads-sharp`](https://github.com/cedarjs/uploads-sharp) has a ready-made generator built on sharp: `sharpVariant({ width: 164 })` is a 164 × 164 WebP cropped from the middle, turned the right way up and written without metadata. Install it and sharp on your api side with `yarn workspace api add @cedarjs/uploads-sharp sharp`. Its README lists the options, and shows how to handle HEIC photos and how to run sharp in a sandbox.
+
+### Schema
+
+Add a `DerivedFile` model to keep track of derived files, then create a migration. The `Upload` model stays as it is.
+
+```prisma title="api/db/schema.prisma"
+model DerivedFile {
+  id        String   @id @default(cuid())
+  /// The source file, such as "upload:<id>" or "remote:<org>/<doc>"
+  source    String
+  /// Name of the variant, such as "thumb-164" or "preview"
+  variant   String
+  /// The made file's Upload row
+  uploadId  String?
+  status    String   @default("pending")
+  claimId   String?
+  attempts  Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([source, variant])
+}
+```
+
+The unique index is what lets only one process start making a given file. `source` is a plain string, not a relation, because the source doesn't have to be a row in your database. That means nothing in the database stops a source file from going away while its derived files stay behind: call `deleteFor()` when you delete a source file. For uploads, `deleteFile()` does that when you pass it `derivedFiles`.
+
+Your own models keep referencing only the original file. They need no columns for thumbnails, no "thumbnail failed at" timestamp, and no relation per variant.
+
+### Declaring derived files
+
+```ts title="api/src/lib/derivedFiles.ts"
+import { defineDerivedFiles, uploadSource } from '@cedarjs/uploads'
+import type { DerivedFileGenerator } from '@cedarjs/uploads'
+import sharp from 'sharp'
+
+import { db } from 'src/lib/db'
+import { targets } from 'src/lib/uploads'
+
+const square =
+  (size: number): DerivedFileGenerator =>
+  async ({ readSource }) => ({
+    data: await sharp((await readSource()).data)
+      .resize(size, size)
+      .webp()
+      .toBuffer(),
+    mimeType: 'image/webp',
+  })
+
+export const derivedFiles = defineDerivedFiles({
+  db,
+  targets,
+  // Where made files are stored, unless a variant names its own target
+  target: targets.thumbnails,
+  sources: {
+    upload: uploadSource({ db, targets }),
+    // Files that live elsewhere: read() fetches one by your reference
+    remote: {
+      key: (ref: RemoteDocRef) => `${ref.org}/${ref.docId}`,
+      read: async (ref: RemoteDocRef) => {
+        const doc = await fetchRemoteDocument(ref)
+        return (
+          doc && {
+            data: doc.bytes,
+            filename: doc.name,
+            organizationId: ref.org,
+          }
+        )
+      },
+    },
+  },
+  variants: {
+    'thumb-164': square(164),
+    'thumb-328': square(328),
+    preview: { generate: drawFirstPage, target: targets.previews },
+  },
+})
+```
+
+A source has a `read()` that returns the file (`{ data, mimeType?, filename?, userId?, organizationId? }`), or `null` when it doesn't exist, and a `key()` that turns your reference into a stable string. References that are strings already don't need `key()`. `uploadSource()` reads an upload from whichever target holds it and gives the made files the upload's owner and organization; an id with no `Upload` row reads as `null`. Whether a viewer may see a derived file is for your code to check, as it is for any upload.
+
+A generator receives `source` (its name, its key, and your reference), the variant's name, and `readSource()`, which reads the source file once however often you call it. It returns `{ data, mimeType, filename? }`, or `null` when this source can't have this variant (a file type it doesn't handle).
+
+### Failures
+
+- **A thrown error is temporary.** A network error or a service that is down is reported to `onError` (which logs by default), and the first request after the next of `retryDelays` has passed tries again. By default that is five retries, 1 minute, 5 minutes, 30 minutes, 2 hours and 6 hours after the attempt before, so an outage of a few hours at a third-party source heals by itself, and a file that still can't be made is remembered as failed about 8.5 hours after the first attempt. Pass `retryDelays: [...]` (in milliseconds, one retry per entry) to change it, or `[]` to never retry.
+- **`null` from a generator is permanent**: this source can't have this variant. So is a made file that can't be stored (an invalid MIME type, or too big for a database target).
+- **Failed stays failed** until you call `resetVariants()`.
+- **A source file that doesn't exist is an error, not a failure.** When a source's `read()` returns `null`, such as for an upload id with no row, `acquireVariant()` and `acquireVariantData()` throw an `UploadError` with code `NOT_FOUND` that names the source key (`upload:<id>`), and nothing is recorded: no `DerivedFile` row is left, so a typo or a deleted file isn't remembered as failed, and a later acquire tries again. Catch it where a source may have been deleted. Only an attempt reads the source, so a file that was already made, or already failed, is reported as such until you delete it with `deleteFor()`.
+
+### Acquiring derived files
+
+```ts
+const result = await derivedFiles.acquireVariant(
+  { upload: photo.uploadId },
+  'thumb-164'
+)
+
+if (result.status === 'completed') {
+  // result.upload is the made file's Upload row
+}
+
+// The row and its bytes, or null when not ready or failed
+const read = await derivedFiles.acquireVariantData({ remote: ref }, 'preview')
+
+// Only if it has already been made; never makes anything
+const made = await derivedFiles.findVariant({ upload: id }, 'thumb-164')
+const byPhoto = await derivedFiles.findVariants(
+  photos.map((photo) => ({ upload: photo.uploadId })),
+  'thumb-164'
+)
+```
+
+`acquireVariant()` returns `completed` with the made file's `Upload` row, `failed`, or `pending`, and throws `NOT_FOUND` for a source file that doesn't exist. Pending means it isn't ready: another process is making it right now, or an attempt failed and is waiting for its retry. It doesn't wait for another process; show a placeholder and ask again later. Within one process, concurrent calls for the same file share one attempt.
+
+The made file is an ordinary `Upload` row, so the `@withSignedUrl` and `@withDataUri` directives work on its id. On a list page, use `findVariants()` so two queries cover every row and nothing is made while the page waits, and make missing files ahead of time from a job:
+
+```ts title="api/src/jobs/ThumbnailJob/ThumbnailJob.ts"
+export const ThumbnailJob = jobs.createJob({
+  queue: 'default',
+  perform: async ({ uploadId }: { uploadId: string }) => {
+    await derivedFiles.acquireVariant({ upload: uploadId }, 'thumb-164')
+    await derivedFiles.acquireVariant({ upload: uploadId }, 'thumb-328')
+  },
+})
+```
+
+An attempt holds a claim on its `DerivedFile` row while it runs. A claim older than `claimTimeout` (ten minutes) is treated as left behind by a process that died, and the next request starts a new attempt. Claims and retries use absolute timestamps, so time zones don't matter, but your servers' clocks should be roughly in sync (NTP).
+
+### Remaking derived files
+
+After fixing a generator, clear every file of that variant:
+
+```ts title="scripts/redrawPreviews.ts"
+import { derivedFiles } from 'api/src/lib/derivedFiles'
+
+export default async () => {
+  console.info(await derivedFiles.resetVariants('preview')) // { deleted, errors }
+}
+```
+
+Made and failed files alike are deleted, and each is made again the next time it's acquired. To make them right away, acquire them from a script or a job.
+
+### Deleting a source and its derived files
+
+Pass `derivedFiles` to `deleteFile()` and it deletes the upload's derived files (bytes, `Upload` rows and bookkeeping) with it. It looks for them both before and after deleting the upload, so a derived file another request started making in between is deleted too:
+
+```ts
+await deleteFile(resolveTarget(targets, upload.target), {
+  db,
+  upload,
+  derivedFiles,
+})
+```
+
+For other sources, call `deleteFor()` once the source file is gone, for example when your app learns a third-party document was deleted. Calling it after, not before, means an attempt that read the file just before it went away is caught too:
+
+```ts
+await derivedFiles.deleteFor({ remote: ref })
+```
+
+Cedar doesn't sweep for derived files whose source went away without a `deleteFor()`: only your app knows how to ask a third party which files still exist. If you need a sweep, write it as a job that reads your `DerivedFile` rows for that source, checks them against the source, and calls `deleteFor()` for the gone ones.
 
 ## Cleaning up stale uploads
 

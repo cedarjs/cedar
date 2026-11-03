@@ -463,16 +463,16 @@ parent's data, you can avoid the second request entirely by exporting a
 
 ```jsx title="web/src/components/AuthorCell/AuthorCell.jsx"
 export const FRAGMENT = gql`
-  fragment AuthorCell_author on User {
+  fragment AuthorCellFragment on User {
     id
     email
     fullName
   }
 `
 
-export const Success = ({ author }) => (
+export const Success = ({ user }) => (
   <span>
-    {author.fullName} ({author.email})
+    {user.fullName} ({user.email})
   </span>
 )
 ```
@@ -481,10 +481,10 @@ export const Success = ({ author }) => (
 <TabItem value="ts" label="TypeScript">
 
 ```tsx title="web/src/components/AuthorCell/AuthorCell.tsx"
-import type { AuthorCell_author } from 'types/graphql'
+import type { AuthorCellFragment } from 'types/graphql'
 
 export const FRAGMENT = gql`
-  fragment AuthorCell_author on User {
+  fragment AuthorCellFragment on User {
     id
     email
     fullName
@@ -492,12 +492,12 @@ export const FRAGMENT = gql`
 `
 
 interface SuccessProps {
-  author: AuthorCell_author
+  user: AuthorCellFragment
 }
 
-export const Success = ({ author }: SuccessProps) => (
+export const Success = ({ user }: SuccessProps) => (
   <span>
-    {author.fullName} ({author.email})
+    {user.fullName} ({user.email})
   </span>
 )
 ```
@@ -506,8 +506,8 @@ export const Success = ({ author }: SuccessProps) => (
 </Tabs>
 
 The parent Cell spreads the fragment in its `QUERY` and passes the matching data
-object down as a prop named after the fragment &mdash; `AuthorCell_author`
-means the Cell takes (and `Success` receives) an `author` prop:
+object down as a prop. The fragment is defined `on User`, so the Cell takes (and
+`Success` receives) a `user` prop:
 
 <Tabs groupId="js-ts">
 <TabItem value="js" label="JavaScript">
@@ -522,7 +522,7 @@ export const QUERY = gql`
       title
       body
       author {
-        ...AuthorCell_author
+        ...AuthorCellFragment
       }
     }
   }
@@ -531,7 +531,7 @@ export const QUERY = gql`
 export const Success = ({ post }) => (
   <article>
     <h2>{post.title}</h2>
-    <AuthorCell author={post.author} />
+    <AuthorCell user={post.author} />
     <div>{post.body}</div>
   </article>
 )
@@ -560,7 +560,7 @@ export const QUERY: TypedDocumentNode<
       title
       body
       author {
-        ...AuthorCell_author
+        ...AuthorCellFragment
       }
     }
   }
@@ -571,7 +571,7 @@ export const Success = ({
 }: CellSuccessProps<FindBlogPostQuery, FindBlogPostQueryVariables>) => (
   <article>
     <h2>{post.title}</h2>
-    <AuthorCell author={post.author} />
+    <AuthorCell user={post.author} />
     <div>{post.body}</div>
   </article>
 )
@@ -587,13 +587,22 @@ enough (importing the child Cell to render it is what pulls the fragment in).
 
 A few things to know about fragment Cells:
 
-- The data prop's name is derived from the fragment name: for a name with an
-  underscore, like `AuthorCell_author`, it's the part after the last underscore
-  (`author`). Otherwise it's the camelCased name of the type the fragment is
-  defined on (`on User` becomes `user`). The parent passes the data in with
-  that prop, and `Success` (and `Empty`) receive the data as that same prop.
+- The data prop's name comes from the fragment name:
+  - For a fragment named after the Cell, like `AuthorCellFragment`, it's the
+    camelCased name of the type the fragment is defined on (`on User` becomes
+    `user`).
+  - To pick a different name, add it to the fragment name in PascalCase:
+    `AuthorCellFragmentAuthor` in `AuthorCell` gives an `author` prop.
+  - A fragment name with an underscore, like `AuthorCell_author`, gives the part
+    after the last underscore (`author`). This takes precedence over the other
+    rules. {/* TODO(fragment-underscore): Remove this bullet when the underscore rule is removed */}
+  - Any other fragment name gives the camelCased type name.
+
+  The parent passes the data in with that prop, and `Success` (and `Empty`)
+  receive the data as that same prop.
+
 - In TypeScript projects, a type named exactly like the fragment
-  (`AuthorCell_author` in the example above) is generated in `types/graphql`,
+  (`AuthorCellFragment` in the example above) is generated in `types/graphql`,
   and the Cell's data prop is typed with it. So if the parent's `QUERY` is
   missing the fragment spread (or the spread doesn't cover all the fields),
   you'll get a TypeScript error right where the fragment Cell is rendered.
@@ -608,8 +617,8 @@ A few things to know about fragment Cells:
   renders (it falls back to the data object it was passed), but it only updates
   when the parent re-renders.
 - This works for lists too: a parent Cell that fetches
-  `posts { author { ...AuthorCell_author } }` can render one
-  `<AuthorCell author={post.author} />` per post, still with a single request.
+  `posts { author { ...AuthorCellFragment } }` can render one
+  `<AuthorCell user={post.author} />` per post, still with a single request.
 
 ## Importing a Cell
 

@@ -29,10 +29,8 @@ import {
 } from '@cedarjs/babel-config'
 import { getAsyncStoreInstance } from '@cedarjs/context/dist/store'
 import { createGraphQLServer } from '@cedarjs/graphql-server'
-import type {
-  CedarGraphQLServer,
-  GraphQLYogaOptions,
-} from '@cedarjs/graphql-server'
+import type { CedarGraphQLServer } from '@cedarjs/graphql-server'
+import type { GraphQLYogaOptions } from '@cedarjs/graphql-server/types'
 import { applyGqlormInject } from '@cedarjs/internal/dist/build/api-graphql-transforms.js'
 import {
   createPrismaClientFileMatcher,

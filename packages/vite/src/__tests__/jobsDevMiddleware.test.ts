@@ -1,3 +1,5 @@
+import { hostname } from 'node:os'
+
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { JobNotFoundError } from '@cedarjs/jobs'
@@ -59,6 +61,7 @@ describe('startJobsDevWorkers', () => {
     const jobsManager = {
       workers: [],
       logger: makeLogger(),
+      syncSchedules: vi.fn(),
       createWorker: vi.fn(),
     }
     const viteServer = makeViteServer({ jobs: jobsManager })
@@ -77,6 +80,7 @@ describe('startJobsDevWorkers', () => {
         { adapter: 'prisma', queue: ['critical'] },
       ],
       logger: makeLogger(),
+      syncSchedules: vi.fn(),
       createWorker: vi.fn(({ processName }: { processName: string }) => {
         const worker = makeFakeWorker(processName)
         createdWorkers.push(worker)
@@ -90,9 +94,9 @@ describe('startJobsDevWorkers', () => {
     expect(pool).not.toBeNull()
     expect(jobsManager.createWorker).toHaveBeenCalledTimes(3)
     expect(createdWorkers.map((w) => w.processName)).toEqual([
-      'ud-jobs.default.0',
-      'ud-jobs.default.1',
-      'ud-jobs.critical.0',
+      `ud-jobs.default.0 host:${hostname()} pid:${process.pid}`,
+      `ud-jobs.default.1 host:${hostname()} pid:${process.pid}`,
+      `ud-jobs.critical.0 host:${hostname()} pid:${process.pid}`,
     ])
     createdWorkers.forEach((w) => expect(w.run).toHaveBeenCalledTimes(1))
 
@@ -106,6 +110,7 @@ describe('startJobsDevWorkers', () => {
     const jobsManager = {
       workers: [{ adapter: 'prisma', queue: 'default', count: 1 }],
       logger: makeLogger(),
+      syncSchedules: vi.fn(),
       createWorker: vi.fn(({ processName }: { processName: string }) =>
         makeFakeWorker(processName),
       ),
@@ -142,5 +147,58 @@ describe('startJobsDevWorkers', () => {
     ).rejects.toThrow(JobNotFoundError)
 
     await pool!.stop()
+  })
+
+  describe('declared schedules', () => {
+    const managerWithOneWorker = () => ({
+      workers: [{ adapter: 'prisma', queue: 'default', count: 1 }],
+      logger: makeLogger(),
+      syncSchedules: vi.fn(),
+      createWorker: vi.fn(({ processName }: { processName: string }) =>
+        makeFakeWorker(processName),
+      ),
+    })
+
+    it('syncs them before the workers start', async () => {
+      const jobsManager = managerWithOneWorker()
+      jobsManager.syncSchedules.mockImplementation(async () => {
+        expect(jobsManager.createWorker).not.toHaveBeenCalled()
+      })
+      const viteServer = makeViteServer({ jobs: jobsManager })
+
+      const pool = await startJobsDevWorkers(viteServer)
+
+      expect(jobsManager.syncSchedules).toHaveBeenCalledOnce()
+      expect(jobsManager.createWorker).toHaveBeenCalledOnce()
+      await pool!.stop()
+    })
+
+    it('logs a failed sync and still starts the workers', async () => {
+      const jobsManager = managerWithOneWorker()
+      const error = new Error('Invalid cron')
+      jobsManager.syncSchedules.mockRejectedValue(error)
+      const viteServer = makeViteServer({ jobs: jobsManager })
+
+      const pool = await startJobsDevWorkers(viteServer)
+
+      expect(jobsManager.logger.error).toHaveBeenCalledWith(
+        '[CedarJS Jobs] Could not sync the declared schedules',
+        error,
+      )
+      expect(jobsManager.createWorker).toHaveBeenCalledOnce()
+      await pool!.stop()
+    })
+
+    it('wires a loadAllJobs override through the vite server', async () => {
+      const viteServer = makeViteServer({ jobs: managerWithOneWorker() })
+      const setOverridesSpy = vi.spyOn(jobsModule, 'setJobLoaderOverrides')
+
+      const pool = await startJobsDevWorkers(viteServer)
+      const overrides = setOverridesSpy.mock.calls[0][0]!
+
+      // The mocked `api/src/jobs` doesn't exist, so there are no jobs
+      expect(await overrides.loadAllJobs?.()).toEqual([])
+      await pool!.stop()
+    })
   })
 })

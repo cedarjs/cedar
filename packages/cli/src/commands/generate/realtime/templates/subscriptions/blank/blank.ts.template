@@ -39,15 +39,15 @@ export type Publish${typeName}ChannelType = PubSub<Publish${typeName}Channel>
 const ${subscriptionName}Subscription = {
   ${subscriptionName}: {
     subscribe: (
-      _,
-      { id },
+      _: unknown,
+      { id }: { id: string },
       { pubSub }: { pubSub: Publish${typeName}ChannelType }
     ) => {
       logger.debug({ id }, '${name} subscription')
 
       return pubSub.subscribe('${typeName}', id)
     },
-    resolve: (payload) => {
+    resolve: (payload: Publish${typeName}Channel['${typeName}'][1]) => {
       logger.debug({ payload }, '${name} subscription resolve')
 
       return payload

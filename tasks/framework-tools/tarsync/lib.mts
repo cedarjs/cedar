@@ -336,13 +336,13 @@ export async function updateResolutions(projectPath: string) {
     // hoisted by yarn but need to be explicit for pnpm's strict isolation.
     const webPkgPath = path.join(projectPath, 'web/package.json')
     const webPkg = JSON.parse(await fs.promises.readFile(webPkgPath, 'utf-8'))
-    webPkg.dependencies['graphql-tag'] = '2.12.6'
-    webPkg.dependencies['react-hook-form'] = '7.74.0'
+    webPkg.dependencies['graphql-tag'] = '2.12.7'
+    webPkg.dependencies['react-hook-form'] = '7.91.0'
     await fs.promises.writeFile(webPkgPath, JSON.stringify(webPkg, null, 2))
 
     const apiPkgPath = path.join(projectPath, 'api/package.json')
     const apiPkg = JSON.parse(await fs.promises.readFile(apiPkgPath, 'utf-8'))
-    apiPkg.dependencies['@prisma/client'] = '7.8.0'
+    apiPkg.dependencies['@prisma/client'] = '7.10.1'
     await fs.promises.writeFile(apiPkgPath, JSON.stringify(apiPkg, null, 2))
 
     updatedPackageJson = { ...projectPackageJson }

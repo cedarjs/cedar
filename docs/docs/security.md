@@ -79,6 +79,14 @@ Since each of these webhooks will call a function endpoint in your CedarJS api, 
 
 For details on how to keep your incoming webhooks secure and how to sign your outgoing webhooks, please see [Webhooks](webhooks.md).
 
+## Untrusted Files
+
+Parsing a file you didn't create, like an uploaded photo, a third party's PDF or an archive, runs a large parser (libvips, pdf.js, an unpacker) on bytes an attacker may have crafted to exploit a bug in it. In your api process, such an exploit can reach everything: `DATABASE_URL` and your keys in the environment, `.env` on disk, every stored upload, your database over the network.
+
+[`@cedarjs/locked-child`](https://github.com/cedarjs/locked-child) runs that work in a locked-down child process instead. The child gets the input on stdin and returns its result on stdout. It gets none of your app's environment variables (on Windows, a few system ones such as `PATH` remain), can read only its own script, the packages you name with their dependencies, and the paths you allow, can't write files or start processes, has no network, and is killed at a heap cap, a timeout or an output cap. It works in every kind of build, including `cedar build --ud` for Netlify and Vercel, with the Vite plugin it comes with.
+
+It builds on Node's permission model and is defense in depth, not a security boundary. Native code isn't limited by the permission model at all: with a native addon (sharp, for one), a memory-safety bug in the native decoder can still read files and open connections, and what holds is the empty environment, the separate process and its limits. Its README has an example, the setup, and exactly what it does and doesn't protect against.
+
 ## Signed Tokens
 
 Some values have to leave your api side and come back through an untrusted channel: the `state` parameter of an OAuth flow, a confirmation or unsubscribe link in an email, a short-lived token that grants one specific action. Rather than storing a nonce somewhere and checking it later, you can mint a token that carries its own claims and expiry and is signed with a secret only your app knows.

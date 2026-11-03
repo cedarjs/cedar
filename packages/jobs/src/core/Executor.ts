@@ -10,6 +10,7 @@ import {
   DEFAULT_DELETE_SUCCESSFUL_JOBS,
   DEFAULT_LOGGER,
   MAX_BACKOFF_MS,
+  SCHEDULE_KEY_PREFIX,
 } from '../consts.js'
 import {
   AdapterRequiredError,
@@ -206,13 +207,20 @@ export class Executor {
    * called only after `failure()` has recorded that (a throwing `failure()`
    * is logged by `#adapterWrite()` instead). A permanently failed recurring
    * (cron) job is not rescheduled, so its schedule stops until the job is
-   * scheduled again. That is logged at error level, together with how to
-   * restart the schedule
+   * scheduled again (a declared schedule: until the workers restart and sync
+   * it). That is logged at error level, together with how to restart the
+   * schedule
    */
   #logPermanentFailure(reason: string) {
     const message = `[CedarJS Jobs] Failed job ${this.jobIdentifier}: ${reason}`
 
-    if (this.job.cron) {
+    if (this.job.cron && this.job.key?.startsWith(SCHEDULE_KEY_PREFIX)) {
+      this.logger.error(
+        this.job,
+        `${message}. Its declared schedule (cron: '${this.job.cron}') has ` +
+          `stopped until the job workers restart, which recreates it`,
+      )
+    } else if (this.job.cron) {
       this.logger.error(
         this.job,
         `${message}. Its recurring schedule (cron: '${this.job.cron}') has ` +

@@ -29,6 +29,7 @@ import { buildCedarApp } from '@cedarjs/vite/build'
 
 import { generatePrismaCommand } from '../../lib/generatePrismaClient.js'
 import { getPaths, getConfig } from '../../lib/index.js'
+import { workspacesForTelemetry } from '../../lib/telemetryWorkspaces.js'
 
 import { buildPackagesTask } from './buildPackagesTask.js'
 
@@ -132,11 +133,11 @@ export const handler = async ({
 }: BuildHandlerOptions) => {
   recordTelemetryAttributes({
     command: 'build',
-    workspace: JSON.stringify(workspace),
+    workspace: workspacesForTelemetry(workspace),
     verbose,
     prisma,
     prerender,
-    apiRootPath,
+    apiRootPath: apiRootPath !== undefined,
   })
 
   const cedarPaths: Paths = getPaths()

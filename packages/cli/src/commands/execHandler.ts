@@ -1,8 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { context } from '@opentelemetry/api'
-import { suppressTracing } from '@opentelemetry/core'
 import { Listr } from 'listr2'
 import type { ListrTask } from 'listr2'
 import { Parser } from 'yargs/helpers'
@@ -177,11 +175,8 @@ export const handler = async (args: ExecOptions) => {
     renderer: args.silent ? 'silent' : 'verbose',
   })
 
-  // Prevent user project telemetry from within the script from being recorded
   try {
-    await context.with(suppressTracing(context.active()), async () => {
-      await tasks.run()
-    })
+    await tasks.run()
   } catch {
     // yargs is configured with `.exitProcess(false)`, so promise rejections
     // from command handlers are swallowed by parseAsync() and never reach the

@@ -28,6 +28,9 @@ const mockUseApolloClient = useApolloClient as unknown as Mock
 const mockApolloUseFragment = useFragment as unknown as Mock
 const mockUseQuery = useQuery as unknown as Mock
 
+// TODO(fragment-underscore): When the underscore rule is removed, rename this
+// fragment to `AuthorCellFragmentAuthor` (and pass `displayName: 'AuthorCell'`
+// in the tests that use it), so the Cell keeps its `author` prop
 const AUTHOR_FRAGMENT = parse(`
   fragment AuthorCell_author on User {
     email
@@ -129,6 +132,88 @@ describe('createFragmentCell', () => {
     )
 
     screen.getByText(/^Writes things$/)
+  })
+
+  test('derives the prop name from what follows `<CellName>Fragment`', () => {
+    const TestCell = createCell({
+      FRAGMENT: parse(`
+        fragment PostCellFragmentAuthor on User {
+          fullName
+        }
+      `),
+      Success: ({ author }) => <>By {author.fullName}</>,
+      displayName: 'PostCell',
+    })
+
+    render(
+      <TestCell
+        author={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+      />,
+    )
+
+    screen.getByText(/^By Story Teller$/)
+  })
+
+  test('derives the prop name from the fragment type for `<CellName>Fragment`', () => {
+    const TestCell = createCell({
+      FRAGMENT: parse(`
+        fragment AuthorCellFragment on User {
+          fullName
+        }
+      `),
+      Success: ({ user }) => <>By {user.fullName}</>,
+      displayName: 'AuthorCell',
+    })
+
+    render(
+      <TestCell
+        user={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+      />,
+    )
+
+    screen.getByText(/^By Story Teller$/)
+  })
+
+  test('derives the prop name from the fragment type when the Fragment prefix names another Cell', () => {
+    const TestCell = createCell({
+      FRAGMENT: parse(`
+        fragment UserFragmentDetails on User {
+          fullName
+        }
+      `),
+      Success: ({ user }) => <>By {user.fullName}</>,
+      displayName: 'AuthorCell',
+    })
+
+    render(
+      <TestCell
+        user={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+      />,
+    )
+
+    screen.getByText(/^By Story Teller$/)
+  })
+
+  // TODO(fragment-underscore): Remove this test when the underscore rule is
+  // removed
+  test('prefers the underscore over the `<CellName>Fragment` prefix', () => {
+    const TestCell = createCell({
+      FRAGMENT: parse(`
+        fragment PostCellFragmentAuthor_writer on User {
+          fullName
+        }
+      `),
+      Success: ({ writer }) => <>By {writer.fullName}</>,
+      displayName: 'PostCell',
+    })
+
+    render(
+      <TestCell
+        writer={{ __typename: 'User', id: 1, fullName: 'Story Teller' }}
+      />,
+    )
+
+    screen.getByText(/^By Story Teller$/)
   })
 
   test('renders Empty when isEmpty says so', () => {

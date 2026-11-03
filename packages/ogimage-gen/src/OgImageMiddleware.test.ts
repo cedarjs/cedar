@@ -43,6 +43,15 @@ vi.mock(osNativeOgPaths.homePage, () => ({
   output: () => 'Mocked component render',
 }))
 
+// These used to be (re-)declared inline inside individual tests below with
+// byte-identical factories every time. Vitest 5 hoists vi.mock calls
+// statically, so a single top-level declaration per specifier is both
+// required and sufficient here.
+vi.mock('/path/to/component.js', () => ({
+  data: () => 'mocked data function',
+  output: () => 'Mocked component render',
+}))
+
 // Mock getRoutesList function
 vi.mock('./getRoutesList', () => ({
   getRoutesList: vi.fn().mockResolvedValue([
@@ -252,11 +261,6 @@ describe('OgImageMiddleware', () => {
     const filePath = '/path/to/component.js'
     const invokeOptions = {}
 
-    vi.mock('/path/to/component.js', () => ({
-      data: () => 'mocked data function',
-      output: () => 'Mocked component render',
-    }))
-
     const result = await middleware.importComponent(filePath, invokeOptions)
 
     expect(result.data()).toBe('mocked data function')
@@ -268,16 +272,6 @@ describe('OgImageMiddleware', () => {
     const req = { url: 'https://example.com/contacts/555.png?bazinga=kittens' }
     const mwResponse = MiddlewareResponse.next()
     const invokeOptions = {}
-
-    // The memfs mocks don't seem to work for this file
-
-    vi.mock(
-      '/redwood-app/web/dist/ssr/ogImage/pages/Contact/ContactPage/ContactPage.og.mjs',
-      () => ({
-        data: () => 'mocked data function',
-        output: () => 'Mocked component render',
-      }),
-    )
 
     await middleware.invoke(req, mwResponse, invokeOptions)
 
@@ -307,15 +301,6 @@ describe('OgImageMiddleware', () => {
     const mwResponse = MiddlewareResponse.next()
     const invokeOptions = {}
 
-    // The memfs mocks don't seem to work for this file
-    vi.mock(
-      '/redwood-app/web/dist/ssr/ogImage/pages/HomePage/HomePage.og.mjs',
-      () => ({
-        data: () => 'mocked data function',
-        output: () => 'Mocked component render',
-      }),
-    )
-
     await middleware.invoke(req, mwResponse, invokeOptions)
 
     expect(goToMock).toHaveBeenCalledWith('https://www.darkmatter.berlin')
@@ -336,15 +321,6 @@ describe('OgImageMiddleware', () => {
     const mwResponse = MiddlewareResponse.next()
     const invokeOptions = {}
 
-    // The memfs mocks don't seem to work for this file
-    vi.mock(
-      '/redwood-app/web/dist/ssr/ogImage/pages/HomePage/HomePage.og.mjs',
-      () => ({
-        data: () => 'mocked data function',
-        output: () => 'Mocked component render',
-      }),
-    )
-
     await middleware.invoke(req, mwResponse, invokeOptions)
 
     expect(mwResponse.body).toMatchInlineSnapshot(
@@ -359,16 +335,6 @@ describe('OgImageMiddleware', () => {
     }
     const mwResponse = MiddlewareResponse.next()
     const invokeOptions = {}
-
-    // The memfs mocks don't seem to work for this file
-
-    vi.mock(
-      '/redwood-app/web/dist/ssr/ogImage/pages/Contact/ContactPage/ContactPage.og.mjs',
-      () => ({
-        data: () => 'mocked data function',
-        output: () => 'Mocked component render',
-      }),
-    )
 
     await middleware.invoke(req, mwResponse, invokeOptions)
 

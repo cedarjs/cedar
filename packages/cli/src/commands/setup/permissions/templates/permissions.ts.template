@@ -1,0 +1,23 @@
+import { permissions } from '__PERMISSIONS_PACKAGE__'
+
+import { createPermissions } from '@cedarjs/permissions/api'
+
+/**
+ * Checks the permissions defined in __PERMISSIONS_PACKAGE__
+ * (packages/permissions): a user may do what any of their roles, in
+ * `currentUser.roles`, may do. `getCurrentUser` adds the user's permissions
+ * with `withPermissions`, so the web can check them with
+ * `useAuth().hasPermission()` and `<PrivateSet permission>`. The web only
+ * uses them to decide what to show. These checks are the guard.
+ *
+ * `canGrantRole(role)` is whether the signed-in user may give someone
+ * `role`, or take it away. They may if they hold every permission the role
+ * has, so nobody can hand out more than they may do themselves.
+ */
+export const {
+  hasPermission,
+  requirePermission,
+  canGrantRole,
+  permissionsOf,
+  withPermissions,
+} = createPermissions(permissions)

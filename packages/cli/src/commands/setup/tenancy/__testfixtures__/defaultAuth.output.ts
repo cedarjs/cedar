@@ -2,6 +2,7 @@ import type { Decoded } from '@cedarjs/api'
 import { AuthenticationError, ForbiddenError } from '@cedarjs/graphql-server'
 
 import { db } from './db.js'
+import { withPermissions } from './permissions.js'
 
 export const cookieName = 'session_%port%'
 
@@ -10,21 +11,23 @@ export const getCurrentUser = async (session: Decoded) => {
     throw new Error('Invalid session')
   }
 
-  return await db.user.findUnique({
-    where: { id: session.id },
-    select: {
-      id: true,
+  return withPermissions(
+    await db.user.findUnique({
+      where: { id: session.id },
+      select: {
+        id: true,
 
-      memberships: {
-        select: {
-          id: true,
-          organizationId: true,
-          role: true,
-          organization: { select: { id: true, slug: true, name: true } },
+        memberships: {
+          select: {
+            id: true,
+            organizationId: true,
+            role: true,
+            organization: { select: { id: true, slug: true, name: true } },
+          },
         },
       },
-    },
-  })
+    }),
+  )
 }
 
 export const isAuthenticated = (): boolean => {
@@ -51,7 +54,7 @@ export const hasRole = (roles: AllowedRoles): boolean => {
   if (Array.isArray(roles)) {
     if (Array.isArray(currentUserRoles)) {
       return currentUserRoles?.some((allowedRole) =>
-        roles.includes(allowedRole)
+        roles.includes(allowedRole),
       )
     } else if (typeof currentUserRoles === 'string') {
       return roles.some((allowedRole) => currentUserRoles === allowedRole)
@@ -70,4 +73,3 @@ export const requireAuth = ({ roles }: { roles?: AllowedRoles } = {}) => {
     throw new ForbiddenError("You don't have access to do that.")
   }
 }
-export { hasOrgRole, requireMembership } from '@cedarjs/tenancy'

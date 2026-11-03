@@ -128,3 +128,283 @@ describe('8.x: Sets with props for their wrappers', () => {
     }
   })
 })
+
+describe('8.x: Prisma packages the project declares', () => {
+  function createProject(
+    rootPkg: Record<string, unknown>,
+    apiPkg?: Record<string, unknown>,
+  ) {
+    const projectPath = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'cedar-8x-prisma-'),
+    )
+
+    fs.writeFileSync(path.join(projectPath, 'cedar.toml'), '')
+    fs.writeFileSync(
+      path.join(projectPath, 'package.json'),
+      JSON.stringify(rootPkg),
+    )
+
+    if (apiPkg) {
+      fs.mkdirSync(path.join(projectPath, 'api'))
+      fs.writeFileSync(
+        path.join(projectPath, 'api', 'package.json'),
+        JSON.stringify(apiPkg),
+      )
+    }
+
+    return projectPath
+  }
+
+  test('aborts and lists the Prisma packages the project is missing', () => {
+    const projectPath = createProject(
+      { devDependencies: { '@cedarjs/core': '7.1.0' } },
+      { dependencies: { '@cedarjs/api': '7.1.0' } },
+    )
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 1)
+      assert.match(stdout, /Prisma packages your project needs to declare/)
+      assert.match(stdout, / {2}prisma in the devDependencies of package\.json/)
+      assert.match(
+        stdout,
+        / {2}@prisma\/client in the dependencies of api\/package\.json/,
+      )
+      assert.match(stdout, /Use version \d+\.\d+\.\d+/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('accepts prisma in the root dependencies', () => {
+    const projectPath = createProject(
+      { dependencies: { prisma: '7.10.1' } },
+      { dependencies: { '@prisma/client': '7.10.1' } },
+    )
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.doesNotMatch(stdout, /Prisma packages/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('requires @prisma/client in the api dependencies', () => {
+    const projectPath = createProject(
+      { devDependencies: { prisma: '7.10.1' } },
+      { devDependencies: { '@prisma/client': '7.10.1' } },
+    )
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 1)
+      assert.match(
+        stdout,
+        / {2}@prisma\/client in the dependencies of api\/package\.json/,
+      )
+      assert.doesNotMatch(stdout, / {2}prisma in the/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('skips projects without an api side', () => {
+    const projectPath = createProject({
+      devDependencies: { '@cedarjs/core': '7.1.0' },
+    })
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.doesNotMatch(stdout, /Prisma packages/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('8.x: Jest types in tsconfig and jsconfig', () => {
+  function createProject(files: Record<string, string>) {
+    const projectPath = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'cedar-8x-jest-types-'),
+    )
+
+    fs.writeFileSync(path.join(projectPath, 'cedar.toml'), '')
+
+    for (const [file, content] of Object.entries(files)) {
+      fs.mkdirSync(path.join(projectPath, path.dirname(file)), {
+        recursive: true,
+      })
+      fs.writeFileSync(path.join(projectPath, file), content)
+    }
+
+    return projectPath
+  }
+
+  test('warns about configs that load Jest types without aborting', () => {
+    // Real configs are JSON with comments and trailing commas
+    const projectPath = createProject({
+      'api/tsconfig.json': [
+        '{',
+        '  "compilerOptions": {',
+        '    // Jest globals',
+        '    "types": ["jest"],',
+        '  },',
+        '}',
+      ].join('\n'),
+      'web/tsconfig.json': [
+        '{',
+        '  "compilerOptions": {',
+        '    "paths": { "types/*": ["./types/*"] },',
+        '    "types": [',
+        '      "jest",',
+        '      "jest-dom",',
+        '      "react/experimental"',
+        '    ]',
+        '  }',
+        '}',
+      ].join('\n'),
+    })
+
+    try {
+      const { status, stdout, stderr } = runScriptIn(projectPath)
+
+      assert.equal(stderr, '')
+      assert.equal(status, 0)
+      assert.match(stdout, /Test globals are typed by vitest\/globals/)
+      assert.match(stdout, / {2}api\/tsconfig\.json\n/)
+      assert.match(stdout, / {2}web\/tsconfig\.json\n/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('checks jsconfig.json too', () => {
+    const projectPath = createProject({
+      'web/jsconfig.json':
+        '{ "compilerOptions": { "types": ["jest", "jest-dom"] } }',
+    })
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.match(stdout, / {2}web\/jsconfig\.json\n/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('ignores configs that already use vitest/globals', () => {
+    const projectPath = createProject({
+      'api/tsconfig.json':
+        '{ "compilerOptions": { "types": ["vitest/globals"] } }',
+      'web/tsconfig.json':
+        '{ "compilerOptions": { "types": ["vitest/globals", "@testing-library/jest-dom/vitest"] } }',
+    })
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.doesNotMatch(stdout, /Test globals are typed by vitest/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+
+  test('ignores configs without a types array', () => {
+    const projectPath = createProject({
+      'api/tsconfig.json': '{ "compilerOptions": { "strict": true } }',
+    })
+
+    try {
+      const { status, stdout } = runScriptIn(projectPath)
+
+      assert.equal(status, 0)
+      assert.doesNotMatch(stdout, /Test globals are typed by vitest/)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('8.x: Cedar packages hoisted by pnpm', () => {
+  function createProject(files: Record<string, string>) {
+    const projectPath = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'cedar-8x-pnpm-hoist-'),
+    )
+
+    fs.writeFileSync(path.join(projectPath, 'cedar.toml'), '')
+
+    for (const [file, content] of Object.entries(files)) {
+      fs.writeFileSync(path.join(projectPath, file), content)
+    }
+
+    return projectPath
+  }
+
+  function run(files: Record<string, string>) {
+    const projectPath = createProject(files)
+
+    try {
+      return runScriptIn(projectPath)
+    } finally {
+      fs.rmSync(projectPath, { recursive: true, force: true })
+    }
+  }
+
+  test('warns without aborting when a pnpm project does not hoist them', () => {
+    const { status, stdout, stderr } = run({
+      'pnpm-workspace.yaml': 'packages:\n  - api\n  - web\n',
+    })
+
+    assert.equal(stderr, '')
+    assert.equal(status, 0)
+    assert.match(stdout, /Cedar packages are not hoisted by pnpm/)
+    assert.match(stdout, /publicHoistPattern:/)
+  })
+
+  test('warns when the hoist pattern does not cover them', () => {
+    const { stdout } = run({
+      'pnpm-workspace.yaml':
+        "publicHoistPattern:\n  - '*eslint*'\n\npackages:\n  - api\n",
+    })
+
+    assert.match(stdout, /Cedar packages are not hoisted by pnpm/)
+  })
+
+  test('accepts a workspace file that hoists @cedarjs/*', () => {
+    const { stdout } = run({
+      'pnpm-workspace.yaml':
+        "packages:\n  - api\n\npublicHoistPattern:\n  - '@cedarjs/*'\n",
+    })
+
+    assert.doesNotMatch(stdout, /not hoisted by pnpm/)
+  })
+
+  test('accepts the pattern in .npmrc, and shamefully hoisting', () => {
+    const fromNpmrc = run({
+      'pnpm-workspace.yaml': 'packages:\n  - api\n',
+      '.npmrc': 'public-hoist-pattern[]=@cedarjs/*\n',
+    })
+    const shamefully = run({
+      'pnpm-workspace.yaml': 'shamefullyHoist: true\npackages:\n  - api\n',
+    })
+
+    assert.doesNotMatch(fromNpmrc.stdout, /not hoisted by pnpm/)
+    assert.doesNotMatch(shamefully.stdout, /not hoisted by pnpm/)
+  })
+
+  test('ignores projects that do not use pnpm', () => {
+    const { stdout } = run({})
+
+    assert.doesNotMatch(stdout, /not hoisted by pnpm/)
+  })
+})

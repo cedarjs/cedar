@@ -1,6 +1,10 @@
 import type { ComponentType, ReactElement, ReactNode } from 'react'
 import React from 'react'
 
+import type { PermissionName } from '@cedarjs/auth' with {
+  'resolution-mode': 'import',
+}
+
 /**
  * The props `<Set>` gives each component in its `wrap` prop: the wrapped
  * routes as `children`, and nothing else
@@ -27,6 +31,25 @@ export type WrapperType = ComponentType<WrapperProps>
 
 interface SetProps {
   /**
+   * Route is permitted when authenticated and user has any of the provided
+   * roles such as "admin" or ["admin", "editor"], in `currentUser.roles`
+   */
+  roles?: string | string[]
+  /**
+   * Route is permitted when authenticated and the user has this permission
+   * (see `cedar setup permissions`). With `roles` as well, they need both.
+   *
+   * Without tenancy, it's one of the user's own permissions, in
+   * `currentUser.permissions`.
+   *
+   * With `tenancy` on the Router, it's a permission of the user's membership
+   * in the route's organization: the one the Router's `tenancy` finds, by
+   * default the one with the route's `orgSlug` param. A signed-in user who
+   * isn't a member gets the tenancy's `notAMember`. A `PrivateSet` with
+   * `permission` throws on a route that isn't in an organization.
+   */
+  permission?: PermissionName
+  /**
    * Components to wrap all routes in this set with, like layouts. The first
    * one in an array is the outermost one.
    *
@@ -48,10 +71,12 @@ interface SetProps {
    */
   unauthenticated?: string
   /**
-   * Route is permitted when authenticated and user has any of the provided
-   * roles such as "admin" or ["admin", "editor"]
+   * The page name where a user will be redirected when authenticated but
+   * without the required roles
+   *
+   * @deprecated Please use `<PrivateSet>` instead and specify this prop there
    */
-  roles?: string | string[]
+  unauthorized?: string
   /** Prerender all pages in the set */
   prerender?: boolean
   children: ReactNode
@@ -74,9 +99,22 @@ export function Set(props: SetProps) {
   return <>{props.children}</>
 }
 
-type PrivateSetProps = Omit<SetProps, 'private' | 'unauthenticated'> & {
-  /** The page name where a user will be redirected when not authenticated */
+type PrivateSetProps = Omit<
+  SetProps,
+  'private' | 'unauthenticated' | 'unauthorized'
+> & {
+  /**
+   * The page name where a user will be redirected when not authenticated.
+   * Also where one without the required roles is redirected, unless the set
+   * has `unauthorized`.
+   */
   unauthenticated: string
+  /**
+   * The page name where a user will be redirected when authenticated but
+   * without the required roles or permission. Without it, they're
+   * redirected to `unauthenticated`.
+   */
+  unauthorized?: string
 }
 
 /** @deprecated Please use `<PrivateSet>` instead */
@@ -89,7 +127,13 @@ export function Private(props: PrivateSetProps) {
 /**
  * Wraps a set of routes that require the user to be authenticated before
  * rendering. Unauthenticated users are redirected to the route named by
- * `unauthenticated`.
+ * `unauthenticated`, and users without the required roles to the one named by
+ * `unauthorized`. Either route can have path params the current route has,
+ * like `orgSlug`: they're filled in from the current route.
+ *
+ * In an app with tenancy, a `PrivateSet` whose routes have `{orgSlug}` in
+ * their path provides the organization to its layouts and page, see `tenancy`
+ * on the `Router`.
  *
  * Coming from React Router or a similar library and looking for something
  * like `RequireAuth` or `ProtectedRoute`? This is the Cedar equivalent.

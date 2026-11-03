@@ -5,7 +5,7 @@ exports[`Generate gql typedefs api 1`] = `
 import { MergePrismaWithSdlTypes, MakeRelationsOptional } from '@cedarjs/api'
 import { PrismaModelOne as PrismaPrismaModelOne, PrismaModelTwo as PrismaPrismaModelTwo, Post as PrismaPost, Todo as PrismaTodo } from 'src/lib/db'
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { CedarGraphQLContext } from '@cedarjs/graphql-server/dist/types';
+import { CedarGraphQLContext } from '@cedarjs/graphql-server/types';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -34,7 +34,7 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  BigInt: { input: number; output: number; }
+  BigInt: { input: bigint | number; output: bigint | number; }
   Byte: { input: Uint8Array; output: Uint8Array; }
   Date: { input: Date | string; output: Date | string; }
   DateTime: { input: Date | string; output: Date | string; }

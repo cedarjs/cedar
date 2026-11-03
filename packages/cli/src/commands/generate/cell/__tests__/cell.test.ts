@@ -867,6 +867,21 @@ describe('Fragment cells', () => {
     expect(generatedFiles[CELL_PATH]).toMatchSnapshot()
   })
 
+  test('names the data prop like the runtime does for the fragment type', async () => {
+    const generatedFiles = await cellHandler.files({
+      name: 'AuthorBio',
+      typescript: true,
+      tests: false,
+      stories: false,
+      fragment: 'Foo2d',
+    })
+
+    const cell = generatedFiles[CELL_PATH]
+
+    expect(cell).toContain('fragment AuthorBioCellFragment on Foo2d {')
+    expect(cell).toContain('CellSuccessProps<{ foo2d: AuthorBioCellFragment }>')
+  })
+
   test('throws when combined with --list', async () => {
     await expect(
       cellHandler.files({

@@ -13,6 +13,13 @@ export {
 } from './PageLoadingContext.js'
 export { useParams, ParamsProvider, ParamsContext } from './params.js'
 export { Router } from './router.js'
+export type {
+  OrgProviderProps,
+  RouterMembership,
+  RouterOrg,
+  Tenancy,
+  UseOrg,
+} from './router-context.js'
 export { Route } from './Route.js'
 export { namedRoutes as routes } from './namedRoutes.js'
 

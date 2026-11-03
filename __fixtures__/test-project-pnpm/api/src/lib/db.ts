@@ -18,7 +18,9 @@ const resolveSqliteUrl = (url = 'file:./db/dev.db') => {
     return url
   }
 
-  return `file:${path.resolve(getPaths().api.base, url.slice('file:'.length))}`
+  const apiDir = getPaths().api.base
+
+  return `file:${path.resolve(apiDir, url.slice('file:'.length))}`
 }
 
 const adapter = new PrismaBetterSqlite3({

@@ -11,7 +11,8 @@ const BATCH_SIZE = 100
  *
  * Run with `__DATA_MIGRATE_UP_COMMAND__`, after
  * `__PRISMA_MIGRATE_DEV_COMMAND__` has applied the
- * `Organization`/`Membership` migration.
+ * `Organization`/`Membership` migration and `__PRISMA_GENERATE_COMMAND__`
+ * has updated the Prisma client.
  */
 export default async ({ db }: { db: PrismaClient }) => {
   let cursor: string | undefined
