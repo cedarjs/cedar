@@ -44,7 +44,7 @@ export function getOTelSetupFileUrl(): string | undefined {
 
   if (!fs.existsSync(setupFilePath)) {
     console.warn(
-      `OpenTelemetry is enabled, but the setup file does not exist at ${setupFilePath}. Run \`cedar experimental setup-opentelemetry\` to generate it.`,
+      `OpenTelemetry is enabled, but the setup file does not exist at ${setupFilePath}. Run \`cedar build api\` to build it, after running \`cedar experimental setup-opentelemetry\` if your project doesn't have an \`api/src/opentelemetry\` file yet.`,
     )
 
     return undefined
