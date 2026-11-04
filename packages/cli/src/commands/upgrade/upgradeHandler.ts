@@ -846,8 +846,8 @@ interface PnpmOverridesBlock {
   start: number
   /** Index of the last entry in the block, or `start` when it has none */
   lastEntry: number
-  /** Index and parts of the `vite` entry, when the block has one */
-  vite?: { index: number; match: RegExpExecArray }
+  /** Index of the `vite` entry, when the block has one */
+  vite?: number
   /** Indentation and quoting of the block's first entry */
   style: { indent: string; keyQuote: string; valueQuote: string }
 }
@@ -896,12 +896,8 @@ function findPnpmOverridesBlock(
 
     block.lastEntry = i
 
-    // `rest` keeps the `\r` of a CRLF line ending
-    const match =
-      /^(\s+)(['"]?)vite\2(\s*:\s*)(['"]?)([^'"\s#]+)\4([^\n]*)$/.exec(line)
-
-    if (match && !block.vite) {
-      block.vite = { index: i, match }
+    if (block.vite === undefined && /^\s+(['"]?)vite\1\s*:/.test(line)) {
+      block.vite = i
     }
   }
 
@@ -918,19 +914,35 @@ function findPnpmOverridesBlock(
  */
 export function updatePnpmViteOverride(content: string, viteVersion: string) {
   const lines = content.split('\n')
-  const vite = findPnpmOverridesBlock(lines)?.vite
+  const viteIndex = findPnpmOverridesBlock(lines)?.vite
 
-  if (!vite) {
+  if (viteIndex === undefined) {
     return undefined
   }
 
-  const [, indent, keyQuote, separator, valueQuote, version, rest] = vite.match
+  // The value is either quoted, and can then contain spaces, like
+  // '^7.0.0 || ^8.0.0', or unquoted. `rest` keeps a trailing comment and the
+  // `\r` of a CRLF line ending.
+  const match =
+    /^(\s+)(['"]?)vite\2(\s*:\s*)(?:(['"])([^\n]*?)\4|([^'"\s#]+))([^\n]*)$/.exec(
+      lines[viteIndex],
+    )
+
+  if (!match) {
+    return undefined
+  }
+
+  const [, indent, keyQuote, separator, quote, quotedVersion, bareVersion] =
+    match
+  const valueQuote = quote ?? ''
+  const version = quotedVersion ?? bareVersion
+  const rest = match[7]
 
   if (version === viteVersion) {
     return undefined
   }
 
-  lines[vite.index] =
+  lines[viteIndex] =
     indent +
     keyQuote +
     'vite' +

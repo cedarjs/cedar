@@ -188,6 +188,14 @@ describe('updatePnpmViteOverride', () => {
     )
   })
 
+  it('updates a quoted value that contains spaces', () => {
+    const content = "overrides:\n  vite: '^7.0.0 || ^8.0.0' # range\n"
+
+    expect(updatePnpmViteOverride(content, '8.3.5')).toBe(
+      "overrides:\n  vite: '8.3.5' # range\n",
+    )
+  })
+
   it("doesn't match packages whose name starts with vite", () => {
     const content = "overrides:\n  'vite-plugin-foo': '1.0.0'\n"
 
@@ -417,6 +425,12 @@ describe('addPnpmViteOverride', () => {
   it('returns undefined when overrides already has vite', () => {
     expect(
       addPnpmViteOverride("overrides:\n  'vite': '7.3.7'\n", '8.3.5'),
+    ).toBeUndefined()
+  })
+
+  it("doesn't add a second vite entry when the existing value has spaces", () => {
+    expect(
+      addPnpmViteOverride("overrides:\n  vite: '^7.0.0 || ^8.0.0'\n", '8.3.5'),
     ).toBeUndefined()
   })
 
