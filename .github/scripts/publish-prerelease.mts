@@ -18,6 +18,10 @@
  * published version until the next run on that branch moves it — harmless,
  * since consumers resolve `canary`/`next`, never the staging tag.
  *
+ * Packages are built once the versions are bumped, packed with `yarn pack`
+ * and checked before anything is published, and uploaded with
+ * `npm publish <tarball>` (see lib/pack.mts).
+ *
  * Used in the `prerelease` job of `.github/workflows/canary.yml`.
  *
  * Usage: node .github/scripts/publish-prerelease.mts
@@ -28,11 +32,14 @@
 
 import { exec as execCb, execSync } from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import util from 'node:util'
 
 import { createNpmAuth, isOidcAvailable } from './lib/npm-auth.mts'
 import type { NpmAuth } from './lib/npm-auth.mts'
+import { buildPackages, packPackages } from './lib/pack.mts'
+import type { PackedPackage } from './lib/pack.mts'
 
 // Dependency fields whose in-monorepo entries get rewritten to the version
 // being published
@@ -351,9 +358,9 @@ function updateCreateCedarAppTemplates(version: string) {
 }
 
 interface PublishablePackage {
-  workspace: WorkspaceInfo
   name: string
   version: string
+  location: string
 }
 
 function getPublishablePackages(
@@ -376,7 +383,7 @@ function getPublishablePackages(
       throw new Error(`Missing name or version in ${pkgJsonPath}`)
     }
 
-    publishable.push({ workspace, name, version })
+    publishable.push({ name, version, location: workspace.location })
   }
 
   return publishable
@@ -409,7 +416,7 @@ async function isPackagePublished(
 // references this tag, so partially-completed runs are invisible to
 // consumers watching the real "canary"/"next" tag.
 async function publishPackagesToStagingTag(
-  packages: PublishablePackage[],
+  packages: PackedPackage[],
   stagingTag: string,
   auth: NpmAuth,
 ): Promise<void> {
@@ -421,7 +428,7 @@ async function publishPackagesToStagingTag(
   const provenanceFlag = isOidcAvailable() ? ' --provenance' : ''
 
   await runWithConcurrency(packages, PUBLISH_CONCURRENCY, async (pkg) => {
-    const { name, version, workspace } = pkg
+    const { name, version, tarball } = pkg
 
     if (await isPackagePublished(name, version)) {
       log(`  ${name}@${version} already published, skipping`)
@@ -430,11 +437,9 @@ async function publishPackagesToStagingTag(
 
     await withRetry(async () =>
       execCommandAsync(
-        `npm publish --tag ${stagingTag} --access public${provenanceFlag}`,
-        {
-          cwd: path.join(REPO_ROOT, workspace.location),
-          env: await auth.forPublish(name),
-        },
+        `npm publish "${tarball}" --tag ${stagingTag} --access public` +
+          provenanceFlag,
+        { env: await auth.forPublish(name) },
       ),
     )
     log(`  ✅ Published ${name}@${version} (staging tag: ${stagingTag})`)
@@ -596,12 +601,22 @@ async function main() {
 
   const packages = getPublishablePackages(workspaces)
   const stagingTag = `staging-${tag}`
+  const tarballDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-canary-'))
 
   try {
-    await publishPackagesToStagingTag(packages, stagingTag, auth)
+    // ── Build, pack and check every package before publishing any ─────────
+
+    buildPackages(REPO_ROOT)
+    const packed = await packPackages(packages, {
+      repoRoot: REPO_ROOT,
+      outDir: tarballDir,
+    })
+
+    await publishPackagesToStagingTag([...packed.values()], stagingTag, auth)
     await flipToFinalTag(packages, tag, auth)
   } finally {
     auth.dispose()
+    fs.rmSync(tarballDir, { recursive: true, force: true })
   }
 
   log('✅ Canary publishing completed successfully!')

@@ -20,7 +20,6 @@
     "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-cli-data-migrate.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "yarn test:unit && yarn test:dist",
     "test:dist": "vitest run ./dist.test.ts",
     "test:unit": "vitest run src"
