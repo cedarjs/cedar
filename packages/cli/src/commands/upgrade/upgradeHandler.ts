@@ -5,7 +5,7 @@ import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import execa from 'execa'
 import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
-import packageJson from 'package-json'
+import packageJson, { VersionNotFoundError } from 'package-json'
 import { terminalLink } from 'termi-link'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
@@ -19,6 +19,7 @@ import {
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getConfig } from '@cedarjs/project-config'
 import { getPackageManager } from '@cedarjs/project-config/packageManager'
+import type { PackageManager } from '@cedarjs/project-config/packageManager'
 
 import { generatePrismaClient } from '../../lib/generatePrismaClient.js'
 import { getPaths } from '../../lib/index.js'
@@ -154,6 +155,14 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
         // Runs after the canary template sync, so the Prisma versions come
         // from the target release rather than from the template on main
         task: (ctx, task) => updatePrismaDeps(ctx, task, { dryRun, verbose }),
+        enabled: (ctx) =>
+          !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
+      },
+      {
+        title: 'Updating Vite and Vitest to the versions CedarJS uses',
+        // Runs after the canary template sync, so the versions come from the
+        // target release rather than from the template on main
+        task: (ctx, task) => updateViteDeps(ctx, task, { dryRun, verbose }),
         enabled: (ctx) =>
           !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
       },
@@ -435,33 +444,65 @@ function updateCedarJSDepsForAllSides(
 }
 
 /**
- * Fetches the `prisma` version that `@cedarjs/cli@<cedarVersion>` declares as
- * its peer dependency, from the npm registry the project is configured to use.
- * Returns `undefined` for CedarJS versions that don't declare `prisma` as a
- * peer.
+ * Fetches the registry manifest of `packageName` at `cedarVersion`, from the
+ * npm registry the project is configured to use
  */
-export async function fetchPrismaPeerVersion(
-  cedarVersion: string,
-): Promise<string | undefined> {
+async function fetchCedarManifest(packageName: string, cedarVersion: string) {
   // Registry metadata doesn't include build metadata, like the `+dd79f1726` in
   // '4.0.0-rc.428+dd79f1726'
   const version = cedarVersion.split('+')[0]
 
-  let manifest: Awaited<ReturnType<typeof packageJson>>
-
   try {
-    manifest = await packageJson('@cedarjs/cli', { version })
+    return await packageJson(packageName, { version })
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     throw new Error(
-      `Failed to fetch @cedarjs/cli@${version} from the npm registry: ` +
+      `Failed to fetch ${packageName}@${version} from the npm registry: ` +
         message,
     )
   }
+}
 
+/**
+ * Fetches the `prisma` version that `@cedarjs/cli@<cedarVersion>` declares as
+ * its peer dependency. Returns `undefined` for CedarJS versions that don't
+ * declare `prisma` as a peer.
+ */
+export async function fetchPrismaPeerVersion(
+  cedarVersion: string,
+): Promise<string | undefined> {
+  const manifest = await fetchCedarManifest('@cedarjs/cli', cedarVersion)
   const prismaVersion = manifest.peerDependencies?.['prisma']
 
   return typeof prismaVersion === 'string' ? prismaVersion : undefined
+}
+
+export interface ViteVersions {
+  vite?: string
+  vitest?: string
+}
+
+/**
+ * Fetches the Vite and Vitest versions CedarJS `cedarVersion` is built
+ * against: the `vite` dependency of `@cedarjs/vite` and the `vitest` peer
+ * dependency of `@cedarjs/testing`. Either is `undefined` when that release
+ * doesn't declare it.
+ */
+export async function fetchViteVersions(
+  cedarVersion: string,
+): Promise<ViteVersions> {
+  const [viteManifest, testingManifest] = await Promise.all([
+    fetchCedarManifest('@cedarjs/vite', cedarVersion),
+    fetchCedarManifest('@cedarjs/testing', cedarVersion),
+  ])
+
+  const vite = viteManifest.dependencies?.['vite']
+  const vitest = testingManifest.peerDependencies?.['vitest']
+
+  return {
+    vite: typeof vite === 'string' ? vite : undefined,
+    vitest: typeof vitest === 'string' ? vitest : undefined,
+  }
 }
 
 /**
@@ -640,6 +681,461 @@ async function updatePrismaDeps(
       if (!dryRun) {
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, undefined, 2))
       }
+    }
+  }
+
+  if (messages.length > 0) {
+    task.title = task.title + '\n' + messages.join('\n')
+  }
+}
+
+/**
+ * Returns the `@vitest/*` packages among `depNames` that are published at
+ * `vitestVersion`, and so are released together with `vitest`. Other
+ * `@vitest/*` packages, like `@vitest/eslint-plugin`, have versions of their
+ * own, and not every Vitest release publishes every package in the scope.
+ */
+export async function fetchVitestReleasePackages(
+  depNames: Iterable<string>,
+  vitestVersion: string,
+): Promise<Set<string>> {
+  const candidates = [...new Set(depNames)].filter((depName) =>
+    depName.startsWith('@vitest/'),
+  )
+
+  const published = await Promise.all(
+    candidates.map(async (depName) => {
+      try {
+        await packageJson(depName, { version: vitestVersion })
+        return true
+      } catch (e) {
+        if (e instanceof VersionNotFoundError) {
+          return false
+        }
+
+        const message = e instanceof Error ? e.message : String(e)
+        throw new Error(
+          `Failed to fetch ${depName}@${vitestVersion} from the npm ` +
+            'registry: ' +
+            message,
+        )
+      }
+    }),
+  )
+
+  return new Set(candidates.filter((_, i) => published[i]))
+}
+
+interface ProjectPackageJson extends TemplatePackageJson {
+  resolutions?: Record<string, unknown>
+  overrides?: Record<string, unknown>
+}
+
+/**
+ * Sets `vite`, `vitest` and the `vitestPackages` in the `dependencies` and
+ * `devDependencies` of `pkg` to `versions`, and the `vite` pin in its
+ * `resolutions` (Yarn) or `overrides` (npm). Collects a line into `messages`
+ * for every change. Only packages and pins `pkg` already declares are
+ * updated.
+ *
+ * `vitestPackages` are the `@vitest/*` packages released together with
+ * `vitest`, as returned by `fetchVitestReleasePackages`.
+ */
+export function updateViteDependencies(
+  pkg: ProjectPackageJson,
+  versions: ViteVersions,
+  messages: string[],
+  {
+    dryRun,
+    verbose,
+    vitestPackages = new Set(),
+  }: {
+    dryRun?: boolean
+    verbose?: boolean
+    vitestPackages?: ReadonlySet<string>
+  } = {},
+) {
+  const versionFor = (depName: string) => {
+    if (depName === 'vite') {
+      return versions.vite
+    }
+
+    if (depName === 'vitest' || vitestPackages.has(depName)) {
+      return versions.vitest
+    }
+
+    return undefined
+  }
+
+  let updated = false
+
+  for (const field of ['dependencies', 'devDependencies'] as const) {
+    const deps = pkg[field] ?? {}
+
+    for (const [depName, depVersion] of Object.entries(deps)) {
+      const version = versionFor(depName)
+
+      if (!version || depVersion === version) {
+        continue
+      }
+
+      if (verbose || dryRun) {
+        messages.push(` - ${depName}: ${depVersion} => ${version}`)
+      }
+
+      deps[depName] = version
+      updated = true
+    }
+  }
+
+  for (const field of ['resolutions', 'overrides'] as const) {
+    const pin = pkg[field]?.['vite']
+
+    // npm overrides can also be objects, which pin nested dependencies.
+    // Only a top-level version string pins the project's own Vite.
+    if (!versions.vite || typeof pin !== 'string' || pin === versions.vite) {
+      continue
+    }
+
+    if (verbose || dryRun) {
+      messages.push(` - ${field}.vite: ${pin} => ${versions.vite}`)
+    }
+
+    pkg[field] = { ...pkg[field], vite: versions.vite }
+    updated = true
+  }
+
+  return updated
+}
+
+/**
+ * Adds a `vite` pin at `viteVersion` to `pkg`, the project's root
+ * package.json: `resolutions.vite` for Yarn and `overrides.vite` for npm.
+ * pnpm keeps its pin in pnpm-workspace.yaml (see `addPnpmViteOverride`), so
+ * there's nothing to add to `pkg` for it. Returns `false`, without changing
+ * `pkg`, when it already has the pin.
+ *
+ * Packages with wide `vite` ranges, like Vitest, Storybook and Vite plugins,
+ * can otherwise get a second, newer Vite installed for them.
+ */
+export function addVitePin(
+  pkg: ProjectPackageJson,
+  packageManager: PackageManager,
+  viteVersion: string,
+  messages: string[],
+) {
+  const field =
+    packageManager === 'yarn'
+      ? 'resolutions'
+      : packageManager === 'npm'
+        ? 'overrides'
+        : undefined
+
+  if (!field || pkg[field]?.['vite'] !== undefined) {
+    return false
+  }
+
+  pkg[field] = { ...pkg[field], vite: viteVersion }
+  messages.push(` - ${field}.vite: added at ${viteVersion}`)
+
+  return true
+}
+
+interface PnpmOverridesBlock {
+  /** Index of the `overrides:` line */
+  start: number
+  /** Index of the last entry in the block, or `start` when it has none */
+  lastEntry: number
+  /** Index of the `vite` entry, when the block has one */
+  vite?: number
+  /** Indentation and quoting of the block's first entry */
+  style: { indent: string; keyQuote: string; valueQuote: string }
+}
+
+/**
+ * Finds the top-level `overrides` block in the `lines` of a
+ * pnpm-workspace.yaml. Returns `undefined` when there's no block-style
+ * `overrides:` key.
+ */
+function findPnpmOverridesBlock(
+  lines: string[],
+): PnpmOverridesBlock | undefined {
+  const start = lines.findIndex((line) =>
+    /^overrides:\s*(#[^\n]*)?$/.test(line),
+  )
+
+  if (start === -1) {
+    return undefined
+  }
+
+  const block: PnpmOverridesBlock = {
+    start,
+    lastEntry: start,
+    style: { indent: '  ', keyQuote: '', valueQuote: "'" },
+  }
+
+  for (let i = start + 1; i < lines.length; i++) {
+    const line = lines[i]
+
+    // The block ends at the next top-level key. Comments can start at any
+    // column.
+    if (/^[^\s#]/.test(line)) {
+      break
+    }
+
+    const entry = /^(\s+)(['"]?)[^\s'"#:]+\2\s*:\s*(['"]?)/.exec(line)
+
+    if (!entry) {
+      continue
+    }
+
+    if (block.lastEntry === start) {
+      const [, indent, keyQuote, valueQuote] = entry
+      block.style = { indent, keyQuote, valueQuote }
+    }
+
+    block.lastEntry = i
+
+    if (block.vite === undefined && /^\s+(['"]?)vite\1\s*:/.test(line)) {
+      block.vite = i
+    }
+  }
+
+  return block
+}
+
+/**
+ * Returns `content`, a pnpm-workspace.yaml, with the `vite` entry in its
+ * top-level `overrides` set to `viteVersion`. Returns `undefined` when there's
+ * no such entry, or it's already on `viteVersion`.
+ *
+ * Edits the text line by line rather than parsing the YAML, so comments and
+ * formatting in the rest of the file stay as they are.
+ */
+export function updatePnpmViteOverride(content: string, viteVersion: string) {
+  const lines = content.split('\n')
+  const viteIndex = findPnpmOverridesBlock(lines)?.vite
+
+  if (viteIndex === undefined) {
+    return undefined
+  }
+
+  // The value is either quoted, and can then contain spaces, like
+  // '^7.0.0 || ^8.0.0', or unquoted. `rest` keeps a trailing comment and the
+  // `\r` of a CRLF line ending.
+  const match =
+    /^(\s+)(['"]?)vite\2(\s*:\s*)(?:(['"])([^\n]*?)\4|([^'"\s#]+))([^\n]*)$/.exec(
+      lines[viteIndex],
+    )
+
+  if (!match) {
+    return undefined
+  }
+
+  const [, indent, keyQuote, separator, quote, quotedVersion, bareVersion] =
+    match
+  const valueQuote = quote ?? ''
+  const version = quotedVersion ?? bareVersion
+  const rest = match[7]
+
+  if (version === viteVersion) {
+    return undefined
+  }
+
+  lines[viteIndex] =
+    indent +
+    keyQuote +
+    'vite' +
+    keyQuote +
+    separator +
+    valueQuote +
+    viteVersion +
+    valueQuote +
+    rest
+
+  return lines.join('\n')
+}
+
+/**
+ * Returns `content`, a pnpm-workspace.yaml, with a `vite: '<viteVersion>'`
+ * entry added to its top-level `overrides`, using the indentation and quoting
+ * of the block's existing entries. Appends an `overrides` block when the file
+ * has none. Returns `undefined` when `overrides` already has a `vite` entry,
+ * or is written in a form other than a block (like `overrides: {}`).
+ *
+ * Edits the text line by line rather than parsing the YAML, so comments and
+ * formatting in the rest of the file stay as they are.
+ */
+export function addPnpmViteOverride(content: string, viteVersion: string) {
+  const eol = content.includes('\r\n') ? '\r\n' : '\n'
+  const lines = content.split('\n')
+  const block = findPnpmOverridesBlock(lines)
+
+  if (!block) {
+    if (lines.some((line) => /^['"]?overrides['"]?\s*:/.test(line))) {
+      return undefined
+    }
+
+    return (
+      content.replace(/\s*$/, '') +
+      eol +
+      eol +
+      'overrides:' +
+      eol +
+      `  vite: '${viteVersion}'` +
+      eol
+    )
+  }
+
+  if (block.vite) {
+    return undefined
+  }
+
+  const { indent, keyQuote, valueQuote } = block.style
+  const entry =
+    indent +
+    keyQuote +
+    'vite' +
+    keyQuote +
+    ': ' +
+    valueQuote +
+    viteVersion +
+    valueQuote +
+    (eol === '\r\n' ? '\r' : '')
+
+  lines.splice(block.lastEntry + 1, 0, entry)
+
+  return lines.join('\n')
+}
+
+/**
+ * Sets the project's Vite and Vitest packages to the versions the CedarJS
+ * release being upgraded to is built against. The CedarJS Vite plugins only
+ * work with the exact Vite version they're built against, and the `@vitest/*`
+ * packages have to match `vitest`. Both sides use Vite to build, so the step
+ * adds `vite` to the web and api sides when it's missing. It also adds the
+ * package manager's `vite` pin when it's missing, so that packages with wide
+ * `vite` ranges use the same Vite. `vitest` is only updated, because a project
+ * that doesn't run tests doesn't need it.
+ */
+async function updateViteDeps(
+  ctx: Record<string, unknown>,
+  task: { title: string; skip: (message: string) => void },
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
+) {
+  if (!ctx.versionToUpgradeTo) {
+    throw new Error('Failed to upgrade')
+  }
+
+  const versions = await fetchViteVersions(String(ctx.versionToUpgradeTo))
+
+  if (!versions.vite && !versions.vitest) {
+    task.skip(
+      `CedarJS ${ctx.versionToUpgradeTo} doesn't declare Vite or Vitest ` +
+        'versions',
+    )
+    return
+  }
+
+  const messages: string[] = []
+
+  const projectPackages = [
+    { basePath: getPaths().base, isRoot: true, requiresVite: false },
+    { basePath: getPaths().web.base, isRoot: false, requiresVite: true },
+    { basePath: getPaths().api.base, isRoot: false, requiresVite: true },
+  ]
+
+  const projectPackageJsons = projectPackages
+    .map(({ basePath, ...rest }) => ({
+      ...rest,
+      pkgJsonPath: path.join(basePath, 'package.json'),
+    }))
+    .filter(({ pkgJsonPath }) => fs.existsSync(pkgJsonPath))
+    .map((projectPackage) => ({
+      ...projectPackage,
+      pkg: JSON.parse(fs.readFileSync(projectPackage.pkgJsonPath, 'utf-8')),
+    }))
+
+  const packageManager = getPackageManager()
+
+  const vitestPackages = versions.vitest
+    ? await fetchVitestReleasePackages(
+        projectPackageJsons.flatMap(({ pkg }) => [
+          ...Object.keys(pkg.dependencies ?? {}),
+          ...Object.keys(pkg.devDependencies ?? {}),
+        ]),
+        versions.vitest,
+      )
+    : new Set<string>()
+
+  for (const {
+    pkgJsonPath,
+    isRoot,
+    requiresVite,
+    pkg,
+  } of projectPackageJsons) {
+    const pkgMessages: string[] = []
+
+    const pinned =
+      isRoot &&
+      !!versions.vite &&
+      addVitePin(pkg, packageManager, versions.vite, pkgMessages)
+
+    const added =
+      requiresVite &&
+      !!versions.vite &&
+      addMissingDependency(
+        pkg,
+        'devDependencies',
+        'vite',
+        versions.vite,
+        pkgMessages,
+      )
+    const updated = updateViteDependencies(pkg, versions, pkgMessages, {
+      dryRun,
+      verbose,
+      vitestPackages,
+    })
+
+    if (pinned || added || updated) {
+      if (pkgMessages.length > 0) {
+        messages.push(`Updating ${pkgJsonPath}`, ...pkgMessages)
+      }
+
+      if (!dryRun) {
+        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, undefined, 2))
+      }
+    }
+  }
+
+  const pnpmWorkspacePath = path.join(getPaths().base, 'pnpm-workspace.yaml')
+
+  if (versions.vite && fs.existsSync(pnpmWorkspacePath)) {
+    const content = fs.readFileSync(pnpmWorkspacePath, 'utf-8')
+    const updatedContent = updatePnpmViteOverride(content, versions.vite)
+    const addedContent =
+      updatedContent === undefined && packageManager === 'pnpm'
+        ? addPnpmViteOverride(content, versions.vite)
+        : undefined
+
+    if (updatedContent !== undefined) {
+      if (verbose || dryRun) {
+        messages.push(
+          `Updating ${pnpmWorkspacePath}`,
+          ` - overrides.vite => ${versions.vite}`,
+        )
+      }
+    } else if (addedContent !== undefined) {
+      messages.push(
+        `Updating ${pnpmWorkspacePath}`,
+        ` - overrides.vite: added at ${versions.vite}`,
+      )
+    }
+
+    const newContent = updatedContent ?? addedContent
+
+    if (newContent !== undefined && !dryRun) {
+      fs.writeFileSync(pnpmWorkspacePath, newContent)
     }
   }
 
