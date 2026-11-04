@@ -16,6 +16,36 @@ export type RedwoodRegisterOptions = RegisterOptions & {
 const isValueEmpty = (val: string): boolean => val === ''
 
 /**
+ * HTML date strings have no timezone and use positive, four-or-more-digit years.
+ * Their Date conversion represents UTC midnight, matching native valueAsDate.
+ */
+const parseDateOnly = (val: string): Date => {
+  const match = /^(\d{4,})-(\d{2})-(\d{2})$/.exec(val)
+  if (!match) {
+    return new Date(NaN)
+  }
+
+  const year = Number(match[1])
+  const month = Number(match[2]) - 1
+  const day = Number(match[3])
+  const date = new Date(0)
+  // setUTCFullYear preserves years 1–99 without the Date.UTC remapping.
+  date.setUTCFullYear(year, month, day)
+
+  // Reject calendar rollover and values outside the JavaScript Date range.
+  if (
+    year === 0 ||
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month ||
+    date.getUTCDate() !== day
+  ) {
+    return new Date(NaN)
+  }
+
+  return date
+}
+
+/**
  * EmptyAsValue defines the values that can be used for the field emptyAs prop
  * It sets the value to be returned from the field if the field is empty.
  * If the valueOf prop is truly undefined (not 'undefined'), it will return
@@ -301,10 +331,24 @@ export const setCoercion = (
     valueAs = 'valueAsString'
   }
 
-  validation.setValueAs = getSetValueAsFn(
-    valueAs, // type
-    emptyAs, // emptyAs
-    validation.required !== undefined && validation.required !== false, // required
-    (name || '').endsWith('Id'), // isId
+  const setValueAs = getSetValueAsFn(
+    valueAs,
+    emptyAs,
+    validation.required !== undefined && validation.required !== false,
+    (name || '').endsWith('Id'),
   )
+
+  if (valueAs === 'valueAsDate' && type === 'date') {
+    // react-hook-form's valueAsDate bypasses setValueAs, including emptyAs.
+    delete validation.valueAsDate
+    // react-hook-form passes values from `setValue()` and `defaultValues` to
+    // setValueAs as they are, so `val` can be a Date. Only strings from the
+    // input are date-only strings that parseDateOnly handles
+    validation.setValueAs = (val: string) =>
+      typeof val !== 'string' || isValueEmpty(val)
+        ? setValueAs?.(val)
+        : parseDateOnly(val)
+  } else {
+    validation.setValueAs = setValueAs
+  }
 }
