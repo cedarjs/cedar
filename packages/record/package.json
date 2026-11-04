@@ -26,15 +26,15 @@
   "dependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "@prisma/internals": "7.10.1",
-    "camelcase": "6.3.0"
+    "@prisma/internals": "catalog:prisma",
+    "camelcase": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "esbuild": "0.28.2",
-    "publint": "0.3.25",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "esbuild": "catalog:",
+    "publint": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

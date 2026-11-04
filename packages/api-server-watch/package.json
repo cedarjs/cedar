@@ -30,18 +30,18 @@
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "ansis": "4.4.0",
-    "chokidar": "3.6.0",
-    "dotenv-defaults": "5.0.2",
-    "yargs": "18.2.0"
+    "ansis": "catalog:",
+    "chokidar": "catalog:",
+    "dotenv-defaults": "catalog:",
+    "yargs": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/dotenv-defaults": "^5.0.0",
-    "@types/yargs": "17.0.35",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "@types/dotenv-defaults": "catalog:",
+    "@types/yargs": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

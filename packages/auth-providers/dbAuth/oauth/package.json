@@ -37,15 +37,15 @@
   "devDependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/aws-lambda": "8.10.164",
-    "concurrently": "9.2.5",
-    "msw": "2.15.0",
+    "@types/aws-lambda": "catalog:",
+    "concurrently": "catalog:",
+    "msw": "catalog:",
     "oauth2-mock-server": "9.3.0",
     "oauth4webapi": "3.8.8",
-    "publint": "0.3.25",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "publint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "oauth4webapi": "^3.0.0"

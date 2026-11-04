@@ -25,31 +25,31 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@babel/parser": "7.29.12",
+    "@babel/parser": "catalog:",
     "@babel/plugin-transform-react-jsx": "7.29.7",
     "@babel/preset-env": "7.29.7",
     "@babel/preset-react": "7.29.7",
     "@babel/register": "7.29.7",
-    "@babel/traverse": "7.29.12",
+    "@babel/traverse": "catalog:",
     "@cedarjs/project-config": "workspace:*",
     "babel-plugin-auto-import": "1.1.0",
     "babel-plugin-graphql-tag": "3.3.0",
     "babel-plugin-module-resolver": "5.0.3",
-    "fast-glob": "3.3.3",
-    "graphql": "16.14.2",
-    "typescript": "5.9.3"
+    "fast-glob": "catalog:",
+    "graphql": "catalog:",
+    "typescript": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.10",
-    "@babel/preset-typescript": "7.29.7",
+    "@babel/core": "catalog:",
+    "@babel/preset-typescript": "catalog:",
     "@cedarjs/framework-tools": "workspace:*",
     "@types/babel-plugin-tester": "11.0.0",
-    "@types/babel__core": "7.20.5",
+    "@types/babel__core": "catalog:",
     "@types/babel__register": "7.17.3",
-    "@types/node": "24.19.2",
+    "@types/node": "catalog:",
     "babel-plugin-tester": "11.0.4",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@babel/core": "^7.26.10",

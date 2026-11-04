@@ -22,18 +22,18 @@
   },
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
-    "@fastify/compress": "9.3.0",
+    "@fastify/compress": "catalog:",
     "@fastify/http-proxy": "11.6.5",
     "@fastify/static": "10.1.7",
-    "@fastify/url-data": "6.0.5",
-    "fast-glob": "3.3.3"
+    "@fastify/url-data": "catalog:",
+    "fast-glob": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "fastify": "5.12.7",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "fastify": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

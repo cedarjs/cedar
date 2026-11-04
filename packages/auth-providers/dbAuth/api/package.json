@@ -58,19 +58,19 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "md5": "2.3.0",
-    "uuid": "11.1.1"
+    "uuid": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@simplewebauthn/server": "13.3.3",
-    "@types/aws-lambda": "8.10.164",
+    "@types/aws-lambda": "catalog:",
     "@types/md5": "2.3.6",
-    "concurrently": "9.2.5",
-    "publint": "0.3.25",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "concurrently": "catalog:",
+    "publint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@simplewebauthn/server": "^13.0.0"

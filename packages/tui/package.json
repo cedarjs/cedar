@@ -20,13 +20,13 @@
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\""
   },
   "dependencies": {
-    "ansis": "4.4.0",
-    "enquirer": "2.4.1",
+    "ansis": "catalog:",
+    "enquirer": "catalog:",
     "stdout-update": "1.6.8"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=24"

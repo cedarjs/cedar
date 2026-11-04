@@ -252,6 +252,14 @@ Most of the time your contribution to Cedar won't involve adding any new depende
 - we check that all of our `package.json`s are sorted
   - if you happen to accidentally "unsort" a package.json, fixing this should be easy: run `yarn dlx sort-package-json` in the unsorted workspace
 
+### Shared dependency versions
+
+A dependency used by two or more workspaces gets its version from the [Yarn catalog](https://yarnpkg.com/features/catalogs) in `.yarnrc.yml`. The workspaces' `package.json` files say `"catalog:"` instead of a version. Prisma packages use the `prisma` catalog (`"catalog:prisma"`) and all have the same version.
+
+- To bump a shared dependency, change its version in `.yarnrc.yml`, run `yarn constraints --fix` (peer dependencies spell their version out, and this updates them), then run `yarn install`
+- To add a dependency that another workspace already uses, add it with `"catalog:"` as the version. `yarn constraints` fails if a shared dependency isn't in the catalog
+- The create-cedar-app templates aren't workspaces, so they spell their versions out
+
 ## Yarn v3: Tips and Troubleshooting
 
 ### Yarn Commands and Utilities

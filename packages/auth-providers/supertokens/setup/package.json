@@ -42,13 +42,13 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/yargs": "17.0.35",
-    "concurrently": "9.2.5",
-    "memfs": "4.80.0",
-    "publint": "0.3.25",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "@types/yargs": "catalog:",
+    "concurrently": "catalog:",
+    "memfs": "catalog:",
+    "publint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"
