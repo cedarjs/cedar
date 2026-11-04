@@ -3,6 +3,9 @@ import type * as PackageJsonModule from 'package-json'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  addPnpmViteOverride,
+  addVitePin,
+  declaresVitest,
   fetchVitestReleasePackages,
   fetchViteVersions,
   updatePnpmViteOverride,
@@ -300,5 +303,140 @@ describe('fetchVitestReleasePackages', () => {
       'Failed to fetch @vitest/ui@5.1.0 from the npm registry: ' +
         'getaddrinfo ENOTFOUND',
     )
+  })
+})
+
+describe('declaresVitest', () => {
+  it('is true when any package declares vitest', () => {
+    expect(
+      declaresVitest([
+        { devDependencies: { vite: '7.3.7' } },
+        { dependencies: { vitest: '5.0.5' } },
+      ]),
+    ).toBe(true)
+    expect(declaresVitest([{}, { devDependencies: { vitest: '5.0.5' } }])).toBe(
+      true,
+    )
+  })
+
+  it('is false when no package declares vitest', () => {
+    expect(
+      declaresVitest([
+        { devDependencies: { vite: '7.3.7', '@vitest/ui': '5.0.5' } },
+        {},
+      ]),
+    ).toBe(false)
+  })
+})
+
+describe('addVitePin', () => {
+  it('adds resolutions.vite for yarn', () => {
+    const pkg = { resolutions: { 'react-is': '19.3.1' } }
+    const messages: string[] = []
+
+    expect(addVitePin(pkg, 'yarn', '8.3.5', messages)).toBe(true)
+    expect(pkg).toEqual({
+      resolutions: { 'react-is': '19.3.1', vite: '8.3.5' },
+    })
+    expect(messages).toEqual([' - resolutions.vite: added at 8.3.5'])
+  })
+
+  it('adds overrides.vite for npm', () => {
+    const pkg = {}
+    const messages: string[] = []
+
+    expect(addVitePin(pkg, 'npm', '8.3.5', messages)).toBe(true)
+    expect(pkg).toEqual({ overrides: { vite: '8.3.5' } })
+    expect(messages).toEqual([' - overrides.vite: added at 8.3.5'])
+  })
+
+  it("doesn't add a package.json pin for pnpm", () => {
+    const pkg = {}
+
+    expect(addVitePin(pkg, 'pnpm', '8.3.5', [])).toBe(false)
+    expect(pkg).toEqual({})
+  })
+
+  it("doesn't add a pin that's already there", () => {
+    const yarnPkg = { resolutions: { vite: '7.3.7' } }
+    const npmPkg = { overrides: { vite: { esbuild: '0.25.0' } } }
+    const messages: string[] = []
+
+    expect(addVitePin(yarnPkg, 'yarn', '8.3.5', messages)).toBe(false)
+    expect(addVitePin(npmPkg, 'npm', '8.3.5', messages)).toBe(false)
+    expect(yarnPkg).toEqual({ resolutions: { vite: '7.3.7' } })
+    expect(npmPkg).toEqual({ overrides: { vite: { esbuild: '0.25.0' } } })
+    expect(messages).toEqual([])
+  })
+
+  it('uses resolutions, not overrides, for yarn', () => {
+    const pkg = { overrides: { 'react-is': '19.3.1' } }
+
+    expect(addVitePin(pkg, 'yarn', '8.3.5', [])).toBe(true)
+    expect(pkg).toEqual({
+      overrides: { 'react-is': '19.3.1' },
+      resolutions: { vite: '8.3.5' },
+    })
+  })
+})
+
+describe('addPnpmViteOverride', () => {
+  it('adds vite to an existing overrides block in its style', () => {
+    const content = [
+      'packages:',
+      '  - api',
+      '  - web',
+      '',
+      'overrides:',
+      "  'react-is': '19.3.1'",
+      '',
+      'allowBuilds:',
+      '  esbuild: true',
+      '',
+    ].join('\n')
+
+    expect(addPnpmViteOverride(content, '8.3.5')).toBe(
+      content.replace(
+        "  'react-is': '19.3.1'\n",
+        "  'react-is': '19.3.1'\n  'vite': '8.3.5'\n",
+      ),
+    )
+  })
+
+  it('uses unquoted keys when the existing entries do', () => {
+    const content = 'overrides:\n  react-is: 19.3.1\n'
+
+    expect(addPnpmViteOverride(content, '8.3.5')).toBe(
+      'overrides:\n  react-is: 19.3.1\n  vite: 8.3.5\n',
+    )
+  })
+
+  it('appends an overrides block when the file has none', () => {
+    const content = 'packages:\n  - api\n  - web\n'
+
+    expect(addPnpmViteOverride(content, '8.3.5')).toBe(
+      "packages:\n  - api\n  - web\n\noverrides:\n  vite: '8.3.5'\n",
+    )
+  })
+
+  it('keeps CRLF line endings', () => {
+    expect(
+      addPnpmViteOverride("overrides:\r\n  'react-is': '19.3.1'\r\n", '8.3.5'),
+    ).toBe("overrides:\r\n  'react-is': '19.3.1'\r\n  'vite': '8.3.5'\r\n")
+    expect(addPnpmViteOverride('packages:\r\n  - web\r\n', '8.3.5')).toBe(
+      "packages:\r\n  - web\r\n\r\noverrides:\r\n  vite: '8.3.5'\r\n",
+    )
+  })
+
+  it('returns undefined when overrides already has vite', () => {
+    expect(
+      addPnpmViteOverride("overrides:\n  'vite': '7.3.7'\n", '8.3.5'),
+    ).toBeUndefined()
+  })
+
+  it('returns undefined for flow-style overrides', () => {
+    expect(
+      addPnpmViteOverride("overrides: { 'react-is': '19.3.1' }\n", '8.3.5'),
+    ).toBeUndefined()
   })
 })
