@@ -23,7 +23,6 @@
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
     "fix:permissions": "chmod +x dist/bin.js",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },

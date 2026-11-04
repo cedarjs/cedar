@@ -103,10 +103,8 @@ describe('create-cedar-app', () => {
   })
 
   test('--yes, -y', async () => {
-    // Running `yarn install` in the test times out and the subsequent step,
-    // generating types, is also flakey since `yarn pack` seems to skip
-    // `.yarnrc.yml` which is necessary for configuring a proper install.
-    // So we use `--no-install` to skip the install step.
+    // Running `yarn install` in the test times out, so we use `--no-install`
+    // to skip the install step.
     const p = await $`yarn create-cedar-app ./cedar-app --no-yarn-install --yes`
     const snapshotPath = path.join(SNAPSHOT_DIR, 'create-cedar-app.out')
     const expected = await fs.readFile(snapshotPath, 'utf8')

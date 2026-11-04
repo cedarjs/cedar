@@ -32,7 +32,6 @@
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "setup:test": "npx prisma generate --config ./src/__tests__/prisma.config.ts && npx prisma migrate diff --config ./src/__tests__/prisma.config.ts --from-empty --to-schema ./src/__tests__/unit-test-schema.prisma --script -o ./src/__tests__/unit-test-schema.sql",
     "test": "vitest run",
     "test:watch": "vitest"

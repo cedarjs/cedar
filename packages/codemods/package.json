@@ -19,7 +19,6 @@
     "build:watch": "nodemon --watch src --ignore dist --exec \"yarn build\"",
     "check:package": "yarn publint",
     "generate:codemod": "yarn node ./tasks/generateCodemod/generateCodemod.mjs",
-    "prepublishOnly": "yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },

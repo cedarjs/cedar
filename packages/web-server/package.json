@@ -23,8 +23,7 @@
     "build:pack": "yarn pack -o cedarjs-web-server.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
-    "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js",
-    "prepublishOnly": "NODE_ENV=production yarn build"
+    "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js"
   },
   "dependencies": {
     "@cedarjs/fastify-web": "workspace:*",

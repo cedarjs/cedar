@@ -48,7 +48,6 @@
     "build": "tsc -p tsconfig.json",
     "build:pack": "yarn pack -o cedarjs-structure.tgz",
     "build:watch": "tsc -p tsconfig.json --watch",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "prettier": "prettier --write './src/**/*.{ts,tsx}'",
     "test": "vitest run",
     "test:watch": "vitest watch"

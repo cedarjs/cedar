@@ -173,6 +173,14 @@ export async function createProjectFiles(
     path.join(newAppDir, '.gitignore'),
   )
 
+  // `yarn pack` never includes a `.yarnrc.yml`, so the yarn overlay ships it
+  // as `yarnrc.yml.template`
+  const yarnrcTemplatePath = path.join(newAppDir, 'yarnrc.yml.template')
+
+  if (fs.existsSync(yarnrcTemplatePath)) {
+    fs.renameSync(yarnrcTemplatePath, path.join(newAppDir, '.yarnrc.yml'))
+  }
+
   await replacePlaceholders(newAppDir, {
     packageManager,
     databaseUrl,
