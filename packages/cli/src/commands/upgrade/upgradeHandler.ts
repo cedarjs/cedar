@@ -809,25 +809,14 @@ export function updateViteDependencies(
 }
 
 /**
- * Whether any of `pkgs` declares `vitest` in its `dependencies` or
- * `devDependencies`
- */
-export function declaresVitest(pkgs: ProjectPackageJson[]) {
-  return pkgs.some(
-    (pkg) =>
-      !!(pkg.dependencies?.['vitest'] ?? pkg.devDependencies?.['vitest']),
-  )
-}
-
-/**
  * Adds a `vite` pin at `viteVersion` to `pkg`, the project's root
  * package.json: `resolutions.vite` for Yarn and `overrides.vite` for npm.
  * pnpm keeps its pin in pnpm-workspace.yaml (see `addPnpmViteOverride`), so
  * there's nothing to add to `pkg` for it. Returns `false`, without changing
  * `pkg`, when it already has the pin.
  *
- * Vitest accepts a wide range of Vite versions, so without the pin the package
- * manager can install a second, newer Vite for it.
+ * Packages with wide `vite` ranges, like Vitest, Storybook and Vite plugins,
+ * can otherwise get a second, newer Vite installed for them.
  */
 export function addVitePin(
   pkg: ProjectPackageJson,
@@ -1012,8 +1001,10 @@ export function addPnpmViteOverride(content: string, viteVersion: string) {
  * release being upgraded to is built against. The CedarJS Vite plugins only
  * work with the exact Vite version they're built against, and the `@vitest/*`
  * packages have to match `vitest`. Both sides use Vite to build, so the step
- * adds `vite` to the web and api sides when it's missing. `vitest` is only
- * updated, because a project that doesn't run tests doesn't need it.
+ * adds `vite` to the web and api sides when it's missing. It also adds the
+ * package manager's `vite` pin when it's missing, so that packages with wide
+ * `vite` ranges use the same Vite. `vitest` is only updated, because a project
+ * that doesn't run tests doesn't need it.
  */
 async function updateViteDeps(
   ctx: Record<string, unknown>,
@@ -1055,13 +1046,6 @@ async function updateViteDeps(
 
   const packageManager = getPackageManager()
 
-  // Projects that run tests get a `vite` pin, so that Vitest uses the Vite
-  // version CedarJS is built against
-  const pinViteVersion =
-    versions.vite && declaresVitest(projectPackageJsons.map(({ pkg }) => pkg))
-      ? versions.vite
-      : undefined
-
   const vitestPackages = versions.vitest
     ? await fetchVitestReleasePackages(
         projectPackageJsons.flatMap(({ pkg }) => [
@@ -1082,8 +1066,8 @@ async function updateViteDeps(
 
     const pinned =
       isRoot &&
-      !!pinViteVersion &&
-      addVitePin(pkg, packageManager, pinViteVersion, pkgMessages)
+      !!versions.vite &&
+      addVitePin(pkg, packageManager, versions.vite, pkgMessages)
 
     const added =
       requiresVite &&
@@ -1118,10 +1102,8 @@ async function updateViteDeps(
     const content = fs.readFileSync(pnpmWorkspacePath, 'utf-8')
     const updatedContent = updatePnpmViteOverride(content, versions.vite)
     const addedContent =
-      updatedContent === undefined &&
-      pinViteVersion &&
-      packageManager === 'pnpm'
-        ? addPnpmViteOverride(content, pinViteVersion)
+      updatedContent === undefined && packageManager === 'pnpm'
+        ? addPnpmViteOverride(content, versions.vite)
         : undefined
 
     if (updatedContent !== undefined) {
@@ -1134,7 +1116,7 @@ async function updateViteDeps(
     } else if (addedContent !== undefined) {
       messages.push(
         `Updating ${pnpmWorkspacePath}`,
-        ` - overrides.vite: added at ${pinViteVersion}`,
+        ` - overrides.vite: added at ${versions.vite}`,
       )
     }
 

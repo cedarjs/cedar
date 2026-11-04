@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   addPnpmViteOverride,
   addVitePin,
-  declaresVitest,
   fetchVitestReleasePackages,
   fetchViteVersions,
   updatePnpmViteOverride,
@@ -306,29 +305,6 @@ describe('fetchVitestReleasePackages', () => {
   })
 })
 
-describe('declaresVitest', () => {
-  it('is true when any package declares vitest', () => {
-    expect(
-      declaresVitest([
-        { devDependencies: { vite: '7.3.7' } },
-        { dependencies: { vitest: '5.0.5' } },
-      ]),
-    ).toBe(true)
-    expect(declaresVitest([{}, { devDependencies: { vitest: '5.0.5' } }])).toBe(
-      true,
-    )
-  })
-
-  it('is false when no package declares vitest', () => {
-    expect(
-      declaresVitest([
-        { devDependencies: { vite: '7.3.7', '@vitest/ui': '5.0.5' } },
-        {},
-      ]),
-    ).toBe(false)
-  })
-})
-
 describe('addVitePin', () => {
   it('adds resolutions.vite for yarn', () => {
     const pkg = { resolutions: { 'react-is': '19.3.1' } }
@@ -348,6 +324,16 @@ describe('addVitePin', () => {
     expect(addVitePin(pkg, 'npm', '8.3.5', messages)).toBe(true)
     expect(pkg).toEqual({ overrides: { vite: '8.3.5' } })
     expect(messages).toEqual([' - overrides.vite: added at 8.3.5'])
+  })
+
+  it("adds the pin for a project that doesn't declare vitest", () => {
+    const pkg = {
+      devDependencies: { '@cedarjs/core': '7.1.0' },
+      resolutions: { 'react-is': '19.3.1' },
+    }
+
+    expect(addVitePin(pkg, 'yarn', '8.3.5', [])).toBe(true)
+    expect(pkg.resolutions).toEqual({ 'react-is': '19.3.1', vite: '8.3.5' })
   })
 
   it("doesn't add a package.json pin for pnpm", () => {
