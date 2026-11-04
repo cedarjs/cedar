@@ -341,8 +341,13 @@ export const setCoercion = (
   if (valueAs === 'valueAsDate' && type === 'date') {
     // react-hook-form's valueAsDate bypasses setValueAs, including emptyAs.
     delete validation.valueAsDate
+    // react-hook-form passes values from `setValue()` and `defaultValues` to
+    // setValueAs as they are, so `val` can be a Date. Only strings from the
+    // input are date-only strings that parseDateOnly handles
     validation.setValueAs = (val: string) =>
-      isValueEmpty(val) ? setValueAs?.(val) : parseDateOnly(val)
+      typeof val !== 'string' || isValueEmpty(val)
+        ? setValueAs?.(val)
+        : parseDateOnly(val)
   } else {
     validation.setValueAs = setValueAs
   }

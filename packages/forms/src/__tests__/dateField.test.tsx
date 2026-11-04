@@ -1,6 +1,8 @@
 import React from 'react'
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { useForm } from 'react-hook-form'
+import type { UseFormSetValue } from 'react-hook-form'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import type { EmptyAsValue, RedwoodRegisterOptions } from '../coercion'
@@ -85,6 +87,58 @@ describe('DateField coercion in Europe/Berlin', () => {
       '+202627-03-05T00:00:00.000Z',
     )
   })
+
+  it.each([false, true])(
+    'keeps a Date from defaultValues with valueAsDate=%s',
+    async (valueAsDate) => {
+      const onSubmit = vi.fn<(data: { date: Date }) => void>()
+      const date = new Date('2026-03-05T00:00:00.000Z')
+
+      render(
+        <Form onSubmit={onSubmit} config={{ defaultValues: { date } }}>
+          <DateField name="date" validation={{ valueAsDate }} />
+          <Submit>Save</Submit>
+        </Form>,
+      )
+
+      fireEvent.click(screen.getByText('Save'))
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+      expect(onSubmit.mock.calls[0][0].date.toISOString()).toBe(
+        date.toISOString(),
+      )
+    },
+  )
+
+  it.each([false, true])(
+    'keeps a Date from setValue() with valueAsDate=%s',
+    async (valueAsDate) => {
+      const onSubmit = vi.fn<(data: { date: Date }) => void>()
+      const date = new Date('2026-03-05T00:00:00.000Z')
+      let setValue: UseFormSetValue<{ date: Date }> | undefined
+
+      const DateForm = () => {
+        const formMethods = useForm<{ date: Date }>()
+        setValue = formMethods.setValue
+
+        return (
+          <Form onSubmit={onSubmit} formMethods={formMethods}>
+            <DateField name="date" validation={{ valueAsDate }} />
+            <Submit>Save</Submit>
+          </Form>
+        )
+      }
+
+      render(<DateForm />)
+      act(() => setValue?.('date', date))
+      fireEvent.click(screen.getByText('Save'))
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+      expect(onSubmit.mock.calls[0][0].date.toISOString()).toBe(
+        date.toISOString(),
+      )
+    },
+  )
 
   it.each(
     emptyCases.flatMap((emptyCase) =>
