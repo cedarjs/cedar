@@ -1,13 +1,18 @@
-import packageJson from 'package-json'
+import packageJson, { VersionNotFoundError } from 'package-json'
+import type * as PackageJsonModule from 'package-json'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  fetchVitestReleasePackages,
   fetchViteVersions,
   updatePnpmViteOverride,
   updateViteDependencies,
 } from '../upgradeHandler.js'
 
-vi.mock('package-json', () => ({ default: vi.fn() }))
+vi.mock('package-json', async (importOriginal) => ({
+  ...(await importOriginal<typeof PackageJsonModule>()),
+  default: vi.fn(),
+}))
 
 const versions = { vite: '8.3.5', vitest: '5.1.0' }
 
@@ -18,12 +23,15 @@ describe('updateViteDependencies', () => {
       devDependencies: {
         '@cedarjs/vite': '7.1.0',
         '@vitest/coverage-v8': '5.0.5',
+        '@vitest/eslint-plugin': '1.6.28',
         vite: '7.3.7',
         vitest: '5.0.5',
       },
     }
 
-    const updated = updateViteDependencies(pkg, versions, [])
+    const updated = updateViteDependencies(pkg, versions, [], {
+      vitestPackages: new Set(['@vitest/coverage-v8']),
+    })
 
     expect(updated).toBe(true)
     expect(pkg).toEqual({
@@ -31,6 +39,7 @@ describe('updateViteDependencies', () => {
       devDependencies: {
         '@cedarjs/vite': '7.1.0',
         '@vitest/coverage-v8': '5.1.0',
+        '@vitest/eslint-plugin': '1.6.28',
         vite: '8.3.5',
         vitest: '5.1.0',
       },
@@ -155,6 +164,28 @@ describe('updatePnpmViteOverride', () => {
     expect(updatePnpmViteOverride(content, '8.3.5')).toBeUndefined()
   })
 
+  it('handles a comment on the overrides line and column-0 comments', () => {
+    const content = [
+      'overrides: # pinned for Cedar',
+      "  'react-is': '19.3.1'",
+      '# Cedar needs this exact version',
+      "  vite: '7.3.7'",
+      '',
+    ].join('\n')
+
+    expect(updatePnpmViteOverride(content, '8.3.5')).toBe(
+      content.replace("vite: '7.3.7'", "vite: '8.3.5'"),
+    )
+  })
+
+  it('keeps CRLF line endings', () => {
+    const content = workspace.replaceAll('\n', '\r\n')
+
+    expect(updatePnpmViteOverride(content, '8.3.5')).toBe(
+      content.replace("'vite': '7.3.7'", "'vite': '8.3.5'"),
+    )
+  })
+
   it("doesn't match packages whose name starts with vite", () => {
     const content = "overrides:\n  'vite-plugin-foo': '1.0.0'\n"
 
@@ -218,6 +249,56 @@ describe('fetchViteVersions', () => {
     await expect(fetchViteVersions('7.1.0')).rejects.toThrow(
       'Failed to fetch @cedarjs/testing@7.1.0 from the npm registry: ' +
         'Package `@cedarjs/testing` could not be found',
+    )
+  })
+})
+
+describe('fetchVitestReleasePackages', () => {
+  const packageJsonMock = vi.mocked(packageJson)
+
+  beforeEach(() => {
+    packageJsonMock.mockReset()
+  })
+
+  it('returns the @vitest packages published at the vitest version', async () => {
+    const published: Record<string, string[]> = {
+      '@vitest/coverage-v8': ['5.0.5', '5.1.0'],
+      '@vitest/eslint-plugin': ['1.6.28'],
+    }
+
+    packageJsonMock.mockImplementation(async (name, options) => {
+      const version = String(options?.version)
+
+      if (!published[String(name)]?.includes(version)) {
+        throw new VersionNotFoundError(String(name), version)
+      }
+
+      // The tests don't read the manifest
+      return {} as Awaited<ReturnType<typeof packageJson>>
+    })
+
+    const vitestPackages = await fetchVitestReleasePackages(
+      [
+        'vitest',
+        '@vitest/coverage-v8',
+        '@vitest/eslint-plugin',
+        '@vitest/coverage-v8',
+      ],
+      '5.1.0',
+    )
+
+    expect(vitestPackages).toEqual(new Set(['@vitest/coverage-v8']))
+    expect(packageJsonMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('throws when the registry lookup fails', async () => {
+    packageJsonMock.mockRejectedValue(new Error('getaddrinfo ENOTFOUND'))
+
+    await expect(
+      fetchVitestReleasePackages(['@vitest/ui'], '5.1.0'),
+    ).rejects.toThrow(
+      'Failed to fetch @vitest/ui@5.1.0 from the npm registry: ' +
+        'getaddrinfo ENOTFOUND',
     )
   })
 })

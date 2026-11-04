@@ -5,7 +5,7 @@ import { ListrEnquirerPromptAdapter } from '@listr2/prompt-adapter-enquirer'
 import execa from 'execa'
 import latestVersion from 'latest-version'
 import { Listr } from 'listr2'
-import packageJson from 'package-json'
+import packageJson, { VersionNotFoundError } from 'package-json'
 import { terminalLink } from 'termi-link'
 
 import { colors as c } from '@cedarjs/cli-helpers/colors'
@@ -689,11 +689,40 @@ async function updatePrismaDeps(
 }
 
 /**
- * Whether `depName` is a Vitest package that's released together with
- * `vitest`, and so has to be on the same version
+ * Returns the `@vitest/*` packages among `depNames` that are published at
+ * `vitestVersion`, and so are released together with `vitest`. Other
+ * `@vitest/*` packages, like `@vitest/eslint-plugin`, have versions of their
+ * own, and not every Vitest release publishes every package in the scope.
  */
-function isVitestReleasePackage(depName: string) {
-  return depName === 'vitest' || depName.startsWith('@vitest/')
+export async function fetchVitestReleasePackages(
+  depNames: Iterable<string>,
+  vitestVersion: string,
+): Promise<Set<string>> {
+  const candidates = [...new Set(depNames)].filter((depName) =>
+    depName.startsWith('@vitest/'),
+  )
+
+  const published = await Promise.all(
+    candidates.map(async (depName) => {
+      try {
+        await packageJson(depName, { version: vitestVersion })
+        return true
+      } catch (e) {
+        if (e instanceof VersionNotFoundError) {
+          return false
+        }
+
+        const message = e instanceof Error ? e.message : String(e)
+        throw new Error(
+          `Failed to fetch ${depName}@${vitestVersion} from the npm ` +
+            'registry: ' +
+            message,
+        )
+      }
+    }),
+  )
+
+  return new Set(candidates.filter((_, i) => published[i]))
 }
 
 interface ProjectPackageJson extends TemplatePackageJson {
@@ -702,24 +731,39 @@ interface ProjectPackageJson extends TemplatePackageJson {
 }
 
 /**
- * Sets `vite`, `vitest` and the `@vitest/*` packages in the `dependencies` and
+ * Sets `vite`, `vitest` and the `vitestPackages` in the `dependencies` and
  * `devDependencies` of `pkg` to `versions`, and the `vite` pin in its
  * `resolutions` (Yarn) or `overrides` (npm). Collects a line into `messages`
  * for every change. Only packages and pins `pkg` already declares are
  * updated.
+ *
+ * `vitestPackages` are the `@vitest/*` packages released together with
+ * `vitest`, as returned by `fetchVitestReleasePackages`.
  */
 export function updateViteDependencies(
   pkg: ProjectPackageJson,
   versions: ViteVersions,
   messages: string[],
-  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean } = {},
+  {
+    dryRun,
+    verbose,
+    vitestPackages = new Set(),
+  }: {
+    dryRun?: boolean
+    verbose?: boolean
+    vitestPackages?: ReadonlySet<string>
+  } = {},
 ) {
   const versionFor = (depName: string) => {
     if (depName === 'vite') {
       return versions.vite
     }
 
-    return isVitestReleasePackage(depName) ? versions.vitest : undefined
+    if (depName === 'vitest' || vitestPackages.has(depName)) {
+      return versions.vitest
+    }
+
+    return undefined
   }
 
   let updated = false
@@ -773,7 +817,9 @@ export function updateViteDependencies(
  */
 export function updatePnpmViteOverride(content: string, viteVersion: string) {
   const lines = content.split('\n')
-  const overridesIndex = lines.findIndex((line) => /^overrides:\s*$/.test(line))
+  const overridesIndex = lines.findIndex((line) =>
+    /^overrides:\s*(#[^\n]*)?$/.test(line),
+  )
 
   if (overridesIndex === -1) {
     return undefined
@@ -782,14 +828,15 @@ export function updatePnpmViteOverride(content: string, viteVersion: string) {
   for (let i = overridesIndex + 1; i < lines.length; i++) {
     const line = lines[i]
 
-    // The block ends at the next top-level key
-    if (/^\S/.test(line)) {
+    // The block ends at the next top-level key. Comments can start at any
+    // column.
+    if (/^[^\s#]/.test(line)) {
       break
     }
 
-    const match = /^(\s+)(['"]?)vite\2(\s*:\s*)(['"]?)([^'"\s#]+)\4(.*)$/.exec(
-      line,
-    )
+    // `rest` keeps the `\r` of a CRLF line ending
+    const match =
+      /^(\s+)(['"]?)vite\2(\s*:\s*)(['"]?)([^'"\s#]+)\4([^\n]*)$/.exec(line)
 
     if (!match) {
       continue
@@ -853,14 +900,29 @@ async function updateViteDeps(
     { basePath: getPaths().api.base, requiresVite: true },
   ]
 
-  for (const { basePath, requiresVite } of projectPackages) {
-    const pkgJsonPath = path.join(basePath, 'package.json')
+  const projectPackageJsons = projectPackages
+    .map(({ basePath, requiresVite }) => ({
+      pkgJsonPath: path.join(basePath, 'package.json'),
+      requiresVite,
+    }))
+    .filter(({ pkgJsonPath }) => fs.existsSync(pkgJsonPath))
+    .map(({ pkgJsonPath, requiresVite }) => ({
+      pkgJsonPath,
+      requiresVite,
+      pkg: JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8')),
+    }))
 
-    if (!fs.existsSync(pkgJsonPath)) {
-      continue
-    }
+  const vitestPackages = versions.vitest
+    ? await fetchVitestReleasePackages(
+        projectPackageJsons.flatMap(({ pkg }) => [
+          ...Object.keys(pkg.dependencies ?? {}),
+          ...Object.keys(pkg.devDependencies ?? {}),
+        ]),
+        versions.vitest,
+      )
+    : new Set<string>()
 
-    const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
+  for (const { pkgJsonPath, requiresVite, pkg } of projectPackageJsons) {
     const pkgMessages: string[] = []
 
     const added =
@@ -876,6 +938,7 @@ async function updateViteDeps(
     const updated = updateViteDependencies(pkg, versions, pkgMessages, {
       dryRun,
       verbose,
+      vitestPackages,
     })
 
     if (added || updated) {
