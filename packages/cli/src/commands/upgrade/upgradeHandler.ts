@@ -158,6 +158,14 @@ export const handler = async (upgradeOptions: UpgradeOptions) => {
           !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
       },
       {
+        title: 'Updating Vite and Vitest to the versions CedarJS uses',
+        // Runs after the canary template sync, so the versions come from the
+        // target release rather than from the template on main
+        task: (ctx, task) => updateViteDeps(ctx, task, { dryRun, verbose }),
+        enabled: (ctx) =>
+          !!ctx.versionToUpgradeTo && notBlockedByPreUpgradeChecks(ctx),
+      },
+      {
         title: 'Downloading yarn patches',
         task: (ctx) => downloadYarnPatches(ctx, { dryRun, verbose }),
         enabled: (ctx) =>
@@ -435,33 +443,65 @@ function updateCedarJSDepsForAllSides(
 }
 
 /**
- * Fetches the `prisma` version that `@cedarjs/cli@<cedarVersion>` declares as
- * its peer dependency, from the npm registry the project is configured to use.
- * Returns `undefined` for CedarJS versions that don't declare `prisma` as a
- * peer.
+ * Fetches the registry manifest of `packageName` at `cedarVersion`, from the
+ * npm registry the project is configured to use
  */
-export async function fetchPrismaPeerVersion(
-  cedarVersion: string,
-): Promise<string | undefined> {
+async function fetchCedarManifest(packageName: string, cedarVersion: string) {
   // Registry metadata doesn't include build metadata, like the `+dd79f1726` in
   // '4.0.0-rc.428+dd79f1726'
   const version = cedarVersion.split('+')[0]
 
-  let manifest: Awaited<ReturnType<typeof packageJson>>
-
   try {
-    manifest = await packageJson('@cedarjs/cli', { version })
+    return await packageJson(packageName, { version })
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     throw new Error(
-      `Failed to fetch @cedarjs/cli@${version} from the npm registry: ` +
+      `Failed to fetch ${packageName}@${version} from the npm registry: ` +
         message,
     )
   }
+}
 
+/**
+ * Fetches the `prisma` version that `@cedarjs/cli@<cedarVersion>` declares as
+ * its peer dependency. Returns `undefined` for CedarJS versions that don't
+ * declare `prisma` as a peer.
+ */
+export async function fetchPrismaPeerVersion(
+  cedarVersion: string,
+): Promise<string | undefined> {
+  const manifest = await fetchCedarManifest('@cedarjs/cli', cedarVersion)
   const prismaVersion = manifest.peerDependencies?.['prisma']
 
   return typeof prismaVersion === 'string' ? prismaVersion : undefined
+}
+
+export interface ViteVersions {
+  vite?: string
+  vitest?: string
+}
+
+/**
+ * Fetches the Vite and Vitest versions CedarJS `cedarVersion` is built
+ * against: the `vite` dependency of `@cedarjs/vite` and the `vitest` peer
+ * dependency of `@cedarjs/testing`. Either is `undefined` when that release
+ * doesn't declare it.
+ */
+export async function fetchViteVersions(
+  cedarVersion: string,
+): Promise<ViteVersions> {
+  const [viteManifest, testingManifest] = await Promise.all([
+    fetchCedarManifest('@cedarjs/vite', cedarVersion),
+    fetchCedarManifest('@cedarjs/testing', cedarVersion),
+  ])
+
+  const vite = viteManifest.dependencies?.['vite']
+  const vitest = testingManifest.peerDependencies?.['vitest']
+
+  return {
+    vite: typeof vite === 'string' ? vite : undefined,
+    vitest: typeof vitest === 'string' ? vitest : undefined,
+  }
 }
 
 /**
@@ -639,6 +679,232 @@ async function updatePrismaDeps(
 
       if (!dryRun) {
         fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, undefined, 2))
+      }
+    }
+  }
+
+  if (messages.length > 0) {
+    task.title = task.title + '\n' + messages.join('\n')
+  }
+}
+
+/**
+ * Whether `depName` is a Vitest package that's released together with
+ * `vitest`, and so has to be on the same version
+ */
+function isVitestReleasePackage(depName: string) {
+  return depName === 'vitest' || depName.startsWith('@vitest/')
+}
+
+interface ProjectPackageJson extends TemplatePackageJson {
+  resolutions?: Record<string, unknown>
+  overrides?: Record<string, unknown>
+}
+
+/**
+ * Sets `vite`, `vitest` and the `@vitest/*` packages in the `dependencies` and
+ * `devDependencies` of `pkg` to `versions`, and the `vite` pin in its
+ * `resolutions` (Yarn) or `overrides` (npm). Collects a line into `messages`
+ * for every change. Only packages and pins `pkg` already declares are
+ * updated.
+ */
+export function updateViteDependencies(
+  pkg: ProjectPackageJson,
+  versions: ViteVersions,
+  messages: string[],
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean } = {},
+) {
+  const versionFor = (depName: string) => {
+    if (depName === 'vite') {
+      return versions.vite
+    }
+
+    return isVitestReleasePackage(depName) ? versions.vitest : undefined
+  }
+
+  let updated = false
+
+  for (const field of ['dependencies', 'devDependencies'] as const) {
+    const deps = pkg[field] ?? {}
+
+    for (const [depName, depVersion] of Object.entries(deps)) {
+      const version = versionFor(depName)
+
+      if (!version || depVersion === version) {
+        continue
+      }
+
+      if (verbose || dryRun) {
+        messages.push(` - ${depName}: ${depVersion} => ${version}`)
+      }
+
+      deps[depName] = version
+      updated = true
+    }
+  }
+
+  for (const field of ['resolutions', 'overrides'] as const) {
+    const pin = pkg[field]?.['vite']
+
+    // npm overrides can also be objects, which pin nested dependencies.
+    // Only a top-level version string pins the project's own Vite.
+    if (!versions.vite || typeof pin !== 'string' || pin === versions.vite) {
+      continue
+    }
+
+    if (verbose || dryRun) {
+      messages.push(` - ${field}.vite: ${pin} => ${versions.vite}`)
+    }
+
+    pkg[field] = { ...pkg[field], vite: versions.vite }
+    updated = true
+  }
+
+  return updated
+}
+
+/**
+ * Returns `content`, a pnpm-workspace.yaml, with the `vite` entry in its
+ * top-level `overrides` set to `viteVersion`. Returns `undefined` when there's
+ * no such entry, or it's already on `viteVersion`.
+ *
+ * Edits the text line by line rather than parsing the YAML, so comments and
+ * formatting in the rest of the file stay as they are.
+ */
+export function updatePnpmViteOverride(content: string, viteVersion: string) {
+  const lines = content.split('\n')
+  const overridesIndex = lines.findIndex((line) => /^overrides:\s*$/.test(line))
+
+  if (overridesIndex === -1) {
+    return undefined
+  }
+
+  for (let i = overridesIndex + 1; i < lines.length; i++) {
+    const line = lines[i]
+
+    // The block ends at the next top-level key
+    if (/^\S/.test(line)) {
+      break
+    }
+
+    const match = /^(\s+)(['"]?)vite\2(\s*:\s*)(['"]?)([^'"\s#]+)\4(.*)$/.exec(
+      line,
+    )
+
+    if (!match) {
+      continue
+    }
+
+    const [, indent, keyQuote, separator, valueQuote, version, rest] = match
+
+    if (version === viteVersion) {
+      return undefined
+    }
+
+    lines[i] =
+      indent +
+      keyQuote +
+      'vite' +
+      keyQuote +
+      separator +
+      valueQuote +
+      viteVersion +
+      valueQuote +
+      rest
+
+    return lines.join('\n')
+  }
+
+  return undefined
+}
+
+/**
+ * Sets the project's Vite and Vitest packages to the versions the CedarJS
+ * release being upgraded to is built against. The CedarJS Vite plugins only
+ * work with the exact Vite version they're built against, and the `@vitest/*`
+ * packages have to match `vitest`. Both sides use Vite to build, so the step
+ * adds `vite` to the web and api sides when it's missing. `vitest` is only
+ * updated, because a project that doesn't run tests doesn't need it.
+ */
+async function updateViteDeps(
+  ctx: Record<string, unknown>,
+  task: { title: string; skip: (message: string) => void },
+  { dryRun, verbose }: { dryRun?: boolean; verbose?: boolean },
+) {
+  if (!ctx.versionToUpgradeTo) {
+    throw new Error('Failed to upgrade')
+  }
+
+  const versions = await fetchViteVersions(String(ctx.versionToUpgradeTo))
+
+  if (!versions.vite && !versions.vitest) {
+    task.skip(
+      `CedarJS ${ctx.versionToUpgradeTo} doesn't declare Vite or Vitest ` +
+        'versions',
+    )
+    return
+  }
+
+  const messages: string[] = []
+
+  const projectPackages = [
+    { basePath: getPaths().base, requiresVite: false },
+    { basePath: getPaths().web.base, requiresVite: true },
+    { basePath: getPaths().api.base, requiresVite: true },
+  ]
+
+  for (const { basePath, requiresVite } of projectPackages) {
+    const pkgJsonPath = path.join(basePath, 'package.json')
+
+    if (!fs.existsSync(pkgJsonPath)) {
+      continue
+    }
+
+    const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
+    const pkgMessages: string[] = []
+
+    const added =
+      requiresVite &&
+      !!versions.vite &&
+      addMissingDependency(
+        pkg,
+        'devDependencies',
+        'vite',
+        versions.vite,
+        pkgMessages,
+      )
+    const updated = updateViteDependencies(pkg, versions, pkgMessages, {
+      dryRun,
+      verbose,
+    })
+
+    if (added || updated) {
+      if (pkgMessages.length > 0) {
+        messages.push(`Updating ${pkgJsonPath}`, ...pkgMessages)
+      }
+
+      if (!dryRun) {
+        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, undefined, 2))
+      }
+    }
+  }
+
+  const pnpmWorkspacePath = path.join(getPaths().base, 'pnpm-workspace.yaml')
+
+  if (versions.vite && fs.existsSync(pnpmWorkspacePath)) {
+    const content = fs.readFileSync(pnpmWorkspacePath, 'utf-8')
+    const updatedContent = updatePnpmViteOverride(content, versions.vite)
+
+    if (updatedContent !== undefined) {
+      if (verbose || dryRun) {
+        messages.push(
+          `Updating ${pnpmWorkspacePath}`,
+          ` - overrides.vite => ${versions.vite}`,
+        )
+      }
+
+      if (!dryRun) {
+        fs.writeFileSync(pnpmWorkspacePath, updatedContent)
       }
     }
   }

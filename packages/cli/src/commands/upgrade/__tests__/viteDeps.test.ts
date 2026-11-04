@@ -1,0 +1,223 @@
+import packageJson from 'package-json'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import {
+  fetchViteVersions,
+  updatePnpmViteOverride,
+  updateViteDependencies,
+} from '../upgradeHandler.js'
+
+vi.mock('package-json', () => ({ default: vi.fn() }))
+
+const versions = { vite: '8.3.5', vitest: '5.1.0' }
+
+describe('updateViteDependencies', () => {
+  it('updates vite, vitest and the @vitest packages the project declares', () => {
+    const pkg = {
+      dependencies: { '@cedarjs/web': '7.1.0' },
+      devDependencies: {
+        '@cedarjs/vite': '7.1.0',
+        '@vitest/coverage-v8': '5.0.5',
+        vite: '7.3.7',
+        vitest: '5.0.5',
+      },
+    }
+
+    const updated = updateViteDependencies(pkg, versions, [])
+
+    expect(updated).toBe(true)
+    expect(pkg).toEqual({
+      dependencies: { '@cedarjs/web': '7.1.0' },
+      devDependencies: {
+        '@cedarjs/vite': '7.1.0',
+        '@vitest/coverage-v8': '5.1.0',
+        vite: '8.3.5',
+        vitest: '5.1.0',
+      },
+    })
+  })
+
+  it("doesn't add packages the project doesn't declare", () => {
+    const pkg = { devDependencies: { '@cedarjs/core': '7.1.0' } }
+
+    const updated = updateViteDependencies(pkg, versions, [])
+
+    expect(updated).toBe(false)
+    expect(pkg).toEqual({ devDependencies: { '@cedarjs/core': '7.1.0' } })
+  })
+
+  it('leaves packages alone when the release declares no version', () => {
+    const pkg = { devDependencies: { vite: '7.3.7', vitest: '5.0.5' } }
+
+    const updated = updateViteDependencies(pkg, { vite: '8.3.5' }, [])
+
+    expect(updated).toBe(true)
+    expect(pkg.devDependencies).toEqual({ vite: '8.3.5', vitest: '5.0.5' })
+  })
+
+  it('updates the vite pin in resolutions and overrides', () => {
+    const pkg = {
+      resolutions: { 'react-is': '19.3.1', vite: '7.3.7' },
+      overrides: { 'react-is': '19.3.1', vite: '7.3.7' },
+    }
+
+    const updated = updateViteDependencies(pkg, versions, [])
+
+    expect(updated).toBe(true)
+    expect(pkg).toEqual({
+      resolutions: { 'react-is': '19.3.1', vite: '8.3.5' },
+      overrides: { 'react-is': '19.3.1', vite: '8.3.5' },
+    })
+  })
+
+  it('leaves nested npm overrides alone', () => {
+    const pkg = { overrides: { vite: { esbuild: '0.25.0' } } }
+
+    const updated = updateViteDependencies(pkg, versions, [])
+
+    expect(updated).toBe(false)
+    expect(pkg).toEqual({ overrides: { vite: { esbuild: '0.25.0' } } })
+  })
+
+  it('only reports changes when verbose or dry run', () => {
+    const quiet: string[] = []
+    const loud: string[] = []
+
+    updateViteDependencies(
+      { devDependencies: { vite: '7.3.7' }, resolutions: { vite: '7.3.7' } },
+      versions,
+      quiet,
+    )
+    updateViteDependencies(
+      { devDependencies: { vite: '7.3.7' }, resolutions: { vite: '7.3.7' } },
+      versions,
+      loud,
+      { verbose: true },
+    )
+
+    expect(quiet).toEqual([])
+    expect(loud).toEqual([
+      ' - vite: 7.3.7 => 8.3.5',
+      ' - resolutions.vite: 7.3.7 => 8.3.5',
+    ])
+  })
+})
+
+describe('updatePnpmViteOverride', () => {
+  const workspace = [
+    'autoInstallPeers: false',
+    '',
+    'packages:',
+    '  - api',
+    '  - web',
+    '',
+    'overrides:',
+    "  'react-is': '19.3.1'",
+    "  'vite': '7.3.7'",
+    '',
+  ].join('\n')
+
+  it('updates the vite override and keeps the rest of the file', () => {
+    expect(updatePnpmViteOverride(workspace, '8.3.5')).toBe(
+      workspace.replace("'vite': '7.3.7'", "'vite': '8.3.5'"),
+    )
+  })
+
+  it('handles unquoted keys and values', () => {
+    const content = 'overrides:\n  vite: 7.3.7 # pinned for Cedar\n'
+
+    expect(updatePnpmViteOverride(content, '8.3.5')).toBe(
+      'overrides:\n  vite: 8.3.5 # pinned for Cedar\n',
+    )
+  })
+
+  it('returns undefined when the override is already up to date', () => {
+    expect(
+      updatePnpmViteOverride(workspace.replace('7.3.7', '8.3.5'), '8.3.5'),
+    ).toBeUndefined()
+  })
+
+  it('returns undefined when there are no overrides', () => {
+    expect(
+      updatePnpmViteOverride('packages:\n  - api\n  - web\n', '8.3.5'),
+    ).toBeUndefined()
+  })
+
+  it('only looks inside the top-level overrides block', () => {
+    const content = [
+      'overrides:',
+      "  'react-is': '19.3.1'",
+      'catalog:',
+      "  vite: '7.3.7'",
+      '',
+    ].join('\n')
+
+    expect(updatePnpmViteOverride(content, '8.3.5')).toBeUndefined()
+  })
+
+  it("doesn't match packages whose name starts with vite", () => {
+    const content = "overrides:\n  'vite-plugin-foo': '1.0.0'\n"
+
+    expect(updatePnpmViteOverride(content, '8.3.5')).toBeUndefined()
+  })
+})
+
+describe('fetchViteVersions', () => {
+  const packageJsonMock = vi.mocked(packageJson)
+
+  beforeEach(() => {
+    packageJsonMock.mockReset()
+  })
+
+  function stubRegistry(manifests: Record<string, Record<string, unknown>>) {
+    packageJsonMock.mockImplementation(async (name) => {
+      const manifest = manifests[String(name)]
+
+      if (!manifest) {
+        throw new Error(`Package \`${name}\` could not be found`)
+      }
+
+      // The tests only read the fields these manifests set
+      return manifest as Awaited<ReturnType<typeof packageJson>>
+    })
+  }
+
+  it("returns @cedarjs/vite's vite and @cedarjs/testing's vitest versions", async () => {
+    stubRegistry({
+      '@cedarjs/vite': { dependencies: { vite: '8.3.5' } },
+      '@cedarjs/testing': { peerDependencies: { vitest: '5.1.0' } },
+    })
+
+    await expect(fetchViteVersions('7.2.0+abc1234')).resolves.toEqual({
+      vite: '8.3.5',
+      vitest: '5.1.0',
+    })
+    expect(packageJsonMock).toHaveBeenCalledWith('@cedarjs/vite', {
+      version: '7.2.0',
+    })
+    expect(packageJsonMock).toHaveBeenCalledWith('@cedarjs/testing', {
+      version: '7.2.0',
+    })
+  })
+
+  it("returns undefined for versions the release doesn't declare", async () => {
+    stubRegistry({
+      '@cedarjs/vite': { dependencies: {} },
+      '@cedarjs/testing': { dependencies: { vitest: '5.1.0' } },
+    })
+
+    await expect(fetchViteVersions('7.1.0')).resolves.toEqual({
+      vite: undefined,
+      vitest: undefined,
+    })
+  })
+
+  it('throws when the registry lookup fails', async () => {
+    stubRegistry({ '@cedarjs/vite': { dependencies: { vite: '8.3.5' } } })
+
+    await expect(fetchViteVersions('7.1.0')).rejects.toThrow(
+      'Failed to fetch @cedarjs/testing@7.1.0 from the npm registry: ' +
+        'Package `@cedarjs/testing` could not be found',
+    )
+  })
+})

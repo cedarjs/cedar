@@ -2415,6 +2415,8 @@ yarn cedar upgrade
 
 This command does all the heavy-lifting of upgrading to a new release for you.
 
+Besides the `@cedarjs` packages, it sets Prisma, Vite and Vitest to the versions the new release is built against. CedarJS needs those exact versions, so it updates them wherever your project declares them, including a `vite` pin in `resolutions`, `overrides` or `pnpm-workspace.yaml`. It adds `vite` to your web and api sides if it's missing. It doesn't add `vitest`, because a project without tests doesn't need it.
+
 Besides upgrading to a new stable release, you can use this command to upgrade to either of our unstable releases, `canary` and `rc`, or you can upgrade to a specific release version.
 
 A canary release is published to npm every time a PR is merged to the `main` branch, and when we're getting close to a new release, we publish release candidates.
