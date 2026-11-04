@@ -35,7 +35,7 @@ export async function rscBuildForSsr({
   }
 
   const ssrBuildOutput = await viteBuild({
-    envFile: false,
+    envDir: false,
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     },
@@ -80,7 +80,7 @@ export async function rscBuildForSsr({
       outDir: rwPaths.web.distSsr,
       ssr: true,
       emptyOutDir: true, // Needed because `outDir` is not inside `root`
-      rollupOptions: {
+      rolldownOptions: {
         onwarn: onWarn,
         external: ['@cedarjs/realtime'],
         input: {
@@ -133,12 +133,6 @@ export async function rscBuildForSsr({
         },
       },
       manifest: 'client-build-manifest-ssr.json',
-    },
-    esbuild: {
-      logLevel: verbose ? 'debug' : 'silent',
-      logOverride: {
-        'unsupported-dynamic-import': 'silent',
-      },
     },
     logLevel: verbose ? 'info' : 'silent',
   })

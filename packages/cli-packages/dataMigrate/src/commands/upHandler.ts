@@ -87,22 +87,28 @@ export async function handler({
               find: /^api\//,
               replacement: getPaths().api.base + '/',
             },
-            {
-              find: /^src\//,
-              replacement: 'src/',
-              customResolver: (id, importer, _options) => {
-                const apiImportBase = importStatementPath(getPaths().api.base)
-                if (importer?.startsWith(apiImportBase)) {
-                  const apiImportSrc = importStatementPath(getPaths().api.src)
-                  const apiId = id.replace('src', apiImportSrc)
-                  return { id: resolveId(apiId) }
-                }
-                return null
-              },
-            },
           ],
         },
         plugins: [
+          {
+            // Files under api/ import each other with bare `src/...` paths,
+            // which have to resolve to api/src
+            name: 'cedar-resolve-src-imports',
+            enforce: 'pre',
+            resolveId(id, importer) {
+              const apiImportBase = importStatementPath(getPaths().api.base)
+
+              if (
+                id.startsWith('src/') &&
+                importer?.startsWith(apiImportBase)
+              ) {
+                const apiImportSrc = importStatementPath(getPaths().api.src)
+                return resolveId(id.replace('src', apiImportSrc))
+              }
+
+              return null
+            },
+          },
           cedarPlugins.cedarCjsCompatPlugin(),
           cedarPlugins.cedarjsResolveCedarStyleImportsPlugin(),
           cedarPlugins.cedarImportDirPlugin(),

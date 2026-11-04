@@ -51,7 +51,7 @@ describe('vitePluginOgGen', () => {
         command: 'build',
         mode: 'production',
       },
-    ).build?.rollupOptions?.input
+    ).build?.rolldownOptions?.input
 
     const inputKeys = Object.keys(rollupInputs)
 

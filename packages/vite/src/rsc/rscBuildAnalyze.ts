@@ -88,7 +88,7 @@ export async function rscBuildAnalyze() {
       // spend time on improving dev support or expand the scope of the components
       // that are looked up via the entries mappings.
       ssr: true,
-      rollupOptions: {
+      rolldownOptions: {
         onwarn: onWarn,
         external: ['@cedarjs/realtime'],
         input: getEntries(),

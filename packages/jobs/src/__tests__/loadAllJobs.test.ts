@@ -36,7 +36,12 @@ const writeFile = (file: string, content: string) => {
 }
 
 beforeEach(() => {
-  paths.distJobs = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-jobs-'))
+  // The real path, as os.tmpdir() can be a symlink (it is on macOS). Vitest's
+  // module runner keys modules by the path they're imported with, so a
+  // symlinked path and its target would load as two separate modules
+  paths.distJobs = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), 'cedar-jobs-'),
+  )
 })
 
 afterEach(() => {

@@ -9,16 +9,6 @@ import type { SourceMap } from 'magic-string'
 import { normalizePath } from 'vite'
 import type { ModuleNode, Plugin, ViteDevServer } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
-import tsPathsMod from 'vite-tsconfig-paths'
-
-// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
-// export: tsconfigPaths.default is the module object, and
-// tsconfigPaths.default.default is the actual function. ESM gets the
-// function directly. The `||` chain resolves correctly for both.
-const tsconfigPaths =
-  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
-  // interop
-  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import { buildCedarContext, wrapLegacyHandler } from '@cedarjs/api/runtime'
 import type { CedarHandler, LegacyHandler } from '@cedarjs/api/runtime'
@@ -235,12 +225,12 @@ export async function createApiViteServer(): Promise<ViteDevServer> {
       middlewareMode: true,
     },
     resolve: {
+      // Resolves user-defined tsconfig.json `paths` aliases, which the Babel
+      // module-resolver handles in the Babel pipeline
+      tsconfigPaths: true,
       alias: workspacePkgSourceMap,
     },
     plugins: [
-      // tsconfigPaths resolves user-defined tsconfig.json `paths` aliases; it
-      // replaces the Babel module-resolver's tsconfig-paths handling for dev.
-      tsconfigPaths(),
       cedarApiLogFormatterDevPlugin(),
       {
         name: 'cedar-api-src-redirect',

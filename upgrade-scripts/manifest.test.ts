@@ -9,6 +9,7 @@ test('all scripts are included in manifest.json', async () => {
     'README.md',
     'manifest.test.ts',
     '8.x.test.ts',
+    '9.x.test.ts',
     '__fixtures__',
   ]
   const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8')).sort()

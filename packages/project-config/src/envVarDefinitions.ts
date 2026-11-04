@@ -20,7 +20,7 @@ export function getEnvVarDefinitions() {
       REDWOOD_ENV_EDITOR: JSON.stringify(process.env.REDWOOD_ENV_EDITOR),
     },
     // Vite can automatically expose environment variables, but we
-    // disable that in `buildFeServer.ts` by setting `envFile: false`
+    // disable that in `buildFeServer.ts` by setting `envDir: false`
     // because we want to use our own logic for loading .env,
     // .env.defaults, etc
     // The two object spreads below will expose all environment

@@ -72,8 +72,8 @@
     "jsonwebtoken": "9.0.3",
     "publint": "0.3.25",
     "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "vite": "8.3.5",
+    "vitest": "5.1.0"
   },
   "engines": {
     "node": ">=24"

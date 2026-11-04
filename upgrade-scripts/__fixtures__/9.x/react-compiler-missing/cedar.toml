@@ -1,0 +1,3 @@
+[experimental.reactCompiler]
+  enabled = true
+  lintOnly = false

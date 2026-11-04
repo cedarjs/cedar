@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { Listr } from 'listr2'
@@ -29,6 +30,38 @@ interface Opts {
 interface TaskHandle {
   output: string
   skip(message?: string): void
+}
+
+/**
+ * Returns the `oxc-transform-react` version the project's `@cedarjs/vite`
+ * declares as its peer dependency. That's the version Cedar's React plugin is
+ * built against, and `oxc-transform-react` is pinned to it, like the rest of
+ * Cedar's toolchain.
+ */
+export function getOxcTransformReactVersion(webBase: string) {
+  const webRequire = createRequire(path.join(webBase, 'package.json'))
+  const cedarVitePkgJson: unknown = JSON.parse(
+    fs.readFileSync(webRequire.resolve('@cedarjs/vite/package.json'), 'utf8'),
+  )
+
+  const version =
+    typeof cedarVitePkgJson === 'object' &&
+    cedarVitePkgJson !== null &&
+    'peerDependencies' in cedarVitePkgJson &&
+    typeof cedarVitePkgJson.peerDependencies === 'object' &&
+    cedarVitePkgJson.peerDependencies !== null &&
+    'oxc-transform-react' in cedarVitePkgJson.peerDependencies
+      ? cedarVitePkgJson.peerDependencies['oxc-transform-react']
+      : undefined
+
+  if (typeof version !== 'string') {
+    throw new Error(
+      "Your version of @cedarjs/vite doesn't support the React Compiler. " +
+        'Please upgrade CedarJS and try again.',
+    )
+  }
+
+  return version
 }
 
 export const handler = async (options: Opts) => {
@@ -123,12 +156,18 @@ export const handler = async (options: Opts) => {
         },
       },
       {
-        title: 'Installing babel-plugin-react-compiler',
+        title: 'Installing oxc-transform-react',
         task: async () => {
-          await addWorkspacePackages('web', ['babel-plugin-react-compiler'], {
-            cwd: getPaths().base,
-            dev: true,
-          })
+          const version = getOxcTransformReactVersion(rwPaths.web.base)
+
+          await addWorkspacePackages(
+            'web',
+            [`oxc-transform-react@${version}`],
+            {
+              cwd: getPaths().base,
+              dev: true,
+            },
+          )
         },
       },
       {

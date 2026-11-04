@@ -2,18 +2,10 @@ import path from 'node:path'
 
 import { build, createServer, normalizePath, resolveConfig } from 'vite'
 import type { PluginOption, ViteDevServer } from 'vite'
-import tsPathsMod from 'vite-tsconfig-paths'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { cedarApiImportGuardPlugin } from '../vite-plugin-cedar-api-import-guard.js'
 import { cedarjsResolveCedarStyleImportsPlugin } from '../vite-plugin-cedarjs-resolve-cedar-style-imports.js'
-
-// vite-tsconfig-paths is ESM-only, and CJS builds double-wrap its default
-// export. Same interop dance as in src/index.ts
-const tsconfigPaths =
-  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
-  // interop
-  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 const rootDir = path.join(__dirname, '__fixtures__', 'dollar-api-imports')
 const webDir = path.join(rootDir, 'web')
@@ -28,17 +20,29 @@ const servicePath = normalizePath(
 // Spinning up Vite dev servers is slow on Windows CI runners
 const TIMEOUT = 30_000
 
-/** The plugin setups the tests resolve `$api/src/lib/db` through */
+/** The setups the tests resolve `$api/src/lib/db` through */
 const PLUGIN_SETUPS = {
   /** Just the resolve plugin, to check what it does on its own */
-  resolve: () => [cedarjsResolveCedarStyleImportsPlugin()],
-  /** What a Cedar project gets, in the order cedar() sets them up in */
-  cedar: () => [
-    cedarApiImportGuardPlugin(),
-    tsconfigPaths(),
-    cedarjsResolveCedarStyleImportsPlugin(),
-  ],
-} satisfies Record<string, () => PluginOption[]>
+  resolve: () => ({
+    plugins: [cedarjsResolveCedarStyleImportsPlugin()],
+    tsconfigPaths: false,
+  }),
+  /**
+   * What a Cedar project gets: the plugins in the order cedar() sets them up
+   * in, and Vite's tsconfig paths resolution, which cedarMergedConfig() turns
+   * on
+   */
+  cedar: () => ({
+    plugins: [
+      cedarApiImportGuardPlugin(),
+      cedarjsResolveCedarStyleImportsPlugin(),
+    ],
+    tsconfigPaths: true,
+  }),
+} satisfies Record<
+  string,
+  () => { plugins: PluginOption[]; tsconfigPaths: boolean }
+>
 
 // Dependency scanning is pure overhead here – the tests only ever resolve a
 // single id – and it's the slowest part of starting a server on CI
@@ -74,13 +78,16 @@ function getServer(setup: PluginSetup) {
   let server = servers.get(setup)
 
   if (!server) {
+    const { plugins, tsconfigPaths } = PLUGIN_SETUPS[setup]()
+
     server = createServer({
       root: webDir,
       configFile: false,
       logLevel: 'silent',
       optimizeDeps: NO_DEP_SCAN,
       server: { middlewareMode: true, hmr: false, watch: null },
-      plugins: PLUGIN_SETUPS[setup](),
+      resolve: { tsconfigPaths },
+      plugins,
     })
 
     servers.set(setup, server)
@@ -109,9 +116,9 @@ describe('$api imports in the client environment', () => {
   it(
     'throws when a client module imports $api',
     async () => {
-      // The web side's tsconfig.json maps `$api/*` to `../api/*`, so
-      // vite-tsconfig-paths resolves $api imports all on its own. The guard
-      // plugin has to run before it to be of any use
+      // The web side's tsconfig.json maps `$api/*` to `../api/*`, so Vite's
+      // tsconfig paths resolution handles $api imports all on its own. The
+      // guard plugin has to run before it to be of any use
       await expect(resolveInEnvironment('client', 'cedar')).rejects.toThrow(
         /Cannot import "\$api\/src\/lib\/db" from client-side/,
       )
@@ -132,13 +139,16 @@ describe('$api imports in the client environment', () => {
   it(
     'fails the client build',
     async () => {
+      const { plugins, tsconfigPaths } = PLUGIN_SETUPS.cedar()
+
       await expect(
         build({
           root: webDir,
           configFile: false,
           logLevel: 'silent',
           optimizeDeps: NO_DEP_SCAN,
-          plugins: PLUGIN_SETUPS.cedar(),
+          resolve: { tsconfigPaths },
+          plugins,
           build: {
             lib: { entry: importer, formats: ['es'] },
             write: false,
@@ -166,30 +176,30 @@ describe('$api imports in the client environment', () => {
 
 describe('plugin ordering', () => {
   it(
-    'runs before the plugins buildApp() adds on top of the project config',
+    "runs before Vite's resolver, which applies the tsconfig paths",
     async () => {
-      // buildApp() (`cedar build`, and `cedar build --ud`) starts its own
-      // plugin list with tsconfigPaths(), and passes it as inline config on
-      // top of the project's web/vite.config.ts – the one calling cedar().
-      // Vite puts config file plugins before inline ones, so the guard still
-      // gets to see $api imports first
+      // buildApp() (`cedar build`, and `cedar build --ud`) turns on
+      // `resolve.tsconfigPaths` in the inline config it passes on top of the
+      // project's web/vite.config.ts – the one calling cedar(). The guard is
+      // an `enforce: 'pre'` plugin, so it sees $api imports before Vite's
+      // resolver does
       const resolved = await resolveConfig(
         {
           root: webDir,
           configFile: path.join(webDir, 'vite.config.ts'),
           logLevel: 'silent',
-          plugins: [tsconfigPaths()],
+          resolve: { tsconfigPaths: true },
         },
         'build',
       )
 
       const names = resolved.plugins.map((plugin) => plugin.name)
       const guardIndex = names.indexOf('cedar-api-import-guard')
-      const tsconfigPathsIndex = names.indexOf('vite-tsconfig-paths')
+      const resolverIndex = names.indexOf('vite:resolve-builtin')
 
       expect(guardIndex).toBeGreaterThan(-1)
-      expect(tsconfigPathsIndex).toBeGreaterThan(-1)
-      expect(guardIndex).toBeLessThan(tsconfigPathsIndex)
+      expect(resolverIndex).toBeGreaterThan(-1)
+      expect(guardIndex).toBeLessThan(resolverIndex)
     },
     TIMEOUT,
   )
@@ -221,8 +231,9 @@ describe('$api imports in the ssr environment', () => {
   it(
     'resolves $api imports of directory named modules',
     async () => {
-      // vite-tsconfig-paths resolves most $api imports on its own, through the
-      // web side's `$api/*` -> `../api/*` mapping, which is why it looks like
+      // Vite's tsconfig paths resolution handles most $api imports on its
+      // own, through the web side's `$api/*` -> `../api/*` mapping, which is
+      // why it looks like
       // cedarjsResolveCedarStyleImportsPlugin's $api handling is redundant.
       // It isn't: plain path mapping doesn't know about Cedar's directory
       // named modules, so `$api/src/services/posts` (posts/posts.ts) only

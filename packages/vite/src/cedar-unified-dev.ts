@@ -391,7 +391,7 @@ export async function startUnifiedDevServer() {
   const devServer = await createServer({
     configFile,
     // env file is handled by Cedar's plugins
-    envFile: false,
+    envDir: false,
     optimizeDeps: {
       // This is the only value that isn't a server option
       force: forceOptimize as boolean | undefined,

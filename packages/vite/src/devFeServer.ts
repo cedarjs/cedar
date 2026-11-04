@@ -98,7 +98,7 @@ async function createServer() {
   // can take control
   const viteSsrDevServer = await createViteServer({
     configFile: rwPaths.web.viteConfig,
-    envFile: false,
+    envDir: false,
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     },
@@ -196,7 +196,7 @@ async function createServer() {
 
   // TODO (RSC): No redwood-vite plugin, add it in here
   const viteRscServer = await createViteServer({
-    envFile: false,
+    envDir: false,
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     },

@@ -3,8 +3,8 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type { PresetProperty } from '@storybook/types'
-import type { PluginBuild } from 'esbuild'
 import { mergeConfig } from 'vite'
+import type { Rolldown } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
 
@@ -118,72 +118,69 @@ export const viteFinal: StorybookConfig['viteFinal'] = async (config) => {
           '@cedarjs/web/apollo',
           '@cedarjs/web/apollo/CedarApolloProvider',
         ],
-        esbuildOptions: {
-          plugins: [
-            {
-              // Cedar's Cell transform (a Vite plugin) injects `export default
-              // createCell(...)` at transform time, which doesn't run during
-              // esbuild's dep scan. Without a default export, esbuild crashes
-              // the scan with "No matching export ... for import 'default'",
-              // causing Vite to skip pre-bundling entirely.
-              //
-              // We must NOT return the real Cell file contents here. If esbuild
-              // follows the Cell's imports (e.g. createCell from @cedarjs/web),
-              // it pulls the modules holding Apollo's React context into their
-              // own pre-bundled chunk separately from the @cedarjs/web chunk.
-              // That produces two distinct context instances, so the context
-              // set by CedarApolloProvider is invisible to the Cell's
-              // useQuery, breaking every Cell story.
-              //
-              // Instead we synthesize a stub module: we scan the source for
-              // exported names and re-export them as empty stubs, plus add a
-              // default export. esbuild treats the Cell as a leaf (no real
-              // imports to follow), keeping @cedarjs/web in a single chunk.
-              // The real Cell transform runs later via Vite's normal pipeline.
-              name: 'cedar-cell-stub',
-              setup(build: PluginBuild) {
-                build.onLoad({ filter: /Cell\.[jt]sx?$/ }, async (args) => {
-                  if (args.path.includes('node_modules')) {
-                    return undefined
-                  }
-
-                  const src = await fs.promises.readFile(args.path, 'utf-8')
-
-                  // Extract every explicitly exported name so that
-                  // `import { Loading, Success } from './MyCell'` resolves
-                  // to a stub value rather than undefined.
-                  const exportedNames = new Set<string>()
-                  // Covers: export const/let/var/function/class Foo
-                  for (const m of src.matchAll(
-                    /^export\s+(?:const|let|var|function|class)\s+(\w+)/gm,
-                  )) {
-                    exportedNames.add(m[1])
-                  }
-                  // Covers: export { Foo, Bar } and export { Foo as Bar }
-                  for (const m of src.matchAll(/^export\s*\{([^}]+)\}/gm)) {
-                    for (const part of m[1].split(',')) {
-                      const name = (part.split(/\bas\b/).pop() ?? '').trim()
-                      if (name) {
-                        exportedNames.add(name)
-                      }
-                    }
-                  }
-
-                  const namedStubs = [...exportedNames]
-                    .filter((n) => n !== 'default')
-                    .map((n) => `export const ${n} = undefined`)
-                    .join('\n')
-
-                  return {
-                    contents: `${namedStubs}\nexport default {}`,
-                    loader: 'js',
-                  }
-                })
-              },
-            },
-          ],
+        rolldownOptions: {
+          plugins: [cedarCellStubPlugin],
         },
       },
     },
   )
+}
+
+/**
+ * Cedar's Cell transform (a Vite plugin) injects `export default
+ * createCell(...)` at transform time, which doesn't run during the dep scan.
+ * Without a default export, the scan fails with a missing export for
+ * `import 'default'`, causing Vite to skip pre-bundling entirely.
+ *
+ * We must NOT return the real Cell file contents here. If the scanner follows
+ * the Cell's imports (e.g. createCell from @cedarjs/web), it pulls the modules
+ * holding Apollo's React context into their own pre-bundled chunk separately
+ * from the @cedarjs/web chunk. That produces two distinct context instances,
+ * so the context set by CedarApolloProvider is invisible to the Cell's
+ * useQuery, breaking every Cell story.
+ *
+ * Instead we synthesize a stub module: we scan the source for exported names
+ * and re-export them as empty stubs, plus add a default export. The scanner
+ * treats the Cell as a leaf (no real imports to follow), keeping @cedarjs/web
+ * in a single chunk. The real Cell transform runs later via Vite's normal
+ * pipeline.
+ */
+const cedarCellStubPlugin: Rolldown.Plugin = {
+  name: 'cedar-cell-stub',
+  load: {
+    filter: { id: { include: /Cell\.[jt]sx?$/, exclude: /node_modules/ } },
+    async handler(id) {
+      const src = await fs.promises.readFile(id, 'utf-8')
+
+      // Extract every explicitly exported name so that
+      // `import { Loading, Success } from './MyCell'` resolves to a stub value
+      // rather than undefined.
+      const exportedNames = new Set<string>()
+      // Covers: export const/let/var/function/class Foo
+      for (const m of src.matchAll(
+        /^export\s+(?:const|let|var|function|class)\s+(\w+)/gm,
+      )) {
+        exportedNames.add(m[1])
+      }
+      // Covers: export { Foo, Bar } and export { Foo as Bar }
+      for (const m of src.matchAll(/^export\s*\{([^}]+)\}/gm)) {
+        for (const part of m[1].split(',')) {
+          const name = (part.split(/\bas\b/).pop() ?? '').trim()
+          if (name) {
+            exportedNames.add(name)
+          }
+        }
+      }
+
+      const namedStubs = [...exportedNames]
+        .filter((n) => n !== 'default')
+        .map((n) => `export const ${n} = undefined`)
+        .join('\n')
+
+      return {
+        code: `${namedStubs}\nexport default {}`,
+        moduleType: 'js',
+      }
+    },
+  },
 }

@@ -3,7 +3,6 @@ import path from 'node:path'
 import type { Plugin } from 'vite'
 import { build as viteBuild } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
-import tsPathsMod from 'vite-tsconfig-paths'
 
 import { findRouteHooksSrc } from '@cedarjs/internal/dist/files.js'
 import type { Paths } from '@cedarjs/project-config'
@@ -13,15 +12,6 @@ import { cedarApiImportGuardPlugin } from './plugins/vite-plugin-cedar-api-impor
 import { cedarAutoImportsPlugin } from './plugins/vite-plugin-cedar-auto-import.js'
 import { cedarDirectoryNamedImportPlugin } from './plugins/vite-plugin-cedar-directory-named-import.js'
 import { cedarjsResolveCedarStyleImportsPlugin } from './plugins/vite-plugin-cedarjs-resolve-cedar-style-imports.js'
-
-// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
-// export: tsconfigPaths.default is the module object, and
-// tsconfigPaths.default.default is the actual function. ESM gets the
-// function directly. The `||` chain resolves correctly for both.
-const tsconfigPaths =
-  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
-  // interop
-  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 /**
  * Returns the path, relative to `web/dist/ssr/routeHooks` and with a `.js`
@@ -97,16 +87,17 @@ export async function buildRouteHooks(
     // Route hooks are node modules, so the static assets in web/public
     // must not be copied next to them
     publicDir: false,
-    envFile: false,
+    envDir: false,
     logLevel: verbose ? 'info' : 'error',
+    resolve: {
+      // Resolves the `paths` mapping in web/tsconfig.json, like `$api/*`
+      tsconfigPaths: true,
+    },
     plugins: [
       // Turns `$api/` imports into an error in the client environment. It's a
-      // no-op in this ssr-only build, but it has to sit in front of
-      // tsconfigPaths() wherever that plugin is used, so it's kept here for
-      // parity with the web build
+      // no-op in this ssr-only build, and is kept here for parity with the web
+      // build
       cedarApiImportGuardPlugin(),
-      // Resolves the `paths` mapping in web/tsconfig.json, like `$api/*`
-      tsconfigPaths(),
       // Resolves `src/` imports to the web side, `$api/` and `api/` imports to
       // the api side, and directory-named modules for those
       cedarjsResolveCedarStyleImportsPlugin(),
@@ -126,7 +117,7 @@ export async function buildRouteHooks(
       // The directory only ever holds route hook output, so clearing it keeps
       // chunks from earlier builds from piling up
       emptyOutDir: true,
-      rollupOptions: {
+      rolldownOptions: {
         input,
         output: {
           format: 'es',

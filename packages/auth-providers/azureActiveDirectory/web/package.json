@@ -49,8 +49,8 @@
     "publint": "0.3.25",
     "react": "19.3.1",
     "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "vite": "8.3.5",
+    "vitest": "5.1.0"
   },
   "peerDependencies": {
     "@azure/msal-browser": "2.39.0"

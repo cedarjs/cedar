@@ -1,0 +1,6 @@
+{
+  "name": "web",
+  "devDependencies": {
+    "oxc-transform-react": "0.156.0"
+  }
+}

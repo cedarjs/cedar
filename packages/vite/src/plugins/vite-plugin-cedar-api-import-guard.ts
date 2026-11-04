@@ -7,8 +7,9 @@ import type { Plugin } from 'vite'
  * ends up in the browser bundle fail with an explanatory error instead of
  * silently bundling server-only code (like the Prisma client) into the browser.
  *
- * Has to run before `vite-tsconfig-paths`, which would otherwise resolve
- * `$api/*` using the `paths` mapping in the project's `web/tsconfig.json`.
+ * Runs before Vite's resolver (`enforce: 'pre'`), which would otherwise
+ * resolve `$api/*` using the `paths` mapping in the project's
+ * `web/tsconfig.json`, through `resolve.tsconfigPaths`.
  */
 export function cedarApiImportGuardPlugin(): Plugin {
   return {

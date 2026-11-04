@@ -36,7 +36,7 @@ export async function rscBuildForServer(
 
   // TODO (RSC): No redwood-vite plugin, add it in here
   const rscServerBuildOutput = await viteBuild({
-    envFile: false,
+    envDir: false,
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     },
@@ -108,7 +108,7 @@ export async function rscBuildForServer(
       outDir,
       emptyOutDir: true, // Needed because `outDir` is not inside `root`
       manifest: 'server-build-manifest.json',
-      rollupOptions: {
+      rolldownOptions: {
         onwarn: onWarn,
         external: ['@cedarjs/realtime'],
         input: {

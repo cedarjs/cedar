@@ -83,12 +83,12 @@ export function cedarjsResolveCedarStyleImportsPlugin(): Plugin {
       // Never resolve them for the client environment – that would bundle
       // server-only code into the browser. See cedarApiImportGuardPlugin, which
       // is what turns such an import into a helpful error message.
-      // vite-tsconfig-paths resolves most $api imports through the web side's
-      // `$api/*` -> `../api/*` mapping, but it only does plain path mapping, so
-      // Cedar's directory named modules (`$api/src/services/posts` ->
-      // posts/posts.ts) still need this. Consumers without vite-tsconfig-paths
-      // (the Vitest api preset, dataMigrate, prerender's node runner) need all
-      // of it
+      // Vite's `resolve.tsconfigPaths` resolves most $api imports through the
+      // web side's `$api/*` -> `../api/*` mapping, but it only does plain path
+      // mapping, so Cedar's directory named modules (`$api/src/services/posts`
+      // -> posts/posts.ts) still need this. Consumers without
+      // `resolve.tsconfigPaths` (the Vitest api preset, dataMigrate,
+      // prerender's node runner) need all of it
       if (
         cedarPaths &&
         id.startsWith('$api/') &&
