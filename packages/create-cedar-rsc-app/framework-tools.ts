@@ -21,8 +21,8 @@ export const defaultBuildOptions: ESBuildOptions = {
   metafile: true,
 }
 
-export const defaultPatterns = ['./src/**/*.{ts,js,tsx,jsx,mts}']
-export const defaultIgnorePatterns = [
+const defaultPatterns = ['./src/**/*.{ts,js,tsx,jsx,mts}']
+const defaultIgnorePatterns = [
   '**/__tests__',
   '**/*.test.{ts,js}',
   '**/__fixtures__',
