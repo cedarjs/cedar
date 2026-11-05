@@ -127,7 +127,7 @@
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
     "@listr2/prompt-adapter-enquirer": "4.4.3",
-    "ansis": "4.4.0",
+    "ansis": "4.5.0",
     "dotenv": "16.6.1",
     "dotenv-defaults": "5.0.2",
     "enquirer": "2.4.1",

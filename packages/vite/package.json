@@ -73,7 +73,7 @@
     "@whatwg-node/server": "0.13.2",
     "acorn": "8.19.0",
     "acorn-loose": "8.5.2",
-    "ansis": "4.4.0",
+    "ansis": "4.5.0",
     "busboy": "1.6.0",
     "dotenv-defaults": "5.0.2",
     "esbuild": "0.28.2",

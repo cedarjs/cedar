@@ -48,7 +48,7 @@
     "@cedarjs/web-server": "workspace:*",
     "@listr2/prompt-adapter-enquirer": "4.4.3",
     "@prisma/internals": "7.10.1",
-    "ansis": "4.4.0",
+    "ansis": "4.5.0",
     "archiver": "7.0.1",
     "boxen": "5.1.2",
     "camel-case": "4.1.2",
