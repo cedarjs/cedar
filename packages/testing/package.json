@@ -65,7 +65,7 @@
     "@types/aws-lambda": "8.10.164",
     "@types/jest": "29.5.14",
     "@types/node": "24.19.2",
-    "ansis": "4.4.0",
+    "ansis": "4.5.0",
     "fast-glob": "3.3.3",
     "jsdom": "27.4.0",
     "msw": "2.15.0",

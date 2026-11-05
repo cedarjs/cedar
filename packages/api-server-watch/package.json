@@ -30,7 +30,7 @@
     "@cedarjs/api-server": "workspace:*",
     "@cedarjs/internal": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "ansis": "4.4.0",
+    "ansis": "4.5.0",
     "chokidar": "3.6.0",
     "dotenv-defaults": "5.0.2",
     "yargs": "18.2.0"

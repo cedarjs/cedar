@@ -29,7 +29,7 @@
     "@cedarjs/telemetry": "workspace:*",
     "@cedarjs/tui": "workspace:*",
     "@types/klaw-sync": "6.0.5",
-    "ansis": "4.4.0",
+    "ansis": "4.5.0",
     "execa": "5.1.1",
     "gradient-string": "3.0.0",
     "klaw-sync": "7.0.0",

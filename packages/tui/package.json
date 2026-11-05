@@ -20,7 +20,7 @@
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\""
   },
   "dependencies": {
-    "ansis": "4.4.0",
+    "ansis": "4.5.0",
     "enquirer": "2.4.1",
     "stdout-update": "1.6.8"
   },
