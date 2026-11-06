@@ -90,14 +90,18 @@ function createCedarJsApp({ typescript }) {
 
     // Framework packages refer to shared versions with `catalog:`, which only
     // means something inside the framework repo, so the resolutions get the
-    // version that range stands for
+    // version that range stands for. A package can declare a dependency in
+    // either `dependencies` or `devDependencies` (e.g. `prisma` and
+    // `@prisma/client`)
     const getVersionFromRwPackage = (dep, pkg) => {
-      const range = JSON.parse(
+      const { dependencies, devDependencies } = JSON.parse(
         fs.readFileSync(
           path.join(CEDARJS_FRAMEWORK_PATH, 'packages', pkg, 'package.json'),
           'utf8',
         ),
-      ).dependencies[dep]
+      )
+
+      const range = dependencies?.[dep] ?? devDependencies?.[dep]
 
       return range && resolveCatalogRange(dep, range, catalogs)
     }

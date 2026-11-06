@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { fetch } from '@whatwg-node/fetch'
 import fg from 'fast-glob'
 import task from 'tasuku'
 

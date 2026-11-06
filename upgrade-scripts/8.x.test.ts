@@ -6,6 +6,8 @@ import path from 'node:path'
 import { describe, test } from 'node:test'
 import { stripVTControlCharacters } from 'node:util'
 
+import { getCatalogs } from '../tasks/catalogs.mts'
+
 const fixturesPath = path.join(
   import.meta.dirname,
   '__fixtures__',
@@ -16,18 +18,17 @@ function runScript(projectName: string) {
   return runScriptIn(path.join(fixturesPath, projectName))
 }
 
-function runScriptIn(projectPath: string) {
-  const result = spawnSync(
-    process.execPath,
-    [path.join(import.meta.dirname, '8.x.ts')],
-    {
-      env: {
-        ...process.env,
-        CEDAR_CWD: projectPath,
-      },
-      encoding: 'utf8',
+function runScriptIn(
+  projectPath: string,
+  scriptPath = path.join(import.meta.dirname, '8.x.ts'),
+) {
+  const result = spawnSync(process.execPath, [scriptPath], {
+    env: {
+      ...process.env,
+      CEDAR_CWD: projectPath,
     },
-  )
+    encoding: 'utf8',
+  })
 
   return {
     status: result.status,
@@ -155,14 +156,58 @@ describe('8.x: Prisma packages the project declares', () => {
     return projectPath
   }
 
+  /**
+   * The script reads the Prisma version from the `@cedarjs/project-config`
+   * manifest it resolves. In the monorepo that is the workspace manifest,
+   * which refers to the `prisma` catalog, while the published package has the
+   * catalog resolved to a version. This copies the script next to a stand-in
+   * for the published package so it runs the way it does for a user.
+   */
+  function createPackagedScript(supportedVersion: string) {
+    const scriptDir = fs.mkdtempSync(
+      path.join(import.meta.dirname, 'tmp-8x-packaged-'),
+    )
+    const packageDir = path.join(
+      scriptDir,
+      'node_modules',
+      '@cedarjs',
+      'project-config',
+    )
+
+    fs.mkdirSync(packageDir, { recursive: true })
+    fs.copyFileSync(
+      path.join(import.meta.dirname, '8.x.ts'),
+      path.join(scriptDir, '8.x.ts'),
+    )
+    fs.writeFileSync(
+      path.join(packageDir, 'package.json'),
+      JSON.stringify({
+        name: '@cedarjs/project-config',
+        version: '0.0.0',
+        type: 'module',
+        main: 'index.js',
+        dependencies: { '@prisma/internals': supportedVersion },
+      }),
+    )
+    fs.writeFileSync(
+      path.join(packageDir, 'index.js'),
+      `export * from ${JSON.stringify(import.meta.resolve('@cedarjs/project-config'))}\n`,
+    )
+
+    return { scriptDir, scriptPath: path.join(scriptDir, '8.x.ts') }
+  }
+
   test('aborts and lists the Prisma packages the project is missing', () => {
+    const supportedVersion = getCatalogs().catalogs.prisma['@prisma/internals']
+    const { scriptDir, scriptPath: packagedScriptPath } =
+      createPackagedScript(supportedVersion)
     const projectPath = createProject(
       { devDependencies: { '@cedarjs/core': '7.1.0' } },
       { dependencies: { '@cedarjs/api': '7.1.0' } },
     )
 
     try {
-      const { status, stdout } = runScriptIn(projectPath)
+      const { status, stdout } = runScriptIn(projectPath, packagedScriptPath)
 
       assert.equal(status, 1)
       assert.match(stdout, /Prisma packages your project needs to declare/)
@@ -171,9 +216,10 @@ describe('8.x: Prisma packages the project declares', () => {
         stdout,
         / {2}@prisma\/client in the dependencies of api\/package\.json/,
       )
-      assert.match(stdout, /Use version \d+\.\d+\.\d+/)
+      assert.match(stdout, new RegExp(`Use version ${supportedVersion}`))
     } finally {
       fs.rmSync(projectPath, { recursive: true, force: true })
+      fs.rmSync(scriptDir, { recursive: true, force: true })
     }
   })
 
