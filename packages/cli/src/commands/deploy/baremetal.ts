@@ -111,6 +111,13 @@ export const builder = (yargs: Argv) => {
     type: 'boolean',
   })
 
+  yargs.option('yes', {
+    alias: 'y',
+    describe: 'Deploy despite unpushed commits, without prompting',
+    default: false,
+    type: 'boolean',
+  })
+
   // TODO: Allow option to pass --sides and only deploy select sides instead of
   // always deploying all sides
 
@@ -136,6 +143,7 @@ interface BaremetalArgs {
   rollback?: number
   verbose: boolean
   gitCheck: boolean
+  yes: boolean
   releaseDir: string
   branch?: string
 }
@@ -156,6 +164,7 @@ export async function handler(yargs: BaremetalArgs) {
     rollback: yargs.rollback,
     verbose: yargs.verbose,
     gitCheck: yargs.gitCheck,
+    yes: yargs.yes,
   })
 
   const { handler: baremetalHandler } =

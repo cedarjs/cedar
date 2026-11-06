@@ -46,22 +46,32 @@ export function getRscStylesheetLinkGenerator(existingLinks?: string[]) {
   return () => [...(existingLinks || []), ...cssLinks]
 }
 
-function extractCssMappingFromManifest(manifest: Record<string, any>) {
+export function extractCssMappingFromManifest(manifest: Record<string, any>) {
   const manifestCss = new Map<string, string[]>()
   const lookupCssAssets = (id: string): string[] => {
     const assets: string[] = []
-    const asset = manifest[id]
-    if (!asset) {
-      return assets
-    }
-    if (asset.css) {
-      assets.push(...asset.css)
-    }
-    if (asset.imports) {
-      for (const importId of asset.imports) {
-        assets.push(...lookupCssAssets(importId))
+    // Chunks can import each other circularly, so every chunk is visited at
+    // most once per top-level lookup.
+    const visited = new Set<string>()
+    const visit = (chunkId: string) => {
+      if (visited.has(chunkId)) {
+        return
+      }
+      visited.add(chunkId)
+      const asset = manifest[chunkId]
+      if (!asset) {
+        return
+      }
+      if (asset.css) {
+        assets.push(...asset.css)
+      }
+      if (asset.imports) {
+        for (const importId of asset.imports) {
+          visit(importId)
+        }
       }
     }
+    visit(id)
     return assets
   }
   for (const key of Object.keys(manifest)) {

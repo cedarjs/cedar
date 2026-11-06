@@ -10,6 +10,15 @@ const testDir = vi.hoisted(() => import.meta.dirname)
 
 globalThis.__dirname = testDir
 
+// Mocked git and prompts for the unpushed-commits confirmation tests
+const { gitMock, promptMock } = vi.hoisted(() => ({
+  gitMock: vi.fn(async () => ({ stdout: '' })),
+  promptMock: vi.fn(async () => ({ confirmed: true })),
+}))
+
+vi.mock('execa', () => ({ default: gitMock }))
+vi.mock('prompts', () => ({ default: promptMock }))
+
 // Track whether handler test should return empty directory
 let returnEmptyBasePath = false
 
@@ -2611,6 +2620,164 @@ describe('handler', () => {
     ).rejects.toThrowError('process.exit: 1')
     expect(vi.mocked(console).error).toHaveBeenCalledWith(
       expect.stringContaining('Baremetal deploy has not been properly setup'),
+    )
+  })
+})
+
+describe('unpushed commit confirmation', () => {
+  const originalIsTTY = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY')
+
+  beforeEach(async () => {
+    returnEmptyBasePath = false
+
+    // Clear the memoization cache for getPaths since it's cached from
+    // previous tests
+    const libModule = await import('../../../lib/index.js')
+    if (
+      'cache' in libModule.getPaths &&
+      typeof libModule.getPaths.cache === 'object' &&
+      libModule.getPaths.cache &&
+      'clear' in libModule.getPaths.cache &&
+      typeof libModule.getPaths.cache.clear === 'function'
+    ) {
+      libModule.getPaths.cache.clear()
+    }
+
+    gitMock.mockReset().mockResolvedValue({
+      stdout: 'abc1234 local change\n',
+    })
+    promptMock.mockReset().mockResolvedValue({ confirmed: true })
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(process, 'exit').mockImplementation((number) => {
+      throw new Error('process.exit: ' + number)
+    })
+  })
+
+  afterEach(() => {
+    if (originalIsTTY) {
+      Object.defineProperty(process.stdin, 'isTTY', originalIsTTY)
+    } else {
+      Reflect.deleteProperty(process.stdin, 'isTTY')
+    }
+    vi.restoreAllMocks()
+    returnEmptyBasePath = false
+  })
+
+  const setIsTTY = (value: boolean | undefined) => {
+    Object.defineProperty(process.stdin, 'isTTY', {
+      configurable: true,
+      writable: true,
+      value,
+    })
+  }
+
+  it.each([false, undefined])(
+    'rejects without prompting when stdin.isTTY is %s and there are unpushed commits',
+    async (isTTY) => {
+      setIsTTY(isTTY)
+      const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
+
+      await expect(
+        baremetal.handler(createBaremetalYargs({ gitCheck: true })),
+      ).rejects.toThrow(/without a terminal.*--no-git-check.*--yes/s)
+
+      expect(run).not.toHaveBeenCalled()
+      expect(promptMock).not.toHaveBeenCalled()
+      expect(console.warn).toHaveBeenCalledWith('  abc1234 local change')
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('--no-git-check'),
+      )
+    },
+  )
+
+  it('deploys with --yes without prompting, but still prints the warning', async () => {
+    setIsTTY(false)
+    const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
+
+    await expect(
+      baremetal.handler(createBaremetalYargs({ gitCheck: true, yes: true })),
+    ).resolves.toBeUndefined()
+
+    expect(run).toHaveBeenCalledOnce()
+    expect(promptMock).not.toHaveBeenCalled()
+    expect(gitMock).toHaveBeenCalledWith(
+      'git',
+      ['log', '@{u}..', '--oneline'],
+      { cwd: `${testDir}/fixtures` },
+    )
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('local commits that have not been pushed'),
+    )
+    expect(console.warn).toHaveBeenCalledWith('  abc1234 local change')
+  })
+
+  it('does not check git when gitCheck is false', async () => {
+    setIsTTY(false)
+    const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
+
+    await expect(
+      baremetal.handler(createBaremetalYargs({ gitCheck: false })),
+    ).resolves.toBeUndefined()
+
+    expect(gitMock).not.toHaveBeenCalled()
+    expect(run).toHaveBeenCalledOnce()
+  })
+
+  it('does not prompt when there are no unpushed commits', async () => {
+    setIsTTY(false)
+    gitMock.mockResolvedValue({ stdout: '' })
+    const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
+
+    await expect(
+      baremetal.handler(createBaremetalYargs({ gitCheck: true })),
+    ).resolves.toBeUndefined()
+
+    expect(promptMock).not.toHaveBeenCalled()
+    expect(run).toHaveBeenCalledOnce()
+    expect(console.warn).not.toHaveBeenCalled()
+  })
+
+  it('prompts when stdin is a TTY and deploys on confirm', async () => {
+    setIsTTY(true)
+    const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
+
+    await expect(
+      baremetal.handler(createBaremetalYargs({ gitCheck: true })),
+    ).resolves.toBeUndefined()
+
+    expect(promptMock).toHaveBeenCalledOnce()
+    expect(run).toHaveBeenCalledOnce()
+  })
+
+  it('aborts when the prompt is declined, mentioning --no-git-check', async () => {
+    setIsTTY(true)
+    promptMock.mockResolvedValue({ confirmed: false })
+    const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
+
+    await expect(
+      baremetal.handler(createBaremetalYargs({ gitCheck: true })),
+    ).rejects.toThrowError('process.exit: 1')
+
+    expect(run).not.toHaveBeenCalled()
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('--no-git-check'),
+    )
+  })
+
+  it('still fails when the git check itself errors, even with --yes', async () => {
+    setIsTTY(false)
+    gitMock.mockRejectedValue(new Error('no upstream'))
+    const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    await expect(
+      baremetal.handler(createBaremetalYargs({ gitCheck: true, yes: true })),
+    ).rejects.toThrow('no upstream')
+
+    expect(run).not.toHaveBeenCalled()
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining('Could not check for unpushed commits'),
     )
   })
 })

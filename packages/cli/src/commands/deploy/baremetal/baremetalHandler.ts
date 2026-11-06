@@ -127,6 +127,7 @@ export interface BaremetalYargs {
   cleanup?: boolean
   keepAssets?: boolean
   gitCheck?: boolean
+  yes?: boolean
   verbose?: boolean
 }
 
@@ -1445,49 +1446,65 @@ export const commands = (yargs: BaremetalYargs, ssh: SshExecutor) => {
   return servers
 }
 
-export const warnIfUnpushedCommits = async () => {
+export const warnIfUnpushedCommits = async (yes = false) => {
+  let unpushedCommits: string
   try {
     const { stdout } = await execa('git', ['log', '@{u}..', '--oneline'], {
       cwd: getPaths().base,
     })
-    const unpushedCommits = stdout.trim()
-
-    if (!unpushedCommits) {
-      return
-    }
-
-    console.warn(
-      c.warning('\nWarning: You have local commits that have not been pushed:'),
-    )
-    console.warn(
-      unpushedCommits
-        .split('\n')
-        .map((line) => `  ${line}`)
-        .join('\n'),
-    )
-    console.warn(
-      c.warning(
-        'The server will pull from the remote, so these commits will not be deployed.\n',
-      ),
-    )
-
-    const { default: prompts } = await import('prompts')
-    const { confirmed } = await prompts({
-      type: 'confirm',
-      name: 'confirmed',
-      message: 'Deploy anyway?',
-      initial: false,
-    })
-
-    if (!confirmed) {
-      console.log('Aborting deploy. Push your commits and try again.')
-      process.exit(1)
-    }
+    unpushedCommits = stdout.trim()
   } catch (e) {
     console.error(
       c.error('\nCould not check for unpushed commits before deploying.'),
     )
     throw e
+  }
+
+  if (!unpushedCommits) {
+    return
+  }
+
+  console.warn(
+    c.warning('\nWarning: You have local commits that have not been pushed:'),
+  )
+  console.warn(
+    unpushedCommits
+      .split('\n')
+      .map((line) => `  ${line}`)
+      .join('\n'),
+  )
+  console.warn(
+    c.warning(
+      'The server will pull from the remote, so these commits will not be deployed.\n',
+    ),
+  )
+  console.warn(c.warning('To skip this check, rerun with --no-git-check.\n'))
+
+  if (yes) {
+    return
+  }
+
+  if (process.stdin.isTTY !== true) {
+    throw new Error(
+      'Cannot ask whether to deploy anyway without a terminal. ' +
+        'Push your commits, rerun with --no-git-check to skip this check, ' +
+        'or rerun with --yes to deploy anyway.',
+    )
+  }
+
+  const { default: prompts } = await import('prompts')
+  const { confirmed } = await prompts({
+    type: 'confirm',
+    name: 'confirmed',
+    message: 'Deploy anyway?',
+    initial: false,
+  })
+
+  if (!confirmed) {
+    console.log(
+      'Aborting deploy. Push your commits and try again, or rerun with --no-git-check.',
+    )
+    process.exit(1)
   }
 }
 
@@ -1507,7 +1524,7 @@ export const handler = async (yargs: BaremetalYargs) => {
   }
 
   if (yargs.gitCheck) {
-    await warnIfUnpushedCommits()
+    await warnIfUnpushedCommits(yargs.yes)
   }
 
   const ssh = new SshExecutor(yargs.verbose ?? false)
