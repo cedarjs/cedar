@@ -6,16 +6,6 @@ import { catchAll } from '@universal-deploy/vite'
 import type { EnvironmentOptions, Plugin, PluginOption } from 'vite'
 import { createBuilder, normalizePath } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
-import tsPathsMod from 'vite-tsconfig-paths'
-
-// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
-// export: tsconfigPaths.default is the module object, and
-// tsconfigPaths.default.default is the actual function. ESM gets the
-// function directly. The `||` chain resolves correctly for both.
-const tsconfigPaths =
-  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
-  // interop
-  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import {
   getApiSideBabelConfigPath,
@@ -113,7 +103,7 @@ export async function buildCedarApp({
         sourcemap: true,
         outDir: cedarPaths.api.dist,
         emptyOutDir: true,
-        rollupOptions: {
+        rolldownOptions: {
           input,
           output: {
             format: 'es',
@@ -141,7 +131,7 @@ export async function buildCedarApp({
           ssr: true,
           outDir: path.join(cedarPaths.api.dist, 'ud'),
           emptyOutDir: true,
-          rollupOptions: {
+          rolldownOptions: {
             // Named, so a plugin in the app's Vite config can add entries
             // of its own next to it, each in a file of its own
             input: { index: catchAllEntry },
@@ -174,7 +164,6 @@ export async function buildCedarApp({
     : {}
 
   const plugins: PluginOption[] = [
-    tsconfigPaths(),
     cedarAutoImportsPlugin(),
     (() => {
       const p = gqlTagPlugin() as Plugin
@@ -182,7 +171,7 @@ export async function buildCedarApp({
       return p
     })(),
     // Suppress noisy warnings from third-party dependencies across all
-    // environments by injecting onwarn into every environment's rollupOptions.
+    // environments by injecting onwarn into every environment's rolldownOptions.
     {
       name: 'cedar-suppress-third-party-warnings',
       configResolved(config) {
@@ -213,9 +202,9 @@ export async function buildCedarApp({
         }
 
         for (const env of Object.values(config.environments ?? {})) {
-          env.build.rollupOptions ??= {}
-          const existingOnwarn = env.build.rollupOptions.onwarn
-          env.build.rollupOptions.onwarn = existingOnwarn
+          env.build.rolldownOptions ??= {}
+          const existingOnwarn = env.build.rolldownOptions.onwarn
+          env.build.rolldownOptions.onwarn = existingOnwarn
             ? (warning, warn) => {
                 onwarn(warning, (w) => existingOnwarn(w, warn))
               }
@@ -256,7 +245,7 @@ export async function buildCedarApp({
         // Vite adds a default 'ssr' environment alongside 'client'. When we
         // are building the API as a separate environment ('api'), the default
         // 'ssr' environment is redundant and inherits the web HTML input,
-        // causing Vite to throw "rollupOptions.input should not be an html file
+        // causing Vite to throw "rolldownOptions.input should not be an html file
         // when building for SSR". Remove it unless the caller explicitly
         // declared it.
         if (!environments.ssr && config.environments.ssr) {
@@ -522,6 +511,8 @@ export async function buildCedarApp({
     logLevel: verbose ? 'info' : 'warn',
     environments,
     resolve: {
+      // Resolves the `paths` aliases in the project's tsconfig.json files
+      tsconfigPaths: true,
       alias: workspacePkgSourceMap,
     },
     plugins,

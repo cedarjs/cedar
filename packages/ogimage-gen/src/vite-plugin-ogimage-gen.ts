@@ -45,7 +45,7 @@ function vitePluginOgImageGen(): ConfigPlugin {
       if (env.isSsrBuild) {
         return {
           build: {
-            rollupOptions: {
+            rolldownOptions: {
               input: ogComponentInput,
             },
           },

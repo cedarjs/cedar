@@ -6,16 +6,6 @@ import { build, context } from 'esbuild'
 import MagicString from 'magic-string'
 import type { Plugin } from 'vite'
 import { build as viteBuild, normalizePath } from 'vite'
-import tsPathsMod from 'vite-tsconfig-paths'
-
-// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
-// export: tsconfigPaths.default is the module object, and
-// tsconfigPaths.default.default is the actual function. ESM gets the
-// function directly. The `||` chain resolves correctly for both.
-const tsconfigPaths =
-  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
-  // interop
-  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import {
   getApiSideBabelConfigPath,
@@ -468,11 +458,16 @@ export const buildApiWithVite = async () => {
   return viteBuild({
     root: cedarPaths.api.base,
     logLevel: 'warn',
+    resolve: {
+      // Resolves user-defined tsconfig.json `paths` aliases, which the Babel
+      // module-resolver handles in the Babel pipeline
+      tsconfigPaths: true,
+    },
     build: {
       ssr: true,
       sourcemap: true,
       outDir: cedarPaths.api.dist,
-      rollupOptions: {
+      rolldownOptions: {
         input,
         output: {
           format: 'es',
@@ -506,11 +501,7 @@ export const buildApiWithVite = async () => {
     // are expanded before Babel sees the code.  The Babel import-dir plugin is
     // not part of getApiSideBabelPluginsForVite(); this inline Vite plugin is
     // its replacement for this code path (both CJS and ESM output via Rollup).
-    // tsconfigPaths resolves user-defined tsconfig.json `paths` aliases; it
-    // replaces the Babel module-resolver's tsconfig-paths handling for this
-    // code path.
     plugins: [
-      tsconfigPaths(),
       createImportDirVitePlugin(),
       createDirectoryNamedImportVitePlugin(),
       createCedarViteApiPlugin(),

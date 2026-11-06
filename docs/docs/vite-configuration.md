@@ -38,14 +38,27 @@ Checkout Vite's docs on [configuration](https://vite.dev/config/)
 
 Vite doesn't run your code through Babel, so `web/babel.config.js` is not
 applied to your dev server or production bundle. If you need a custom Babel
-plugin or preset in your web build, pass it via the `cedar()` plugin's `babel`
-option:
+plugin or preset in your web build, add
+[`@rolldown/plugin-babel`](https://www.npmjs.com/package/@rolldown/plugin-babel)
+to your Vite config:
+
+```
+yarn workspace web add -D @rolldown/plugin-babel @babel/core
+```
 
 ```ts
+import babel from '@rolldown/plugin-babel'
+import { defineConfig } from 'vite'
+
+import { cedar } from '@cedarjs/vite'
+
 export default defineConfig(({ mode }) => ({
-  plugins: [cedar({ mode, babel: { plugins: ['my-babel-plugin'] } })],
+  plugins: [cedar({ mode }), babel({ plugins: ['my-babel-plugin'] })],
 }))
 ```
+
+Babel then runs as an extra pass over your web source files, before Vite
+compiles TypeScript and JSX.
 
 ## One plugin — or all the building blocks
 

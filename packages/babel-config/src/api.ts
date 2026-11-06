@@ -190,7 +190,7 @@ export const getApiSideBabelPlugins = ({ forVite = false } = {}) => {
  * dedicated Vite/esbuild transforms:
  *  - JSX/TypeScript compilation: handled natively by Vite/esbuild
  *  - babel-plugin-module-resolver (`src/` and tsconfig `paths` aliases):
- *    cedar-api-src-redirect + vite-tsconfig-paths (Vite) or applySrcAlias +
+ *    cedar-api-src-redirect + `resolve.tsconfigPaths` (Vite) or applySrcAlias +
  *    applyTsconfigPaths (esbuild); import extension rewriting is covered by
  *    applyImportExtensions
  *  - directory-named imports: cedarDirectoryNamedImportPlugin /

@@ -1,6 +1,5 @@
 import fs from 'fs/promises'
 
-import type { OutputChunk } from 'rollup'
 import { normalizePath } from 'vite'
 
 import { getPaths } from '@cedarjs/project-config'
@@ -104,7 +103,10 @@ export async function rscBuildEntriesMappings(
   }
   for (const [name, sourceFile] of Object.entries(entries)) {
     const buildOutputItem = serverBuildOutput.find((item) => {
-      return (item as OutputChunk).facadeModuleId === normalizePath(sourceFile)
+      return (
+        item.type === 'chunk' &&
+        item.facadeModuleId === normalizePath(sourceFile)
+      )
     })
 
     if (buildOutputItem) {

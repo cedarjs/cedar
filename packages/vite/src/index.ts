@@ -1,17 +1,6 @@
 import react from '@vitejs/plugin-react'
-import type { BabelOptions } from '@vitejs/plugin-react'
 import type { PluginOption } from 'vite'
 import { gqlPlugin as gqlTagPlugin } from 'vite-plugin-graphql-tag'
-import tsPathsMod from 'vite-tsconfig-paths'
-
-// vite-tsconfig-paths is ESM-only. CJS builds double-wrap its default
-// export: tsconfigPaths.default is the module object, and
-// tsconfigPaths.default.default is the actual function. ESM gets the
-// function directly. The `||` chain resolves correctly for both.
-const tsconfigPaths =
-  // @ts-expect-error – .default only exists at runtime in CJS double-wrap
-  // interop
-  tsPathsMod.default?.default || tsPathsMod.default || tsPathsMod
 
 import { getConfig } from '@cedarjs/project-config'
 import {
@@ -68,13 +57,26 @@ export { cedarWaitForApiServer } from './plugins/vite-plugin-cedar-wait-for-api-
 
 type PluginOptions = {
   mode?: string | undefined
-  babel?: BabelOptions | undefined
 }
 
 /**
  * Pre-configured vite plugin, with required config for CedarJS apps.
  */
-export function cedar({ mode, babel }: PluginOptions = {}): PluginOption[] {
+export function cedar(options: PluginOptions = {}): PluginOption[] {
+  // Configs written in JavaScript aren't type checked, so an unsupported
+  // `babel` option fails the build here instead of being silently ignored
+  if ('babel' in options) {
+    throw new Error(
+      "`cedar()` doesn't take a `babel` option. Cedar builds your web side " +
+        'with Vite, which compiles TypeScript and JSX without Babel.\n\n' +
+        'Remove the `babel` option from `cedar()` in your Vite config. If you ' +
+        'still need a Babel plugin, add `@rolldown/plugin-babel` to your ' +
+        'Vite config as a plugin of its own. See ' +
+        'https://cedarjs.com/docs/vite-configuration#custom-babel-plugins',
+    )
+  }
+
+  const { mode } = options
   const cedarConfig = getConfig()
 
   const rscEnabled = cedarConfig.experimental?.rsc?.enabled
@@ -83,23 +85,8 @@ export function cedar({ mode, babel }: PluginOptions = {}): PluginOption[] {
     cedarConfig.experimental?.reactCompiler?.enabled &&
     cedarConfig.experimental?.reactCompiler?.lintOnly === false
 
-  const compilerPlugins: BabelOptions['plugins'] = reactCompilerEnabled
-    ? [['babel-plugin-react-compiler', { target: '19' }]]
-    : []
-
-  const babelConfig: BabelOptions | undefined =
-    reactCompilerEnabled || babel
-      ? {
-          ...babel,
-          plugins: [...compilerPlugins, ...(babel?.plugins ?? [])],
-        }
-      : undefined
-
   return [
-    // Has to come before tsconfigPaths(), which would otherwise resolve
-    // `$api/*` imports using the project's web/tsconfig.json `paths` mapping
     cedarApiImportGuardPlugin(),
-    tsconfigPaths(),
     gqlTagPlugin(),
     mode === 'test' && cedarJsRouterImportTransformPlugin(),
     mode === 'test' && createAuthImportTransformPlugin(),
@@ -120,7 +107,9 @@ export function cedar({ mode, babel }: PluginOptions = {}): PluginOption[] {
     !rscEnabled && cedarRoutesAutoLoaderPlugin(),
     cedarMockCellDataPlugin(),
     cedarAutoImportsPlugin(),
-    react({ babel: babelConfig }),
+    // React Compiler runs on `oxc-transform-react`, which
+    // `yarn cedar experimental setup-react-compiler` installs
+    react({ compiler: !!reactCompilerEnabled }),
   ]
 }
 

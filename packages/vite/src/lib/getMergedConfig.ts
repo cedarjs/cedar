@@ -60,6 +60,8 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
     const defaultCedarViteConfig: ViteUserConfig = {
       root: cedarPaths.web.base,
       resolve: {
+        // Resolves the `paths` aliases in the project's tsconfig.json files
+        tsconfigPaths: true,
         alias: {
           ...workspaceAliases,
           // $api/ bare specifiers (e.g. "from '$api/src/lib/db'") are
@@ -125,19 +127,21 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
         manifest: !env.isSsrBuild ? 'client-build-manifest.json' : undefined,
         // Note that sourcemap can be boolean or 'inline'
         sourcemap: !env.isSsrBuild && cedarConfig.web.sourceMap,
-        rollupOptions: {
-          input: getRollupInput(userConfig, !!env.isSsrBuild),
+        [getBundlerOptionsKey(userConfig)]: {
+          input: getRolldownInput(userConfig, !!env.isSsrBuild),
         },
       },
       // @MARK: do not set buildSsrCjsExternalHeuristics here
       // because rsc builds want false, client and server build wants true
       optimizeDeps: {
-        esbuildOptions: {
-          // Node.js global to browser globalThis
-          // @MARK unsure why we need this, but required for DevFatalErrorPage
-          // at least
-          define: {
-            global: 'globalThis',
+        rolldownOptions: {
+          transform: {
+            // Node.js global to browser globalThis
+            // @MARK unsure why we need this, but required for
+            // DevFatalErrorPage at least
+            define: {
+              global: 'globalThis',
+            },
           },
         },
       },
@@ -157,26 +161,45 @@ export function getMergedConfig(cedarConfig: Config, cedarPaths: Paths) {
 }
 
 /**
- * This function configures how vite (actually Rollup) will bundle.
+ * Which `build` key Cedar writes its bundler options to.
+ *
+ * Vite ignores `build.rollupOptions` whenever `build.rolldownOptions` is also
+ * set. Tools that still write `rollupOptions` (Storybook 8's Vite builder, or
+ * an app's own vite config) would have their options silently dropped if
+ * Cedar wrote `rolldownOptions` next to them, so Cedar uses the key the
+ * incoming config already uses.
+ */
+function getBundlerOptionsKey(userConfig: ViteUserConfig) {
+  return userConfig.build?.rollupOptions && !userConfig.build.rolldownOptions
+    ? 'rollupOptions'
+    : 'rolldownOptions'
+}
+
+/**
+ * This function configures how Vite (actually Rolldown) will bundle.
  *
  * By default, the entry point is the index.html file - even if you don't
- * specify it in RollupOptions
+ * specify it in `rolldownOptions`
  *
  * With streaming SSR, our entrypoint is different - either entry.client.tsx or
  * entry.server.tsx and the html file is not used at all, because it is defined
  * in Document.tsx
  *
  * @param ssr Whether to return the SSR inputs or not
- * @returns Rollup input Options
+ * @returns Rolldown input options
  */
-function getRollupInput(userConfig: ViteUserConfig, ssr: boolean) {
+function getRolldownInput(userConfig: ViteUserConfig, ssr: boolean) {
   const cedarConfig = getConfig()
   const cedarPaths = getPaths()
 
   // Don't override the input if the user has already set it in their config.
   // This is also needed for when this runs inside Storybook's Vite server.
-  if (userConfig.build?.rollupOptions?.input) {
-    return userConfig.build.rollupOptions.input
+  const userInput =
+    userConfig.build?.rolldownOptions?.input ??
+    userConfig.build?.rollupOptions?.input
+
+  if (userInput) {
+    return userInput
   }
 
   if (!cedarPaths.web.entryClient) {

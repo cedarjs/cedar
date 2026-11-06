@@ -39,7 +39,7 @@ export async function rscBuildClient(clientEntryFiles: Record<string, string>) {
       minify: false,
       outDir: rwPaths.web.distBrowser,
       emptyOutDir: true, // Needed because `outDir` is not inside `root`
-      rollupOptions: {
+      rolldownOptions: {
         onwarn: onWarn,
         input: {
           // @MARK: temporary hack to find the entry client so we can get the
@@ -67,9 +67,6 @@ export async function rscBuildClient(clientEntryFiles: Record<string, string>) {
         },
       },
       manifest: 'client-build-manifest.json',
-    },
-    esbuild: {
-      logLevel: 'debug',
     },
     logLevel: 'info',
     plugins: [rscRoutesAutoLoader()],

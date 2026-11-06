@@ -65,8 +65,8 @@ describe('api/ bare-specifier imports', () => {
     const code = await testTransformation('apiImport.ts')
 
     expect(code).toMatchInlineSnapshot(`
-      "const PrismaClient = { name: "PrismaClient" };
-      console.log(PrismaClient);
+      "// src/plugins/__tests__/__fixtures__/api-style-imports/apiImport.ts
+      console.log({ name: "PrismaClient" });
       "
     `)
   })

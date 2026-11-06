@@ -166,8 +166,7 @@
     "termi-link": "catalog:",
     "tsconfig-paths": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:",
-    "vite-tsconfig-paths": "catalog:"
+    "vite": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",

@@ -68,7 +68,7 @@
     "@swc/core": "catalog:",
     "@universal-deploy/store": "0.3.0",
     "@universal-deploy/vite": "0.2.2",
-    "@vitejs/plugin-react": "4.7.0",
+    "@vitejs/plugin-react": "6.2.1",
     "@whatwg-node/fetch": "catalog:",
     "@whatwg-node/server": "0.13.2",
     "acorn": "8.19.0",
@@ -88,9 +88,8 @@
     "unimport": "catalog:",
     "unplugin-auto-import": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-cjs-interop": "2.4.4",
+    "vite-plugin-cjs-interop": "4.0.3",
     "vite-plugin-graphql-tag": "0.1.1",
-    "vite-tsconfig-paths": "catalog:",
     "ws": "catalog:",
     "yargs-parser": "catalog:"
   },
@@ -114,17 +113,23 @@
     "publint": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "rollup": "catalog:",
     "ts-dedent": "catalog:",
     "typescript": "catalog:",
+    "verkit": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
+    "oxc-transform-react": "0.156.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
+  },
+  "peerDependenciesMeta": {
+    "oxc-transform-react": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=24"

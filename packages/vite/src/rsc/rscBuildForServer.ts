@@ -108,7 +108,7 @@ export async function rscBuildForServer(
       outDir,
       emptyOutDir: true, // Needed because `outDir` is not inside `root`
       manifest: 'server-build-manifest.json',
-      rollupOptions: {
+      rolldownOptions: {
         onwarn: onWarn,
         external: ['@cedarjs/realtime'],
         input: {

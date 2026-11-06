@@ -27,6 +27,7 @@ import * as v7Gql from './codemods/redwood/v7.x.x/updateGraphQLConfig/updateGrap
 import * as v2MoveGeneratorTemplates from './codemods/v2.3.x/moveGeneratorTemplates/moveGeneratorTemplates.yargs.js'
 import * as v2PrismaV7Prep from './codemods/v2.7.x/prismaV7Prep/prismaV7Prep.yargs.js'
 import * as v3PrismaV7 from './codemods/v3.x/prismaV7/prismaV7.yargs.js'
+import * as v9RenameRollupOptions from './codemods/v9.x/renameRollupOptions/renameRollupOptions.yargs.js'
 
 // This only loads environment variables before the codemods run, not before
 // they're imported. So codemods can't access env vars at module initialization
@@ -40,6 +41,7 @@ yargs(hideBin(process.argv))
   .command(v2MoveGeneratorTemplates)
   .command(v2PrismaV7Prep)
   .command(v3PrismaV7)
+  .command(v9RenameRollupOptions)
   .command('redwood', 'List or run Redwood codemods', (yargs) => {
     return yargs
       .command(v2TsconfigForRouteHooks)

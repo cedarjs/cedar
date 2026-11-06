@@ -1,7 +1,10 @@
-import type { LoggingFunction, RollupLog } from 'rollup'
+import type { Rolldown } from 'vite'
 
 // Upstream issue: https://github.com/rollup/rollup/issues/4699
-export function onWarn(warning: RollupLog, defaultHandler: LoggingFunction) {
+export function onWarn(
+  warning: Rolldown.RolldownLog,
+  defaultHandler: Rolldown.LoggingFunction,
+) {
   const fileName = warning.loc?.file
 
   if (

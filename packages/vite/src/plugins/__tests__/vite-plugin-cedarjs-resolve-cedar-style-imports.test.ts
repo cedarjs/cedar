@@ -47,8 +47,8 @@ describe('directory named imports', () => {
     const code = await testTransformation('moduleImport.js')
 
     expect(code).toMatchInlineSnapshot(`
-      "const ImpModule = { name: "ImpModule" };
-      console.log(ImpModule);
+      "// src/plugins/__tests__/__fixtures__/directory-named-imports/moduleImport.js
+      console.log({ name: "ImpModule" });
       "
     `)
   })
@@ -57,7 +57,9 @@ describe('directory named imports', () => {
     const code = await testTransformation('tsxImport.ts')
 
     expect(code).toMatchInlineSnapshot(`
-      "const ImpTSX = () => null;
+      "// src/plugins/__tests__/__fixtures__/directory-named-imports/TSX/TSX.tsx
+      var ImpTSX = () => null;
+      // src/plugins/__tests__/__fixtures__/directory-named-imports/tsxImport.ts
       console.log(ImpTSX);
       "
     `)
@@ -67,10 +69,9 @@ describe('directory named imports', () => {
     const code = await testTransformation('moduleExport.js')
 
     expect(code).toMatchInlineSnapshot(`
-      "const ImpModule = { name: "ImpModule" };
-      export {
-        ImpModule
-      };
+      "// src/plugins/__tests__/__fixtures__/directory-named-imports/Module/Module.js
+      var ImpModule = { name: "ImpModule" };
+      export { ImpModule };
       "
     `)
   })
@@ -79,10 +80,9 @@ describe('directory named imports', () => {
     const code = await testTransformation('indexModuleExport.js')
 
     expect(code).toMatchInlineSnapshot(`
-      "const ExpIndex = "index.js";
-      export {
-        ExpIndex
-      };
+      "// src/plugins/__tests__/__fixtures__/directory-named-imports/indexModule/index.js
+      var ExpIndex = "index.js";
+      export { ExpIndex };
       "
     `)
   })
@@ -91,10 +91,9 @@ describe('directory named imports', () => {
     const code = await testTransformation('indexModuleExport.ts')
 
     expect(code).toMatchInlineSnapshot(`
-      "const TSWithIndex = "index.js";
-      export {
-        TSWithIndex
-      };
+      "// src/plugins/__tests__/__fixtures__/directory-named-imports/TSWithIndex/index.js
+      var TSWithIndex = "index.js";
+      export { TSWithIndex };
       "
     `)
   })
@@ -103,8 +102,8 @@ describe('directory named imports', () => {
     const code = await testTransformation('tsImport.ts')
 
     expect(code).toMatchInlineSnapshot(`
-      "const pew = "pew";
-      console.log(pew);
+      "// src/plugins/__tests__/__fixtures__/directory-named-imports/tsImport.ts
+      console.log("pew");
       "
     `)
   })
@@ -113,10 +112,9 @@ describe('directory named imports', () => {
     const code = await testTransformation('tsxExport.ts')
 
     expect(code).toMatchInlineSnapshot(`
-      "const pew = () => "pew";
-      export {
-        pew
-      };
+      "// src/plugins/__tests__/__fixtures__/directory-named-imports/TSX/TSX.tsx
+      var pew = () => "pew";
+      export { pew };
       "
     `)
   })
@@ -125,10 +123,9 @@ describe('directory named imports', () => {
     const code = await testTransformation('jsxExport.ts')
 
     expect(code).toMatchInlineSnapshot(`
-      "const pew = () => "pew";
-      export {
-        pew
-      };
+      "// src/plugins/__tests__/__fixtures__/directory-named-imports/JSX/JSX.jsx
+      var pew = () => "pew";
+      export { pew };
       "
     `)
   })
