@@ -28,27 +28,27 @@
   },
   "dependencies": {
     "@envelop/live-query": "7.0.0",
-    "@graphql-tools/schema": "10.1.5",
-    "@graphql-tools/utils": "12.1.0",
+    "@graphql-tools/schema": "catalog:",
+    "@graphql-tools/utils": "catalog:",
     "@graphql-yoga/plugin-defer-stream": "3.24.6",
     "@graphql-yoga/plugin-graphql-sse": "3.24.6",
     "@graphql-yoga/redis-event-target": "3.0.4",
     "@graphql-yoga/subscription": "5.1.1",
     "@n1ru4l/graphql-live-query": "0.10.0",
     "@n1ru4l/in-memory-live-query-store": "0.10.0",
-    "graphql": "16.14.2"
+    "graphql": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@envelop/core": "5.6.1",
+    "@envelop/core": "catalog:",
     "@envelop/testing": "7.0.0",
-    "@envelop/types": "5.2.2",
-    "graphql-yoga": "5.24.6",
+    "@envelop/types": "catalog:",
+    "graphql-yoga": "catalog:",
     "ioredis": "5.11.1",
-    "nodemon": "3.1.14",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "nodemon": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "ioredis": "^5.3.2"

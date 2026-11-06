@@ -38,18 +38,18 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "jsonwebtoken": "9.0.3"
+    "jsonwebtoken": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/aws-lambda": "8.10.164",
-    "@types/jsonwebtoken": "9.0.10",
-    "concurrently": "9.2.5",
-    "publint": "0.3.25",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "@types/aws-lambda": "catalog:",
+    "@types/jsonwebtoken": "catalog:",
+    "concurrently": "catalog:",
+    "publint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

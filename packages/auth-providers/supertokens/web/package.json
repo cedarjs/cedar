@@ -42,14 +42,14 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/react": "^19.2.0",
-    "concurrently": "9.2.5",
-    "publint": "0.3.25",
-    "react": "19.3.1",
+    "@types/react": "catalog:",
+    "concurrently": "catalog:",
+    "publint": "catalog:",
+    "react": "catalog:",
     "supertokens-auth-react": "0.51.3",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "supertokens-auth-react": "0.51.3"

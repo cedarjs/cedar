@@ -43,13 +43,13 @@
   "devDependencies": {
     "@azure/msal-browser": "2.39.0",
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/react": "^19.2.0",
-    "concurrently": "9.2.5",
-    "publint": "0.3.25",
-    "react": "19.3.1",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "@types/react": "catalog:",
+    "concurrently": "catalog:",
+    "publint": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@azure/msal-browser": "2.39.0"

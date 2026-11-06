@@ -54,24 +54,24 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
-    "react-server-dom-webpack": "19.3.1",
-    "ts-toolbelt": "9.6.0"
+    "react-server-dom-webpack": "catalog:",
+    "ts-toolbelt": "catalog:"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.5",
+    "@arethetypeswrong/cli": "catalog:",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
-    "@testing-library/jest-dom": "6.9.1",
-    "@types/react": "^19.2.0",
-    "@types/react-dom": "^19.2.0",
-    "concurrently": "9.2.5",
-    "publint": "0.3.25",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "tstyche": "5.0.2",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "@testing-library/jest-dom": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "concurrently": "catalog:",
+    "publint": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tstyche": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",

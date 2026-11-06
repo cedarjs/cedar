@@ -56,6 +56,7 @@ vi.mock('../../../../lib/index.js', async (importOriginal) => {
   }
 })
 
+import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import type * as NodeFs from 'node:fs'
 import path from 'node:path'
@@ -1082,11 +1083,14 @@ describe('packageHandler', () => {
   // This test is to make sure we don't forget to update the template when we
   // upgrade TypeScript
   it('has the correct version of TypeScript in the generated package', () => {
-    const cedarPackageJsonPath = path.normalize(
-      path.join(__dirname, ...Array(7).fill('..'), 'package.json'),
-    )
-    const packageJson = JSON.parse(
-      fs.readFileSync(cedarPackageJsonPath, 'utf8'),
+    // The framework's TypeScript version is in the Yarn catalog
+    const catalog = JSON.parse(
+      execFileSync('yarn', ['config', 'get', 'catalog', '--json'], {
+        cwd: path.normalize(path.join(__dirname, ...Array(7).fill('..'))),
+        encoding: 'utf8',
+        // Yarn is a shell script on Windows
+        shell: process.platform === 'win32',
+      }),
     )
 
     const packageJsonTemplatePath = path.join(
@@ -1098,7 +1102,7 @@ describe('packageHandler', () => {
     const packageJsonTemplate = fs.readFileSync(packageJsonTemplatePath, 'utf8')
 
     expect(packageJsonTemplate).toContain(
-      `"typescript": "${packageJson.devDependencies.typescript}"`,
+      `"typescript": "${catalog.typescript}"`,
     )
   })
 })

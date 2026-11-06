@@ -29,17 +29,17 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "pluralize": "8.0.0"
+    "pluralize": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/pluralize": "0.0.33",
-    "concurrently": "9.2.5",
-    "nodemon": "3.1.14",
-    "publint": "0.3.25",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "concurrently": "catalog:",
+    "nodemon": "catalog:",
+    "publint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

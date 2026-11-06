@@ -9,6 +9,8 @@ import url from 'node:url'
 import Arborist from '@npmcli/arborist'
 import packlist from 'npm-packlist'
 
+import { resolveCatalogRange } from '../../catalogs.mts'
+
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
 export const CEDAR_FRAMEWORK_PATH = path.resolve(__dirname, '../../../')
@@ -69,7 +71,7 @@ export function getFrameworkDependencies(
   for (const packageJsonPath of packageJsonPaths) {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 
-    for (const [name, version] of Object.entries(
+    for (const [name, range] of Object.entries(
       packageJson?.dependencies ?? {},
     )) {
       // Skip `@cedarjs` packages, since these are processed by the workspace.
@@ -81,6 +83,10 @@ export function getFrameworkDependencies(
       if (name.startsWith('storybook-framework-cedarjs')) {
         continue
       }
+
+      // The project isn't part of the framework's Yarn project, so it needs
+      // the version a `catalog:` range stands for
+      const version = resolveCatalogRange(name, range)
 
       dependencies[name] = version
 

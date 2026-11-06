@@ -55,17 +55,17 @@
     "@storybook/builder-vite": "8.6.19",
     "@storybook/react": "8.6.19",
     "empathic": "2.1.0",
-    "magic-string": "0.30.21",
+    "magic-string": "catalog:",
     "react-docgen": "7.1.1",
-    "tsconfig-paths": "4.2.0",
-    "unplugin-auto-import": "19.3.0"
+    "tsconfig-paths": "catalog:",
+    "unplugin-auto-import": "catalog:"
   },
   "devDependencies": {
     "@storybook/types": "8.6.19",
-    "@types/node": "24.19.2",
-    "typescript": "5.9.3",
-    "vite": "7.3.7",
-    "vitest": "5.0.5"
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@cedarjs/project-config": "workspace:*",

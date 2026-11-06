@@ -42,11 +42,11 @@
     "check:package": "concurrently npm:check:attw yarn:publint"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.5",
+    "@arethetypeswrong/cli": "catalog:",
     "@cedarjs/framework-tools": "workspace:*",
-    "concurrently": "9.2.5",
-    "publint": "0.3.25",
-    "typescript": "5.9.3"
+    "concurrently": "catalog:",
+    "publint": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=24"

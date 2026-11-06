@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=24"

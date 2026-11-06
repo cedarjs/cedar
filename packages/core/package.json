@@ -52,14 +52,14 @@
     "@cedarjs/jobs": "workspace:*",
     "@cedarjs/vite": "workspace:*",
     "@cedarjs/web-server": "workspace:*",
-    "graphql-tag": "2.12.7",
-    "nodemon": "3.1.14",
-    "typescript": "5.9.3"
+    "graphql-tag": "catalog:",
+    "nodemon": "catalog:",
+    "typescript": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "prisma": "7.10.1",
-    "publint": "0.3.25"
+    "prisma": "catalog:prisma",
+    "publint": "catalog:"
   },
   "peerDependencies": {
     "prisma": "7.10.1"
