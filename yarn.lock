@@ -3985,7 +3985,7 @@ __metadata:
     "@uppy/drag-drop": ^6.0.0
     "@uppy/react": ^6.0.0
     "@uppy/xhr-upload": ^6.0.0
-    fastify: 5.12.7
+    fastify: 5.12.8
     react: 19.3.1
   peerDependenciesMeta:
     "@apollo/client":
@@ -17850,9 +17850,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify@npm:5.12.7":
-  version: 5.12.7
-  resolution: "fastify@npm:5.12.7"
+"fastify@npm:5.12.8":
+  version: 5.12.8
+  resolution: "fastify@npm:5.12.8"
   dependencies:
     "@fastify/ajv-compiler": "npm:^4.0.5"
     "@fastify/error": "npm:^4.0.0"
@@ -17861,7 +17861,7 @@ __metadata:
     abstract-logging: "npm:^2.0.1"
     avvio: "npm:^9.0.0"
     fast-json-stringify: "npm:^7.0.0"
-    find-my-way: "npm:^9.6.0"
+    find-my-way: "npm:^9.10.0"
     light-my-request: "npm:^6.0.0"
     pino: "npm:^9.14.0 || ^10.1.0"
     process-warning: "npm:^5.1.0"
@@ -17869,7 +17869,7 @@ __metadata:
     secure-json-parse: "npm:^4.0.0"
     semver: "npm:^7.6.0"
     toad-cache: "npm:^3.7.0"
-  checksum: 10c0/e0c02ee75cff47f840043bd8904e00d6eff5cfcb5e9c8cefaa4659dfbe676905ecff061fbcd37a76aed0c3ae8a5ff556410cb1a2d9e6cd817a182c84fd70fd7f
+  checksum: 10c0/cd79733f38d738a087200d430a7d55e76b2c20ece8b7746c7ec06e2b22251a342b38a54adfe4ae8ef953655fd448e2804d3814cab26f9af117ba5d769e61a577
   languageName: node
   linkType: hard
 
@@ -18016,7 +18016,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"find-my-way@npm:9.10.0, find-my-way@npm:^9.6.0":
+"find-my-way@npm:9.10.0, find-my-way@npm:^9.10.0":
   version: 9.10.0
   resolution: "find-my-way@npm:9.10.0"
   dependencies:
