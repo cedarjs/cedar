@@ -73,6 +73,17 @@ describe('Lambda Request', () => {
     })
   })
 
+  test('Handles an aws event without headers', async () => {
+    const event = {
+      ...createMockedLambdaEvent('GET'),
+      headers: null,
+    } as unknown as APIGatewayProxyEvent
+
+    const request = await normalizeRequest(event)
+
+    expect(Array.from(request.headers.entries())).toEqual([])
+  })
+
   test('Handles CORS requests with and without b64 encoded', async () => {
     const corsEventB64 = createMockedLambdaEvent('OPTIONS', undefined, true)
 

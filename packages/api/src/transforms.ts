@@ -196,7 +196,7 @@ export async function normalizeRequest(
   const jsonBody = parseLambdaEventBody(event)
 
   return {
-    headers: new Headers(event.headers as Record<string, string>),
+    headers: new Headers((event.headers ?? {}) as Record<string, string>),
     method: event.httpMethod,
     query: event.queryStringParameters,
     jsonBody,
