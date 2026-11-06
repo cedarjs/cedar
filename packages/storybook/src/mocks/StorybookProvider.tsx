@@ -20,9 +20,12 @@ export const MockingLoader = async () => {
    * Additionally, because we want to load the mock files eagerly,
    * we need to pass the `eager: true` option.
    *
+   * The pattern uses brace expansion. Extended glob syntax such as `+(mock)`
+   * isn't supported by Vite's glob import and matches no files.
+   *
    * More info on Glob Import here: https://vitejs.dev/guide/features#glob-import
    */
-  import.meta.glob('~__CEDAR__USER_WEB_SRC/**/*.+(mock).(js|ts)', {
+  import.meta.glob('~__CEDAR__USER_WEB_SRC/**/*.mock.{js,ts}', {
     eager: true,
   })
 
