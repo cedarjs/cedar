@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { fetch } from '@whatwg-node/fetch'
 import { parseConfigFileTextToJson } from 'typescript'
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
@@ -43,12 +42,6 @@ export const registerShims = (routerPath: string) => {
   globalThis.location = {
     ...globalThis.location,
     pathname: routerPath,
-  }
-  // Shim fetch in the node.js context
-  // This is to avoid using cross-fetch when configuring apollo-client
-  // which would cause the client bundle size to increase
-  if (!globalThis.fetch) {
-    globalThis.fetch = fetch
   }
 }
 

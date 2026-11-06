@@ -49,7 +49,6 @@
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-replace": "6.0.3",
     "@swc/core": "catalog:",
-    "@whatwg-node/fetch": "catalog:",
     "cheerio": "catalog:",
     "graphql": "catalog:",
     "mime-types": "catalog:",

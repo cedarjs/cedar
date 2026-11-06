@@ -1,4 +1,4 @@
-import { Headers, Request as PonyfillRequest } from '@whatwg-node/fetch'
+import { Request as PonyfillRequest } from '@whatwg-node/fetch'
 import type { APIGatewayProxyEvent } from 'aws-lambda'
 
 // This is part of the request, dreived either from a LambdaEvent or FetchAPI Request

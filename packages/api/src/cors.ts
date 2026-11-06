@@ -1,5 +1,3 @@
-import { Headers } from '@whatwg-node/fetch'
-
 import type { PartialRequest } from './transforms.js'
 
 export type CorsConfig = {

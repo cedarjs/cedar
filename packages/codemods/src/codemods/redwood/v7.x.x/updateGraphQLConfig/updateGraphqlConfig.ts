@@ -1,8 +1,6 @@
 import fs from 'node:fs'
 import path from 'path'
 
-import { fetch } from '@whatwg-node/fetch'
-
 import { getPaths } from '@cedarjs/project-config'
 
 export const updateGraphqlConfig = async () => {

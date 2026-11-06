@@ -1,4 +1,3 @@
-import { Headers } from '@whatwg-node/fetch'
 import type { APIGatewayProxyEvent } from 'aws-lambda'
 import { test, expect, describe } from 'vitest'
 
