@@ -186,7 +186,38 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/client@npm:4.3.5, @apollo/client@npm:^4.0.0":
+"@apollo/client@npm:4.3.6":
+  version: 4.3.6
+  resolution: "@apollo/client@npm:4.3.6"
+  dependencies:
+    "@graphql-typed-document-node/core": "npm:^3.1.1"
+    "@wry/caches": "npm:^1.0.0"
+    "@wry/equality": "npm:^0.5.6"
+    "@wry/trie": "npm:^0.5.0"
+    graphql-tag: "npm:^2.12.6"
+    optimism: "npm:^0.18.0"
+    tslib: "npm:^2.3.0"
+  peerDependencies:
+    graphql: ^16.0.0 || ^17.0.0
+    graphql-ws: ^5.5.5 || ^6.0.3
+    react: ^17.0.0 || ^18.0.0 || >=19.0.0-rc
+    react-dom: ^17.0.0 || ^18.0.0 || >=19.0.0-rc
+    rxjs: ^7.3.0
+    subscriptions-transport-ws: ^0.9.0 || ^0.11.0
+  peerDependenciesMeta:
+    graphql-ws:
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+    subscriptions-transport-ws:
+      optional: true
+  checksum: 10c0/2f9397ef7f8e2c7c39f4c0166967ba4d847009ea7ced7a4675443696bac6350daccde44cffb941b25fb0e27b72f23bee419d8844bdf03c43db119041631c6bd0
+  languageName: node
+  linkType: hard
+
+"@apollo/client@npm:^4.0.0":
   version: 4.3.5
   resolution: "@apollo/client@npm:4.3.5"
   dependencies:
@@ -3227,7 +3258,7 @@ __metadata:
     "@cedarjs/framework-tools": "workspace:*"
     "@cedarjs/project-config": "workspace:*"
     "@fastify/compress": "catalog:"
-    "@fastify/http-proxy": "npm:11.6.5"
+    "@fastify/http-proxy": "npm:11.6.6"
     "@fastify/static": "npm:10.1.7"
     "@fastify/url-data": "catalog:"
     fast-glob: "catalog:"
@@ -3848,7 +3879,7 @@ __metadata:
     vitest: "catalog:"
     zx: "catalog:"
   peerDependencies:
-    "@apollo/client": 4.3.5
+    "@apollo/client": 4.3.6
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
@@ -3977,7 +4008,7 @@ __metadata:
     vitest: "catalog:"
     zx: "catalog:"
   peerDependencies:
-    "@apollo/client": 4.3.5
+    "@apollo/client": 4.3.6
     "@aws-sdk/client-s3": ^3.0.0
     "@aws-sdk/s3-request-presigner": ^3.0.0
     "@cedarjs/web": "workspace:*"
@@ -5461,15 +5492,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/http-proxy@npm:11.6.5":
-  version: 11.6.5
-  resolution: "@fastify/http-proxy@npm:11.6.5"
+"@fastify/http-proxy@npm:11.6.6":
+  version: 11.6.6
+  resolution: "@fastify/http-proxy@npm:11.6.6"
   dependencies:
     "@fastify/reply-from": "npm:^12.6.2"
     fast-querystring: "npm:^1.1.2"
     fastify-plugin: "npm:^6.0.0"
     ws: "npm:^8.18.3"
-  checksum: 10c0/323d45f2749341b657f88f49fe7d18d79daef219ec5b6f4a3a740e338516f77cd8600be56de9e12cdfa1b4bb81d811e8e4b4be3216254f31956279a24eeb039e
+  checksum: 10c0/212f751871672c2c6076ff5a0f0b74f7401c27d5722f4c4800601f3b6220d3716aeaad237fd93a5b3fd042de4dcf32cc17eec353ac3f9632ed57950181df551e
   languageName: node
   linkType: hard
 
@@ -9297,6 +9328,13 @@ __metadata:
   version: 0.156.0
   resolution: "@oxc-project/types@npm:0.156.0"
   checksum: 10c0/7f101d33e967179c10d38708c71c8c602ad862843a788603d6b8c2accebf2fce420ca95a26d74d90bc35db36daa0a8285c3af1589c38ae20e46e47153549313f
+  languageName: node
+  linkType: hard
+
+"@oxc-project/types@npm:^0.157.0":
+  version: 0.157.0
+  resolution: "@oxc-project/types@npm:0.157.0"
+  checksum: 10c0/779771acd7679def85bee728dc5439d3c219c6789c6060cd6858e1212f991bf59760b7fc4a74bab629e7b74222ea82a1891acd7a86ac83e69e2233cb85f9f4c0
   languageName: node
   linkType: hard
 

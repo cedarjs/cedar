@@ -75,7 +75,7 @@
     "zx": "catalog:"
   },
   "peerDependencies": {
-    "@apollo/client": "4.3.5",
+    "@apollo/client": "4.3.6",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
