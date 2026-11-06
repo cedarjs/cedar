@@ -27,7 +27,7 @@ export const buildWeb = async ({ verbose }: BuildOptions) => {
 
   return build({
     configFile: viteConfig,
-    envFile: false,
+    envDir: false,
     logLevel: verbose ? 'info' : 'warn',
   })
 }

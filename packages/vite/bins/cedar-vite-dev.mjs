@@ -40,7 +40,8 @@ const startDevServer = async () => {
 
   const devServer = await createServer({
     configFile,
-    envFile: false, // env file is handled by plugins in the redwood-vite plugin
+    // env file is handled by Cedar's plugins
+    envDir: false,
     optimizeDeps: {
       // This is the only value that isn't a server option
       force: forceOptimize,

@@ -97,7 +97,7 @@ export async function buildRouteHooks(
     // Route hooks are node modules, so the static assets in web/public
     // must not be copied next to them
     publicDir: false,
-    envFile: false,
+    envDir: false,
     logLevel: verbose ? 'info' : 'error',
     plugins: [
       // Turns `$api/` imports into an error in the client environment. It's a

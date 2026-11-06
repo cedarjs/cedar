@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import fastify from 'fastify'
 import { vol } from 'memfs'
 import {
@@ -30,7 +32,10 @@ console.log = vi.fn()
 
 // Set up CEDAR_CWD.
 let original_CEDAR_CWD: string | undefined
-const FIXTURE_PATH = '/graphql/cedar-app'
+const FIXTURE_PATH = path.join(
+  import.meta.dirname,
+  'fixtures/graphql/cedar-app',
+)
 
 beforeAll(() => {
   original_CEDAR_CWD = process.env.CEDAR_CWD
@@ -52,48 +57,9 @@ const userConfig = {
   requestTimeout: 25_000,
 }
 
-const mockedConfigSpecifiers = await vi.hoisted(async () => {
-  const path = await import('node:path')
-  const url = await import('node:url')
-
-  const testDir = path.dirname(url.fileURLToPath(import.meta.url))
-
-  // This will be `D:\` on Windows (or some other drive letter) and `/` on Unix
-  const osRoot = path.parse(testDir).root.replace('\\', '/')
-
-  const configPath = osRoot + 'graphql/cedar-app/api/server.config.js'
-  const configFileUrl = url.pathToFileURL(configPath)
-
-  return {
-    configPath,
-    // Vitest 4's module runner resolves the dynamic import in fastify.ts to
-    // the file:// URL produced by pathToFileURL(), so the mock has to be
-    // registered under that exact specifier as well
-    configUrl: configFileUrl.href,
-    // On Windows the module runner's internal module ids use the URL pathname
-    // form (`/D:/graphql/...`), so the mock has to be registered under that
-    // specifier too. On Unix this is identical to configPath
-    configUrlPathname: configFileUrl.pathname,
-  }
-})
-
-vi.mock(mockedConfigSpecifiers.configPath, () => {
-  return {
-    default: {
-      config: userConfig,
-    },
-  }
-})
-
-vi.mock(mockedConfigSpecifiers.configUrl, () => {
-  return {
-    default: {
-      config: userConfig,
-    },
-  }
-})
-
-vi.mock(mockedConfigSpecifiers.configUrlPathname, () => {
+// The fixture's server.config.js is a real file, so the module runner can
+// resolve the dynamic import in fastify.ts. Its exports are replaced here
+vi.mock('./fixtures/graphql/cedar-app/api/server.config.js', () => {
   return {
     default: {
       config: userConfig,

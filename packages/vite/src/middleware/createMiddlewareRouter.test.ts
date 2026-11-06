@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createMiddlewareRouter } from './register.js'
 
-vi.mock('@cedarjs/project-config', () => {
+vi.mock('@cedarjs/project-config', async () => {
+  const path = await import('node:path')
+  const { fileURLToPath } = await import('node:url')
+
   const mockWin32Paths = {
     web: {
       base: 'C:\\proj\\web',
@@ -24,45 +27,21 @@ vi.mock('@cedarjs/project-config', () => {
       return process.platform === 'win32' ? mockWin32Paths : mockUnixPaths
     },
     getConfig: () => ({}),
+    // A real file, so the module runner can resolve the dynamic import in
+    // register.ts. Its exports are replaced by the vi.mock() below
     getBuiltServerEntryFile: () => {
-      return process.platform === 'win32'
-        ? 'C:\\proj\\web\\dist\\ssr\\entry-server.mjs'
-        : '/proj/web/dist/ssr/entry-server.mjs'
+      return path.join(
+        path.dirname(fileURLToPath(import.meta.url)),
+        '__fixtures__',
+        'entry-server.mjs',
+      )
     },
   }
 })
 
 const distRegisterMwMock = vi.fn()
 
-// Vitest 4's module runner resolves the dynamic import in register.ts to the
-// file:// URL produced by makeFilePath(), and internally keys mocks by both
-// path- and URL-style ids, so the mock has to be registered under every
-// specifier form the current platform can produce. The Unix-style
-// 'file:///proj/...' form must never be registered on Windows —
-// fileURLToPath() throws on drive-less file URLs there.
-const entryServerSpecifiers = await vi.hoisted(async () => {
-  const url = await import('node:url')
-
-  const entryPath =
-    process.platform === 'win32'
-      ? 'C:/proj/web/dist/ssr/entry-server.mjs'
-      : '/proj/web/dist/ssr/entry-server.mjs'
-  const entryUrl = url.pathToFileURL(entryPath)
-
-  return [entryPath, entryUrl.pathname, entryUrl.href]
-})
-
-vi.mock(entryServerSpecifiers[0], () => {
-  return {
-    registerMiddleware: distRegisterMwMock,
-  }
-})
-vi.mock(entryServerSpecifiers[1], () => {
-  return {
-    registerMiddleware: distRegisterMwMock,
-  }
-})
-vi.mock(entryServerSpecifiers[2], () => {
+vi.mock('./__fixtures__/entry-server.mjs', () => {
   return {
     registerMiddleware: distRegisterMwMock,
   }

@@ -32,7 +32,7 @@
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
 
     "rootDir": "${configDir}/src",
     "outDir": "${configDir}/dist"
