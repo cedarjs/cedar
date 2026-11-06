@@ -518,7 +518,7 @@ export async function buildCedarApp({
 
   const builder = await createBuilder({
     configFile: cedarPaths.web.viteConfig,
-    envFile: false,
+    envDir: false,
     logLevel: verbose ? 'info' : 'warn',
     environments,
     resolve: {

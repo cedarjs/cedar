@@ -35,7 +35,7 @@ export async function rscBuildForSsr({
   }
 
   const ssrBuildOutput = await viteBuild({
-    envFile: false,
+    envDir: false,
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     },

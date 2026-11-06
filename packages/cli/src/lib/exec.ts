@@ -14,7 +14,7 @@ import {
   cedarCjsCompatPlugin,
 } from '@cedarjs/vite'
 
-// When the customResolver returns an id, that id is final – Vite won't try
+// When a resolveId hook returns an id, that id is final – Vite won't try
 // alternative extensions on it. This helper resolves the actual file on disk,
 // handling both bare paths (src/lib/jobs) and .js/.jsx paths that map to .ts
 // files in a TypeScript project (e.g. db.js -> db.ts). For bare paths it also
@@ -94,39 +94,40 @@ export async function runScriptFunction({
           find: /^web\//,
           replacement: getPaths().web.base + '/',
         },
-        {
-          find: /^src\//,
-          replacement: 'src/',
-          customResolver: (id, importer, _options) => {
-            const apiImportBase = importStatementPath(getPaths().api.base)
-            const webImportBase = importStatementPath(getPaths().web.base)
-
-            // When importing a file from the api directory (using api/src/...
-            // in the script), that file in turn might import another file using
-            // just src/... That's a problem for Vite when it's running a file
-            // from scripts/ because it doesn't know what the src/ alias is.
-            // So we have to tell it to use the correct path based on what file
-            // is doing the importing.
-            // Also, to support imports like 'src/lib/db.js' in TS projects
-            // where only a .ts file exists, we resolve the correct extension
-            // ourselves – the customResolver result is final and Vite won't
-            // try alternative extensions on it.
-            if (importer?.startsWith(apiImportBase)) {
-              const apiImportSrc = importStatementPath(getPaths().api.src)
-              const apiId = id.replace('src', apiImportSrc)
-              return { id: resolveId(apiId) }
-            } else if (importer?.startsWith(webImportBase)) {
-              const webImportSrc = importStatementPath(getPaths().web.src)
-              const webId = id.replace('src', webImportSrc)
-              return { id: resolveId(webId) }
-            }
-
-            return null
-          },
-        },
       ],
     },
     plugins: [
+      {
+        // When importing a file from the api directory (using api/src/... in
+        // the script), that file in turn might import another file using just
+        // src/... That's a problem for Vite when it's running a file from
+        // scripts/ because it doesn't know what src/ refers to. So we resolve
+        // it based on what file is doing the importing.
+        // Also, to support imports like 'src/lib/db.js' in TS projects where
+        // only a .ts file exists, we resolve the correct extension ourselves –
+        // the resolveId result is final and Vite won't try alternative
+        // extensions on it.
+        name: 'cedar-resolve-src-imports',
+        enforce: 'pre',
+        resolveId(id, importer) {
+          if (!id.startsWith('src/')) {
+            return null
+          }
+
+          const apiImportBase = importStatementPath(getPaths().api.base)
+          const webImportBase = importStatementPath(getPaths().web.base)
+
+          if (importer?.startsWith(apiImportBase)) {
+            const apiImportSrc = importStatementPath(getPaths().api.src)
+            return resolveId(id.replace('src', apiImportSrc))
+          } else if (importer?.startsWith(webImportBase)) {
+            const webImportSrc = importStatementPath(getPaths().web.src)
+            return resolveId(id.replace('src', webImportSrc))
+          }
+
+          return null
+        },
+      },
       cedarCjsCompatPlugin(),
       cedarjsResolveCedarStyleImportsPlugin(),
       cedarCellTransform(),

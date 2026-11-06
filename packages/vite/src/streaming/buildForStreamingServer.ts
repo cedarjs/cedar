@@ -33,7 +33,7 @@ export async function buildForStreamingServer({
       ssr: true,
       emptyOutDir: true,
     },
-    envFile: false,
+    envDir: false,
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     },
