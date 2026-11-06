@@ -2,6 +2,8 @@ import fs from 'node:fs'
 
 import { build, defaultBuildOptions } from '@cedarjs/framework-tools'
 
+import { resolveCatalogRange } from '../../tasks/catalogs.mts'
+
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8')) as {
   version: string
   devDependencies: Record<string, string>
@@ -13,11 +15,18 @@ if (!pkg.version) {
 
 // `@prisma/client` is a devDependency: apps install their own copy, and this
 // is the version Cedar is built and tested against
-const prismaClientVersion = pkg.devDependencies['@prisma/client']
+const prismaClientRange = pkg.devDependencies['@prisma/client']
 
-if (!prismaClientVersion) {
+if (!prismaClientRange) {
   throw new Error('build error: @prisma/client is not available')
 }
+
+// The range is `catalog:prisma`, which only means something inside the
+// framework repo, so the version it stands for is embedded
+const prismaClientVersion = resolveCatalogRange(
+  '@prisma/client',
+  prismaClientRange,
+)
 
 await build({
   buildOptions: {
