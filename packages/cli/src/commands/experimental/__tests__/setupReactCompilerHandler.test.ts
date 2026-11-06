@@ -29,10 +29,10 @@ describe('getOxcTransformReactVersion', () => {
 
   it("returns @cedarjs/vite's oxc-transform-react peer version", () => {
     writeCedarVitePackageJson({
-      peerDependencies: { 'oxc-transform-react': '0.156.0', react: '19.3.1' },
+      peerDependencies: { 'oxc-transform-react': '0.157.0', react: '19.3.1' },
     })
 
-    expect(getOxcTransformReactVersion(webBase)).toBe('0.156.0')
+    expect(getOxcTransformReactVersion(webBase)).toBe('0.157.0')
   })
 
   it("throws when @cedarjs/vite doesn't declare the peer dependency", () => {

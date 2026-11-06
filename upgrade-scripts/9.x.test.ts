@@ -125,7 +125,7 @@ describe('9.x: React Compiler', () => {
       res.end(
         JSON.stringify({
           name: '@cedarjs/vite',
-          peerDependencies: { 'oxc-transform-react': '0.156.0' },
+          peerDependencies: { 'oxc-transform-react': '0.157.0' },
         }),
       )
     })
@@ -152,7 +152,7 @@ describe('9.x: React Compiler', () => {
     assert.match(stdout, /React Compiler needs oxc-transform-react/)
     assert.match(
       stdout,
-      /^ {4}yarn workspace web remove babel-plugin-react-compiler\n {4}yarn workspace web add -D oxc-transform-react@0\.156\.0$/m,
+      /^ {4}yarn workspace web remove babel-plugin-react-compiler\n {4}yarn workspace web add -D oxc-transform-react@0\.157\.0$/m,
     )
     assert.equal(requestedUrls.length, 1)
     assert.match(requestedUrls[0], /^\/@cedarjs%2fvite\/[^/]+$/)
