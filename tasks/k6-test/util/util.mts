@@ -6,7 +6,7 @@ import execa from 'execa'
 import fg from 'fast-glob'
 import { rimrafSync } from 'rimraf'
 
-import { getCatalogs, resolveCatalogRange } from '../../catalogs.cjs'
+import { getCatalogs, resolveCatalogRange } from '../../catalogs.mts'
 
 export function buildRedwoodFramework({
   frameworkPath,

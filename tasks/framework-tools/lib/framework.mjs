@@ -9,7 +9,7 @@ import url from 'node:url'
 import Arborist from '@npmcli/arborist'
 import packlist from 'npm-packlist'
 
-import { resolveCatalogRange } from '../../catalogs.cjs'
+import { resolveCatalogRange } from '../../catalogs.mts'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 

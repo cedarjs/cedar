@@ -10,7 +10,7 @@ const {
   getCatalogs,
   isCatalogRange,
   resolveCatalogRange,
-} = require('./tasks/catalogs.cjs')
+} = require('./tasks/catalogs.mts')
 const { getCurrentGitBranch } = require('./tasks/git-hooks/git-branch.cjs')
 
 /**

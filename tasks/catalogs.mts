@@ -1,5 +1,3 @@
-// @ts-check
-
 /**
  * Reads the Yarn catalogs (`catalog` and `catalogs` in `.yarnrc.yml`) and
  * resolves `catalog:` ranges to the versions they stand for.
@@ -11,25 +9,21 @@
  * `resolveCatalogRange()`.
  */
 
-const { execFileSync } = require('node:child_process')
-const path = require('node:path')
+import { execFileSync } from 'node:child_process'
+import path from 'node:path'
 
 const CATALOG_PROTOCOL = 'catalog:'
 
-/**
- * @typedef {Record<string, string>} Catalog
- * @typedef {{ catalog: Catalog, catalogs: Record<string, Catalog> }} Catalogs
- */
+type Catalog = Record<string, string>
 
-/** @type {Map<string, Catalogs>} */
-const cache = new Map()
+export interface Catalogs {
+  catalog: Catalog
+  catalogs: Record<string, Catalog>
+}
 
-/**
- * @param {string} cwd
- * @param {string} key
- * @returns {unknown}
- */
-function readYarnConfig(cwd, key) {
+const cache = new Map<string, Catalogs>()
+
+function readYarnConfig(cwd: string, key: string): unknown {
   // Yarn parses `.yarnrc.yml` itself, so these are exactly the catalogs it
   // installs from
   const output = execFileSync('yarn', ['config', 'get', key, '--json'], {
@@ -42,22 +36,17 @@ function readYarnConfig(cwd, key) {
   return JSON.parse(output)
 }
 
-/**
- * @param {unknown} value
- * @returns {value is Record<string, unknown>}
- */
-function isRecord(value) {
+function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 /**
  * The default and named catalogs of the Yarn project in `cwd` (the Cedar
  * framework repo by default).
- *
- * @param {string} [cwd]
- * @returns {Catalogs}
  */
-function getCatalogs(cwd = path.join(__dirname, '..')) {
+export function getCatalogs(
+  cwd: string = path.join(import.meta.dirname, '..'),
+): Catalogs {
   const cached = cache.get(cwd)
 
   if (cached) {
@@ -71,11 +60,10 @@ function getCatalogs(cwd = path.join(__dirname, '..')) {
     throw new Error(`Could not read the Yarn catalogs in ${cwd}`)
   }
 
-  /** @type {Catalogs} */
-  const result = {
+  const result: Catalogs = {
     // `yarn config get` prints every catalog entry as a string
-    catalog: /** @type {Catalog} */ (catalog),
-    catalogs: /** @type {Record<string, Catalog>} */ (catalogs),
+    catalog: catalog as Catalog,
+    catalogs: catalogs as Record<string, Catalog>,
   }
 
   cache.set(cwd, result)
@@ -83,23 +71,19 @@ function getCatalogs(cwd = path.join(__dirname, '..')) {
   return result
 }
 
-/**
- * @param {string} range
- */
-function isCatalogRange(range) {
+export function isCatalogRange(range: string): boolean {
   return range.startsWith(CATALOG_PROTOCOL)
 }
 
 /**
  * Turns `catalog:` and `catalog:<name>` into the version that catalog has
  * for `packageName`. Any other range is returned as it is.
- *
- * @param {string} packageName
- * @param {string} range
- * @param {Catalogs} [catalogs]
- * @returns {string}
  */
-function resolveCatalogRange(packageName, range, catalogs = getCatalogs()) {
+export function resolveCatalogRange(
+  packageName: string,
+  range: string,
+  catalogs: Catalogs = getCatalogs(),
+): string {
   if (!isCatalogRange(range)) {
     return range
   }
@@ -123,5 +107,3 @@ function resolveCatalogRange(packageName, range, catalogs = getCatalogs()) {
 
   return version
 }
-
-module.exports = { getCatalogs, isCatalogRange, resolveCatalogRange }

@@ -10,7 +10,7 @@ const fg = require('fast-glob')
 const { hideBin } = require('yargs/helpers')
 const yargs = require('yargs/yargs')
 
-const { getCatalogs, resolveCatalogRange } = require('./catalogs.cjs')
+const { getCatalogs, resolveCatalogRange } = require('./catalogs.mts')
 
 // This script sets up a blank CedarJS app into a directory.
 // It uses the packages from the CedarJS framework (../packages).
