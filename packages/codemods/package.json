@@ -30,7 +30,6 @@
     "@cedarjs/project-config": "workspace:*",
     "@svgr/core": "8.1.0",
     "@svgr/plugin-jsx": "8.1.0",
-    "@whatwg-node/fetch": "catalog:",
     "cheerio": "catalog:",
     "deepmerge": "catalog:",
     "execa": "catalog:",

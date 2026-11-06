@@ -1,4 +1,3 @@
-import { Headers } from '@whatwg-node/fetch'
 import type { APIGatewayProxyEvent } from 'aws-lambda'
 import { test, expect, describe } from 'vitest'
 
@@ -72,6 +71,17 @@ describe('Lambda Request', () => {
         bazinga: 'hello_world',
       },
     })
+  })
+
+  test('Handles an aws event without headers', async () => {
+    const event = {
+      ...createMockedLambdaEvent('GET'),
+      headers: null,
+    } as unknown as APIGatewayProxyEvent
+
+    const request = await normalizeRequest(event)
+
+    expect(Array.from(request.headers.entries())).toEqual([])
   })
 
   test('Handles CORS requests with and without b64 encoded', async () => {

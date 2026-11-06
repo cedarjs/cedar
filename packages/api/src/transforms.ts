@@ -1,4 +1,4 @@
-import { Headers, Request as PonyfillRequest } from '@whatwg-node/fetch'
+import { Request as PonyfillRequest } from '@whatwg-node/fetch'
 import type { APIGatewayProxyEvent } from 'aws-lambda'
 
 // This is part of the request, dreived either from a LambdaEvent or FetchAPI Request
@@ -196,7 +196,7 @@ export async function normalizeRequest(
   const jsonBody = parseLambdaEventBody(event)
 
   return {
-    headers: new Headers(event.headers as Record<string, string>),
+    headers: new Headers((event.headers ?? {}) as Record<string, string>),
     method: event.httpMethod,
     query: event.queryStringParameters,
     jsonBody,
