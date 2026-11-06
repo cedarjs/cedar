@@ -1,5 +1,3 @@
-import { fetch } from '@whatwg-node/fetch'
-
 /**
  * @param tag should be something like 'v0.42.1'
  * @param file should be something like 'prettier.config.cjs', 'api/src/index.ts', 'web/src/index.ts'
