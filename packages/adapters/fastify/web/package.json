@@ -17,24 +17,23 @@
     "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-fastify-web.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
-    "@fastify/compress": "9.3.0",
-    "@fastify/http-proxy": "11.6.5",
+    "@fastify/compress": "catalog:",
+    "@fastify/http-proxy": "11.6.6",
     "@fastify/static": "10.1.7",
-    "@fastify/url-data": "6.0.5",
-    "fast-glob": "3.3.3"
+    "@fastify/url-data": "catalog:",
+    "fast-glob": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "fastify": "5.12.7",
-    "typescript": "5.9.3",
-    "vite": "8.3.5",
-    "vitest": "5.1.0"
+    "fastify": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

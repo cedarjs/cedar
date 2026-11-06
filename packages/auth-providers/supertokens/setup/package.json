@@ -34,7 +34,6 @@
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
@@ -43,13 +42,13 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/yargs": "17.0.35",
-    "concurrently": "9.2.5",
-    "memfs": "4.80.0",
-    "publint": "0.3.25",
-    "typescript": "5.9.3",
-    "vite": "8.3.5",
-    "vitest": "5.1.0"
+    "@types/yargs": "catalog:",
+    "concurrently": "catalog:",
+    "memfs": "catalog:",
+    "publint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

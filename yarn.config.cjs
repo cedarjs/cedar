@@ -6,6 +6,11 @@ const path = require('node:path')
 
 const semver = require('semver')
 
+const {
+  getCatalogs,
+  isCatalogRange,
+  resolveCatalogRange,
+} = require('./tasks/catalogs.mts')
 const { getCurrentGitBranch } = require('./tasks/git-hooks/git-branch.cjs')
 
 /**
@@ -33,7 +38,7 @@ async function enforceEsbuildMatchesVite({ Yarn }) {
 
     if (deps.vite || devDeps.vite) {
       viteWorkspace = workspace
-      viteVersion = deps.vite || devDeps.vite
+      viteVersion = resolveCatalogRange('vite', deps.vite || devDeps.vite)
       break
     }
   }
@@ -147,11 +152,13 @@ async function enforceEsbuildMatchesVite({ Yarn }) {
     const devDeps = workspace.manifest.devDependencies || {}
     const peerDeps = workspace.manifest.peerDependencies || {}
 
-    const declaredEsbuild = deps.esbuild || devDeps.esbuild || peerDeps.esbuild
+    const declaredRange = deps.esbuild || devDeps.esbuild || peerDeps.esbuild
 
-    if (!declaredEsbuild) {
+    if (!declaredRange) {
       continue
     }
+
+    const declaredEsbuild = resolveCatalogRange('esbuild', declaredRange)
 
     // Check if the declared esbuild version satisfies vite's esbuild version
     // range
@@ -194,11 +201,15 @@ async function enforceEsbuildMatchesVite({ Yarn }) {
  * @param {Context} context
  */
 function enforceConsistentDependenciesAcrossTheProject({ Yarn }) {
+  const { catalog } = getCatalogs()
+
   for (const dependency of Yarn.dependencies()) {
-    // enforceSinglePrismaVersion sets the version for these
+    // enforceSinglePrismaVersion and enforceCatalogForSharedDependencies set
+    // the range for these
     if (
       dependency.type === `peerDependencies` ||
-      isPrismaReleasePackage(dependency.ident)
+      isPrismaReleasePackage(dependency.ident) ||
+      catalog[dependency.ident]
     ) {
       continue
     }
@@ -244,7 +255,8 @@ function enforceWorkspaceDependenciesWhenPossible({ Yarn }) {
  * versions.
  *
  * Every `dependencies` entry must be an exact version (like `1.2.3` or
- * `1.2.3-rc.4`) or `workspace:*`. A `peerDependencies` entry must also be
+ * `1.2.3-rc.4`) or `workspace:*`. A `catalog:` range counts as the version
+ * the catalog has for it. A `peerDependencies` entry must also be
  * exact or `workspace:*`, unless it's marked optional in
  * `peerDependenciesMeta`. Optional peers belong to opt-in features that the
  * app installs and upgrades itself via a setup command, so they use a range;
@@ -262,9 +274,10 @@ function enforceExactVersionsInPublishedWorkspaces({ Yarn }) {
   const exactVersion = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/
   const rangeAllowed = new Set(['@babel/core'])
 
-  /** @param {string} range */
-  const isPinned = (range) =>
-    exactVersion.test(range) || range === 'workspace:*'
+  /** @param {import('@yarnpkg/types').Yarn.Constraints.Dependency} dependency */
+  const isPinned = ({ ident, range }) =>
+    range === 'workspace:*' ||
+    exactVersion.test(resolveCatalogRange(ident, range))
 
   for (const workspace of Yarn.workspaces()) {
     if (workspace.manifest.private) {
@@ -279,7 +292,7 @@ function enforceExactVersionsInPublishedWorkspaces({ Yarn }) {
         continue
       }
 
-      if (!isPinned(dependency.range)) {
+      if (!isPinned(dependency)) {
         dependency.error(
           `The dependency '${dependency.ident}' must use an exact version or ` +
             `'workspace:*', not '${dependency.range}'`,
@@ -297,7 +310,7 @@ function enforceExactVersionsInPublishedWorkspaces({ Yarn }) {
         continue
       }
 
-      if (!isPinned(dependency.range)) {
+      if (!isPinned(dependency)) {
         dependency.error(
           `The peer dependency '${dependency.ident}' must use an exact ` +
             `version or 'workspace:*', not '${dependency.range}'. Only ` +
@@ -443,25 +456,56 @@ function findPackageJsonFiles(dir) {
  * versions install duplicate copies of Prisma and its engines in apps, and
  * produce peer dependency warnings.
  *
- * The reference version is the `prisma` peer dependency of `@cedarjs/cli`,
- * which is also the version `yarn cedar upgrade` sets in apps.
+ * The version lives in the `prisma` catalog in `.yarnrc.yml`. Every entry in
+ * that catalog has the same version, and workspace dependencies and
+ * devDependencies refer to it with `catalog:prisma`. Peer dependencies and
+ * the create-cedar-app templates spell the version out, and it has to match
+ * the catalog. `@cedarjs/cli`'s `prisma` peer dependency is the version
+ * `yarn cedar upgrade` sets in apps.
  *
  * @param {Context} context
  */
 function enforceSinglePrismaVersion({ Yarn }) {
-  const cliWorkspace = Yarn.workspace({ ident: '@cedarjs/cli' })
-  const prismaVersion = cliWorkspace?.manifest.peerDependencies?.prisma
+  const prismaCatalog = getCatalogs().catalogs.prisma ?? {}
+  const prismaVersion = prismaCatalog.prisma
 
-  if (!cliWorkspace || !prismaVersion) {
+  if (!prismaVersion) {
     throw new Error(
-      'Prisma version constraint failed: @cedarjs/cli must declare `prisma` ' +
-        'as a peer dependency',
+      'Prisma version constraint failed: .yarnrc.yml must have a `prisma` ' +
+        'catalog with a `prisma` entry',
+    )
+  }
+
+  const mismatchedEntries = Object.entries(prismaCatalog).filter(
+    ([, version]) => version !== prismaVersion,
+  )
+
+  if (mismatchedEntries.length > 0) {
+    throw new Error(
+      'Prisma version constraint failed: every entry in the `prisma` catalog ' +
+        `in .yarnrc.yml must be ${prismaVersion}, the version of \`prisma\`:\n\n` +
+        mismatchedEntries
+          .map(([ident, version]) => `  ${ident}: ${version}`)
+          .join('\n'),
     )
   }
 
   for (const dependency of Yarn.dependencies()) {
-    if (isPrismaReleasePackage(dependency.ident)) {
-      dependency.update(prismaVersion)
+    // enforcePeerDependenciesMatchCatalogs sets the version of peers
+    if (
+      !isPrismaReleasePackage(dependency.ident) ||
+      dependency.type === 'peerDependencies'
+    ) {
+      continue
+    }
+
+    if (prismaCatalog[dependency.ident]) {
+      dependency.update('catalog:prisma')
+    } else {
+      dependency.error(
+        `${dependency.ident} is released together with Prisma. Add it to ` +
+          'the `prisma` catalog in .yarnrc.yml and use `catalog:prisma`',
+      )
     }
   }
 
@@ -496,9 +540,99 @@ function enforceSinglePrismaVersion({ Yarn }) {
   if (violations.length > 0) {
     throw new Error(
       `Prisma version constraint failed: create-cedar-app templates must ` +
-        `use the same Prisma version as @cedarjs/cli's \`prisma\` peer ` +
-        `dependency (${prismaVersion}).\n\n${violations.join('\n')}`,
+        `use the Prisma version from the \`prisma\` catalog in .yarnrc.yml ` +
+        `(${prismaVersion}).\n\n${violations.join('\n')}`,
     )
+  }
+}
+
+/**
+ * This rule will enforce that a dependency used by two or more workspaces gets
+ * its version from the default catalog in `.yarnrc.yml`, as `catalog:`, so a
+ * version bump changes one line in `.yarnrc.yml` instead of every
+ * `package.json` that uses it. A dependency that is in the catalog always
+ * uses `catalog:`, however many workspaces use it.
+ *
+ * This covers `dependencies` and `devDependencies`. Yarn rewrites `catalog:`
+ * in `peerDependencies` to `*` on install, so peer dependencies spell their
+ * version out (see `enforcePeerDependenciesMatchCatalogs`). Prisma packages
+ * use the `prisma` catalog (see `enforceSinglePrismaVersion`).
+ *
+ * @param {Context} context
+ */
+function enforceCatalogForSharedDependencies({ Yarn }) {
+  const { catalog } = getCatalogs()
+
+  /** @type {Map<string, Set<string>>} */
+  const workspacesByIdent = new Map()
+
+  for (const dependency of Yarn.dependencies()) {
+    if (
+      dependency.type === 'peerDependencies' ||
+      Yarn.workspace({ ident: dependency.ident }) ||
+      isPrismaReleasePackage(dependency.ident)
+    ) {
+      continue
+    }
+
+    const workspaces = workspacesByIdent.get(dependency.ident) ?? new Set()
+    workspaces.add(dependency.workspace.cwd)
+    workspacesByIdent.set(dependency.ident, workspaces)
+  }
+
+  for (const dependency of Yarn.dependencies()) {
+    const workspaces = workspacesByIdent.get(dependency.ident)
+
+    if (!workspaces || dependency.type === 'peerDependencies') {
+      continue
+    }
+
+    if (catalog[dependency.ident]) {
+      dependency.update('catalog:')
+    } else if (workspaces.size > 1) {
+      dependency.error(
+        `'${dependency.ident}' is used by ${workspaces.size} workspaces. Add ` +
+          'it to the `catalog` in .yarnrc.yml and use `catalog:` in each of ' +
+          'them',
+      )
+    }
+  }
+}
+
+/**
+ * This rule will enforce that an exact peer dependency on a package that is
+ * in a catalog uses the version from that catalog: the `prisma` catalog for
+ * Prisma packages, the default catalog for everything else.
+ *
+ * Peer dependencies can't use `catalog:`, because Yarn rewrites it to `*` on
+ * install, and `yarn pack` would then publish `*`. `yarn constraints --fix`
+ * updates the peers after a catalog bump. Peer dependencies on a range (like
+ * `^7.0.0`) are left alone.
+ *
+ * @param {Context} context
+ */
+function enforcePeerDependenciesMatchCatalogs({ Yarn }) {
+  const { catalog, catalogs } = getCatalogs()
+  const exactVersion = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/
+
+  for (const dependency of Yarn.dependencies({ type: 'peerDependencies' })) {
+    const catalogVersion = isPrismaReleasePackage(dependency.ident)
+      ? catalogs.prisma?.[dependency.ident]
+      : catalog[dependency.ident]
+
+    if (!catalogVersion) {
+      continue
+    }
+
+    if (isCatalogRange(dependency.range) || dependency.range === '*') {
+      dependency.error(
+        `The peer dependency '${dependency.ident}' must spell out its ` +
+          `version (${catalogVersion}). Yarn rewrites \`catalog:\` peer ` +
+          'dependencies to `*`',
+      )
+    } else if (exactVersion.test(dependency.range)) {
+      dependency.update(catalogVersion)
+    }
   }
 }
 
@@ -554,6 +688,8 @@ module.exports = defineConfig({
     const branch = getCurrentGitBranch()
 
     enforceConsistentDependenciesAcrossTheProject(ctx)
+    enforceCatalogForSharedDependencies(ctx)
+    enforcePeerDependenciesMatchCatalogs(ctx)
     if (branch !== 'next' && !branch?.startsWith('release/')) {
       enforceWorkspaceDependenciesWhenPossible(ctx)
     }

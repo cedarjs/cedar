@@ -32,24 +32,23 @@
     "build": "node build.mts",
     "build:pack": "yarn pack -o cedarjs-telemetry.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/structure": "workspace:*",
-    "ci-info": "4.4.0",
-    "envinfo": "7.21.0",
-    "uuid": "11.1.1",
-    "yargs": "18.2.0"
+    "ci-info": "catalog:",
+    "envinfo": "catalog:",
+    "uuid": "catalog:",
+    "yargs": "catalog:"
   },
   "devDependencies": {
     "@types/envinfo": "7.8.4",
-    "@types/yargs": "17.0.35",
-    "typescript": "5.9.3",
-    "vite": "8.3.5",
-    "vitest": "5.1.0"
+    "@types/yargs": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

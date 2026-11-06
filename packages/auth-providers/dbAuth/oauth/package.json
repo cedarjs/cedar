@@ -28,7 +28,6 @@
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
@@ -38,15 +37,15 @@
   "devDependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/aws-lambda": "8.10.164",
-    "concurrently": "9.2.5",
-    "msw": "2.15.0",
+    "@types/aws-lambda": "catalog:",
+    "concurrently": "catalog:",
+    "msw": "catalog:",
     "oauth2-mock-server": "9.3.0",
     "oauth4webapi": "3.8.8",
-    "publint": "0.3.25",
-    "typescript": "5.9.3",
-    "vite": "8.3.5",
-    "vitest": "5.1.0"
+    "publint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "oauth4webapi": "^3.0.0"

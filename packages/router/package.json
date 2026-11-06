@@ -22,6 +22,7 @@
     "./util": "./dist/util.js",
     "./react-util": "./dist/react-util.js",
     "./rscCss": "./dist/rsc/rscCss.js",
+    "./skip-nav.css": "./skip-nav.css",
     "./serverRouter": "./dist/rsc/ServerRouter.js",
     "./RscRouter": {
       "react-server": "./dist/rsc/ServerRouter.js",
@@ -44,9 +45,8 @@
     "build:pack": "yarn pack -o cedarjs-router.tgz",
     "build:types": "tsc --build --verbose tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
-    "check:attw": "yarn cedar-fwtools-attw",
+    "check:attw": "yarn cedar-fwtools-attw --exclude-entrypoints ./skip-nav.css",
     "check:package": "concurrently npm:check:attw yarn publint",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:types": "tstyche",
     "test:watch": "vitest watch"
@@ -54,24 +54,24 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/server-store": "workspace:*",
-    "react-server-dom-webpack": "19.3.1",
-    "ts-toolbelt": "9.6.0"
+    "react-server-dom-webpack": "catalog:",
+    "ts-toolbelt": "catalog:"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.5",
+    "@arethetypeswrong/cli": "catalog:",
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
-    "@testing-library/jest-dom": "6.9.1",
-    "@types/react": "^19.2.0",
-    "@types/react-dom": "^19.2.0",
-    "concurrently": "9.2.5",
-    "publint": "0.3.25",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "tstyche": "5.0.2",
-    "typescript": "5.9.3",
-    "vite": "8.3.5",
-    "vitest": "5.1.0"
+    "@testing-library/jest-dom": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "concurrently": "catalog:",
+    "publint": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tstyche": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@cedarjs/auth": "workspace:*",

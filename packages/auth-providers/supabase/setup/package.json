@@ -33,18 +33,17 @@
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx,template\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn cedar-fwtools-attw",
-    "check:package": "concurrently npm:check:attw yarn:publint",
-    "prepublishOnly": "NODE_ENV=production yarn build"
+    "check:package": "concurrently npm:check:attw yarn:publint"
   },
   "dependencies": {
     "@cedarjs/cli-helpers": "workspace:*"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/yargs": "17.0.35",
-    "concurrently": "9.2.5",
-    "publint": "0.3.25",
-    "typescript": "5.9.3"
+    "@types/yargs": "catalog:",
+    "concurrently": "catalog:",
+    "publint": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=24"

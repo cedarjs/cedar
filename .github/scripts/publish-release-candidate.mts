@@ -6,10 +6,16 @@
  * Environment variables required: GITHUB_REF_NAME. Authentication is npm
  * trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as a fallback (see
  * lib/npm-auth.mts). Not needed for dry-run.
+ *
+ * Packages are built once their versions are bumped, packed with `yarn pack`
+ * and checked, and uploaded with `npm publish <tarball>` (see lib/pack.mts).
+ * A dry run builds, packs and checks every package except create-cedar-app,
+ * and uploads nothing.
  */
 
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
@@ -21,6 +27,8 @@ import {
 
 import { createNpmAuth, isOidcAvailable } from './lib/npm-auth.mts'
 import type { NpmAuth } from './lib/npm-auth.mts'
+import { buildPackages, packPackages } from './lib/pack.mts'
+import type { PackedPackage, PackTarget } from './lib/pack.mts'
 
 const REPO_ROOT = process.cwd()
 const CREATE_CEDAR_APP_DIR = path.join(REPO_ROOT, 'packages/create-cedar-app')
@@ -340,6 +348,7 @@ function updateJavaScriptTemplates() {
 async function main() {
   let restoreWorkspaces: (() => void) | null = null
   let auth: NpmAuth | null = null
+  const tarballDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-rc-'))
 
   try {
     // Fail early if there are no credentials at all (not needed for dry-run)
@@ -442,7 +451,12 @@ async function main() {
 
     log('Step 7: Publishing RC versions of all packages')
 
-    const publishedPackageNames = await publishPackages('rc', isDryRun, auth)
+    const publishedPackageNames = await publishPackages(
+      'rc',
+      isDryRun,
+      auth,
+      tarballDir,
+    )
 
     log('Step 8: Restoring workspaces configuration')
     if (restoreWorkspaces) {
@@ -599,14 +613,23 @@ async function main() {
       )
       const ccaPackageName = ccaPkgJson.name || 'create-cedar-app'
 
-      await publishPackage(
-        ccaPackageName,
-        versionToPublish,
-        'rc',
-        CREATE_CEDAR_APP_DIR,
-        false,
-        auth,
+      // create-cedar-app bundles its own version, so it's built now that
+      // the version is bumped
+      buildPackages(CREATE_CEDAR_APP_DIR)
+      const packed = await packPackages(
+        [
+          {
+            name: ccaPackageName,
+            version: versionToPublish,
+            location: CREATE_CEDAR_APP_DIR,
+          },
+        ],
+        { repoRoot: REPO_ROOT, outDir: tarballDir },
       )
+
+      for (const pkg of packed.values()) {
+        await publishPackage(pkg, 'rc', false, auth)
+      }
     }
 
     log('🎉 Release candidate publishing completed successfully!')
@@ -628,6 +651,7 @@ async function main() {
     process.exit(1)
   } finally {
     auth?.dispose()
+    fs.rmSync(tarballDir, { recursive: true, force: true })
   }
 }
 
@@ -714,10 +738,8 @@ async function waitForNpm(packageName: string, version: string) {
 }
 
 async function publishPackage(
-  packageName: string,
-  version: string,
+  { name: packageName, version, tarball }: PackedPackage,
   distTag: string,
-  packageDir: string,
   dryRun: boolean,
   auth: NpmAuth | null,
 ) {
@@ -739,20 +761,26 @@ async function publishPackage(
 
   log(`Publishing ${packageName}@${version}...`)
   execCommand(
-    `npm publish --tag ${distTag} --access public${provenanceFlag}`,
-    packageDir,
+    `npm publish "${tarball}" --tag ${distTag} --access public` +
+      provenanceFlag,
+    REPO_ROOT,
     undefined,
     await auth.forPublish(packageName),
   )
   log(`✅ Published ${packageName}@${version}`)
 }
 
+/**
+ * Builds, packs and checks every public workspace, then publishes them one
+ * by one. Nothing is published unless every package packs and passes the
+ * checks.
+ */
 async function publishPackages(
   distTag: string,
   dryRun: boolean,
   auth: NpmAuth | null,
+  tarballDir: string,
 ) {
-  const publishedPackageNames: string[] = []
   const workspacesOutput = execCommand('yarn workspaces list --json')
   const workspaces: WorkspaceInfo[] = workspacesOutput
     .split('\n')
@@ -760,32 +788,39 @@ async function publishPackages(
     .map((line) => JSON.parse(line))
     .filter((ws) => ws.location !== '.')
 
+  const targets: PackTarget[] = []
+
   for (const workspace of workspaces) {
-    const pkgJsonPath = path.join(REPO_ROOT, workspace.location, 'package.json')
+    const pkgJson = readPackageJson(workspacePackageJsonPath(workspace))
+
+    if (pkgJson.private) {
+      log(`Skipping private package: ${pkgJson.name}`)
+      continue
+    }
+
+    targets.push({
+      name: pkgJson.name,
+      version: pkgJson.version,
+      location: workspace.location,
+    })
+  }
+
+  buildPackages(REPO_ROOT)
+  const packed = await packPackages(targets, {
+    repoRoot: REPO_ROOT,
+    outDir: tarballDir,
+  })
+
+  for (const pkg of packed.values()) {
     try {
-      const pkgJson: PackageJson = JSON.parse(
-        fs.readFileSync(pkgJsonPath, 'utf-8'),
-      )
-      if (pkgJson.private) {
-        log(`Skipping private package: ${pkgJson.name}`)
-        continue
-      }
-      await publishPackage(
-        pkgJson.name,
-        pkgJson.version,
-        distTag,
-        path.join(REPO_ROOT, workspace.location),
-        dryRun,
-        auth,
-      )
-      publishedPackageNames.push(pkgJson.name)
+      await publishPackage(pkg, distTag, dryRun, auth)
     } catch (e) {
-      log(`❌ Failed to publish ${workspace.location}: ${e}`)
+      log(`❌ Failed to publish ${pkg.name}: ${e}`)
       throw e
     }
   }
 
-  return publishedPackageNames
+  return [...packed.keys()]
 }
 
 // Run the script

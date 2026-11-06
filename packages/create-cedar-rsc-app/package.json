@@ -30,7 +30,7 @@
     "prettier-plugin-packagejson/sort-package-json": "3.7.1"
   },
   "dependencies": {
-    "ansis": "4.4.0",
+    "ansis": "4.5.0",
     "ci-info": "4.4.0",
     "enquirer": "2.4.1",
     "node-fetch": "3.3.2",
@@ -62,7 +62,7 @@
     "knip": "^5.26.0",
     "prettier": "3.9.10",
     "prettier-plugin-curly": "^0.4.1",
-    "prettier-plugin-packagejson": "3.0.3",
+    "prettier-plugin-packagejson": "3.1.0",
     "prettier-plugin-sh": "^0.20.0",
     "publint": "0.3.25",
     "rimraf": "^6.0.1",

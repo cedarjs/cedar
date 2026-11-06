@@ -57,6 +57,16 @@ export async function generateLockfile(
       filter: (src) => !EXCLUDED_TEMPLATE_ENTRIES.includes(path.basename(src)),
     })
 
+    // The yarn overlay ships its `.yarnrc.yml` as `yarnrc.yml.template`,
+    // because `yarn pack` never includes a `.yarnrc.yml`. create-cedar-app
+    // renames it when scaffolding an app, and the install here has to run
+    // with the same config.
+    const yarnrcTemplatePath = path.join(tmpDir, 'yarnrc.yml.template')
+
+    if (fs.existsSync(yarnrcTemplatePath)) {
+      fs.renameSync(yarnrcTemplatePath, path.join(tmpDir, '.yarnrc.yml'))
+    }
+
     await within(async () => {
       cd(tmpDir)
       $.env = { ...process.env, ...env }

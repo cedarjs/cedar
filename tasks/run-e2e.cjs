@@ -10,6 +10,8 @@ const fg = require('fast-glob')
 const { hideBin } = require('yargs/helpers')
 const yargs = require('yargs/yargs')
 
+const { getCatalogs, resolveCatalogRange } = require('./catalogs.mts')
+
 // This script sets up a blank CedarJS app into a directory.
 // It uses the packages from the CedarJS framework (../packages).
 // So, if you're making changes to the framework,
@@ -84,13 +86,20 @@ function createCedarJsApp({ typescript }) {
     const packageJSONPath = path.join(CEDARJS_PROJECT_DIRECTORY, 'package.json')
     const packageJSON = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'))
 
+    const catalogs = getCatalogs(CEDARJS_FRAMEWORK_PATH)
+
+    // Framework packages refer to shared versions with `catalog:`, which only
+    // means something inside the framework repo, so the resolutions get the
+    // version that range stands for
     const getVersionFromRwPackage = (dep, pkg) => {
-      return JSON.parse(
+      const range = JSON.parse(
         fs.readFileSync(
           path.join(CEDARJS_FRAMEWORK_PATH, 'packages', pkg, 'package.json'),
           'utf8',
         ),
       ).dependencies[dep]
+
+      return range && resolveCatalogRange(dep, range, catalogs)
     }
 
     packageJSON.resolutions = {

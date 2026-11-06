@@ -31,13 +31,13 @@
     "build:types": "tsc --build --verbose"
   },
   "dependencies": {
-    "@arethetypeswrong/cli": "0.18.5",
-    "esbuild": "0.28.2",
-    "execa": "5.1.1",
-    "fast-glob": "3.3.3"
+    "@arethetypeswrong/cli": "catalog:",
+    "esbuild": "catalog:",
+    "execa": "catalog:",
+    "fast-glob": "catalog:"
   },
   "devDependencies": {
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=24"

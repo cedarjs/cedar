@@ -27,7 +27,6 @@
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
@@ -40,13 +39,13 @@
     "@cedarjs/auth-dbauth-oauth": "workspace:*",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/graphql-server": "workspace:*",
-    "@types/aws-lambda": "8.10.164",
-    "concurrently": "9.2.5",
-    "publint": "0.3.25",
-    "ts-toolbelt": "9.6.0",
-    "typescript": "5.9.3",
-    "vite": "8.3.5",
-    "vitest": "5.1.0"
+    "@types/aws-lambda": "catalog:",
+    "concurrently": "catalog:",
+    "publint": "catalog:",
+    "ts-toolbelt": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

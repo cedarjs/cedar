@@ -20,22 +20,21 @@
     "build:pack": "yarn pack -o cedarjs-record.tgz",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:package": "yarn publint",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
   "dependencies": {
     "@cedarjs/api": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "@prisma/internals": "7.10.1",
-    "camelcase": "6.3.0"
+    "@prisma/internals": "catalog:prisma",
+    "camelcase": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "esbuild": "0.28.2",
-    "publint": "0.3.25",
-    "vite": "8.3.5",
-    "vitest": "5.1.0"
+    "esbuild": "catalog:",
+    "publint": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24"

@@ -23,20 +23,19 @@
     "build:pack": "yarn pack -o cedarjs-web-server.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build && yarn fix:permissions\"",
-    "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js",
-    "prepublishOnly": "NODE_ENV=production yarn build"
+    "fix:permissions": "chmod +x dist/index.js; chmod +x dist/watch.js"
   },
   "dependencies": {
     "@cedarjs/fastify-web": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
-    "ansis": "4.4.0",
-    "dotenv-defaults": "5.0.2",
-    "fastify": "5.12.7",
-    "yargs": "18.2.0"
+    "ansis": "catalog:",
+    "dotenv-defaults": "catalog:",
+    "fastify": "catalog:",
+    "yargs": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=24"

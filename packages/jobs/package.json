@@ -32,7 +32,6 @@
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
     "check:attw": "yarn cedar-fwtools-attw",
     "check:package": "concurrently npm:check:attw yarn:publint",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "setup:test": "npx prisma generate --config ./src/__tests__/prisma.config.ts && npx prisma migrate diff --config ./src/__tests__/prisma.config.ts --from-empty --to-schema ./src/__tests__/unit-test-schema.prisma --script -o ./src/__tests__/unit-test-schema.sql",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -44,17 +43,17 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@prisma/adapter-better-sqlite3": "7.10.1",
-    "@prisma/client": "7.10.1",
-    "@types/better-sqlite3": "7.6.13",
-    "better-sqlite3": "12.11.1",
-    "concurrently": "9.2.5",
-    "prisma": "7.10.1",
-    "publint": "0.3.25",
-    "typescript": "5.9.3",
-    "vite": "8.3.5",
-    "vitest": "5.1.0",
-    "zx": "8.8.5"
+    "@prisma/adapter-better-sqlite3": "catalog:prisma",
+    "@prisma/client": "catalog:prisma",
+    "@types/better-sqlite3": "catalog:",
+    "better-sqlite3": "catalog:",
+    "concurrently": "catalog:",
+    "prisma": "catalog:prisma",
+    "publint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "zx": "catalog:"
   },
   "engines": {
     "node": ">=24"

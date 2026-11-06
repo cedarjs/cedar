@@ -17,8 +17,7 @@
     "build": "node ./build.mts",
     "build:pack": "yarn pack -o cedarjs-mailer-handler-studio.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
-    "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
-    "prepublishOnly": "NODE_ENV=production yarn build"
+    "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\""
   },
   "dependencies": {
     "@cedarjs/mailer-core": "workspace:*",
@@ -26,8 +25,8 @@
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/nodemailer": "^6",
-    "typescript": "5.9.3"
+    "@types/nodemailer": "catalog:",
+    "typescript": "catalog:"
   },
   "publishConfig": {
     "access": "public"

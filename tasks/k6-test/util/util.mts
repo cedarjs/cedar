@@ -6,6 +6,8 @@ import execa from 'execa'
 import fg from 'fast-glob'
 import { rimrafSync } from 'rimraf'
 
+import { getCatalogs, resolveCatalogRange } from '../../catalogs.mts'
+
 export function buildRedwoodFramework({
   frameworkPath,
   verbose,
@@ -72,13 +74,20 @@ export function createRedwoodJSApp({
     const packageJSONPath = path.join(projectPath, 'package.json')
     const packageJSON = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'))
 
+    const catalogs = getCatalogs(frameworkPath)
+
+    // Framework packages refer to shared versions with `catalog:`, which only
+    // means something inside the framework repo, so the resolutions get the
+    // version that range stands for
     const getVersionFrmRwPkg = (dep, pkg) => {
-      return JSON.parse(
+      const range = JSON.parse(
         fs.readFileSync(
           path.join(frameworkPath, 'packages', pkg, 'package.json'),
           'utf8',
         ),
       ).dependencies[dep]
+
+      return range && resolveCatalogRange(dep, range, catalogs)
     }
 
     packageJSON.resolutions = {

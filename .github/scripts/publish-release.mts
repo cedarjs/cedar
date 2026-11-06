@@ -38,6 +38,10 @@
  *   scaffolding the previous, self-consistent release until everything else
  *   is on npm.
  *
+ * Every package is built, packed with `yarn pack` and checked before
+ * anything is published, and uploaded with `npm publish <tarball>` (see
+ * lib/pack.mts).
+ *
  * Re-running after a failure is safe: already published versions are skipped.
  *
  * Usage: node .github/scripts/publish-release.mts [--packages-only] [--dry-run]
@@ -46,14 +50,15 @@
  * other ref: the version is then read from packages/core/package.json and
  * the "HEAD is the tagged commit" check is skipped. Authentication is npm
  * trusted publishing (OIDC) in CI, or NPM_AUTH_TOKEN as a fallback.
- * `--dry-run` runs every check and `npm publish --dry-run`, which packs every
- * package. With trusted publishing it also checks, for every package, that
- * the registry accepts this workflow as a trusted publisher; `npm publish
- * --dry-run` alone doesn't fail on that.
+ * `--dry-run` builds, packs and checks every package, and runs
+ * `npm publish --dry-run` on every tarball. With trusted publishing it also
+ * checks, for every package, that the registry accepts this workflow as a
+ * trusted publisher; `npm publish --dry-run` alone doesn't fail on that.
  */
 
 import { exec as execCb, execSync } from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 import util from 'node:util'
@@ -65,6 +70,8 @@ import {
   isOidcAvailable,
 } from './lib/npm-auth.mts'
 import type { NpmAuth } from './lib/npm-auth.mts'
+import { buildPackages, packPackages } from './lib/pack.mts'
+import type { PackedPackage } from './lib/pack.mts'
 
 // Every field that can point at another package in this monorepo. All of
 // them have to be pinned to the release version.
@@ -207,8 +214,7 @@ async function execCommandAsync(
 
 // Rate limiting, 409 conflicts, and other transient/network errors, as
 // opposed to a definitive rejection like "cannot publish over previously
-// published version" or a failing prepublish build, which retrying won't
-// fix. A 409 means another write to the same package is already in
+// published version", which retrying won't fix. A 409 means another write to the same package is already in
 // progress — e.g. this release overlapping a canary run — and it clears
 // within seconds, so it's retried the same as the others. Anchored on npm's
 // own error lines (`npm error code E429`, `npm error 503 Service
@@ -678,7 +684,7 @@ async function waitForPackagesOnNpm(packages: PublishablePackage[]) {
 // ── Registry writes ─────────────────────────────────────────────────────────
 
 async function publishPackage(
-  pkg: PublishablePackage,
+  pkg: PackedPackage,
   distTag: string,
   auth: NpmAuth | null,
 ) {
@@ -705,12 +711,9 @@ async function publishPackage(
   await withRetry(async () => {
     try {
       await execCommandAsync(
-        `npm publish --tag ${distTag} --access public` +
+        `npm publish "${pkg.tarball}" --tag ${distTag} --access public` +
           `${provenanceFlag}${dryRunFlag}`,
-        {
-          cwd: path.join(REPO_ROOT, pkg.location),
-          env: auth ? await auth.forPublish(pkg.name) : process.env,
-        },
+        { env: auth ? await auth.forPublish(pkg.name) : process.env },
       )
     } catch (error) {
       // The registry can accept a publish and still fail the response on the
@@ -741,6 +744,7 @@ async function publishPackage(
  */
 async function publishLevels(
   levels: PublishablePackage[][],
+  packed: Map<string, PackedPackage>,
   distTag: string,
   auth: NpmAuth | null,
   {
@@ -754,9 +758,15 @@ async function publishLevels(
         level.map((pkg) => pkg.name).join(', '),
     )
 
-    await runWithConcurrency(level, PUBLISH_CONCURRENCY, (pkg) =>
-      publishPackage(pkg, distTag, auth),
-    )
+    await runWithConcurrency(level, PUBLISH_CONCURRENCY, (pkg) => {
+      const packedPkg = packed.get(pkg.name)
+
+      if (!packedPkg) {
+        throw new Error(`${pkg.name} was not packed`)
+      }
+
+      return publishPackage(packedPkg, distTag, auth)
+    })
 
     if (!isDryRun) {
       await waitForPackagesOnNpm(level)
@@ -830,13 +840,24 @@ async function main() {
   const cedarLevels = levels.slice(0, -1)
   const createCedarAppLevel = levels.slice(-1)
 
-  log(
-    `Publishing ${packages.length} packages under '${distTag}' in ` +
-      `${levels.length} dependency levels`,
-  )
+  const tarballDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-release-'))
 
   try {
-    await publishLevels(cedarLevels, distTag, auth, {
+    // Everything is built, packed and checked before the first publish, so
+    // a broken tarball stops the release before any of it is on npm. A
+    // packages-only run packs create-cedar-app too and doesn't publish it.
+    buildPackages(REPO_ROOT)
+    const packed = await packPackages(packages, {
+      repoRoot: REPO_ROOT,
+      outDir: tarballDir,
+    })
+
+    log(
+      `Publishing ${packages.length} packages under '${distTag}' in ` +
+        `${levels.length} dependency levels`,
+    )
+
+    await publishLevels(cedarLevels, packed, distTag, auth, {
       firstLevelNumber: 1,
       totalLevels: levels.length,
     })
@@ -848,13 +869,14 @@ async function main() {
       )
     } else {
       assertCreateCedarAppLockfilesPresent()
-      await publishLevels(createCedarAppLevel, distTag, auth, {
+      await publishLevels(createCedarAppLevel, packed, distTag, auth, {
         firstLevelNumber: levels.length,
         totalLevels: levels.length,
       })
     }
   } finally {
     auth?.dispose()
+    fs.rmSync(tarballDir, { recursive: true, force: true })
   }
 
   if (isDryRun) {

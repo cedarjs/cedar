@@ -18,7 +18,6 @@
     "build:pack": "yarn pack -o cedarjs-cli-storybook-vite.tgz",
     "build:types": "tsc --build --verbose ./tsconfig.build.json",
     "build:watch": "nodemon --watch src --ext \"js,jsx,ts,tsx\" --ignore dist --exec \"yarn build\"",
-    "prepublishOnly": "NODE_ENV=production yarn build",
     "test": "yarn test:unit",
     "test:unit": "vitest run"
   },
@@ -26,19 +25,19 @@
     "@cedarjs/cli-helpers": "workspace:*",
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/telemetry": "workspace:*",
-    "execa": "5.1.1",
+    "execa": "catalog:",
     "storybook": "8.6.19",
     "storybook-framework-cedarjs": "workspace:*",
-    "termi-link": "1.1.0",
-    "verkit": "0.5.0",
-    "vite": "8.3.5",
-    "vitest": "5.1.0",
-    "yargs": "18.2.0"
+    "termi-link": "catalog:",
+    "verkit": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "yargs": "catalog:"
   },
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
-    "@types/yargs": "17.0.35",
-    "typescript": "5.9.3"
+    "@types/yargs": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=24"
