@@ -29,7 +29,7 @@
     "@babel/plugin-transform-react-jsx": "7.29.7",
     "@babel/preset-env": "7.29.7",
     "@babel/preset-react": "7.29.7",
-    "@babel/register": "7.29.7",
+    "@babel/register": "7.29.13",
     "@babel/traverse": "catalog:",
     "@cedarjs/project-config": "workspace:*",
     "babel-plugin-auto-import": "1.1.0",
