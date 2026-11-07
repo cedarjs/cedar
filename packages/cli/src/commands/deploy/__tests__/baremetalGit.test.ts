@@ -49,6 +49,10 @@ describe('warnIfUnpushedCommits with git', () => {
   }
   let tempDir: string
   let originRepo: string
+  // An empty file git reads instead of the user's global config, so the tests
+  // see the same git behavior on every machine. `os.devNull` can't be used:
+  // the Windows path form (`\\.\nul`) is rejected by git.
+  let emptyGitConfig: string
 
   const git = (args: string[], cwd = projectPaths.base) =>
     execa('git', ['-c', 'commit.gpgsign=false', ...args], {
@@ -58,7 +62,7 @@ describe('warnIfUnpushedCommits with git', () => {
         GIT_AUTHOR_EMAIL: 'cedar-test@example.com',
         GIT_COMMITTER_NAME: 'Cedar Test',
         GIT_COMMITTER_EMAIL: 'cedar-test@example.com',
-        GIT_CONFIG_GLOBAL: os.devNull,
+        GIT_CONFIG_GLOBAL: emptyGitConfig,
         GIT_CONFIG_NOSYSTEM: '1',
       },
     })
@@ -91,6 +95,8 @@ describe('warnIfUnpushedCommits with git', () => {
     tempDirs.push(tempDir)
     projectPaths.base = path.join(tempDir, 'app')
     originRepo = path.join(tempDir, 'origin.git')
+    emptyGitConfig = path.join(tempDir, 'git-config')
+    fs.writeFileSync(emptyGitConfig, '')
     fs.mkdirSync(projectPaths.base)
 
     Object.defineProperty(process.stdin, 'isTTY', {
