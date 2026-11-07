@@ -137,6 +137,11 @@ export type LifecycleHooks = {
   after: Record<string, string[]>
 }
 
+export type DeployConfig = {
+  serverConfigs: ServerConfig[]
+  envLifecycle: LifecycleHooks
+}
+
 // Command config passed to lifecycle helpers
 interface CommandConfig {
   yargs: BaremetalYargs
@@ -1368,26 +1373,37 @@ export const parseConfig = (yargs: BaremetalYargs, rawConfigToml: string) => {
   return { envConfig, envLifecycle }
 }
 
+export const loadDeployConfig = (yargs: BaremetalYargs): DeployConfig => {
+  const rawConfig = fs.readFileSync(
+    path.join(getPaths().base, CONFIG_FILENAME),
+    'utf-8',
+  )
+  const { envConfig, envLifecycle } = parseConfig(yargs, rawConfig)
+  // Server entries receive defaults and validation before use
+  const serverList = (envConfig.servers ?? []) as Partial<ServerConfig>[]
+  const serverConfigs = serverList.map((config) => {
+    const serverConfig = serverConfigWithDefaults(config, yargs)
+    verifyServerConfig(serverConfig)
+    return serverConfig
+  })
+
+  return { serverConfigs, envLifecycle }
+}
+
 /**
  * Builds the per-server Listr task list for the deploy.
  */
-export const commands = (yargs: BaremetalYargs, ssh: SshExecutor) => {
-  const deployConfig = fs
-    .readFileSync(pathJoin(getPaths().base, CONFIG_FILENAME))
-    .toString()
-
-  const { envConfig, envLifecycle } = parseConfig(yargs, deployConfig)
+export const commands = (
+  yargs: BaremetalYargs,
+  ssh: SshExecutor,
+  deployConfig: DeployConfig = loadDeployConfig(yargs),
+) => {
+  const { serverConfigs, envLifecycle } = deployConfig
   const servers: { title: string; task: () => Listr }[] = []
   let tasks: ListrTaskObject[] = []
 
   // loop through each server in deploy.toml
-  const serverList = (envConfig.servers ?? []) as Partial<ServerConfig>[]
-  for (const config of serverList) {
-    // merge in defaults
-    const serverConfig = serverConfigWithDefaults(config, yargs)
-
-    verifyServerConfig(serverConfig)
-
+  for (const serverConfig of serverConfigs) {
     // server-specific lifecycle
     const serverLifecycle = mergeLifecycleEvents(
       envLifecycle,
@@ -1446,48 +1462,109 @@ export const commands = (yargs: BaremetalYargs, ssh: SshExecutor) => {
   return servers
 }
 
-export const warnIfUnpushedCommits = async (yes = false) => {
-  let unpushedCommits: string
-  try {
-    const { stdout } = await execa('git', ['log', '@{u}..', '--oneline'], {
-      cwd: getPaths().base,
-    })
-    unpushedCommits = stdout.trim()
-  } catch (e) {
-    console.error(
-      c.error('\nCould not check for unpushed commits before deploying.'),
-    )
-    throw e
+export const warnIfUnpushedCommits = async (
+  yargs: BaremetalYargs,
+  serverConfigs: readonly ServerConfig[],
+): Promise<void> => {
+  const checkedTargets = new Map<string, Set<string>>()
+  const targets: {
+    repo: string
+    branch: string
+    hosts: string[]
+    commits: string
+  }[] = []
+
+  for (const { repo, branch } of serverConfigs) {
+    const branches = checkedTargets.get(repo)
+    if (branches?.has(branch)) {
+      continue
+    }
+    if (branches) {
+      branches.add(branch)
+    } else {
+      checkedTargets.set(repo, new Set([branch]))
+    }
+
+    let step = 'fetch'
+    try {
+      // `git clone --branch` resolves a branch first and only falls back to
+      // a tag with the same name, so the check fetches the ref the deploy
+      // will use in the same order
+      await execa('git', ['fetch', repo, `refs/heads/${branch}`], {
+        cwd: getPaths().base,
+      }).catch(() =>
+        execa('git', ['fetch', repo, `refs/tags/${branch}`], {
+          cwd: getPaths().base,
+        }),
+      )
+      // Each fetch overwrites FETCH_HEAD, so read its commits before fetching again
+      step = 'log'
+      const { stdout } = await execa(
+        'git',
+        ['log', 'FETCH_HEAD..HEAD', '--oneline'],
+        { cwd: getPaths().base },
+      )
+      targets.push({
+        repo,
+        branch,
+        hosts: serverConfigs
+          .filter((server) => server.repo === repo && server.branch === branch)
+          .map((server) => server.host),
+        commits: stdout.trim(),
+      })
+    } catch (e) {
+      console.error(
+        c.error(
+          '\nCould not compare HEAD with the deploy branch before deploying.',
+        ),
+      )
+      const exitCode =
+        typeof e === 'object' &&
+        e !== null &&
+        'exitCode' in e &&
+        typeof e.exitCode === 'number'
+          ? ` (exit code ${e.exitCode})`
+          : ''
+      throw new Error(
+        `git ${step} failed while checking the deploy branch "${branch}"${exitCode}`,
+      )
+    }
   }
 
-  if (!unpushedCommits) {
+  const unpushedTargets = targets.filter((target) => target.commits)
+  if (unpushedTargets.length === 0) {
     return
   }
 
-  console.warn(
-    c.warning('\nWarning: You have local commits that have not been pushed:'),
-  )
-  console.warn(
-    unpushedCommits
-      .split('\n')
-      .map((line) => `  ${line}`)
-      .join('\n'),
-  )
+  for (const { branch, hosts, commits } of unpushedTargets) {
+    console.warn(
+      c.warning(
+        `\nWarning: HEAD has commits that aren't on the "${branch}" branch ` +
+          `that servers ${hosts.join(' ')} deploy from, so they won't be deployed:`,
+      ),
+    )
+    console.warn(
+      commits
+        .split('\n')
+        .map((line) => `  ${line}`)
+        .join('\n'),
+    )
+  }
   console.warn(
     c.warning(
-      'The server will pull from the remote, so these commits will not be deployed.\n',
+      'Push the commits to the deploy branch, rerun with --no-git-check to skip this check, ' +
+        'or rerun with --yes to deploy anyway.\n',
     ),
   )
-  console.warn(c.warning('To skip this check, rerun with --no-git-check.\n'))
 
-  if (yes) {
+  if (yargs.yes) {
     return
   }
 
   if (process.stdin.isTTY !== true) {
     throw new Error(
       'Cannot ask whether to deploy anyway without a terminal. ' +
-        'Push your commits, rerun with --no-git-check to skip this check, ' +
+        'Push the commits to the deploy branch, rerun with --no-git-check to skip this check, ' +
         'or rerun with --yes to deploy anyway.',
     )
   }
@@ -1502,10 +1579,33 @@ export const warnIfUnpushedCommits = async (yes = false) => {
 
   if (!confirmed) {
     console.log(
-      'Aborting deploy. Push your commits and try again, or rerun with --no-git-check.',
+      'Aborting deploy. Push the commits and try again, or rerun with --no-git-check.',
     )
     process.exit(1)
   }
+}
+
+const exitWithDeployError = (e: unknown): never => {
+  console.error(c.error('\nDeploy failed:'))
+  const errMessage =
+    e instanceof Error
+      ? 'stderr' in e && typeof e.stderr === 'string'
+        ? e.stderr
+        : e.message
+      : String(e)
+  const exitCode =
+    e instanceof Error && 'exitCode' in e && typeof e.exitCode === 'number'
+      ? e.exitCode
+      : 1
+  console.error(
+    boxen(errMessage, {
+      padding: { top: 0, bottom: 0, right: 1, left: 1 },
+      margin: 0,
+      borderColor: 'red',
+    }),
+  )
+
+  process.exit(exitCode)
 }
 
 export const handler = async (yargs: BaremetalYargs) => {
@@ -1523,40 +1623,27 @@ export const handler = async (yargs: BaremetalYargs) => {
     process.exit(1)
   }
 
+  let deployConfig: DeployConfig
+  try {
+    deployConfig = loadDeployConfig(yargs)
+  } catch (e) {
+    exitWithDeployError(e)
+  }
+
   if (yargs.gitCheck) {
-    await warnIfUnpushedCommits(yargs.yes)
+    await warnIfUnpushedCommits(yargs, deployConfig.serverConfigs)
   }
 
   const ssh = new SshExecutor(yargs.verbose ?? false)
 
   try {
-    const listrTasks = new Listr(commands(yargs, ssh), {
+    const listrTasks = new Listr(commands(yargs, ssh, deployConfig), {
       concurrent: true,
       exitOnError: true,
       renderer: yargs.verbose ? 'verbose' : undefined,
     })
     await listrTasks.run()
   } catch (e) {
-    console.error(c.error('\nDeploy failed:'))
-    const errMessage =
-      e instanceof Error && 'stderr' in e
-        ? ((e as NodeJS.ErrnoException & { stderr?: string }).stderr ??
-          e.message)
-        : e instanceof Error
-          ? e.message
-          : String(e)
-    const exitCode =
-      e instanceof Error && 'exitCode' in e
-        ? ((e as Error & { exitCode?: number | null }).exitCode ?? 1)
-        : 1
-    console.error(
-      boxen(errMessage, {
-        padding: { top: 0, bottom: 0, right: 1, left: 1 },
-        margin: 0,
-        borderColor: 'red',
-      }),
-    )
-
-    process.exit(exitCode)
+    exitWithDeployError(e)
   }
 }

@@ -12,7 +12,7 @@ globalThis.__dirname = testDir
 
 // Mocked git and prompts for the unpushed-commits confirmation tests
 const { gitMock, promptMock } = vi.hoisted(() => ({
-  gitMock: vi.fn(async () => ({ stdout: '' })),
+  gitMock: vi.fn(async (_cmd: string, _args: string[]) => ({ stdout: '' })),
   promptMock: vi.fn(async () => ({ confirmed: true })),
 }))
 
@@ -2491,7 +2491,49 @@ describe('RELEASE_DIR_PATTERN', () => {
   )
 })
 
+describe('loadDeployConfig', () => {
+  it('loads and validates the resolved server configs', () => {
+    const config = baremetal.loadDeployConfig(createBaremetalYargs())
+
+    expect(
+      config.serverConfigs.map(({ host, repo, branch }) => ({
+        host,
+        repo,
+        branch,
+      })),
+    ).toEqual([
+      { host: 'prod1.server.com', repo: 'git://github.com', branch: 'main' },
+      { host: 'prod2.server.com', repo: 'git://github.com', branch: 'main' },
+    ])
+    expect(config.envLifecycle).toEqual({ before: {}, after: {} })
+  })
+
+  it('resolves the CLI branch override for every server', () => {
+    const config = baremetal.loadDeployConfig(
+      createBaremetalYargs({ branch: 'release' }),
+    )
+
+    expect(config.serverConfigs.map(({ branch }) => branch)).toEqual([
+      'release',
+      'release',
+    ])
+  })
+})
+
 describe('commands', () => {
+  it('uses the supplied config without reading deploy.toml again', () => {
+    const yargs = createBaremetalYargs()
+    const config = baremetal.loadDeployConfig(yargs)
+    const readFile = vi.spyOn(fs, 'readFileSync')
+
+    try {
+      expect(baremetal.commands(yargs, sshExecutor, config)).toHaveLength(2)
+      expect(readFile).not.toHaveBeenCalled()
+    } finally {
+      readFile.mockRestore()
+    }
+  })
+
   it('contains a top-level task for each server in an environment', () => {
     const prodServers = baremetal.commands(
       { environment: 'production', releaseDir: '2022051120000' },
@@ -2643,9 +2685,9 @@ describe('unpushed commit confirmation', () => {
       libModule.getPaths.cache.clear()
     }
 
-    gitMock.mockReset().mockResolvedValue({
-      stdout: 'abc1234 local change\n',
-    })
+    gitMock.mockReset().mockImplementation(async (_cmd, args) => ({
+      stdout: args[0] === 'fetch' ? '' : 'abc1234 local change\n',
+    }))
     promptMock.mockReset().mockResolvedValue({ confirmed: true })
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -2671,6 +2713,26 @@ describe('unpushed commit confirmation', () => {
       value,
     })
   }
+
+  it('prints config errors in the deploy error box before checking git', async () => {
+    const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    await expect(
+      baremetal.handler(
+        createBaremetalYargs({ environment: 'missing', gitCheck: true }),
+      ),
+    ).rejects.toThrowError('process.exit: 1')
+
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Deploy failed:'),
+    )
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('No servers found for environment "missing"'),
+    )
+    expect(gitMock).not.toHaveBeenCalled()
+    expect(run).not.toHaveBeenCalled()
+  })
 
   it.each([false, undefined])(
     'rejects without prompting when stdin.isTTY is %s and there are unpushed commits',
@@ -2701,13 +2763,26 @@ describe('unpushed commit confirmation', () => {
 
     expect(run).toHaveBeenCalledOnce()
     expect(promptMock).not.toHaveBeenCalled()
-    expect(gitMock).toHaveBeenCalledWith(
+    expect(gitMock).toHaveBeenCalledTimes(2)
+    expect(gitMock).toHaveBeenNthCalledWith(
+      1,
       'git',
-      ['log', '@{u}..', '--oneline'],
+      ['fetch', 'git://github.com', 'refs/heads/main'],
+      { cwd: `${testDir}/fixtures` },
+    )
+    expect(gitMock).toHaveBeenNthCalledWith(
+      2,
+      'git',
+      ['log', 'FETCH_HEAD..HEAD', '--oneline'],
       { cwd: `${testDir}/fixtures` },
     )
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('local commits that have not been pushed'),
+      expect.stringContaining(
+        'HEAD has commits that aren\'t on the "main" branch',
+      ),
+    )
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('prod1.server.com prod2.server.com'),
     )
     expect(console.warn).toHaveBeenCalledWith('  abc1234 local change')
   })
@@ -2738,6 +2813,16 @@ describe('unpushed commit confirmation', () => {
     expect(console.warn).not.toHaveBeenCalled()
   })
 
+  it('does not call git when there are no servers', async () => {
+    await expect(
+      baremetal.warnIfUnpushedCommits(createBaremetalYargs(), []),
+    ).resolves.toBeUndefined()
+
+    expect(gitMock).not.toHaveBeenCalled()
+    expect(console.warn).not.toHaveBeenCalled()
+    expect(promptMock).not.toHaveBeenCalled()
+  })
+
   it('prompts when stdin is a TTY and deploys on confirm', async () => {
     setIsTTY(true)
     const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
@@ -2747,6 +2832,12 @@ describe('unpushed commit confirmation', () => {
     ).resolves.toBeUndefined()
 
     expect(promptMock).toHaveBeenCalledOnce()
+    expect(promptMock).toHaveBeenCalledWith({
+      type: 'confirm',
+      name: 'confirmed',
+      message: 'Deploy anyway?',
+      initial: false,
+    })
     expect(run).toHaveBeenCalledOnce()
   })
 
@@ -2765,19 +2856,41 @@ describe('unpushed commit confirmation', () => {
     )
   })
 
-  it('still fails when the git check itself errors, even with --yes', async () => {
-    setIsTTY(false)
-    gitMock.mockRejectedValue(new Error('no upstream'))
-    const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+  it.each(['fetch', 'log'])(
+    'fails with a sanitized git %s error, even with --yes',
+    async (step) => {
+      setIsTTY(false)
+      const rawMessage = `git ${step} https://deploy:secret@example.com/repo.git failed`
+      const gitError = Object.assign(new Error(rawMessage), {
+        exitCode: 128,
+        stderr: rawMessage,
+      })
+      if (step === 'log') {
+        gitMock.mockResolvedValueOnce({ stdout: '' })
+      } else {
+        // The branch fetch falls back to a tag fetch on failure, so both
+        // fetch attempts reject before the log runs
+        gitMock.mockRejectedValueOnce(gitError)
+      }
+      gitMock.mockRejectedValueOnce(gitError)
+      const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    await expect(
-      baremetal.handler(createBaremetalYargs({ gitCheck: true, yes: true })),
-    ).rejects.toThrow('no upstream')
+      const deploy = baremetal.handler(
+        createBaremetalYargs({ gitCheck: true, yes: true }),
+      )
+      await expect(deploy).rejects.toMatchObject({
+        message: `git ${step} failed while checking the deploy branch "main" (exit code 128)`,
+      })
+      await expect(deploy).rejects.not.toHaveProperty('cause')
 
-    expect(run).not.toHaveBeenCalled()
-    expect(error).toHaveBeenCalledWith(
-      expect.stringContaining('Could not check for unpushed commits'),
-    )
-  })
+      expect(run).not.toHaveBeenCalled()
+      expect(promptMock).not.toHaveBeenCalled()
+      expect(error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Could not compare HEAD with the deploy branch',
+        ),
+      )
+    },
+  )
 })
