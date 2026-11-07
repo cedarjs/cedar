@@ -3227,7 +3227,7 @@ __metadata:
     "@cedarjs/project-config": "workspace:*"
     "@fastify/compress": "catalog:"
     "@fastify/http-proxy": "npm:11.6.6"
-    "@fastify/static": "npm:10.1.7"
+    "@fastify/static": "npm:10.1.9"
     "@fastify/url-data": "catalog:"
     fast-glob: "catalog:"
     fastify: "catalog:"
@@ -5518,31 +5518,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/send@npm:^4.0.0":
-  version: 4.1.0
-  resolution: "@fastify/send@npm:4.1.0"
+"@fastify/send@npm:^4.2.0":
+  version: 4.2.1
+  resolution: "@fastify/send@npm:4.2.1"
   dependencies:
     "@lukeed/ms": "npm:^2.0.2"
     escape-html: "npm:~1.0.3"
     fast-decode-uri-component: "npm:^1.0.1"
     http-errors: "npm:^2.0.0"
     mime: "npm:^3"
-  checksum: 10c0/991d7a21c9876eff0a2b37d2979113ac0718af730584481bd328ee28b2c3981f3624f85112c6d6b3e6db0e8ef84949684db49a3932f31ad6f8c7d23cf15c1c8a
+  checksum: 10c0/79d1dd88fc878e5aabdfa1b5bd777e30c74cdfe53e638683d48800b43a9eeb1f68d3e99d42a9b6bdc9461c49c910a4a8948c616bdf2b8daed51a0d8d1c691525
   languageName: node
   linkType: hard
 
-"@fastify/static@npm:10.1.7":
-  version: 10.1.7
-  resolution: "@fastify/static@npm:10.1.7"
+"@fastify/static@npm:10.1.9":
+  version: 10.1.9
+  resolution: "@fastify/static@npm:10.1.9"
   dependencies:
     "@fastify/accept-negotiator": "npm:^2.0.0"
     "@fastify/error": "npm:^4.0.0"
-    "@fastify/send": "npm:^4.0.0"
+    "@fastify/send": "npm:^4.2.0"
     content-disposition: "npm:^3.0.0"
     fastify-plugin: "npm:^6.0.0"
     fastq: "npm:^1.17.1"
-    glob: "npm:^13.0.0"
-  checksum: 10c0/325fcca2fb5818ce44c3775b49d21afb47841ef46f02c20c6571475c78233c65d94b0e88821ec577d31b8a42ad4c616fd9cc61d9aec3b8a7b2adc8df7c39f6a6
+    glob: "npm:^14.0.0"
+  checksum: 10c0/ac7f5bdb9ba144db93f7bda8ebf93b435361546bd6e5b50845ae3fb6988f9f7763e5638fad922985db7eb231ba9960c9a2ab8fc96acf58bcf844329fc7ba5c5d
   languageName: node
   linkType: hard
 
@@ -18589,7 +18589,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^14.0.3":
+"glob@npm:^14.0.0, glob@npm:^14.0.3":
   version: 14.0.4
   resolution: "glob@npm:14.0.4"
   dependencies:
