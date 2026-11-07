@@ -30,11 +30,27 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
 }))
 vi.mock('prompts', () => ({ default: promptMock }))
 
-// A partial execa stand-in for the dropped-connection test: it fails the
+// A partial execa stand-in for the dropped-connection tests: it fails the
 // branch fetch and delegates everything else to the real execa
 const realExecaPromise = import('execa')
 const failingBranchFetchExeca = vi.fn(async (_cmd: string, args: string[]) => {
   if (args[0] === 'fetch' && args[2] === 'refs/heads/release') {
+    throw Object.assign(new Error('connection reset'), { exitCode: 128 })
+  }
+
+  const { default: realExeca } = await realExecaPromise
+
+  return realExeca(_cmd, args, { cwd: projectPaths.base })
+})
+
+// A partial execa stand-in for the unreachable-repo test: it fails both the
+// deploy ref lookup and the branch fetch, so only a check that treats the
+// lookup failure as "branch missing" would reach the tag fetch
+const failingLookupExeca = vi.fn(async (_cmd: string, args: string[]) => {
+  if (
+    (args[0] === 'ls-remote' && args[1] !== undefined) ||
+    (args[0] === 'fetch' && args[2] === 'refs/heads/release')
+  ) {
     throw Object.assign(new Error('connection reset'), { exitCode: 128 })
   }
 
@@ -278,6 +294,48 @@ describe('warnIfUnpushedCommits with git', () => {
     )
   })
 
+  it('accepts a tag deploy when another branch name ends with the tag name', async () => {
+    await commit('tag target')
+    await git(['tag', 'release'])
+    await git(['push', 'origin', 'refs/tags/release'])
+    // The branch shares only a suffix with the tag, so the ref lookup must
+    // not confuse it with the deploy branch and stop the tag fallback
+    const suffixCommit = await commit('suffix branch move')
+    await git(['push', 'origin', 'HEAD:refs/heads/feature/release'])
+    const localCommit = await commit('local change')
+
+    await warnIfUnpushedCommits(yargs, [serverConfig({ branch: 'release' })])
+
+    // The comparison runs against the tag, so every commit after it counts
+    expect(console.warn).toHaveBeenCalledWith(
+      `  ${localCommit}\n  ${suffixCommit}`,
+    )
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('"release" branch'),
+    )
+  })
+
+  it('accepts a tag deploy when a branch embeds the qualified ref name', async () => {
+    await commit('tag target')
+    await git(['tag', 'release'])
+    await git(['push', 'origin', 'refs/tags/release'])
+    // `ls-remote` and `fetch` match the pattern by suffix, so a branch named
+    // `refs/heads/release` would otherwise be fetched instead of the tag the
+    // server deploys
+    const qualifiedCommit = await commit('qualified branch move')
+    await git(['push', 'origin', 'HEAD:refs/heads/refs/heads/release'])
+    const localCommit = await commit('local change')
+
+    await warnIfUnpushedCommits(yargs, [serverConfig({ branch: 'release' })])
+
+    expect(console.warn).toHaveBeenCalledWith(
+      `  ${localCommit}\n  ${qualifiedCommit}`,
+    )
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('"release" branch'),
+    )
+  })
+
   it('rejects a failed branch fetch instead of comparing against the tag', async () => {
     await commit('branch move')
     await git(['push', 'origin', 'HEAD:refs/heads/release'])
@@ -299,10 +357,43 @@ describe('warnIfUnpushedCommits with git', () => {
       await expect(check).rejects.toThrow(
         'git fetch failed while checking the deploy branch "release"',
       )
-      expect(failingBranchFetchExeca).not.toHaveBeenCalledWith(
-        'git',
-        expect.arrayContaining(['refs/tags/release']),
+      expect(failingBranchFetchExeca).not.toHaveBeenCalledWith('git', [
+        'fetch',
+        originRepo,
+        'refs/tags/release',
+      ])
+    } finally {
+      vi.doUnmock('execa')
+    }
+  })
+
+  it('rejects when the deploy ref cannot be looked up', async () => {
+    await commit('branch move')
+    await git(['push', 'origin', 'HEAD:refs/heads/release'])
+    await git(['tag', 'release', 'HEAD~1'])
+    await git(['push', 'origin', 'refs/tags/release'])
+
+    // A repo that cannot be reached fails the ref lookup itself: the check
+    // must fail instead of mistaking the lookup error for a missing branch
+    // and comparing against the tag
+    vi.doMock('execa', () => ({ default: failingLookupExeca }))
+
+    try {
+      vi.resetModules()
+      const { warnIfUnpushedCommits: warnWithFailingLookup } =
+        await import('../baremetal/baremetalHandler.js')
+      const check = warnWithFailingLookup(yargs, [
+        serverConfig({ branch: 'release' }),
+      ])
+
+      await expect(check).rejects.toThrow(
+        'git ls-remote failed while checking the deploy branch "release"',
       )
+      expect(failingLookupExeca).not.toHaveBeenCalledWith('git', [
+        'fetch',
+        originRepo,
+        'refs/tags/release',
+      ])
     } finally {
       vi.doUnmock('execa')
     }
@@ -354,13 +445,65 @@ describe('warnIfUnpushedCommits with git', () => {
     expect(promptMock).toHaveBeenCalledOnce()
   })
 
+  it('sanitizes a transport error even when its output mentions a missing ref', async () => {
+    await commit('branch move')
+    await git(['push', 'origin', 'HEAD:refs/heads/release'])
+
+    // A failed ls-remote wraps transport output that can end in the same
+    // words as the not-found error, so only the private error class may
+    // bypass the sanitized git step wrapper
+    const leakyError = Object.assign(
+      new Error(
+        'Command failed with exit code 128: git ls-remote ' +
+          'https://deploy:secret@example.com/repo.git refs/heads/release\n' +
+          'remote: repository was not found',
+      ),
+      { exitCode: 128 },
+    )
+    const failingExeca = vi.fn(async (_cmd: string, _args: string[]) => {
+      throw leakyError
+    })
+    vi.doMock('execa', () => ({ default: failingExeca }))
+
+    try {
+      vi.resetModules()
+      const { warnIfUnpushedCommits: warnWithLeakyLookup } =
+        await import('../baremetal/baremetalHandler.js')
+      const check = warnWithLeakyLookup(yargs, [
+        serverConfig({ branch: 'release' }),
+      ])
+
+      await expect(check).rejects.toThrow(
+        'git ls-remote failed while checking the deploy branch "release" (exit code 128)',
+      )
+      await expect(check).rejects.not.toThrow('secret')
+      await expect(check).rejects.not.toThrow('example.com')
+    } finally {
+      vi.doUnmock('execa')
+    }
+  })
+
+  it('accepts an annotated tag as the configured branch', async () => {
+    await commit('tag target')
+    await git(['tag', '-a', 'release', '-m', 'annotated'])
+    await git(['push', 'origin', 'refs/tags/release'])
+    const localCommit = await commit('local change')
+
+    await warnIfUnpushedCommits(yargs, [serverConfig({ branch: 'release' })])
+
+    expect(console.warn).toHaveBeenCalledWith(`  ${localCommit}`)
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('"release" branch'),
+    )
+  })
+
   it('rejects a missing deploy branch without exposing the repo', async () => {
     const check = warnIfUnpushedCommits(yargs, [
       serverConfig({ branch: 'missing-branch' }),
     ])
 
     await expect(check).rejects.toThrow(
-      'git fetch failed while checking the deploy branch "missing-branch"',
+      'the deploy ref "missing-branch" was not found',
     )
     await expect(check).rejects.not.toThrow(originRepo)
     await expect(check).rejects.not.toHaveProperty('cause')

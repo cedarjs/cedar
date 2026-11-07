@@ -2686,7 +2686,12 @@ describe('unpushed commit confirmation', () => {
     }
 
     gitMock.mockReset().mockImplementation(async (_cmd, args) => ({
-      stdout: args[0] === 'fetch' ? '' : 'abc1234 local change\n',
+      stdout:
+        args[0] === 'fetch'
+          ? ''
+          : args[0] === 'ls-remote'
+            ? 'abc1234\trefs/heads/main\n'
+            : 'abc1234 local change\n',
     }))
     promptMock.mockReset().mockResolvedValue({ confirmed: true })
     vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -2763,15 +2768,21 @@ describe('unpushed commit confirmation', () => {
 
     expect(run).toHaveBeenCalledOnce()
     expect(promptMock).not.toHaveBeenCalled()
-    expect(gitMock).toHaveBeenCalledTimes(2)
+    expect(gitMock).toHaveBeenCalledTimes(3)
     expect(gitMock).toHaveBeenNthCalledWith(
       1,
+      'git',
+      ['ls-remote', 'git://github.com', 'refs/heads/main', 'refs/tags/main'],
+      { cwd: `${testDir}/fixtures` },
+    )
+    expect(gitMock).toHaveBeenNthCalledWith(
+      2,
       'git',
       ['fetch', 'git://github.com', 'refs/heads/main'],
       { cwd: `${testDir}/fixtures` },
     )
     expect(gitMock).toHaveBeenNthCalledWith(
-      2,
+      3,
       'git',
       ['log', 'FETCH_HEAD..HEAD', '--oneline'],
       { cwd: `${testDir}/fixtures` },
@@ -2802,6 +2813,14 @@ describe('unpushed commit confirmation', () => {
   it('does not prompt when there are no unpushed commits', async () => {
     setIsTTY(false)
     gitMock.mockResolvedValue({ stdout: '' })
+    gitMock.mockImplementation(async (_cmd, args) => ({
+      stdout:
+        args[0] === 'ls-remote'
+          ? 'abc1234\trefs/heads/main\n'
+          : args[0] === 'fetch'
+            ? ''
+            : '',
+    }))
     const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
 
     await expect(
@@ -2866,12 +2885,19 @@ describe('unpushed commit confirmation', () => {
         stderr: rawMessage,
       })
       if (step === 'log') {
-        gitMock.mockResolvedValueOnce({ stdout: '' })
+        // The deploy ref resolves and the fetch succeeds, so the git log
+        // step is the one that fails
+        gitMock
+          .mockResolvedValueOnce({ stdout: 'abc1234\trefs/heads/main\n' })
+          .mockResolvedValueOnce({ stdout: '' })
+          .mockRejectedValueOnce(gitError)
       } else {
-        // The branch exists (ls-remote succeeds), so the failed branch fetch
-        // is not followed by the tag fallback
+        // The deploy ref resolves (ls-remote prints it), so the failed
+        // deploy ref fetch fails the check
+        gitMock.mockResolvedValueOnce({
+          stdout: 'abc1234\trefs/heads/main\n',
+        })
         gitMock.mockRejectedValueOnce(gitError)
-        gitMock.mockResolvedValueOnce({ stdout: '' })
       }
       gitMock.mockRejectedValueOnce(gitError)
       const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})

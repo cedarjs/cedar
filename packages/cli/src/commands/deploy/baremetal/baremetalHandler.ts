@@ -330,6 +330,13 @@ const API_PROCESS_META_FILES = GENERATED_DATA_DIRS.map((dir) =>
 export class ApiProcessMetaMissingError extends Error {}
 
 /**
+ * Thrown by `warnIfUnpushedCommits` when the configured deploy branch (or
+ * tag) doesn't exist on the deploy repo. Carries no repo details, so the
+ * sanitized git error wrapper lets it pass through unchanged
+ */
+class DeployRefNotFoundError extends Error {}
+
+/**
  * Reads what the `current` release's api server recorded about itself once it
  * started listening. The file is in the release itself, so it can't come from
  * another app's api server on the same machine
@@ -1485,31 +1492,41 @@ export const warnIfUnpushedCommits = async (
       checkedTargets.set(repo, new Set([branch]))
     }
 
-    let step = 'fetch'
+    let step = 'ls-remote'
     try {
       // `git clone --branch` resolves a branch first and only falls back to
-      // a tag with the same name, so the check fetches the ref the deploy
-      // will use in the same order. The fallback only covers a branch that
-      // doesn't exist: when the branch is there, a failed fetch fails the
-      // check instead of silently comparing against the tag
-      await execa('git', ['fetch', repo, `refs/heads/${branch}`], {
-        cwd: getPaths().base,
-      }).catch(async (branchFetchError: unknown) => {
-        const branchExists = await execa(
-          'git',
-          ['ls-remote', '--exit-code', '--heads', repo, branch],
-          { cwd: getPaths().base },
-        )
-          .then(() => true)
-          .catch(() => false)
+      // a tag with the same name, so the check resolves the deploy ref the
+      // same way before fetching it. `ls-remote` patterns match by suffix,
+      // so the printed refs are compared for an exact match instead
+      const deployRef = await execa(
+        'git',
+        ['ls-remote', repo, `refs/heads/${branch}`, `refs/tags/${branch}`],
+        { cwd: getPaths().base },
+      ).then(({ stdout }) => {
+        // No `trim()`: a ref name can contain trailing whitespace git
+        // preserves, and the trailing empty row cannot match anyway
+        const refs = stdout
+          .split('\n')
+          .map((line) => line.slice(line.indexOf('\t') + 1))
 
-        if (branchExists) {
-          throw branchFetchError
+        if (refs.includes(`refs/heads/${branch}`)) {
+          return `refs/heads/${branch}`
         }
 
-        return execa('git', ['fetch', repo, `refs/tags/${branch}`], {
-          cwd: getPaths().base,
-        })
+        return refs.includes(`refs/tags/${branch}`)
+          ? `refs/tags/${branch}`
+          : null
+      })
+
+      if (deployRef === null) {
+        throw new DeployRefNotFoundError(
+          `the deploy ref "${branch}" was not found`,
+        )
+      }
+
+      step = 'fetch'
+      await execa('git', ['fetch', repo, deployRef], {
+        cwd: getPaths().base,
       })
       // Each fetch overwrites FETCH_HEAD, so read its commits before fetching again
       step = 'log'
@@ -1532,6 +1549,12 @@ export const warnIfUnpushedCommits = async (
           '\nCould not compare HEAD with the deploy branch before deploying.',
         ),
       )
+      // The not-found error carries no repo details, so it passes through
+      // without the generic git step wrapper. Anything else, including a
+      // transport error, goes through the sanitized message
+      if (e instanceof DeployRefNotFoundError) {
+        throw e
+      }
       const exitCode =
         typeof e === 'object' &&
         e !== null &&
