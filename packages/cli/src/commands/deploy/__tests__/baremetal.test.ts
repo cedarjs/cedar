@@ -2868,9 +2868,10 @@ describe('unpushed commit confirmation', () => {
       if (step === 'log') {
         gitMock.mockResolvedValueOnce({ stdout: '' })
       } else {
-        // The branch fetch falls back to a tag fetch on failure, so both
-        // fetch attempts reject before the log runs
+        // The branch exists (ls-remote succeeds), so the failed branch fetch
+        // is not followed by the tag fallback
         gitMock.mockRejectedValueOnce(gitError)
+        gitMock.mockResolvedValueOnce({ stdout: '' })
       }
       gitMock.mockRejectedValueOnce(gitError)
       const run = vi.spyOn(Listr.prototype, 'run').mockResolvedValue({})
@@ -2880,7 +2881,7 @@ describe('unpushed commit confirmation', () => {
         createBaremetalYargs({ gitCheck: true, yes: true }),
       )
       await expect(deploy).rejects.toMatchObject({
-        message: `git ${step} failed while checking the deploy branch "main" (exit code 128)`,
+        message: `git ${step} failed while checking the deploy branch "main" (exit code 128). Rerun with --no-git-check to skip this check.`,
       })
       await expect(deploy).rejects.not.toHaveProperty('cause')
 

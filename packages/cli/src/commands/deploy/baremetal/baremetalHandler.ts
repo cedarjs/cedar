@@ -1489,14 +1489,28 @@ export const warnIfUnpushedCommits = async (
     try {
       // `git clone --branch` resolves a branch first and only falls back to
       // a tag with the same name, so the check fetches the ref the deploy
-      // will use in the same order
+      // will use in the same order. The fallback only covers a branch that
+      // doesn't exist: when the branch is there, a failed fetch fails the
+      // check instead of silently comparing against the tag
       await execa('git', ['fetch', repo, `refs/heads/${branch}`], {
         cwd: getPaths().base,
-      }).catch(() =>
-        execa('git', ['fetch', repo, `refs/tags/${branch}`], {
+      }).catch(async (branchFetchError: unknown) => {
+        const branchExists = await execa(
+          'git',
+          ['ls-remote', '--exit-code', '--heads', repo, branch],
+          { cwd: getPaths().base },
+        )
+          .then(() => true)
+          .catch(() => false)
+
+        if (branchExists) {
+          throw branchFetchError
+        }
+
+        return execa('git', ['fetch', repo, `refs/tags/${branch}`], {
           cwd: getPaths().base,
-        }),
-      )
+        })
+      })
       // Each fetch overwrites FETCH_HEAD, so read its commits before fetching again
       step = 'log'
       const { stdout } = await execa(
@@ -1526,7 +1540,8 @@ export const warnIfUnpushedCommits = async (
           ? ` (exit code ${e.exitCode})`
           : ''
       throw new Error(
-        `git ${step} failed while checking the deploy branch "${branch}"${exitCode}`,
+        `git ${step} failed while checking the deploy branch "${branch}"${exitCode}. ` +
+          'Rerun with --no-git-check to skip this check.',
       )
     }
   }

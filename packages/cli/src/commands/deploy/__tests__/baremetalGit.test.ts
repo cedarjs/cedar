@@ -30,6 +30,19 @@ vi.mock('@cedarjs/project-config/packageManager', () => ({
 }))
 vi.mock('prompts', () => ({ default: promptMock }))
 
+// A partial execa stand-in for the dropped-connection test: it fails the
+// branch fetch and delegates everything else to the real execa
+const realExecaPromise = import('execa')
+const failingBranchFetchExeca = vi.fn(async (_cmd: string, args: string[]) => {
+  if (args[0] === 'fetch' && args[2] === 'refs/heads/release') {
+    throw Object.assign(new Error('connection reset'), { exitCode: 128 })
+  }
+
+  const { default: realExeca } = await realExecaPromise
+
+  return realExeca(_cmd, args, { cwd: projectPaths.base })
+})
+
 import {
   serverConfigWithDefaults,
   warnIfUnpushedCommits,
@@ -53,6 +66,7 @@ describe('warnIfUnpushedCommits with git', () => {
   // see the same git behavior on every machine. `os.devNull` can't be used:
   // the Windows path form (`\\.\nul`) is rejected by git.
   let emptyGitConfig: string
+  let originalEnv: { GIT_CONFIG_GLOBAL?: string; GIT_CONFIG_NOSYSTEM?: string }
 
   const git = (args: string[], cwd = projectPaths.base) =>
     execa('git', ['-c', 'commit.gpgsign=false', ...args], {
@@ -99,6 +113,17 @@ describe('warnIfUnpushedCommits with git', () => {
     fs.writeFileSync(emptyGitConfig, '')
     fs.mkdirSync(projectPaths.base)
 
+    // The processes warnIfUnpushedCommits spawns inherit the environment of
+    // the test process, so the isolation applies here too, not just in the
+    // git helper. A user's global `log.decorate` setting would otherwise
+    // change the output the assertions compare against
+    originalEnv = {
+      GIT_CONFIG_GLOBAL: process.env.GIT_CONFIG_GLOBAL,
+      GIT_CONFIG_NOSYSTEM: process.env.GIT_CONFIG_NOSYSTEM,
+    }
+    process.env.GIT_CONFIG_GLOBAL = emptyGitConfig
+    process.env.GIT_CONFIG_NOSYSTEM = '1'
+
     Object.defineProperty(process.stdin, 'isTTY', {
       configurable: true,
       value: true,
@@ -119,6 +144,13 @@ describe('warnIfUnpushedCommits with git', () => {
       Object.defineProperty(process.stdin, 'isTTY', originalIsTTY)
     } else {
       Reflect.deleteProperty(process.stdin, 'isTTY')
+    }
+    for (const [name, value] of Object.entries(originalEnv)) {
+      if (value === undefined) {
+        delete process.env[name]
+      } else {
+        process.env[name] = value
+      }
     }
     vi.restoreAllMocks()
   })
@@ -244,6 +276,36 @@ describe('warnIfUnpushedCommits with git', () => {
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringContaining('"release" branch'),
     )
+  })
+
+  it('rejects a failed branch fetch instead of comparing against the tag', async () => {
+    await commit('branch move')
+    await git(['push', 'origin', 'HEAD:refs/heads/release'])
+    await git(['tag', 'release', 'HEAD~1'])
+    await git(['push', 'origin', 'refs/tags/release'])
+
+    // A connection that drops mid-fetch fails the branch fetch even though
+    // the branch exists, so the check must not fall back to the tag
+    vi.doMock('execa', () => ({ default: failingBranchFetchExeca }))
+
+    try {
+      vi.resetModules()
+      const { warnIfUnpushedCommits: warnWithFailingFetch } =
+        await import('../baremetal/baremetalHandler.js')
+      const check = warnWithFailingFetch(yargs, [
+        serverConfig({ branch: 'release' }),
+      ])
+
+      await expect(check).rejects.toThrow(
+        'git fetch failed while checking the deploy branch "release"',
+      )
+      expect(failingBranchFetchExeca).not.toHaveBeenCalledWith(
+        'git',
+        expect.arrayContaining(['refs/tags/release']),
+      )
+    } finally {
+      vi.doUnmock('execa')
+    }
   })
 
   it('groups servers sharing the same repo and branch into one warning', async () => {
