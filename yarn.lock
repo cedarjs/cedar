@@ -186,9 +186,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/client@npm:4.3.6, @apollo/client@npm:^4.0.0":
-  version: 4.3.6
-  resolution: "@apollo/client@npm:4.3.6"
+"@apollo/client@npm:4.3.7, @apollo/client@npm:^4.0.0":
+  version: 4.3.7
+  resolution: "@apollo/client@npm:4.3.7"
   dependencies:
     "@graphql-typed-document-node/core": "npm:^3.1.1"
     "@wry/caches": "npm:^1.0.0"
@@ -213,7 +213,7 @@ __metadata:
       optional: true
     subscriptions-transport-ws:
       optional: true
-  checksum: 10c0/2f9397ef7f8e2c7c39f4c0166967ba4d847009ea7ced7a4675443696bac6350daccde44cffb941b25fb0e27b72f23bee419d8844bdf03c43db119041631c6bd0
+  checksum: 10c0/d2451c46c6243fb762d3cce987b7485dfac3f3271324242378b43d0d57f77afc69861fed7a2227a81ef52940291774ebfdef48a70db4ddb3f1e10b9ac387e1cf
   languageName: node
   linkType: hard
 
@@ -3846,7 +3846,7 @@ __metadata:
     vitest: "catalog:"
     zx: "catalog:"
   peerDependencies:
-    "@apollo/client": 4.3.6
+    "@apollo/client": 4.3.7
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/router": "workspace:*"
     "@cedarjs/web": "workspace:*"
@@ -3975,7 +3975,7 @@ __metadata:
     vitest: "catalog:"
     zx: "catalog:"
   peerDependencies:
-    "@apollo/client": 4.3.6
+    "@apollo/client": 4.3.7
     "@aws-sdk/client-s3": ^3.0.0
     "@aws-sdk/s3-request-presigner": ^3.0.0
     "@cedarjs/web": "workspace:*"
