@@ -3181,7 +3181,7 @@ __metadata:
     "@graphql-eslint/eslint-plugin": "npm:4.4.2"
     eslint: "catalog:"
     eslint-config-prettier: "npm:10.1.8"
-    eslint-plugin-import-x: "npm:4.17.1"
+    eslint-plugin-import-x: "npm:4.18.0"
     eslint-plugin-jest-dom: "npm:5.10.1"
     eslint-plugin-jsx-a11y: "npm:6.10.2"
     eslint-plugin-prettier: "npm:5.5.7"
@@ -14854,6 +14854,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cjs-module-lexer@npm:^2.2.1":
+  version: 2.3.0
+  resolution: "cjs-module-lexer@npm:2.3.0"
+  checksum: 10c0/9a6b9ca6f3c4734e108afa7a9cdf9ebf180329e1f94729a8a054102b2d66f5bbd62beb6a7b25ed8b0feca561c96542f34583fe5f0a72691751ff3ab718f5690f
+  languageName: node
+  linkType: hard
+
 "classnames@npm:^2.3.1, classnames@npm:^2.5.1":
   version: 2.5.1
   resolution: "classnames@npm:2.5.1"
@@ -16759,6 +16766,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"es-module-lexer@npm:^3.0.3":
+  version: 3.0.4
+  resolution: "es-module-lexer@npm:3.0.4"
+  checksum: 10c0/6e89027c3ce2e78c577bee234d3cf9e41035b6622cc2d399bffda322556f09735a864b3c7729da8528c96ec8cf00d93d7d418cdedb6765e9e4d228954fbfde3d
+  languageName: node
+  linkType: hard
+
 "es-object-atoms@npm:^1.0.0, es-object-atoms@npm:^1.1.1":
   version: 1.1.1
   resolution: "es-object-atoms@npm:1.1.1"
@@ -17153,16 +17167,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import-x@npm:4.17.1":
-  version: 4.17.1
-  resolution: "eslint-plugin-import-x@npm:4.17.1"
+"eslint-plugin-import-x@npm:4.18.0":
+  version: 4.18.0
+  resolution: "eslint-plugin-import-x@npm:4.18.0"
   dependencies:
     "@typescript-eslint/types": "npm:^8.56.0"
+    cjs-module-lexer: "npm:^2.2.1"
     comment-parser: "npm:^1.4.1"
     debug: "npm:^4.4.1"
+    es-module-lexer: "npm:^3.0.3"
     eslint-import-context: "npm:^0.1.9"
     is-glob: "npm:^4.0.3"
-    minimatch: "npm:^9.0.3 || ^10.1.2"
+    minimatch: "npm:^9.0.3 || ^10.1.2 || ^11.0.1"
     semver: "npm:^7.7.2"
     stable-hash-x: "npm:^0.2.0"
     unrs-resolver: "npm:^1.9.2"
@@ -17175,7 +17191,7 @@ __metadata:
       optional: true
     eslint-import-resolver-node:
       optional: true
-  checksum: 10c0/4ea2ace22c3d805f2253063912211c438055f112ca9a2124df262311744975fc96443e4526fd80eef0acec7845a48fb6d1da444a4c4b0ff9786927fe2755f2a7
+  checksum: 10c0/f18cd0896b8aded6011826e622f6c30cb3533bd873bab07d7a9ccb1d60a87be0007dee1884e121d5cbe5596d23e5781c98f58f21beb659ce511b2e81fb412e01
   languageName: node
   linkType: hard
 
@@ -21964,7 +21980,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^10.0.0, minimatch@npm:^10.0.3, minimatch@npm:^10.2.1, minimatch@npm:^10.2.2, minimatch@npm:^10.2.4, minimatch@npm:^10.2.6, minimatch@npm:^9.0.3 || ^10.1.2, minimatch@npm:~10.2.4":
+"minimatch@npm:^10.0.0, minimatch@npm:^10.0.3, minimatch@npm:^10.2.1, minimatch@npm:^10.2.2, minimatch@npm:^10.2.4, minimatch@npm:^10.2.6, minimatch@npm:~10.2.4":
   version: 10.2.6
   resolution: "minimatch@npm:10.2.6"
   dependencies:
@@ -21973,7 +21989,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^11.0.5":
+"minimatch@npm:^11.0.5, minimatch@npm:^9.0.3 || ^10.1.2 || ^11.0.1":
   version: 11.0.5
   resolution: "minimatch@npm:11.0.5"
   dependencies:
