@@ -98,7 +98,7 @@
     "@uppy/drag-drop": "^6.0.0",
     "@uppy/react": "^6.0.0",
     "@uppy/xhr-upload": "^6.0.0",
-    "fastify": "5.12.7",
+    "fastify": "5.12.8",
     "react": "19.3.1"
   },
   "peerDependenciesMeta": {
