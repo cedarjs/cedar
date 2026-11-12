@@ -1,0 +1,90 @@
+name: 🔬 Diagnose tutorial 404 (temporary)
+
+# Temporary workflow on a throwaway branch. It runs the tutorial E2E several
+# times in parallel to catch an intermittent 404 at /posts, and records what
+# the dev server serves while it happens.
+
+on:
+  push:
+    branches: ['diag/**']
+
+permissions:
+  contents: read
+
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+
+jobs:
+  tutorial:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        run: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Set up job
+        uses: ./.github/actions/set-up-job
+
+      - run: npx playwright install-deps chromium
+      - run: npx playwright install chromium
+
+      - name: 🌲 Create a Cedar App
+        id: crwa
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: false
+        run: |
+          project_path=$(mktemp -d -t cedar.XXXXXX)
+          echo "project-path=$project_path" >> $GITHUB_OUTPUT
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          ./tasks/run-e2e.cjs "$project_path" --no-build-framework --no-start
+
+      - name: Start the dev server in the background
+        run: |
+          yarn cedar dev --fwd="--no-open" 2>&1 | tee dev_server.log &
+        working-directory: ${{ steps.crwa.outputs.project-path }}
+
+      - name: Watch the served Routes module
+        run: |
+          nohup ./.github/scripts/diag-routes-watch.sh "${{ steps.crwa.outputs.project-path }}" "$GITHUB_WORKSPACE/routes-watch.log" > /dev/null 2>&1 &
+
+      - name: 🌲 Run the tutorial E2E test
+        id: e2e
+        env:
+          CEDAR_TEST_PROJECT_PATH: ${{ steps.crwa.outputs.project-path }}
+        working-directory: ./tasks/e2e
+        run: |
+          attempt=0
+          until curl --silent --fail http://[::1]:8910; do
+            attempt=$((attempt + 1))
+            if [ $attempt -ge 60 ]; then
+              echo "Dev server did not start in time" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+          npx playwright test
+
+      - name: Snapshot state after a failure
+        if: failure()
+        run: |
+          p="${{ steps.crwa.outputs.project-path }}"
+          mkdir -p "$GITHUB_WORKSPACE/diag"
+          curl -s --max-time 5 http://localhost:8910/src/Routes.jsx > "$GITHUB_WORKSPACE/diag/served-Routes.jsx" || true
+          curl -s --max-time 5 http://localhost:8910/posts > "$GITHUB_WORKSPACE/diag/served-posts.html" || true
+          cp "$p/web/src/Routes.jsx" "$GITHUB_WORKSPACE/diag/disk-Routes.jsx" || true
+          ls -la --time-style=full-iso "$p/web/src" "$p/web/src/pages" "$p/web/src/pages/Post" "$p/web/src/pages/Posts" > "$GITHUB_WORKSPACE/diag/ls.txt" 2>&1 || true
+          cp "$p/dev_server.log" "$GITHUB_WORKSPACE/diag/dev_server.log" 2>/dev/null || cp dev_server.log "$GITHUB_WORKSPACE/diag/dev_server.log" || true
+          cp "$GITHUB_WORKSPACE/routes-watch.log" "$GITHUB_WORKSPACE/diag/" || true
+          cp -r tasks/e2e/test-results "$GITHUB_WORKSPACE/diag/test-results" || true
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: diag-${{ matrix.run }}
+          path: |
+            diag/**
+            dev_server.log
+            routes-watch.log
+          if-no-files-found: ignore
