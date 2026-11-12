@@ -69,7 +69,7 @@
     "prettier-plugin-packagejson/sort-package-json": "3.7.1",
     "protobufjs": "7.6.6",
     "test-exclude/minimatch": "npm:3.1.5",
-    "vite": "7.3.7"
+    "vite": "7.3.8"
   },
   "devDependencies": {
     "@actions/cache": "6.0.1",
