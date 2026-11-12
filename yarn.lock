@@ -8070,13 +8070,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@listr2/prompt-adapter-enquirer@npm:4.4.3":
-  version: 4.4.3
-  resolution: "@listr2/prompt-adapter-enquirer@npm:4.4.3"
+"@listr2/prompt-adapter-enquirer@npm:4.4.4":
+  version: 4.4.4
+  resolution: "@listr2/prompt-adapter-enquirer@npm:4.4.4"
   peerDependencies:
     enquirer: ">= 2.3.0 < 3"
     listr2: ^11.0.0
-  checksum: 10c0/d5f0622389dca4fcb41a66ee2f14d4ece23012158ab2989559a0ae6fc43a36c669749c3eae7289eac77fd65c5c6756909f146fac7bb8b1cfcd05f82dd49874b0
+  checksum: 10c0/95866b37e829424ce16c9c3550a765abde1306a19cfc3d57ffe94e331d2b643cd37d7dec6fd32b4de64ab617f83dfc5c641cfeffc2b446cca86a3a335013ed6a
   languageName: node
   linkType: hard
 
