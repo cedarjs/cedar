@@ -3181,7 +3181,7 @@ __metadata:
     "@graphql-eslint/eslint-plugin": "npm:4.4.2"
     eslint: "catalog:"
     eslint-config-prettier: "npm:10.1.8"
-    eslint-plugin-import-x: "npm:4.18.0"
+    eslint-plugin-import-x: "npm:4.18.1"
     eslint-plugin-jest-dom: "npm:5.10.1"
     eslint-plugin-jsx-a11y: "npm:6.10.2"
     eslint-plugin-prettier: "npm:5.5.7"
@@ -17170,9 +17170,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import-x@npm:4.18.0":
-  version: 4.18.0
-  resolution: "eslint-plugin-import-x@npm:4.18.0"
+"eslint-plugin-import-x@npm:4.18.1":
+  version: 4.18.1
+  resolution: "eslint-plugin-import-x@npm:4.18.1"
   dependencies:
     "@typescript-eslint/types": "npm:^8.56.0"
     cjs-module-lexer: "npm:^2.2.1"
@@ -17194,7 +17194,7 @@ __metadata:
       optional: true
     eslint-import-resolver-node:
       optional: true
-  checksum: 10c0/f18cd0896b8aded6011826e622f6c30cb3533bd873bab07d7a9ccb1d60a87be0007dee1884e121d5cbe5596d23e5781c98f58f21beb659ce511b2e81fb412e01
+  checksum: 10c0/a206b41f2b442bcc183d365e9d3f139eebf95cebee099c27dad85cad439c205976187e51e06e12f9e69ce80de2ba82e19b80497fe221ff0f0359f27b5c07127b
   languageName: node
   linkType: hard
 
