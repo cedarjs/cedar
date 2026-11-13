@@ -93,7 +93,7 @@
     "@types/ncp": "2.0.8",
     "@types/node": "catalog:",
     "@types/prompts": "2.4.9",
-    "@typescript-eslint/eslint-plugin": "8.72.1",
+    "@typescript-eslint/eslint-plugin": "8.72.2",
     "@typescript-eslint/parser": "catalog:",
     "@yarnpkg/types": "4.0.1",
     "ansis": "catalog:",
