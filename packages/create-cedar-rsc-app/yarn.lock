@@ -2824,11 +2824,15 @@ __metadata:
   linkType: hard
 
 "prettier-plugin-curly@npm:^0.4.1":
-  version: 0.4.1
-  resolution: "prettier-plugin-curly@npm:0.4.1"
+  version: 0.4.2
+  resolution: "prettier-plugin-curly@npm:0.4.2"
   peerDependencies:
+    "@prettier/plugin-oxc": ^0.2.2
     prettier: ^3
-  checksum: 10c0/9fed1ddbf8cb1cfb2b15196e63031d91ceba7ac4dceff08ae53c23e1c6b2efc69865fd1038e2b5cd017a220c12efb21ba69eaaae6edadd7d507e078d99c363b2
+  peerDependenciesMeta:
+    "@prettier/plugin-oxc":
+      optional: true
+  checksum: 10c0/7a6c57710e4b580fc81c3efe47cfee7638004b8c9766a312bf1c121cf6ed98efbe7804b0d85654f969d5bbfec9aae151712402b3872863343aa3a3a9a835cb18
   languageName: node
   linkType: hard
 
