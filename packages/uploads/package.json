@@ -53,8 +53,8 @@
   "devDependencies": {
     "@apollo/client": "catalog:",
     "@arethetypeswrong/cli": "catalog:",
-    "@aws-sdk/client-s3": "3.1164.0",
-    "@aws-sdk/s3-request-presigner": "3.1164.0",
+    "@aws-sdk/client-s3": "3.1166.0",
+    "@aws-sdk/s3-request-presigner": "3.1166.0",
     "@cedarjs/framework-tools": "workspace:*",
     "@cedarjs/web": "workspace:*",
     "@prisma/adapter-better-sqlite3": "catalog:prisma",
