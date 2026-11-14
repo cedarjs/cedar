@@ -27,7 +27,7 @@
   "dependencies": {
     "@babel/parser": "catalog:",
     "@babel/plugin-transform-react-jsx": "7.29.7",
-    "@babel/preset-env": "7.29.7",
+    "@babel/preset-env": "7.29.14",
     "@babel/preset-react": "7.29.7",
     "@babel/register": "7.29.13",
     "@babel/traverse": "catalog:",
