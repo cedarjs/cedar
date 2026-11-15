@@ -1,8 +1,6 @@
+import { GraphQLError } from 'graphql'
 import type { Plugin } from 'graphql-yoga'
-import {
-  handleStreamOrSingleExecutionResult,
-  createGraphQLError,
-} from 'graphql-yoga'
+import { handleStreamOrSingleExecutionResult } from 'graphql-yoga'
 
 import { CedarError } from '@cedarjs/api'
 import type { Logger } from '@cedarjs/api/logger'
@@ -39,7 +37,7 @@ export const useCedarError = (logger: Logger): Plugin<CedarGraphQLContext> => {
                     'Converting CedarError to GraphQLError',
                   )
 
-                  return createGraphQLError(error.message, {
+                  return new GraphQLError(error.message, {
                     extensions: error.extensions,
                   })
                 } else {

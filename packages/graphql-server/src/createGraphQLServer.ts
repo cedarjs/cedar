@@ -39,6 +39,7 @@ import { resolveServerAuthState } from './serverAuthState.js'
 import { makeSubscriptions } from './subscriptions/makeSubscriptions.js'
 import type { CedarSubscription } from './subscriptions/makeSubscriptions.js'
 import type { GraphQLYogaOptions, CedarGraphQLContext } from './types.js'
+import { createYogaLogger } from './yogaLogger.js'
 
 /**
  * The server context Yoga is created with. The Fastify entry point adds the
@@ -251,7 +252,7 @@ export const createGraphQLServer = async ({
         errorMessage: defaultError,
         isDev: isDevEnv,
       },
-      logging: logger,
+      logging: createYogaLogger(logger),
       healthCheckEndpoint: graphiQLEndpoint + '/health',
       graphqlEndpoint: graphiQLEndpoint,
       graphiql: configureGraphiQLPlayground({
