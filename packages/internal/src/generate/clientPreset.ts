@@ -48,6 +48,12 @@ export const generateClientPreset = async () => {
         documentTransforms: [addTypenameSelectionDocumentTransform],
         config: {
           // DO NOT USE documentMode: 'string',
+          // The client preset has no scalar mappings, so custom scalars,
+          // including Cedar's built-in ones like DateTime, are typed as
+          // `any`, not codegen's default of `unknown`
+          defaultScalarType: 'any',
+
+
         },
       },
     },
