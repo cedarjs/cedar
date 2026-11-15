@@ -6,7 +6,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { createServer } from 'vite'
+import { createServer, normalizePath } from 'vite'
 import type { ViteDevServer } from 'vite'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
@@ -95,7 +95,9 @@ describe('the tenancy module of cedarVitestWebConfigPlugin', () => {
     const { id } = await resolveTenancyModule()
 
     expect(id).toBe(
-      path.join(appDir(), 'node_modules/@cedarjs/tenancy/dist/web/index.js'),
+      normalizePath(
+        path.join(appDir(), 'node_modules/@cedarjs/tenancy/dist/web/index.js'),
+      ),
     )
   })
 
