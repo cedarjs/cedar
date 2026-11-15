@@ -234,7 +234,11 @@ sends:
 This version of the code generator is also what makes GraphQL 17 support
 possible, including fragment arguments later on.
 
-The types for your schema, like `Post`, have the same shape as before.
+The types for your schema, like `Post`, have the same shape as before, with
+one exception: a custom scalar you define yourself and don't map to a
+TypeScript type is typed `unknown` instead of `any`, on both the api and web
+sides. Cedar's built-in scalars, like `DateTime` and `JSON`, are mapped and
+not affected.
 
 ### Upgrading
 
@@ -254,6 +258,11 @@ and cache write data:
   apart, needs `__typename` added to the query or fragment's selection. Apollo
   adds it to every response at runtime, but the generated types only include
   it when you select it
+- Code that uses a value of an unmapped custom scalar fails type checking
+  where it relied on `any`. Map the scalar to a type with `scalars` in your
+  `codegen.yml` (see
+  [Generated Types](https://cedarjs.com/docs/typescript/generated-types)), or
+  narrow the value where you use it
 
 If your app uses trusted documents, document IDs are `sha256:`-prefixed
 SHA-256 hashes, the format the GraphQL-over-HTTP persisted documents spec
