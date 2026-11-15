@@ -8,6 +8,7 @@ import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
 import { getOperationName } from '../../graphql.js'
 
 import { useCellCacheContext } from './CellCacheContext.js'
+import { CellOperationVariablesProvider } from './CellOperationVariablesContext.js'
 import type { CreateCellProps, DataObject } from './cellTypes.js'
 import { createFragmentCell } from './createFragmentCell.js'
 import { createSuspendingCell } from './createSuspendingCell.js'
@@ -131,6 +132,13 @@ function createNonSuspendingCell<
       ...queryResult
     } = useQuery<DataObject>(query, options)
 
+    // The variables the query ran with, including the operation's default
+    // values and any variables passed to `refetch`. Fragment Cells rendered
+    // below this Cell read their data from the cache with these. They're
+    // captured here because the prerender branch below replaces
+    // `queryResult`
+    const operationVariables = queryResult.variables
+
     if (globalThis.__REDWOOD__PRERENDERING) {
       // __REDWOOD__PRERENDERING will always either be set, or not set. So
       // rules-of-hooks are still respected, even though we wrap this in an if
@@ -244,7 +252,13 @@ function createNonSuspendingCell<
         }
 
         // See the long comment around line 200 about why we cast to `any` here
-        return <Empty {...(emptyProps as any)} />
+        const element = <Empty {...(emptyProps as any)} />
+
+        return (
+          <CellOperationVariablesProvider variables={operationVariables}>
+            {element}
+          </CellOperationVariablesProvider>
+        )
       } else {
         const successProps = {
           ...props,
@@ -254,7 +268,13 @@ function createNonSuspendingCell<
         }
 
         // See the long comment around line 200 about why we cast to `any` here
-        return <Success {...(successProps as any)} />
+        const element = <Success {...(successProps as any)} />
+
+        return (
+          <CellOperationVariablesProvider variables={operationVariables}>
+            {element}
+          </CellOperationVariablesProvider>
+        )
       }
     } else if (loading) {
       const loadingProps = { ...props, queryResult }

@@ -1,4 +1,4 @@
-import type { StoreObject } from '@apollo/client'
+import type { OperationVariables, StoreObject } from '@apollo/client'
 import type { FragmentRegistryAPI } from '@apollo/client/cache'
 import { createFragmentRegistry } from '@apollo/client/cache'
 import {
@@ -17,6 +17,11 @@ export interface FragmentHookOptions {
    * identify works.
    */
   from: Record<string, unknown>
+  /**
+   * The variables of the operation the fragment is spread in. Needed when
+   * the fragment uses operation variables, like `comments(first: $count)`
+   */
+  variables?: OperationVariables
 }
 
 export interface FragmentHookResult<TData = any> {

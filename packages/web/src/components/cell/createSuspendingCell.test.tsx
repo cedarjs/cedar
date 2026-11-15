@@ -8,6 +8,7 @@ import {
   useReadQuery,
 } from '@apollo/client/react'
 import { render, screen } from '@testing-library/react'
+import { parse } from 'graphql'
 import type { Mock } from 'vitest'
 import { vi, describe, beforeAll, beforeEach, test, expect } from 'vitest'
 
@@ -54,7 +55,7 @@ describe('createSuspendingCell', () => {
   test('Renders a static Success component', () => {
     const TestCell = createSuspendingCell({
       // @ts-expect-error - Purposefully using a plain string here.
-      QUERY: 'query TestQuery { answer }',
+      QUERY: parse('query TestQuery { answer }'),
       Success: () => <>Great success!</>,
     })
 
@@ -67,7 +68,7 @@ describe('createSuspendingCell', () => {
   test('Renders Success with data', () => {
     const TestCell = createSuspendingCell({
       // @ts-expect-error - Purposefully using a plain string here.
-      QUERY: 'query TestQuery { answer }',
+      QUERY: parse('query TestQuery { answer }'),
       Success: ({ answer }) => (
         <>
           <dl>
@@ -91,7 +92,7 @@ describe('createSuspendingCell', () => {
   test('Renders Success if any of the fields have data (i.e. not just the first)', () => {
     const TestCell = createSuspendingCell({
       // @ts-expect-error - Purposefully using a plain string here.
-      QUERY: 'query TestQuery { users { name } posts { title } }',
+      QUERY: parse('query TestQuery { users { name } posts { title } }'),
       Empty: () => <>No users or posts</>,
       Success: ({ users, posts }) => (
         <>
@@ -139,7 +140,7 @@ describe('createSuspendingCell', () => {
   test('Renders nothing when beforeQuery returns skipToken', () => {
     const TestCell = createSuspendingCell({
       // @ts-expect-error - Purposefully using a plain string here.
-      QUERY: 'query TestQuery { answer }',
+      QUERY: parse('query TestQuery { answer }'),
       Success: () => <>Should not render</>,
       Loading: () => <>Should not render</>,
       Empty: () => <>Should not render</>,
@@ -168,7 +169,7 @@ describe('createSuspendingCell', () => {
   test('Renders nothing when an active Cell becomes skipped', () => {
     const TestCell = createSuspendingCell({
       // @ts-expect-error - Purposefully using a plain string here.
-      QUERY: 'query TestQuery($name: String) { greeting(name: $name) }',
+      QUERY: parse('query TestQuery($name: String) { greeting(name: $name) }'),
       Success: ({ greeting }) => <>{greeting}</>,
       beforeQuery: ({ name }: { name?: string }) =>
         name ? { variables: { name } } : skipToken,

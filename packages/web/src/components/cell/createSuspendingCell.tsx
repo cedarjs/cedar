@@ -11,6 +11,10 @@ import {
 
 import type { FallbackProps } from './CellErrorBoundary.js'
 import { CellErrorBoundary } from './CellErrorBoundary.js'
+import {
+  CellOperationVariablesProvider,
+  withOperationVariableDefaults,
+} from './CellOperationVariablesContext.js'
 import type {
   CellBeforeQueryResult,
   CreateCellProps,
@@ -229,14 +233,24 @@ export function createSuspendingCell<
       )
     }
 
+    // Fragment Cells rendered below this Cell read their data from the cache
+    // with the variables the query ran with, including the operation's
+    // default values
+    const operationVariables = withOperationVariableDefaults(
+      query,
+      queryOptions.variables,
+    )
+
     return (
       <CellErrorBoundary renderFallback={FailureComponent}>
         {wrapInSuspenseIfLoadingPresent(
-          <SuspendingSuccess
-            userProps={props}
-            queryRef={queryRef}
-            suspenseQueryResult={suspenseQueryResult}
-          />,
+          <CellOperationVariablesProvider variables={operationVariables}>
+            <SuspendingSuccess
+              userProps={props}
+              queryRef={queryRef}
+              suspenseQueryResult={suspenseQueryResult}
+            />
+          </CellOperationVariablesProvider>,
           Loading,
         )}
       </CellErrorBoundary>
