@@ -56,12 +56,13 @@ export const generateClientPreset = async () => {
   try {
     // The codegen returns filenames relative to `cwd`, but everything
     // downstream (and our callers) expects absolute paths
-    const generatedFiles = (await generate(config, true)).map(
-      (f: GeneratedFile) => ({
-        ...f,
-        filename: path.resolve(getPaths().base, f.filename),
-      }),
-    )
+    // `generate()` only resolves without files in watch mode, which isn't
+    // used here
+    const codegenFiles = (await generate(config, true)) ?? []
+    const generatedFiles = codegenFiles.map((f: GeneratedFile) => ({
+      ...f,
+      filename: path.resolve(getPaths().base, f.filename),
+    }))
 
     clientPresetFiles = generatedFiles.map((f: GeneratedFile) => f.filename)
 
