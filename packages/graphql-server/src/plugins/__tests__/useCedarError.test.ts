@@ -11,7 +11,7 @@ import { createLogger } from '@cedarjs/api/logger'
 import { createGraphQLHandler } from '../../functions/graphql.js'
 
 vi.mock('../../makeMergedSchema', async () => {
-  const { createGraphQLError } = await import('graphql-yoga')
+  const { GraphQLError } = await import('graphql')
   const { makeExecutableSchema } = await import('@graphql-tools/schema')
   const { ForbiddenError, CedarGraphQLError } = await import('../../errors.js')
   const { CurrencyResolver } = await import('graphql-scalars')
@@ -81,7 +81,7 @@ vi.mock('../../makeMergedSchema', async () => {
               throw new ForbiddenError('You are forbidden')
             },
             graphQLErrorUser: () => {
-              throw createGraphQLError('You are forbidden by a GraphQLError')
+              throw new GraphQLError('You are forbidden by a GraphQLError')
             },
             redwoodGraphQLErrorUser: () => {
               throw new CedarGraphQLError(

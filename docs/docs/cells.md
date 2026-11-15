@@ -616,6 +616,12 @@ A few things to know about fragment Cells:
   mutation or another query updates that entity. Without it, the Cell still
   renders (it falls back to the data object it was passed), but it only updates
   when the parent re-renders.
+- A fragment can use the variables of the query it's spread in, like
+  `comments(first: $count) { body }` with `$count` declared in the parent
+  Cell's `QUERY`. The fragment Cell reads its data from the cache with the
+  parent Cell's variables (including default values), so live updates work
+  for these fields too. Nested fragment Cells use the variables of the nearest
+  Cell with a `QUERY` above them.
 - This works for lists too: a parent Cell that fetches
   `posts { author { ...AuthorCellFragment } }` can render one
   `<AuthorCell user={post.author} />` per post, still with a single request.

@@ -6,6 +6,7 @@ import { Kind } from 'graphql'
 
 import { fragmentRegistry, useFragment } from '../../apollo/fragmentRegistry.js'
 
+import { useCellOperationVariables } from './CellOperationVariablesContext.js'
 import type { CreateCellProps } from './cellTypes.js'
 import { isDataEmpty } from './isCellEmpty.js'
 
@@ -95,7 +96,9 @@ function isDataRef(value: unknown): value is Record<string, unknown> {
  *
  * When the GraphQL client supports it (Apollo does), the fragment data is
  * read from the client's cache, so the Cell re-renders when other queries or
- * mutations update the underlying entity. If the cache read is incomplete,
+ * mutations update the underlying entity. The cache read uses the variables
+ * of the nearest query Cell above, so fragments can use that query's
+ * variables. If the cache read is incomplete,
  * the passed-in object itself is used as the data snapshot.
  */
 export function createFragmentCell<
@@ -137,10 +140,17 @@ export function createFragmentCell<
 
     const dataRef = isDataRef(rawSlice) ? rawSlice : undefined
 
+    // The fragment can use the variables of the query it's spread in (like
+    // `comments(first: $count)`). The cache stores such fields under keys
+    // that include their arguments, so reading them back needs the same
+    // variables
+    const operationVariables = useCellOperationVariables()
+
     const fragmentResult = useFragment({
       fragment,
       fragmentName,
       from: dataRef ?? {},
+      variables: operationVariables,
     })
 
     if (!(propName in props)) {

@@ -51,10 +51,14 @@ export const useLogIn = <
   return useCallback(
     async (options?: TLogInOptions) => {
       setAuthProviderState(spaDefaultAuthProviderState)
-      const loginResult = await authImplementation.login(options)
-      await reauthenticate()
 
-      return loginResult
+      // `reauthenticate` runs on rejection too, because it is what takes
+      // `loading` back to `false` after the reset above
+      try {
+        return await authImplementation.login(options)
+      } finally {
+        await reauthenticate()
+      }
     },
     [authImplementation, reauthenticate, setAuthProviderState],
   )

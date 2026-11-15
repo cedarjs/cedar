@@ -8,9 +8,11 @@ import {
   useBackgroundQuery,
   useReadQuery,
 } from '@apollo/client/react'
+import { unwrapQueryRef } from '@apollo/client/react/internal'
 
 import type { FallbackProps } from './CellErrorBoundary.js'
 import { CellErrorBoundary } from './CellErrorBoundary.js'
+import { CellOperationVariablesProvider } from './CellOperationVariablesContext.js'
 import type {
   CellBeforeQueryResult,
   CreateCellProps,
@@ -81,6 +83,14 @@ export function createSuspendingCell<
     >(queryRef)
     const afterQueryData = afterQuery(data)
 
+    // The variables the query currently runs with, including the operation's
+    // default values and any variables passed to `refetch`. Fragment Cells
+    // rendered below this Cell read their data from the cache with these.
+    // Apollo Client exposes a query reference's variables only through its
+    // internal API. `useReadQuery` above re-renders this component whenever
+    // the query reference changes, so this always reads the current value
+    const operationVariables = unwrapQueryRef(queryRef)?.observable.variables
+
     const queryResultWithNetworkStatus: SuspenseCellQueryResult = {
       ...suspenseQueryResult,
       networkStatus,
@@ -99,7 +109,13 @@ export function createSuspendingCell<
         queryResult: queryResultWithNetworkStatus,
       }
 
-      return <Empty {...(emptyProps as any)} />
+      const emptyElement = <Empty {...(emptyProps as any)} />
+
+      return (
+        <CellOperationVariablesProvider variables={operationVariables}>
+          {emptyElement}
+        </CellOperationVariablesProvider>
+      )
     }
 
     const successProps = {
@@ -108,7 +124,13 @@ export function createSuspendingCell<
       queryResult: queryResultWithNetworkStatus,
     }
 
-    return <Success {...(successProps as any)} />
+    const successElement = <Success {...(successProps as any)} />
+
+    return (
+      <CellOperationVariablesProvider variables={operationVariables}>
+        {successElement}
+      </CellOperationVariablesProvider>
+    )
   }
 
   SuspendingSuccess.displayName = displayName

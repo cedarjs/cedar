@@ -677,6 +677,45 @@ describe('Custom auth provider', () => {
     expect(result.current.hasPermission('billing.manage')).toBe(false)
   })
 
+  describe('when the login call rejects', () => {
+    const { AuthProvider, useAuth } = createCustomTestAuth({
+      ...mockedTestAuthClient,
+      login: () => {
+        throw new Error('Failed to fetch')
+      },
+    })
+
+    test('settles auth state and passes the rejection on', async () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      await act(async () => {
+        await expect(result.current.logIn()).rejects.toThrow('Failed to fetch')
+      })
+
+      expect(result.current.loading).toBe(false)
+      expect(result.current.isAuthenticated).toBe(false)
+      expect(result.current.currentUser).toBeNull()
+    })
+
+    test('keeps an existing session authenticated', async () => {
+      pretendWeLoggedIn()
+
+      const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider })
+
+      await waitFor(() => expect(result.current.isAuthenticated).toBe(true))
+
+      await act(async () => {
+        await expect(result.current.logIn()).rejects.toThrow('Failed to fetch')
+      })
+
+      expect(result.current.loading).toBe(false)
+      expect(result.current.isAuthenticated).toBe(true)
+      expect(result.current.currentUser).toEqual(CURRENT_USER_DATA)
+    })
+  })
+
   test("getToken doesn't fail if client throws an error", async () => {
     mockedTestAuthClient.getToken.mockImplementation(() => {
       throw new Error('Login Required')
