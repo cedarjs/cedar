@@ -11,7 +11,8 @@
     "@cedarjs/eslint-config": "7.1.0",
     "@cedarjs/project-config": "7.1.0",
     "@cedarjs/testing": "7.1.0",
-    "prettier-plugin-tailwindcss": "^0.8.0"
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "prisma": "7.10.1"
   },
   "engines": {
     "node": "24.x"
@@ -91,6 +92,11 @@
     "@cedarjs/utils": "file:../packages/utils/cedarjs-utils.tgz",
     "@cedarjs/vite": "file:../packages/vite/cedarjs-vite.tgz",
     "@cedarjs/web": "file:../packages/web/cedarjs-web.tgz",
-    "@cedarjs/web-server": "file:../packages/web-server/cedarjs-web-server.tgz"
+    "@cedarjs/web-server": "file:../packages/web-server/cedarjs-web-server.tgz",
+    "@cedarjs/api-server-watch": "file:../packages/api-server-watch/cedarjs-api-server-watch.tgz",
+    "@cedarjs/auth-dbauth-oauth": "file:../packages/auth-providers/dbAuth/oauth/cedarjs-auth-dbauth-oauth.tgz",
+    "@cedarjs/permissions": "file:../packages/permissions/cedarjs-permissions.tgz",
+    "@cedarjs/tenancy": "file:../packages/tenancy/cedarjs-tenancy.tgz",
+    "@cedarjs/uploads": "file:../packages/uploads/cedarjs-uploads.tgz"
   }
 }

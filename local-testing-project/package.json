@@ -105,7 +105,11 @@
     "@cedarjs/graphql-server": "file:../packages/graphql-server/cedarjs-graphql-server.tgz",
     "@cedarjs/eslint-plugin": "file:../packages/eslint-plugin/cedarjs-eslint-plugin.tgz",
     "@cedarjs/codemods": "file:../packages/codemods/cedarjs-codemods.tgz",
-    "@cedarjs/router": "file:../packages/router/cedarjs-router.tgz"
+    "@cedarjs/router": "file:../packages/router/cedarjs-router.tgz",
+    "@cedarjs/auth-dbauth-oauth": "file:../packages/auth-providers/dbAuth/oauth/cedarjs-auth-dbauth-oauth.tgz",
+    "@cedarjs/permissions": "file:../packages/permissions/cedarjs-permissions.tgz",
+    "@cedarjs/tenancy": "file:../packages/tenancy/cedarjs-tenancy.tgz",
+    "@cedarjs/uploads": "file:../packages/uploads/cedarjs-uploads.tgz"
   },
   "dependenciesMeta": {
     "@clerk/shared": {
