@@ -1,6 +1,5 @@
 import { useDisableIntrospection } from '@envelop/disable-introspection'
 import { useFilterAllowedOperations } from '@envelop/filter-operation-type'
-import { PinoLogWriter } from '@graphql-hive/logger/writers/pino'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { OperationTypeNode } from 'graphql'
 import type { GraphQLSchema } from 'graphql'
@@ -8,7 +7,6 @@ import {
   useReadinessCheck,
   createYoga,
   useExecutionCancellation,
-  Logger as YogaLogger,
 } from 'graphql-yoga'
 import type { Plugin, YogaServerInstance } from 'graphql-yoga'
 
@@ -41,6 +39,7 @@ import { resolveServerAuthState } from './serverAuthState.js'
 import { makeSubscriptions } from './subscriptions/makeSubscriptions.js'
 import type { CedarSubscription } from './subscriptions/makeSubscriptions.js'
 import type { GraphQLYogaOptions, CedarGraphQLContext } from './types.js'
+import { createYogaLogger } from './yogaLogger.js'
 
 /**
  * The server context Yoga is created with. The Fastify entry point adds the
@@ -253,13 +252,7 @@ export const createGraphQLServer = async ({
         errorMessage: defaultError,
         isDev: isDevEnv,
       },
-      // Yoga logs through a `@graphql-hive/logger` Logger. The writer forwards
-      // every message to Cedar's logger, and the `trace` level leaves the
-      // filtering to that logger's own level
-      logging: new YogaLogger({
-        level: 'trace',
-        writers: [new PinoLogWriter(logger)],
-      }),
+      logging: createYogaLogger(logger),
       healthCheckEndpoint: graphiQLEndpoint + '/health',
       graphqlEndpoint: graphiQLEndpoint,
       graphiql: configureGraphiQLPlayground({
