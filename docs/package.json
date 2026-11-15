@@ -25,7 +25,7 @@
   },
   "resolutions": {
     "node-gyp@latest": "13.1.0",
-    "tinypool@npm:^1.0.2": "2.1.2"
+    "tinypool@npm:^1.0.2": "2.2.0"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
