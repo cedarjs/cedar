@@ -16,12 +16,17 @@ import {
 // the permissions of the user's roles
 setMockPermissionDefinitions(await loadAppPermissions(getPaths().web.base))
 
-// `@cedarjs/tenancy/web` as the app's own code gets it, so it clears the same
-// clients. `undefined` in an app without tenancy. The module is resolved by
-// `cedarVitestWebConfigPlugin`
-const { clearOrgClients } = await import('virtual:cedar-testing-tenancy-web')
+let clearOrgClients: (() => Promise<void>) | undefined
 
 beforeAll(async () => {
+  // `@cedarjs/tenancy/web` as the app's own code gets it, so it clears the
+  // same clients. `undefined` in an app without tenancy. The module is
+  // resolved by `cedarVitestWebConfigPlugin`. It's imported here, after the
+  // test file's imports, so a `vi.resetModules()` in the test file still
+  // leaves this the instance the app uses
+  const tenancyWeb = await import('virtual:cedar-testing-tenancy-web')
+  clearOrgClients = tenancyWeb.clearOrgClients
+
   const cellMocks = findCellMocks(getPaths().web.src)
 
   for (const m of cellMocks) {
