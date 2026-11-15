@@ -52,8 +52,6 @@ export const generateClientPreset = async () => {
           // including Cedar's built-in ones like DateTime, are typed as
           // `any`, not codegen's default of `unknown`
           defaultScalarType: 'any',
-
-
         },
       },
     },
@@ -74,7 +72,7 @@ export const generateClientPreset = async () => {
 
     const trustedDocumentsStoreFile =
       await trustedDocumentsStore(generatedFiles)
-    replaceGqlTagWithTrustedDocumentGraphql(generatedFiles)
+    await replaceGqlTagWithTrustedDocumentGraphql(generatedFiles)
 
     return {
       clientPresetFiles,
