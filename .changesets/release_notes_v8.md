@@ -238,9 +238,11 @@ The types for your schema, like `Post`, have the same shape as before.
 
 ### Upgrading
 
-Run `yarn cedar generate types` and type check your project. Errors show up
-where test data, mocks or story args are typed with a generated query or
-fragment type:
+Run `yarn cedar generate types` and type check your project. Data your app
+gets from the server has the right shape already. Errors show up where your
+code builds an object typed with a generated query or fragment type, most
+often test data, mocks and story args, but also Apollo `optimisticResponse`
+and cache write data:
 
 - Remove `__typename` from those objects
 - Add `field: null` for nullable fields an object leaves out. The real server
@@ -248,6 +250,10 @@ fragment type:
 - If a component's props come from a query type (for example
   `interface Props extends FindPostQuery {}`), components rendered without a
   nullable prop need it passed explicitly, like `<BlogPost blogPost={null} />`
+- Code that reads `__typename`, for example to tell the members of a union
+  apart, needs `__typename` added to the query or fragment's selection. Apollo
+  adds it to every response at runtime, but the generated types only include
+  it when you select it
 
 If your app uses trusted documents, document IDs are `sha256:`-prefixed
 SHA-256 hashes, the format the GraphQL-over-HTTP persisted documents spec
