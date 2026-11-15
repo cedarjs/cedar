@@ -1,5 +1,6 @@
 import { useDisableIntrospection } from '@envelop/disable-introspection'
 import { useFilterAllowedOperations } from '@envelop/filter-operation-type'
+import { PinoLogWriter } from '@graphql-hive/logger/writers/pino'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { OperationTypeNode } from 'graphql'
 import type { GraphQLSchema } from 'graphql'
@@ -7,6 +8,7 @@ import {
   useReadinessCheck,
   createYoga,
   useExecutionCancellation,
+  Logger as YogaLogger,
 } from 'graphql-yoga'
 import type { Plugin, YogaServerInstance } from 'graphql-yoga'
 
@@ -251,7 +253,13 @@ export const createGraphQLServer = async ({
         errorMessage: defaultError,
         isDev: isDevEnv,
       },
-      logging: logger,
+      // Yoga logs through a `@graphql-hive/logger` Logger. The writer forwards
+      // every message to Cedar's logger, and the `trace` level leaves the
+      // filtering to that logger's own level
+      logging: new YogaLogger({
+        level: 'trace',
+        writers: [new PinoLogWriter(logger)],
+      }),
       healthCheckEndpoint: graphiQLEndpoint + '/health',
       graphqlEndpoint: graphiQLEndpoint,
       graphiql: configureGraphiQLPlayground({
