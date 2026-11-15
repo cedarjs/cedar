@@ -215,6 +215,45 @@ and exports are made more precise.
 - If you extend `CurrentUser` with `declare module '@cedarjs/auth'`, extend
   `LoggedInUser` instead. `CurrentUser` is a type alias and can't be extended
 
+## GraphQL Code Generator 8
+
+Cedar generates its GraphQL types with GraphQL Code Generator 8, and the types
+for your queries, mutations and fragments match what the server actually
+sends:
+
+- Nullable fields are typed `T | null` instead of being optional. The server
+  always includes every selected field, so you don't need to handle an
+  `undefined` that can't happen. Fields with `@skip`, `@include` or `@defer`
+  are still optional
+- Variables and inputs use plain TypeScript types (`id: number`) instead of
+  wrappers like `Scalars['Int']['input']` and `InputMaybe`, which keeps
+  editor hovers and type errors readable
+- Operation and fragment types don't include `__typename`, unless you select
+  it
+
+This version of the code generator is also what makes GraphQL 17 support
+possible, including fragment arguments later on.
+
+The types for your schema, like `Post`, have the same shape as before.
+
+### Upgrading
+
+Run `yarn cedar generate types` and type check your project. Errors show up
+where test data, mocks or story args are typed with a generated query or
+fragment type:
+
+- Remove `__typename` from those objects
+- Add `field: null` for nullable fields an object leaves out. The real server
+  always sends them, so this makes your mocks match real responses
+- If a component's props come from a query type (for example
+  `interface Props extends FindPostQuery {}`), components rendered without a
+  nullable prop need it passed explicitly, like `<BlogPost blogPost={null} />`
+
+If your app uses trusted documents, document IDs are `sha256:`-prefixed
+SHA-256 hashes, the format the GraphQL-over-HTTP persisted documents spec
+defines. Browser tabs still running a bundle built before the upgrade send
+IDs the server doesn't recognize until they're reloaded.
+
 ## `<Set>` wrappers only get `children`
 
 `<Set>`, `<PrivateSet>` and `<Private>` render the components in `wrap` with
