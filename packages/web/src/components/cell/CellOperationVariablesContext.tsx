@@ -1,8 +1,6 @@
 import React, { createContext, useContext } from 'react'
 
 import type { OperationVariables } from '@apollo/client'
-import type { DocumentNode, OperationDefinitionNode } from 'graphql'
-import { Kind, valueFromASTUntyped } from 'graphql'
 
 /**
  * Holds the variables of the GraphQL operation (query) that fetched the data
@@ -45,40 +43,4 @@ export const CellOperationVariablesProvider = ({
  */
 export function useCellOperationVariables() {
   return useContext(CellOperationVariablesContext)
-}
-
-/**
- * Applies the default values declared in the operation's variable
- * definitions (`query Q($count: Int = 10)`) to `variables`, the same way
- * Apollo Client does before running a query and writing its result to the
- * cache. A variable that is missing or `undefined` gets its default value.
- */
-export function withOperationVariableDefaults(
-  query: DocumentNode,
-  variables: OperationVariables | undefined,
-): OperationVariables {
-  const operation = query.definitions.find(
-    (definition): definition is OperationDefinitionNode =>
-      definition.kind === Kind.OPERATION_DEFINITION,
-  )
-
-  const defaults: OperationVariables = {}
-
-  for (const variableDefinition of operation?.variableDefinitions ?? []) {
-    if (variableDefinition.defaultValue) {
-      defaults[variableDefinition.variable.name.value] = valueFromASTUntyped(
-        variableDefinition.defaultValue,
-      )
-    }
-  }
-
-  const result: OperationVariables = { ...defaults }
-
-  for (const [name, value] of Object.entries(variables ?? {})) {
-    if (value !== undefined || !(name in defaults)) {
-      result[name] = value
-    }
-  }
-
-  return result
 }

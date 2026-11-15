@@ -2,13 +2,13 @@ import React from 'react'
 
 import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client'
 import { ApolloProvider } from '@apollo/client/react'
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { parse } from 'graphql'
+import { of } from 'rxjs'
 import { describe, beforeEach, test } from 'vitest'
 
 import { fragmentRegistry } from '../../apollo/fragmentRegistry.js'
 
-import { withOperationVariableDefaults } from './CellOperationVariablesContext.js'
 import { createCell } from './createCell.js'
 import { createSuspendingCell } from './createSuspendingCell.js'
 
@@ -67,6 +67,44 @@ function makeClient() {
     cache: new InMemoryCache({ fragments: fragmentRegistry }),
     link: ApolloLink.empty(),
   })
+}
+
+/**
+ * A client whose link answers with the first `$count` comments, so queries
+ * (and refetches) with different variables write different cache entries
+ */
+function makeNetworkClient() {
+  return new ApolloClient({
+    cache: new InMemoryCache({ fragments: fragmentRegistry }),
+    link: new ApolloLink((operation) => {
+      const count = Number(operation.variables.count)
+
+      return of({
+        data: {
+          post: {
+            ...POST_DATA.post,
+            comments: POST_DATA.post.comments.slice(0, count),
+          },
+        },
+      })
+    }),
+  })
+}
+
+interface RefetchSuccessProps {
+  post: { id: number }
+  queryResult: { refetch: (variables: Record<string, unknown>) => unknown }
+}
+
+function RefetchSuccess({ post, queryResult }: RefetchSuccessProps) {
+  return (
+    <>
+      <CommentsCell post={{ __typename: 'Post', id: post.id }} />
+      <button onClick={() => queryResult.refetch({ count: 1 })}>
+        Show one
+      </button>
+    </>
+  )
 }
 
 function cacheOnly(props: Record<string, unknown>) {
@@ -254,26 +292,67 @@ describe('fragment Cells reading fields that use operation variables', () => {
 
     await screen.findByText(/^Comments: First, Second$/)
   })
-})
 
-describe('withOperationVariableDefaults', () => {
-  const QUERY = parse(`
-    query Q($a: Int = 1, $b: String = "x", $c: [Int] = [1, 2], $d: Int) {
-      field
-    }
-  `)
+  test('use the variables passed to `refetch`', async () => {
+    const QUERY = parse(`
+      query FindPostRefetch($id: Int!, $count: Int!) {
+        post(id: $id) {
+          ...CommentsCellFragment
+        }
+      }
+    `)
 
-  test('applies defaults for missing and undefined variables', ({ expect }) => {
-    expect(withOperationVariableDefaults(QUERY, { b: undefined })).toEqual({
-      a: 1,
-      b: 'x',
-      c: [1, 2],
+    const FindPostCell = createCell({
+      QUERY,
+      Success: RefetchSuccess,
     })
+
+    render(
+      <ApolloProvider client={makeNetworkClient()}>
+        <FindPostCell id={1} count={2} />
+      </ApolloProvider>,
+    )
+
+    await screen.findByText(/^Comments: First, Second$/)
+
+    fireEvent.click(screen.getByText('Show one'))
+
+    await screen.findByText(/^Comments: First$/)
   })
 
-  test('keeps passed values, including null', ({ expect }) => {
-    expect(
-      withOperationVariableDefaults(QUERY, { a: 5, b: null, d: 3, e: 'extra' }),
-    ).toEqual({ a: 5, b: null, c: [1, 2], d: 3, e: 'extra' })
+  test('use the variables passed to a streaming Cell’s `refetch`', async () => {
+    globalThis.RWJS_ENV = { RWJS_EXP_STREAMING_SSR: true }
+
+    const QUERY = parse(`
+      query FindPostStreamingRefetch($id: Int!, $count: Int!) {
+        post(id: $id) {
+          ...CommentsCellFragment
+        }
+      }
+    `)
+
+    const FindPostCell = createSuspendingCell({
+      QUERY,
+      Loading: () => <>Loading...</>,
+      Success: RefetchSuccess,
+    })
+
+    // The streaming Cell suspends while its query loads, and React only
+    // commits the resolved tree when the render runs inside an awaited `act`
+    await act(async () => {
+      render(
+        <ApolloProvider client={makeNetworkClient()}>
+          <FindPostCell id={1} count={2} />
+        </ApolloProvider>,
+      )
+    })
+
+    await screen.findByText(/^Comments: First, Second$/)
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Show one'))
+    })
+
+    await screen.findByText(/^Comments: First$/)
   })
 })
