@@ -3432,7 +3432,7 @@ __metadata:
     "@types/better-sqlite3": "catalog:"
     better-sqlite3: "catalog:"
     concurrently: "catalog:"
-    cron-parser: "npm:5.10.4"
+    cron-parser: "npm:5.10.5"
     prisma: "catalog:prisma"
     publint: "catalog:"
     typescript: "catalog:"
@@ -15509,12 +15509,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cron-parser@npm:5.10.4":
-  version: 5.10.4
-  resolution: "cron-parser@npm:5.10.4"
+"cron-parser@npm:5.10.5":
+  version: 5.10.5
+  resolution: "cron-parser@npm:5.10.5"
   dependencies:
     luxon: "npm:^3.7.2"
-  checksum: 10c0/4d672375cab88bcb886f914b545717a675d1fcdfcac5ca362b2cbbf34c60423271ae9893b280270a945ba8ed2f1a257f674de44e175bbad522218b98a8d48bc7
+  checksum: 10c0/081d16035b9ea3b7e6e0cd16a30a8ddc1bc2c9c9944dc503c03d113316026a6b2b29260debd4aa5819157e8e0e26e986631090c054d89c3eed737005b9fd1a27
   languageName: node
   linkType: hard
 
