@@ -4083,7 +4083,7 @@ __metadata:
     express: "npm:5.3.0"
     fast-glob: "catalog:"
     find-my-way: "npm:9.10.1"
-    http-proxy-middleware: "npm:3.0.10"
+    http-proxy-middleware: "npm:3.0.11"
     isbot: "npm:5.2.3"
     magic-string: "catalog:"
     memfs: "catalog:"
@@ -19295,9 +19295,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"http-proxy-middleware@npm:3.0.10":
-  version: 3.0.10
-  resolution: "http-proxy-middleware@npm:3.0.10"
+"http-proxy-middleware@npm:3.0.11":
+  version: 3.0.11
+  resolution: "http-proxy-middleware@npm:3.0.11"
   dependencies:
     "@types/http-proxy": "npm:^1.17.15"
     debug: "npm:^4.3.6"
@@ -19305,7 +19305,7 @@ __metadata:
     is-glob: "npm:^4.0.3"
     is-plain-object: "npm:^5.0.0"
     micromatch: "npm:^4.0.8"
-  checksum: 10c0/f8a9f242825dd79677231a6944cdfda052c1cef6c345a5eb4b350ea03463c29dc67f564f8dabd6f1aa4cf64f674f6424227d09adac7816b2ab9fdd5bd9c9c623
+  checksum: 10c0/cb576b5e37ce0fd7cfc43ca8122d0d8044d38dc92ee231bbf28b08614f19bb11c6864e93310b775ae52776cdfd4a1f249d3aea6287e571546c070d8cf0ccaa52
   languageName: node
   linkType: hard
 
