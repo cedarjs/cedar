@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import { vi, beforeEach, afterEach, describe, test, expect } from 'vitest'
@@ -77,5 +78,53 @@ describe('Generate client preset', () => {
     expect(errors).toHaveLength(0)
 
     expect(trustedDocumentsStoreFile).toContain('trustedDocumentsStore.ts')
+  })
+
+  test('types custom scalar fields as `any`', async () => {
+    mockedGetConfig.mockReturnValue({
+      graphql: { trustedDocuments: true, includeScalars: { File: true } },
+    })
+
+    // The probe document is added to a copy of the fixture, so other tests
+    // reading the fixture don't pick it up. The copy lives inside this
+    // package so that codegen can resolve its presets and plugins from the
+    // workspace's node_modules
+    const cacheDir = path.resolve(__dirname, '../../node_modules/.cache')
+    fs.mkdirSync(cacheDir, { recursive: true })
+    const projectCopy = fs.mkdtempSync(
+      path.join(cacheDir, 'cedar-client-preset-'),
+    )
+    fs.cpSync(FIXTURE_PATH, projectCopy, { recursive: true })
+    process.env.CEDAR_CWD = projectCopy
+
+    // `currentUser` is a `JSON` field. The fixture's own documents don't
+    // select any custom scalar fields
+    const probeFile = path.join(
+      projectCopy,
+      'web/src/components/ScalarProbe/ScalarProbe.js',
+    )
+    fs.mkdirSync(path.dirname(probeFile), { recursive: true })
+    fs.writeFileSync(
+      probeFile,
+      'export const QUERY = gql`\n  query ScalarProbe_CurrentUser {\n    currentUser\n  }\n`\n',
+    )
+
+    try {
+      await generateGraphQLSchema()
+      const { clientPresetFiles, errors } = await generateClientPreset()
+      expect(errors).toHaveLength(0)
+
+      const graphqlFile = clientPresetFiles.find(
+        (filename) => path.basename(filename) === 'graphql.ts',
+      )
+      expect(graphqlFile).toBeDefined()
+
+      const output = fs.readFileSync(graphqlFile ?? '', 'utf-8')
+      expect(output).toMatch(
+        /export type ScalarProbe_CurrentUserQuery = \{[^}]*\bcurrentUser: any\b/,
+      )
+    } finally {
+      fs.rmSync(projectCopy, { recursive: true, force: true })
+    }
   })
 })

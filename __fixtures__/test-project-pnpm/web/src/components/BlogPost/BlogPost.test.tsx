@@ -8,7 +8,7 @@ import BlogPost from './BlogPost'
 describe('BlogPost', () => {
   it('renders successfully', () => {
     expect(() => {
-      render(<BlogPost />)
+      render(<BlogPost blogPost={null} />)
     }).not.toThrow()
   })
 })

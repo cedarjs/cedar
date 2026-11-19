@@ -8,11 +8,6 @@ import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from '
 import { CedarGraphQLContext } from '@cedarjs/graphql-server/types';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 export type ResolverFn<TResult, TParent, TContext, TArgs> = (
       args?: TArgs,
       obj?: { root: TParent; context: TContext; info: GraphQLResolveInfo }
@@ -356,14 +351,13 @@ export type DirectiveResolvers<ContextType = CedarGraphQLContext> = {
 `;
 
 exports[`Generate gql typedefs web 1`] = `
-"import { Prisma } from "$api/src/lib/db"
+"/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+/** Internal type. DO NOT USE DIRECTLY. */
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+import { Prisma } from "$api/src/lib/db"
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -462,30 +456,30 @@ export type Todo = {
 };
 
 export type AddTodo_CreateTodoVariables = Exact<{
-  body: Scalars['String']['input'];
+  body: string;
 }>;
 
 
-export type AddTodo_CreateTodo = { __typename?: 'Mutation', createTodo?: { __typename: 'Todo', id: number, body: string, status: string } | null };
+export type AddTodo_CreateTodo = { createTodo: { __typename: 'Todo', id: number, body: string, status: string } | null };
 
 export type NumTodosCell_GetCountVariables = Exact<{ [key: string]: never; }>;
 
 
-export type NumTodosCell_GetCount = { __typename?: 'Query', todosCount: number };
+export type NumTodosCell_GetCount = { todosCount: number };
 
 export type TodoListCell_GetTodosVariables = Exact<{ [key: string]: never; }>;
 
 
-export type TodoListCell_GetTodos = { __typename?: 'Query', todos?: Array<{ __typename?: 'Todo', id: number, body: string, status: string } | null> | null };
+export type TodoListCell_GetTodos = { todos: Array<{ id: number, body: string, status: string } | null> | null };
 
 export type TodoListCell_CheckTodoVariables = Exact<{
-  id: Scalars['Int']['input'];
-  status: Scalars['String']['input'];
+  id: number;
+  status: string;
 }>;
 
 
-export type TodoListCell_CheckTodo = { __typename?: 'Mutation', updateTodoStatus?: { __typename: 'Todo', id: number, status: string } | null };
+export type TodoListCell_CheckTodo = { updateTodoStatus: { __typename: 'Todo', id: number, status: string } | null };
 
-export type TodoStatusCell_todo = { __typename?: 'Todo', id: number, status: string };
+export type TodoStatusCell_todo = { id: number, status: string };
 "
 `;

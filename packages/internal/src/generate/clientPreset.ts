@@ -48,6 +48,10 @@ export const generateClientPreset = async () => {
         documentTransforms: [addTypenameSelectionDocumentTransform],
         config: {
           // DO NOT USE documentMode: 'string',
+          // The client preset has no scalar mappings, so custom scalars,
+          // including Cedar's built-in ones like DateTime, are typed as
+          // `any`, not codegen's default of `unknown`
+          defaultScalarType: 'any',
         },
       },
     },
@@ -56,18 +60,19 @@ export const generateClientPreset = async () => {
   try {
     // The codegen returns filenames relative to `cwd`, but everything
     // downstream (and our callers) expects absolute paths
-    const generatedFiles = (await generate(config, true)).map(
-      (f: GeneratedFile) => ({
-        ...f,
-        filename: path.resolve(getPaths().base, f.filename),
-      }),
-    )
+    // `generate()` only resolves without files in watch mode, which isn't
+    // used here
+    const codegenFiles = (await generate(config, true)) ?? []
+    const generatedFiles = codegenFiles.map((f: GeneratedFile) => ({
+      ...f,
+      filename: path.resolve(getPaths().base, f.filename),
+    }))
 
     clientPresetFiles = generatedFiles.map((f: GeneratedFile) => f.filename)
 
     const trustedDocumentsStoreFile =
       await trustedDocumentsStore(generatedFiles)
-    replaceGqlTagWithTrustedDocumentGraphql(generatedFiles)
+    await replaceGqlTagWithTrustedDocumentGraphql(generatedFiles)
 
     return {
       clientPresetFiles,

@@ -63,10 +63,16 @@ export const plugin: PluginFunction<
   // result
 
   const splitContent = content.split('\n')
+  const firstDefinition = visitorResult.definitions.find(
+    (d): d is string => typeof d === 'string',
+  )
+
+  if (firstDefinition === undefined) {
+    throw new Error('The resolvers visitor produced no type definitions')
+  }
+
   const visitorResultStart = splitContent.indexOf(
-    visitorResult.definitions
-      .filter((d: unknown) => typeof d === 'string')[0]
-      .split('\n')[0],
+    firstDefinition.split('\n')[0],
   )
 
   const splitRootResolver = visitor.getRootResolver().content.split('\n')

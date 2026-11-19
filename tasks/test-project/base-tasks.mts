@@ -648,6 +648,11 @@ export async function createComponents(
     fullPath('web/src/components/BlogPost/BlogPost'),
   )
 
+  await applyCodemod(
+    'updateBlogPostTest.js',
+    fullPath('web/src/components/BlogPost/BlogPost.test'),
+  )
+
   await createComponent('author')
 
   await applyCodemod('author.js', fullPath('web/src/components/Author/Author'))
