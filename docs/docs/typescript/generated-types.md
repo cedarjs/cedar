@@ -180,6 +180,8 @@ config:
     DateTime: Date
 ```
 
+With [trusted documents](../graphql/trusted-documents.md), the operation types in `web/src/graphql/` use the same scalar mappings, including the ones from your `codegen.yml`. The other options in your `codegen.yml` don't apply to them.
+
 You can configure graphql-codegen in a number of different ways: `codegen.yml`, `codegen.json`, or `codegen.js`. Even a `codegen` key in your root `package.json` will do. graphql-codegen uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig#cosmiconfig) under the hood—take a look at their docs if you want to know more.
 
 For completeness, [here's the docs](https://www.graphql-code-generator.com/docs/config-reference/config-field) on configuring GraphQL Code Generator. Currently, Cedar only supports the root level `config` option.

@@ -269,6 +269,14 @@ SHA-256 hashes, the format the GraphQL-over-HTTP persisted documents spec
 defines. Browser tabs still running a bundle built before the upgrade send
 IDs the server doesn't recognize until they're reloaded.
 
+The operation types in `web/src/graphql/`, which hooks like `useQuery` take
+their result types from when you use trusted documents, use the same scalar
+mappings as `web/types/graphql.d.ts`, including the `scalars` from your
+`codegen.yml`. Fields of Cedar's built-in scalars there are typed as, for
+example, `string` for `DateTime` and `Prisma.JsonValue` for `JSON`, instead of
+`any`, and unmapped custom scalars are typed `unknown`. Type checking can find
+new errors where your code uses these values.
+
 ## `<Set>` wrappers only get `children`
 
 `<Set>`, `<PrivateSet>` and `<Private>` render the components in `wrap` with

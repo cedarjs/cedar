@@ -80,51 +80,87 @@ describe('Generate client preset', () => {
     expect(trustedDocumentsStoreFile).toContain('trustedDocumentsStore.ts')
   })
 
-  test('types custom scalar fields as `any`', async () => {
-    mockedGetConfig.mockReturnValue({
-      graphql: { trustedDocuments: true, includeScalars: { File: true } },
+  describe('scalar types', () => {
+    /**
+     * Generates the client preset for a copy of the fixture with a document
+     * that selects `currentUser`, a `JSON` field, and returns the generated
+     * `graphql.ts`. The fixture's own documents don't select any custom
+     * scalar fields
+     */
+    async function generateProbeTypes(codegenConfig?: string) {
+      mockedGetConfig.mockReturnValue({
+        graphql: { trustedDocuments: true, includeScalars: { File: true } },
+      })
+
+      // The probe document is added to a copy of the fixture, so other tests
+      // reading the fixture don't pick it up. The copy lives inside this
+      // package so that codegen can resolve its presets and plugins from the
+      // workspace's node_modules
+      const cacheDir = path.resolve(__dirname, '../../node_modules/.cache')
+      fs.mkdirSync(cacheDir, { recursive: true })
+      const projectCopy = fs.mkdtempSync(
+        path.join(cacheDir, 'cedar-client-preset-'),
+      )
+      fs.cpSync(FIXTURE_PATH, projectCopy, { recursive: true })
+      process.env.CEDAR_CWD = projectCopy
+
+      const probeFile = path.join(
+        projectCopy,
+        'web/src/components/ScalarProbe/ScalarProbe.js',
+      )
+      fs.mkdirSync(path.dirname(probeFile), { recursive: true })
+      fs.writeFileSync(
+        probeFile,
+        'export const QUERY = gql`\n  query ScalarProbe_CurrentUser {\n    currentUser\n  }\n`\n',
+      )
+
+      if (codegenConfig) {
+        fs.writeFileSync(path.join(projectCopy, 'codegen.yml'), codegenConfig)
+      }
+
+      try {
+        await generateGraphQLSchema()
+        const { clientPresetFiles, errors } = await generateClientPreset()
+        expect(errors).toHaveLength(0)
+
+        const graphqlFile = clientPresetFiles.find(
+          (filename) => path.basename(filename) === 'graphql.ts',
+        )
+        expect(graphqlFile).toBeDefined()
+
+        return fs.readFileSync(graphqlFile ?? '', 'utf-8')
+      } finally {
+        fs.rmSync(projectCopy, { recursive: true, force: true })
+      }
+    }
+
+    test("uses Cedar's built-in scalar mappings", async () => {
+      const output = await generateProbeTypes()
+
+      expect(output).toMatch(
+        /export type ScalarProbe_CurrentUserQuery = \{[^}]*\bcurrentUser: Prisma\.JsonValue\b/,
+      )
+      expect(output).toContain("import type { Prisma } from '$api/src/lib/db'")
     })
 
-    // The probe document is added to a copy of the fixture, so other tests
-    // reading the fixture don't pick it up. The copy lives inside this
-    // package so that codegen can resolve its presets and plugins from the
-    // workspace's node_modules
-    const cacheDir = path.resolve(__dirname, '../../node_modules/.cache')
-    fs.mkdirSync(cacheDir, { recursive: true })
-    const projectCopy = fs.mkdtempSync(
-      path.join(cacheDir, 'cedar-client-preset-'),
-    )
-    fs.cpSync(FIXTURE_PATH, projectCopy, { recursive: true })
-    process.env.CEDAR_CWD = projectCopy
-
-    // `currentUser` is a `JSON` field. The fixture's own documents don't
-    // select any custom scalar fields
-    const probeFile = path.join(
-      projectCopy,
-      'web/src/components/ScalarProbe/ScalarProbe.js',
-    )
-    fs.mkdirSync(path.dirname(probeFile), { recursive: true })
-    fs.writeFileSync(
-      probeFile,
-      'export const QUERY = gql`\n  query ScalarProbe_CurrentUser {\n    currentUser\n  }\n`\n',
-    )
-
-    try {
-      await generateGraphQLSchema()
-      const { clientPresetFiles, errors } = await generateClientPreset()
-      expect(errors).toHaveLength(0)
-
-      const graphqlFile = clientPresetFiles.find(
-        (filename) => path.basename(filename) === 'graphql.ts',
+    test('merges in the scalars from the codegen config', async () => {
+      const output = await generateProbeTypes(
+        'config:\n  scalars:\n    JSON: Record<string, string>\n',
       )
-      expect(graphqlFile).toBeDefined()
 
-      const output = fs.readFileSync(graphqlFile ?? '', 'utf-8')
       expect(output).toMatch(
-        /export type ScalarProbe_CurrentUserQuery = \{[^}]*\bcurrentUser: any\b/,
+        /export type ScalarProbe_CurrentUserQuery = \{[^}]*\bcurrentUser: Record<string, string>/,
       )
-    } finally {
-      fs.rmSync(projectCopy, { recursive: true, force: true })
-    }
+    })
+
+    test("keeps Cedar's mappings for scalars the codegen config doesn't list", async () => {
+      const output = await generateProbeTypes(
+        'config:\n  scalars:\n    DateTime: Date\n',
+      )
+
+      expect(output).toMatch(
+        /export type ScalarProbe_CurrentUserQuery = \{[^}]*\bcurrentUser: Prisma\.JsonValue\b/,
+      )
+    })
   })
 })

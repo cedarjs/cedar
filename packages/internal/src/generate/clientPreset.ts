@@ -6,6 +6,7 @@ import { addTypenameSelectionDocumentTransform } from '@graphql-codegen/client-p
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
+import { getWebScalars, WEB_PRISMA_IMPORT_SOURCE } from './graphqlCodeGen.js'
 import {
   trustedDocumentsStore,
   replaceGqlTagWithTrustedDocumentGraphql,
@@ -34,30 +35,39 @@ export const generateClientPreset = async () => {
   // and throws
   const documentsGlob = './web/src/**/!(*.d).{ts,tsx,js,jsx}'
 
-  const config: CodegenConfig = {
-    cwd: getPaths().base,
-    schema: getPaths().generated.schema,
-    documents: documentsGlob,
-    silent: true, // Plays nicely with cli task output
-    generates: {
-      ['./web/src/graphql/']: {
-        preset: 'client',
-        presetConfig: {
-          persistedDocuments: true,
-        },
-        documentTransforms: [addTypenameSelectionDocumentTransform],
-        config: {
-          // DO NOT USE documentMode: 'string',
-          // The client preset has no scalar mappings, so custom scalars,
-          // including Cedar's built-in ones like DateTime, are typed as
-          // `any`, not codegen's default of `unknown`
-          defaultScalarType: 'any',
+  try {
+    const config: CodegenConfig = {
+      cwd: getPaths().base,
+      schema: getPaths().generated.schema,
+      documents: documentsGlob,
+      silent: true, // Plays nicely with cli task output
+      generates: {
+        ['./web/src/graphql/']: {
+          preset: 'client',
+          presetConfig: {
+            persistedDocuments: true,
+          },
+          documentTransforms: [addTypenameSelectionDocumentTransform],
+          // The preset adds these plugins to `graphql.ts`, the file with the
+          // operation types
+          plugins: [
+            {
+              add: {
+                content: `import type { Prisma } from '${WEB_PRISMA_IMPORT_SOURCE}'`,
+                placement: 'prepend',
+              },
+            },
+          ],
+          config: {
+            // DO NOT USE documentMode: 'string',
+            // The same scalar mappings as in web/types/graphql.d.ts, so that
+            // an operation's types are the same in both files
+            scalars: await getWebScalars(),
+          },
         },
       },
-    },
-  }
+    }
 
-  try {
     // The codegen returns filenames relative to `cwd`, but everything
     // downstream (and our callers) expects absolute paths
     // `generate()` only resolves without files in watch mode, which isn't
