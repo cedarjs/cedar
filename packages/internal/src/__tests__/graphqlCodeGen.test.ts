@@ -20,6 +20,7 @@ const mockConfig = vi.hoisted((): { parsedScalars: { DateTime?: 'Date' } } => ({
   parsedScalars: {},
 }))
 
+import { dedent } from 'ts-dedent'
 import ts from 'typescript'
 import {
   beforeAll,
@@ -204,16 +205,17 @@ function getTypeErrors(program: ts.Program, files: string[]) {
  * The generated types import the Prisma namespace, and on the api side the
  * model types, from it
  */
-const DB_STUB = `export declare namespace Prisma {
-  type JsonValue = string | number | boolean | null | JsonObject | JsonValue[]
-  type JsonObject = { [key: string]: JsonValue }
-  type InputJsonValue = string | number | boolean | InputJsonObject | InputJsonValue[]
-  type InputJsonObject = { readonly [key: string]: InputJsonValue | null }
-}
-export type PrismaModelOne = { id: string }
-export type PrismaModelTwo = { id: string }
-export type Post = { id: string }
-export type Todo = { id: number; body: string; status: string }
+const DB_STUB = dedent`
+  export declare namespace Prisma {
+    type JsonValue = string | number | boolean | null | JsonObject | JsonValue[]
+    type JsonObject = { [key: string]: JsonValue }
+    type InputJsonValue = string | number | boolean | InputJsonObject | InputJsonValue[]
+    type InputJsonObject = { readonly [key: string]: InputJsonValue | null }
+  }
+  export type PrismaModelOne = { id: string }
+  export type PrismaModelTwo = { id: string }
+  export type Post = { id: string }
+  export type Todo = { id: number; body: string; status: string }
 `
 
 test('generated api types type-check without skipLibCheck', async () => {
@@ -234,21 +236,22 @@ test('generated api types type-check without skipLibCheck', async () => {
   // `@ts-expect-error` below would be unused
   fs.writeFileSync(
     checkFile,
-    `import type { QueryResolvers } from './graphql'
+    dedent`
+      import type { QueryResolvers } from './graphql'
 
-type Ctx = NonNullable<
-  Parameters<NonNullable<QueryResolvers['todos']>>[1]
->['context']
+      type Ctx = NonNullable<
+        Parameters<NonNullable<QueryResolvers['todos']>>[1]
+      >['context']
 
-// @ts-expect-error A number isn't a valid context
-export const notAContext: Ctx = 5
-`,
+      // @ts-expect-error A number isn't a valid context
+      export const notAContext: Ctx = 5
+    `,
   )
 
   try {
-    // These match the api tsconfig.json of a new Cedar app, except for
-    // `skipLibCheck`. The generated types are a .d.ts file, so
-    // `skipLibCheck: true` would hide every error in them
+    // The module and strictness options of a new Cedar app's api
+    // tsconfig.json. `skipLibCheck` is off, because the generated types are a
+    // .d.ts file and `skipLibCheck: true` would hide every error in them
     const program = ts.createProgram([graphqlTypesPath, checkFile], {
       target: ts.ScriptTarget.ES2023,
       module: ts.ModuleKind.ESNext,
@@ -277,28 +280,29 @@ test('generated web types type-check without skipLibCheck', async () => {
 
   fs.writeFileSync(
     path.join(projectCopy, 'api/src/graphql/posts.sdl.ts'),
-    `export const schema = gql\`
-  enum PostStatus {
-    DRAFT
-    PUBLISHED
-  }
+    dedent`
+      export const schema = gql\`
+        enum PostStatus {
+          DRAFT
+          PUBLISHED
+        }
 
-  input CreatePostInput {
-    title: String!
-    status: PostStatus!
-  }
+        input CreatePostInput {
+          title: String!
+          status: PostStatus!
+        }
 
-  type Post {
-    id: Int!
-    title: String!
-    status: PostStatus!
-  }
+        type Post {
+          id: Int!
+          title: String!
+          status: PostStatus!
+        }
 
-  type Mutation {
-    createPost(input: CreatePostInput!): Post! @requireAuth
-  }
-\`
-`,
+        type Mutation {
+          createPost(input: CreatePostInput!): Post! @requireAuth
+        }
+      \`
+    `,
   )
 
   const probeFile = path.join(
@@ -308,15 +312,16 @@ test('generated web types type-check without skipLibCheck', async () => {
   fs.mkdirSync(path.dirname(probeFile), { recursive: true })
   fs.writeFileSync(
     probeFile,
-    `export const MUTATION = gql\`
-  mutation PostProbe_CreatePost($input: CreatePostInput!) {
-    createPost(input: $input) {
-      id
-      status
-    }
-  }
-\`
-`,
+    dedent`
+      export const MUTATION = gql\`
+        mutation PostProbe_CreatePost($input: CreatePostInput!) {
+          createPost(input: $input) {
+            id
+            status
+          }
+        }
+      \`
+    `,
   )
 
   const dbStub = path.join(projectCopy, 'db.d.ts')
@@ -330,9 +335,9 @@ test('generated web types type-check without skipLibCheck', async () => {
     } = await generateTypeDefGraphQLWeb()
     expect(errors).toEqual([])
 
-    // These match the web tsconfig.json of a new Cedar app, except for
-    // `skipLibCheck`. The generated types are a .d.ts file, so
-    // `skipLibCheck: true` would hide every error in them
+    // The module and strictness options of a new Cedar app's web
+    // tsconfig.json. `skipLibCheck` is off, because the generated types are a
+    // .d.ts file and `skipLibCheck: true` would hide every error in them
     const program = ts.createProgram([graphqlTypesPath], {
       target: ts.ScriptTarget.ES2023,
       module: ts.ModuleKind.ESNext,
