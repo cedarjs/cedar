@@ -153,6 +153,18 @@ describe('Generate client preset', () => {
       )
     })
 
+    test('imports a relative scalar mapping from the same file as web/types/graphql.d.ts does', async () => {
+      const output = await generateProbeTypes(
+        'config:\n  scalars:\n    JSON: ../../types/scalars#JsonValue\n',
+      )
+
+      // web/types/graphql.d.ts imports `../../types/scalars`, the project's
+      // types/scalars. From web/src/graphql/ the same file is three levels up
+      expect(output).toMatch(
+        /import (type )?\{ JsonValue \} from '\.\.\/\.\.\/\.\.\/types\/scalars'/,
+      )
+    })
+
     test("keeps Cedar's mappings for scalars the codegen config doesn't list", async () => {
       const output = await generateProbeTypes(
         'config:\n  scalars:\n    DateTime: Date\n',
