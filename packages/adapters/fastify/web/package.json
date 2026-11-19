@@ -23,7 +23,7 @@
   "dependencies": {
     "@cedarjs/project-config": "workspace:*",
     "@fastify/compress": "catalog:",
-    "@fastify/http-proxy": "11.6.8",
+    "@fastify/http-proxy": "11.6.9",
     "@fastify/static": "10.1.11",
     "@fastify/url-data": "catalog:",
     "fast-glob": "catalog:"
