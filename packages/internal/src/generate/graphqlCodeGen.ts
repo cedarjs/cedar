@@ -154,7 +154,15 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
     },
     {
       name: 'typescript-operations',
-      options: {},
+      options: {
+        // The typescript plugin already writes the schema's input types and
+        // enums to this file. Pointing `importSchemaTypesFrom` at the file
+        // stops typescript-operations from writing them a second time, and
+        // the empty `namespacedImportName` makes the operation types refer to
+        // them by name, without an import
+        importSchemaTypesFrom: filename,
+        namespacedImportName: '',
+      },
       codegenPlugin: typescriptOperations,
     },
   ]
