@@ -68,7 +68,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@uppy/aws-s3": "6.3.1",
-    "@uppy/core": "6.3.1",
+    "@uppy/core": "6.3.2",
     "@uppy/dashboard": "6.0.3",
     "@uppy/drag-drop": "6.0.2",
     "@uppy/react": "6.1.1",
