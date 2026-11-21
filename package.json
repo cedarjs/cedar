@@ -80,7 +80,7 @@
     "@babel/parser": "catalog:",
     "@babel/traverse": "catalog:",
     "@babel/types": "catalog:",
-    "@npmcli/arborist": "9.9.3",
+    "@npmcli/arborist": "9.9.4",
     "@playwright/test": "catalog:",
     "@prisma/dev": "0.25.2",
     "@testing-library/dom": "catalog:",
