@@ -6,25 +6,7 @@ import { pathToFileURL } from 'node:url'
 import type { PermissionDefinitions } from '@cedarjs/permissions'
 import { getPaths } from '@cedarjs/project-config'
 
-function readPackageJson(file: string): Record<string, unknown> | undefined {
-  try {
-    const packageJson: unknown = JSON.parse(fs.readFileSync(file, 'utf-8'))
-
-    return packageJson && typeof packageJson === 'object'
-      ? { ...packageJson }
-      : undefined
-  } catch {
-    return undefined
-  }
-}
-
-function dependsOn(packageJson: Record<string, unknown>, name: string) {
-  return ['dependencies', 'devDependencies'].some((field) => {
-    const deps = packageJson[field]
-
-    return !!deps && typeof deps === 'object' && Object.hasOwn(deps, name)
-  })
-}
+import { dependsOn, readPackageJson } from '../packageJson.js'
 
 function isPermissionDefinitions(
   value: unknown,
