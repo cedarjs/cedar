@@ -2937,7 +2937,7 @@ __metadata:
     "@cedarjs/auth": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
     "@supabase/ssr": "catalog:"
-    "@supabase/supabase-js": "npm:2.119.0"
+    "@supabase/supabase-js": "npm:2.119.1"
     "@types/react": "catalog:"
     concurrently: "catalog:"
     publint: "catalog:"
@@ -2946,7 +2946,7 @@ __metadata:
     vite: "catalog:"
     vitest: "catalog:"
   peerDependencies:
-    "@supabase/supabase-js": 2.119.0
+    "@supabase/supabase-js": 2.119.1
   languageName: unknown
   linkType: soft
 
@@ -11462,21 +11462,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/auth-js@npm:2.119.0":
-  version: 2.119.0
-  resolution: "@supabase/auth-js@npm:2.119.0"
+"@supabase/auth-js@npm:2.119.1":
+  version: 2.119.1
+  resolution: "@supabase/auth-js@npm:2.119.1"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/338bf2c0c72d3b6bbe8eecedeafb5eee288097998b93170466997db5240f2078468f5094c130c626a7e389d73c271cd5a469ea8a6684bb73ff58879c14c27366
+  checksum: 10c0/9be9fc11527743931b9f1da617027dee92dfb44f25279236763568d34a3d935e4f07fca4d86021c59e14b71d71ae117c875fcd17db2d1cc4b17efd010d9b369e
   languageName: node
   linkType: hard
 
-"@supabase/functions-js@npm:2.119.0":
-  version: 2.119.0
-  resolution: "@supabase/functions-js@npm:2.119.0"
+"@supabase/functions-js@npm:2.119.1":
+  version: 2.119.1
+  resolution: "@supabase/functions-js@npm:2.119.1"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/e5fbcb380e9a70cb453fea10a675ffce25c04e270073142a24ddf8bf49c693cbbd2870631db6e2609b1fcae412cb1c37f49fe48b7bd996576290b10b13823e1b
+  checksum: 10c0/337ace661f6730863ec3b7ecbb991b6e907e7d7d07fc67f10f5066f3298b4246d316a82986d5752bfa171bb120190866e88b2553bb89f2e206985610930df9be
   languageName: node
   linkType: hard
 
@@ -11487,22 +11487,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/postgrest-js@npm:2.119.0":
-  version: 2.119.0
-  resolution: "@supabase/postgrest-js@npm:2.119.0"
+"@supabase/postgrest-js@npm:2.119.1":
+  version: 2.119.1
+  resolution: "@supabase/postgrest-js@npm:2.119.1"
   dependencies:
     tslib: "npm:2.8.1"
-  checksum: 10c0/71c1c42f7581a2f8f7f805cb5c0a1e9ba971a8e5699ef7cfe69ede99a9d35d31a7064b132748f7d1d6de0a258e427a3bbc220b71c045dfd66b28f6c5d606f879
+  checksum: 10c0/c6b5184f13a1f62fd6221b7b310397e3575b577d073412c4be3312e5e8d2333be45d94171e3058053613a0a9844be06b5a8ab310914914e7fcc80be6a1908410
   languageName: node
   linkType: hard
 
-"@supabase/realtime-js@npm:2.119.0":
-  version: 2.119.0
-  resolution: "@supabase/realtime-js@npm:2.119.0"
+"@supabase/realtime-js@npm:2.119.1":
+  version: 2.119.1
+  resolution: "@supabase/realtime-js@npm:2.119.1"
   dependencies:
     "@supabase/phoenix": "npm:0.4.5"
     tslib: "npm:2.8.1"
-  checksum: 10c0/efe096d534f3c50b9cf26c87e76da9ac0b4ce42daa011b0ef9de6e0b38912291931181ab094fa70888176cea480b6ad17bae4b58b89cd4dc9503e8eedb0d09f1
+  checksum: 10c0/30bf66c6475e41ba712c2844719ef7853a20892947706a8f9dada1e919c8d4ade83e177d8adbe808aa8f577487be39c82fd85dbe5379cef0b723791f2a52f941
   languageName: node
   linkType: hard
 
@@ -11517,31 +11517,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@supabase/storage-js@npm:2.119.0":
-  version: 2.119.0
-  resolution: "@supabase/storage-js@npm:2.119.0"
+"@supabase/storage-js@npm:2.119.1":
+  version: 2.119.1
+  resolution: "@supabase/storage-js@npm:2.119.1"
   dependencies:
     iceberg-js: "npm:^0.8.1"
     tslib: "npm:2.8.1"
-  checksum: 10c0/774cc09fb05a050c911bcd2470745761e3e2c2368a0d92efce328f6a167717237ffd8fac30336ddbb753f674893436dd244e6ad5407c07a07ec96f4fdd47974c
+  checksum: 10c0/c86a2e9dc81669f4f5f08c2fd1822ab485f16d50dbed455b91b6d7daefbbc5586064c419ecc195c203f9549e8d7f4a7e4248dde9a824c25daad00f34d637ef07
   languageName: node
   linkType: hard
 
-"@supabase/supabase-js@npm:2.119.0":
-  version: 2.119.0
-  resolution: "@supabase/supabase-js@npm:2.119.0"
+"@supabase/supabase-js@npm:2.119.1":
+  version: 2.119.1
+  resolution: "@supabase/supabase-js@npm:2.119.1"
   dependencies:
-    "@supabase/auth-js": "npm:2.119.0"
-    "@supabase/functions-js": "npm:2.119.0"
-    "@supabase/postgrest-js": "npm:2.119.0"
-    "@supabase/realtime-js": "npm:2.119.0"
-    "@supabase/storage-js": "npm:2.119.0"
+    "@supabase/auth-js": "npm:2.119.1"
+    "@supabase/functions-js": "npm:2.119.1"
+    "@supabase/postgrest-js": "npm:2.119.1"
+    "@supabase/realtime-js": "npm:2.119.1"
+    "@supabase/storage-js": "npm:2.119.1"
   peerDependencies:
     "@opentelemetry/api": ">=1.0.0"
   peerDependenciesMeta:
     "@opentelemetry/api":
       optional: true
-  checksum: 10c0/74bc64e4db65f51f78f77bf23bbd2e0f6a87486e49646f12e6efedaea75ac49c269e8a973e9cebba22f908400276f43772d7b6a1781d7629b5ed3859b40c79bc
+  checksum: 10c0/fcc6af73b0643dd6a0d417632f448e858d08447a0983ce4faf4ff66cbfdaa765a5078c9aaac5098549ba4e459561ab769d6f42e08cdf84bda742ffc85d1630e7
   languageName: node
   linkType: hard
 
