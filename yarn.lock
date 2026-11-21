@@ -4115,7 +4115,7 @@ __metadata:
     "@types/react": "catalog:"
     "@types/react-dom": "catalog:"
     "@uppy/aws-s3": "npm:6.3.1"
-    "@uppy/core": "npm:6.3.1"
+    "@uppy/core": "npm:6.3.2"
     "@uppy/dashboard": "npm:6.0.3"
     "@uppy/drag-drop": "npm:6.0.2"
     "@uppy/react": "npm:6.1.1"
@@ -13177,9 +13177,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@uppy/core@npm:6.3.1":
-  version: 6.3.1
-  resolution: "@uppy/core@npm:6.3.1"
+"@uppy/core@npm:6.3.2":
+  version: 6.3.2
+  resolution: "@uppy/core@npm:6.3.2"
   dependencies:
     "@transloadit/prettier-bytes": "npm:^2.0.0"
     classnames: "npm:^2.5.1"
@@ -13191,7 +13191,7 @@ __metadata:
     p-retry: "npm:^8.0.0"
     preact: "npm:^10.29.2"
     type-fest: "npm:^5.10.0"
-  checksum: 10c0/d374eec34370c0e1390fe9591d41fa3893cd08bf70136eac08dd556fb85e330ec5c996a5928e57fa4fb7d9827e558aab4191fba2a87af6804761c150e32f8b96
+  checksum: 10c0/cfd1aefc25f64f2c80fd2cf454ad2b300f181da84ac989cdeb4c4a4c5a526b1fba579bc00dfc1993f94c5b4fa1848c8a7b52c9d43468196c63dd998582359417
   languageName: node
   linkType: hard
 
