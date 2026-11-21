@@ -4321,7 +4321,7 @@ __metadata:
     concurrently: "catalog:"
     cookie: "catalog:"
     graphql: "catalog:"
-    graphql-sse: "npm:2.6.3"
+    graphql-sse: "npm:2.6.4"
     graphql-tag: "catalog:"
     nodemon: "catalog:"
     publint: "catalog:"
@@ -19195,12 +19195,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-sse@npm:2.6.3, graphql-sse@npm:^2.0.0":
-  version: 2.6.3
-  resolution: "graphql-sse@npm:2.6.3"
+"graphql-sse@npm:2.6.4, graphql-sse@npm:^2.0.0":
+  version: 2.6.4
+  resolution: "graphql-sse@npm:2.6.4"
   peerDependencies:
     graphql: ">=0.11 <=17"
-  checksum: 10c0/4ea795ee4c19e3c21045feb73e816241ff67bf80436bb571b7217c8673da4cb1bd7630418a95b6e2caf1be8d96e003dcb768b403011337db101e6a42682cb97d
+  checksum: 10c0/6c58c50701e9bc37c78a6104b071a9c7b8e73580e702dd60e0d5218d8dadb79e4f0a9683c18315c8178a2aacbb5a36113ecf9f542725e3c14c932ddaa5292e9d
   languageName: node
   linkType: hard
 
