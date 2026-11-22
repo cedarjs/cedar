@@ -1,5 +1,5 @@
+import { Logger as YogaLogger } from '@graphql-hive/logger'
 import { PinoLogWriter } from '@graphql-hive/logger/writers/pino'
-import { Logger as YogaLogger } from 'graphql-yoga'
 
 import type { Logger } from '@cedarjs/api/logger'
 
