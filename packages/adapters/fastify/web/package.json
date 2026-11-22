@@ -24,7 +24,7 @@
     "@cedarjs/project-config": "workspace:*",
     "@fastify/compress": "catalog:",
     "@fastify/http-proxy": "11.6.10",
-    "@fastify/static": "10.1.11",
+    "@fastify/static": "10.1.12",
     "@fastify/url-data": "catalog:",
     "fast-glob": "catalog:"
   },
