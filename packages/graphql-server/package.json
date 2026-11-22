@@ -44,7 +44,7 @@
     "@envelop/filter-operation-type": "10.0.1",
     "@envelop/on-resolve": "8.0.1",
     "@escape.tech/graphql-armor": "3.2.0",
-    "@graphql-hive/logger": "1.1.1",
+    "@graphql-hive/logger": "1.2.0",
     "@graphql-tools/merge": "catalog:",
     "@graphql-tools/schema": "catalog:",
     "@graphql-tools/utils": "catalog:",
