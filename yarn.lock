@@ -331,14 +331,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/client-s3@npm:3.1171.0":
-  version: 3.1171.0
-  resolution: "@aws-sdk/client-s3@npm:3.1171.0"
+"@aws-sdk/client-s3@npm:3.1172.0":
+  version: 3.1172.0
+  resolution: "@aws-sdk/client-s3@npm:3.1172.0"
   dependencies:
     "@aws-sdk/checksums": "npm:^3.1002.5"
     "@aws-sdk/core": "npm:^3.981.0"
     "@aws-sdk/credential-provider-node": "npm:^3.972.97"
-    "@aws-sdk/middleware-sdk-s3": "npm:^3.972.89"
+    "@aws-sdk/middleware-sdk-s3": "npm:^3.972.90"
     "@aws-sdk/signature-v4-multi-region": "npm:^3.996.52"
     "@aws-sdk/types": "npm:^3.975.1"
     "@smithy/core": "npm:^3.40.0"
@@ -346,13 +346,13 @@ __metadata:
     "@smithy/node-http-handler": "npm:^4.14.2"
     "@smithy/types": "npm:^4.20.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/1e4bf636e4744b1ba6cb71d83159f3c87b6093c8ee1ae2cc2083f88873e830fc4da84a819826ee037a01f5ce015c557a926a50e8d3fb347d624d0682ebff3582
+  checksum: 10c0/e5edb8748b3d4571564958204f1c1a6f245de54ce72c89d2648ecc02760bf550309dd12aaa2d867744caeaee3712ef0712acfb3d90fa4eed473797111554c5c0
   languageName: node
   linkType: hard
 
-"@aws-sdk/core@npm:^3.981.0":
-  version: 3.981.0
-  resolution: "@aws-sdk/core@npm:3.981.0"
+"@aws-sdk/core@npm:^3.981.0, @aws-sdk/core@npm:^3.981.1":
+  version: 3.981.1
+  resolution: "@aws-sdk/core@npm:3.981.1"
   dependencies:
     "@aws-sdk/types": "npm:^3.975.1"
     "@aws-sdk/xml-builder": "npm:^3.972.43"
@@ -362,7 +362,7 @@ __metadata:
     "@smithy/types": "npm:^4.20.0"
     bowser: "npm:^2.11.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/4108dfaac2488e6d87c3c0cd14ded569e3545bdcb2cf17597321ba666d9b29eb28372ebd953995318eca47e225cf1f47d98e8089a253af64e5f9cd9bb113b743
+  checksum: 10c0/b9f93e1551d754077deb3636a24255c4a78fbeffdf0a77da96f4a848fd64fcb7af519b4ff89c6413c39d1152a3b97b63c6c27d2651f62bf6abad5495c8f22346
   languageName: node
   linkType: hard
 
@@ -490,17 +490,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/middleware-sdk-s3@npm:^3.972.89":
-  version: 3.972.89
-  resolution: "@aws-sdk/middleware-sdk-s3@npm:3.972.89"
+"@aws-sdk/middleware-sdk-s3@npm:^3.972.90":
+  version: 3.972.91
+  resolution: "@aws-sdk/middleware-sdk-s3@npm:3.972.91"
   dependencies:
-    "@aws-sdk/core": "npm:^3.981.0"
+    "@aws-sdk/core": "npm:^3.981.1"
     "@aws-sdk/signature-v4-multi-region": "npm:^3.996.52"
     "@aws-sdk/types": "npm:^3.975.1"
     "@smithy/core": "npm:^3.40.0"
     "@smithy/types": "npm:^4.20.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/1a232b35ad18f167b956db24d7442354049390d0d88e3948054c00f47aee5675dd62b3b2110e7fc5c0bb34c740206e0838788e02a20aded993f91120dde0a9a8
+  checksum: 10c0/34b63a08f0362283832a3d39437a6de78f7f77130301fc737158dc396ad0cf17c6f3dcfb7ea091b4147c4b2cf38a1a98ac234c7aa34901d7f926f75680a8654e
   languageName: node
   linkType: hard
 
@@ -520,9 +520,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/s3-request-presigner@npm:3.1171.0":
-  version: 3.1171.0
-  resolution: "@aws-sdk/s3-request-presigner@npm:3.1171.0"
+"@aws-sdk/s3-request-presigner@npm:3.1172.0":
+  version: 3.1172.0
+  resolution: "@aws-sdk/s3-request-presigner@npm:3.1172.0"
   dependencies:
     "@aws-sdk/core": "npm:^3.981.0"
     "@aws-sdk/signature-v4-multi-region": "npm:^3.996.52"
@@ -530,7 +530,7 @@ __metadata:
     "@smithy/core": "npm:^3.40.0"
     "@smithy/types": "npm:^4.20.0"
     tslib: "npm:^2.6.2"
-  checksum: 10c0/edf0045f5d2642a8e8d8b57656e2a41a12bd5b011fdcfa90f04d33d4f84304447070094bbf73a5117c935e89dc1b2e8a7ce48770cc174cc514391ed2460b596c
+  checksum: 10c0/1a5cd14432602e07e0fb9ab7e919cc20ab62ccc809560d5c51ca8ef74ef9db069f8e4e7a9f3c5e2b8eba573b94eb96065a1d2f8bc6add26e7903d6c68de75eb5
   languageName: node
   linkType: hard
 
@@ -4096,8 +4096,8 @@ __metadata:
   dependencies:
     "@apollo/client": "catalog:"
     "@arethetypeswrong/cli": "catalog:"
-    "@aws-sdk/client-s3": "npm:3.1171.0"
-    "@aws-sdk/s3-request-presigner": "npm:3.1171.0"
+    "@aws-sdk/client-s3": "npm:3.1172.0"
+    "@aws-sdk/s3-request-presigner": "npm:3.1172.0"
     "@cedarjs/api": "workspace:*"
     "@cedarjs/context": "workspace:*"
     "@cedarjs/framework-tools": "workspace:*"
