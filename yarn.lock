@@ -2730,7 +2730,7 @@ __metadata:
     concurrently: "catalog:"
     msw: "catalog:"
     oauth2-mock-server: "npm:9.3.0"
-    oauth4webapi: "npm:3.8.8"
+    oauth4webapi: "npm:3.8.9"
     publint: "catalog:"
     typescript: "catalog:"
     vite: "catalog:"
@@ -23550,10 +23550,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oauth4webapi@npm:3.8.8, oauth4webapi@npm:^3.8.2":
-  version: 3.8.8
-  resolution: "oauth4webapi@npm:3.8.8"
-  checksum: 10c0/1f7d35ba8d7d5aa9ce9ec5959a4611ed2b5dd7830172b1546749b91dda8c53f7934e669c6f81e912c64e3ae4fc681d4d6ce149b42cc9d17db97162bf8765e028
+"oauth4webapi@npm:3.8.9, oauth4webapi@npm:^3.8.2":
+  version: 3.8.9
+  resolution: "oauth4webapi@npm:3.8.9"
+  checksum: 10c0/04567cc375142acfc25fafbbf78b4cb1e5145185cb603d5694c5085f9fabb18474438fedd93531b04d5561ab1153a7a582b3f2767329724a09c5f10fc9c846a1
   languageName: node
   linkType: hard
 
