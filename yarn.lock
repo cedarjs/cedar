@@ -3342,7 +3342,7 @@ __metadata:
     eslint: "catalog:"
     eslint-config-prettier: "npm:10.1.8"
     eslint-plugin-import-x: "npm:4.18.1"
-    eslint-plugin-jest-dom: "npm:5.10.2"
+    eslint-plugin-jest-dom: "npm:5.10.3"
     eslint-plugin-jsx-a11y: "npm:6.10.2"
     eslint-plugin-prettier: "npm:5.5.7"
     eslint-plugin-react: "catalog:"
@@ -17484,9 +17484,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-jest-dom@npm:5.10.2":
-  version: 5.10.2
-  resolution: "eslint-plugin-jest-dom@npm:5.10.2"
+"eslint-plugin-jest-dom@npm:5.10.3":
+  version: 5.10.3
+  resolution: "eslint-plugin-jest-dom@npm:5.10.3"
   dependencies:
     requireindex: "npm:^1.2.0"
   peerDependencies:
@@ -17495,7 +17495,7 @@ __metadata:
   peerDependenciesMeta:
     "@testing-library/dom":
       optional: true
-  checksum: 10c0/e590efd48f1a178e6768f921ec9c5f09a152093ae7ac3e849fdd98197276b460d8cd1c99cf3b3f98f22aca0cd650730b3170091420595dd46fb4ebe8b502ed87
+  checksum: 10c0/d4d47e7b27e7935aa497f12923f9ed0d199e027eacd44cedcdd83486f6ec12dc34674746a327c7a5c9baa415d672f45022aa5dd7fe1d12731fc721c8ccb02053
   languageName: node
   linkType: hard
 
