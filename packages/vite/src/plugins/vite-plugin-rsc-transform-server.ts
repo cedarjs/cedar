@@ -2,7 +2,8 @@ import path from 'node:path'
 
 import * as babel from '@babel/core'
 import type { PluginObj, types } from '@babel/core'
-import * as swc from '@swc/core'
+import { langFromPath, parseSync } from '@swc-next/parser'
+import type { Program } from '@swc-next/parser'
 import type { Plugin } from 'vite'
 
 export function rscTransformUseServerPlugin(
@@ -30,38 +31,39 @@ export function rscTransformUseServerPlugin(
         return code
       }
 
-      let mod: swc.Module
-
-      const isTypescript = id.endsWith('.ts') || id.endsWith('.tsx')
+      let program: Program
 
       try {
-        mod = swc.parseSync(code, {
-          target: 'es2022',
-          syntax: isTypescript ? 'typescript' : 'ecmascript',
-          tsx: id.endsWith('.tsx'),
-          jsx: id.endsWith('.jsx'),
-        })
-      } catch (e: any) {
-        console.error('Error parsing', id, e.message)
+        program = parseSync(code, {
+          lang: langFromPath(id),
+          comments: 'none',
+        }).program
+      } catch (error) {
+        const message =
+          error && typeof error === 'object' && 'message' in error
+            ? error.message
+            : error
+        console.error('Error parsing', id, message)
         return code
       }
 
       let useClient = false
       let moduleScopedUseServer = false
 
-      for (const node of mod.body) {
+      for (const statement of program.body) {
         if (
-          node.type !== 'ExpressionStatement' ||
-          node.expression.type !== 'StringLiteral'
+          statement.type !== 'ExpressionStatement' ||
+          statement.expression.type !== 'Literal'
         ) {
           continue
         }
 
-        if (node.expression.value === 'use client') {
+        const directive = statement.expression.value
+        if (directive === 'use client') {
           useClient = true
         }
 
-        if (node.expression.value === 'use server') {
+        if (directive === 'use server') {
           moduleScopedUseServer = true
         }
       }
@@ -103,7 +105,7 @@ export function rscTransformUseServerPlugin(
       let transformedCode = code
 
       if (moduleScopedUseServer) {
-        transformedCode = transformServerModule(mod, builtFileName, code)
+        transformedCode = transformServerModule(program, builtFileName, code)
       } else {
         const result = babel.transformSync(code, {
           filename: id,
@@ -130,7 +132,7 @@ export function rscTransformUseServerPlugin(
 }
 
 function transformServerModule(
-  mod: swc.Module,
+  program: Program,
   url: string,
   code: string,
 ): string {
@@ -138,59 +140,56 @@ function transformServerModule(
   const localNames = new Map<string, string>()
   const localTypes = new Map<string, string>()
 
-  for (const node of mod.body) {
+  for (const node of program.body) {
     switch (node.type) {
       // TODO (RSC): Add code comments with examples of each type of node
 
-      case 'ExportDeclaration':
-        if (node.declaration.type === 'FunctionDeclaration') {
-          const name = node.declaration.identifier.value
+      case 'ExportNamedDeclaration': {
+        const { declaration, specifiers } = node
+        if (
+          (declaration?.type === 'FunctionDeclaration' ||
+            declaration?.type === 'TSDeclareFunction') &&
+          declaration.id
+        ) {
+          const name = declaration.id.name
           localNames.set(name, name)
           localTypes.set(name, 'function')
-        } else if (node.declaration.type === 'VariableDeclaration') {
-          for (const declaration of node.declaration.declarations) {
-            if (declaration.id.type === 'Identifier') {
-              const name = declaration.id.value
-              localNames.set(name, name)
+        } else if (declaration?.type === 'VariableDeclaration') {
+          for (const { id } of declaration.declarations) {
+            if (id.type === 'Identifier') {
+              localNames.set(id.name, id.name)
             }
           }
         }
 
-        break
-
-      case 'ExportDefaultDeclaration':
-        if (node.decl.type === 'FunctionExpression') {
-          const identifier = node.decl.identifier
-          if (identifier) {
-            localNames.set(identifier.value, 'default')
-            localTypes.set(identifier.value, 'function')
+        for (const { local, exported } of specifiers) {
+          if (exported.type === 'Identifier') {
+            const localName =
+              local.type === 'Identifier' ? local.name : local.value
+            localNames.set(localName, exported.name)
+          } else if (local.type === 'Identifier') {
+            localNames.set(local.name, local.name)
           }
         }
-
         break
+      }
 
-      case 'ExportNamedDeclaration':
-        for (const specifier of node.specifiers) {
-          if (specifier.type === 'ExportSpecifier') {
-            const name = specifier.orig.value
-
-            if (specifier.exported?.type === 'Identifier') {
-              const exportedName = specifier.exported.value
-              localNames.set(name, exportedName)
-            } else if (specifier.orig.type === 'Identifier') {
-              localNames.set(name, name)
-            }
-          }
+      case 'ExportDefaultDeclaration': {
+        const { declaration } = node
+        if (
+          (declaration.type === 'FunctionDeclaration' ||
+            declaration.type === 'TSDeclareFunction') &&
+          declaration.id
+        ) {
+          const name = declaration.id.name
+          localNames.set(name, 'default')
+          localTypes.set(name, 'function')
+        } else if (declaration.type === 'Identifier') {
+          localNames.set(declaration.name, 'default')
         }
 
         break
-
-      case 'ExportDefaultExpression':
-        if (node.expression.type === 'Identifier') {
-          localNames.set(node.expression.value, 'default')
-        }
-
-        break
+      }
     }
   }
 

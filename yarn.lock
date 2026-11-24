@@ -4221,7 +4221,8 @@ __metadata:
     "@hyrious/esbuild-plugin-commonjs": "npm:0.2.6"
     "@jridgewell/trace-mapping": "catalog:"
     "@oxc-project/types": "catalog:"
-    "@swc/core": "catalog:"
+    "@swc-next/parser": "catalog:"
+    "@swc-next/walker": "catalog:"
     "@types/aws-lambda": "catalog:"
     "@types/busboy": "npm:^1"
     "@types/express": "npm:5.0.6"
@@ -11669,6 +11670,175 @@ __metadata:
   peerDependencies:
     "@svgr/core": "*"
   checksum: 10c0/07b4d9e00de795540bf70556fa2cc258774d01e97a12a26234c6fdf42b309beb7c10f31ee24d1a71137239347b1547b8bb5587d3a6de10669f95dcfe99cddc56
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-darwin-arm64@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-darwin-arm64@npm:0.8.1"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-darwin-x64@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-darwin-x64@npm:0.8.1"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-linux-arm-gnueabihf@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-linux-arm-gnueabihf@npm:0.8.1"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-linux-arm64-gnu@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-linux-arm64-gnu@npm:0.8.1"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-linux-arm64-musl@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-linux-arm64-musl@npm:0.8.1"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-linux-ppc64-gnu@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-linux-ppc64-gnu@npm:0.8.1"
+  conditions: os=linux & cpu=ppc64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-linux-riscv64-gnu@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-linux-riscv64-gnu@npm:0.8.1"
+  conditions: os=linux & cpu=riscv64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-linux-riscv64-musl@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-linux-riscv64-musl@npm:0.8.1"
+  conditions: os=linux & cpu=riscv64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-linux-s390x-gnu@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-linux-s390x-gnu@npm:0.8.1"
+  conditions: os=linux & cpu=s390x & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-linux-x64-gnu@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-linux-x64-gnu@npm:0.8.1"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-linux-x64-musl@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-linux-x64-musl@npm:0.8.1"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-win32-arm64-msvc@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-win32-arm64-msvc@npm:0.8.1"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-win32-ia32-msvc@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-win32-ia32-msvc@npm:0.8.1"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser-binding-win32-x64-msvc@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser-binding-win32-x64-msvc@npm:0.8.1"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@swc-next/parser@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/parser@npm:0.8.1"
+  dependencies:
+    "@swc-next/parser-binding-darwin-arm64": "npm:0.8.1"
+    "@swc-next/parser-binding-darwin-x64": "npm:0.8.1"
+    "@swc-next/parser-binding-linux-arm-gnueabihf": "npm:0.8.1"
+    "@swc-next/parser-binding-linux-arm64-gnu": "npm:0.8.1"
+    "@swc-next/parser-binding-linux-arm64-musl": "npm:0.8.1"
+    "@swc-next/parser-binding-linux-ppc64-gnu": "npm:0.8.1"
+    "@swc-next/parser-binding-linux-riscv64-gnu": "npm:0.8.1"
+    "@swc-next/parser-binding-linux-riscv64-musl": "npm:0.8.1"
+    "@swc-next/parser-binding-linux-s390x-gnu": "npm:0.8.1"
+    "@swc-next/parser-binding-linux-x64-gnu": "npm:0.8.1"
+    "@swc-next/parser-binding-linux-x64-musl": "npm:0.8.1"
+    "@swc-next/parser-binding-win32-arm64-msvc": "npm:0.8.1"
+    "@swc-next/parser-binding-win32-ia32-msvc": "npm:0.8.1"
+    "@swc-next/parser-binding-win32-x64-msvc": "npm:0.8.1"
+    "@swc-next/types": "npm:0.8.1"
+  peerDependencies:
+    "@swc-next/parser-binding-wasm": 0.8.1
+  dependenciesMeta:
+    "@swc-next/parser-binding-darwin-arm64":
+      optional: true
+    "@swc-next/parser-binding-darwin-x64":
+      optional: true
+    "@swc-next/parser-binding-linux-arm-gnueabihf":
+      optional: true
+    "@swc-next/parser-binding-linux-arm64-gnu":
+      optional: true
+    "@swc-next/parser-binding-linux-arm64-musl":
+      optional: true
+    "@swc-next/parser-binding-linux-ppc64-gnu":
+      optional: true
+    "@swc-next/parser-binding-linux-riscv64-gnu":
+      optional: true
+    "@swc-next/parser-binding-linux-riscv64-musl":
+      optional: true
+    "@swc-next/parser-binding-linux-s390x-gnu":
+      optional: true
+    "@swc-next/parser-binding-linux-x64-gnu":
+      optional: true
+    "@swc-next/parser-binding-linux-x64-musl":
+      optional: true
+    "@swc-next/parser-binding-win32-arm64-msvc":
+      optional: true
+    "@swc-next/parser-binding-win32-ia32-msvc":
+      optional: true
+    "@swc-next/parser-binding-win32-x64-msvc":
+      optional: true
+  peerDependenciesMeta:
+    "@swc-next/parser-binding-wasm":
+      optional: true
+  checksum: 10c0/36ab3c9db81b3ff026c955cbd5f6eb94f097f1ab24b02dab11d230805fb60e3cbf37d49578aaa2aec0cc8314f2f5eafbf65f12cef081f44c1cc8414055610a07
+  languageName: node
+  linkType: hard
+
+"@swc-next/types@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/types@npm:0.8.1"
+  checksum: 10c0/cf4eca296df40bdcc85bac5c4ee8c43655a50c9a7026668ae5e813ea6f9d89f7bf20f6f25a4dd6c236d052cbe772ac9178071f5c4d8cc53626af9c8aab649109
+  languageName: node
+  linkType: hard
+
+"@swc-next/walker@npm:0.8.1":
+  version: 0.8.1
+  resolution: "@swc-next/walker@npm:0.8.1"
+  checksum: 10c0/8f1f290af3e59bc6b4604ab5a7bb7c31ee0f4fea87d31b183b6d9fcc96fa6dc2d7b725efc49b12a67cc16314d939ff7c3060aea79a3857510185d45e41a13864
   languageName: node
   linkType: hard
 

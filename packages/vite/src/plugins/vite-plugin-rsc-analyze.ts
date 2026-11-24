@@ -1,6 +1,8 @@
 import path from 'node:path'
 
-import * as swc from '@swc/core'
+import { langFromPath, parseSync } from '@swc-next/parser'
+import type { Node, Program } from '@swc-next/parser'
+import { walk } from '@swc-next/walker'
 import type { Plugin } from 'vite'
 
 export function rscAnalyzePlugin(
@@ -17,33 +19,35 @@ export function rscAnalyzePlugin(
         // a simple code.includes('use client') || code.includes('use server')
         // check first before parsing the code
 
-        const mod = swc.parseSync(code, {
-          syntax: ext === '.ts' || ext === '.tsx' ? 'typescript' : 'ecmascript',
-          tsx: ext === '.tsx',
+        const { program } = parseSync(code, {
+          lang: langFromPath(id),
+          comments: 'none',
         })
 
         let directiveFound = false
 
-        // The `item`s in mod.body are the top-level statements in the file
-        for (const item of mod.body) {
+        for (const statement of program.body) {
           if (
-            item.type === 'ExpressionStatement' &&
-            item.expression.type === 'StringLiteral'
+            statement.type !== 'ExpressionStatement' ||
+            statement.expression.type !== 'Literal'
           ) {
-            if (item.expression.value === 'use client') {
-              clientEntryCallback(id)
-              directiveFound = true
-            } else if (item.expression.value === 'use server') {
-              serverEntryCallback(id)
-              directiveFound = true
-            }
+            continue
+          }
+
+          const directive = statement.expression.value
+          if (directive === 'use client') {
+            clientEntryCallback(id)
+            directiveFound = true
+          } else if (directive === 'use server') {
+            serverEntryCallback(id)
+            directiveFound = true
           }
         }
 
         if (
           !directiveFound &&
           code.includes('use server') &&
-          containsServerAction(mod)
+          containsServerAction(program)
         ) {
           serverEntryCallback(id)
         }
@@ -54,73 +58,46 @@ export function rscAnalyzePlugin(
   }
 }
 
-function isServerAction(
-  node:
-    | swc.FunctionDeclaration
-    | swc.FunctionExpression
-    | swc.ArrowFunctionExpression,
-): boolean {
-  const body = node.body
+function containsServerAction(program: Program): boolean {
+  let found = false
 
-  // Checking for `stmts` instead of `body?.type === 'BlockStatement'` because
-  // newer versions of @swc/core (1.16+) parse function bodies as a
-  // `FunctionBody` node instead of `BlockStatement`, even though `@swc/types`
-  // still types `body` as `BlockStatement | Expression`. Both node shapes
-  // carry a `stmts` array, so this check is resilient to that rename.
-  return (
-    !!body &&
-    'stmts' in body &&
-    body.stmts.some(
-      (s) =>
-        s.type === 'ExpressionStatement' &&
-        s.expression.type === 'StringLiteral' &&
-        s.expression.value === 'use server',
-    )
-  )
-}
+  walk<Program, unknown, Node>(program, {
+    Function(node, context) {
+      const { parent, key } = context
+      if (key === 'value') {
+        // Scan constructor and object method bodies for nested server actions.
+        if (parent?.type === 'MethodDefinition') {
+          if (parent.kind !== 'constructor') {
+            context.skip()
+          }
+          return
+        }
 
-function isFunctionDeclaration(
-  node: swc.Node,
-): node is swc.FunctionDeclaration {
-  return node.type === 'FunctionDeclaration'
-}
-
-function isFunctionExpression(node: swc.Node): node is swc.FunctionExpression {
-  return node.type === 'FunctionExpression'
-}
-
-function isArrowFunctionExpression(
-  node: swc.Node,
-): node is swc.ArrowFunctionExpression {
-  return node.type === 'ArrowFunctionExpression'
-}
-
-function containsServerAction(mod: swc.Module) {
-  function walk(node: swc.Node): boolean {
-    if (
-      isFunctionDeclaration(node) ||
-      isFunctionExpression(node) ||
-      isArrowFunctionExpression(node)
-    ) {
-      if (isServerAction(node)) {
-        return true
+        if (parent?.type === 'Property') {
+          if (parent.kind === 'get' || parent.kind === 'set') {
+            context.skip()
+            return
+          }
+          if (parent.method) {
+            return
+          }
+        }
       }
-    }
 
-    return Object.values(node).some((value) =>
-      (Array.isArray(value) ? value : [value]).some((v) => {
-        if (typeof v?.type === 'string') {
-          return walk(v)
-        }
+      if (
+        node.body?.type === 'BlockStatement' &&
+        node.body.body.some(
+          (statement) =>
+            statement.type === 'ExpressionStatement' &&
+            statement.expression.type === 'Literal' &&
+            statement.expression.value === 'use server',
+        )
+      ) {
+        found = true
+        context.stop()
+      }
+    },
+  })
 
-        if (typeof v?.expression?.type === 'string') {
-          return walk(v.expression)
-        }
-
-        return false
-      }),
-    )
-  }
-
-  return walk(mod)
+  return found
 }
