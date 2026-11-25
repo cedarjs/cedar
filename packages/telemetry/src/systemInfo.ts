@@ -78,10 +78,11 @@ async function which(command: string): Promise<string | undefined> {
     ? ['']
     : [
         ...(isWindows ? [process.cwd()] : []),
+        // An empty entry stands for the current directory. It's kept, and
+        // `path.join()` turns it into a path relative to the current directory
         ...(process.env.PATH ?? '')
           .split(path.delimiter)
-          .map((dir) => dir.replace(/^"(.*)"$/, '$1'))
-          .filter(Boolean),
+          .map((dir) => dir.replace(/^"(.*)"$/, '$1')),
       ]
 
   const extensions = isWindows

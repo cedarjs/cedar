@@ -175,6 +175,14 @@ describe('getNodeInfo', () => {
     })
   })
 
+  it('finds node in the current directory for an empty PATH entry', async () => {
+    vi.stubEnv('PATH', ['', '/usr/local/bin'].join(path.delimiter))
+    setExecutables(['node', p('/usr/local/bin/node')])
+    mockCommands.output['node -v'] = 'v1.2.3\n'
+
+    expect(await getNodeInfo()).toEqual({ version: '1.2.3', path: 'node' })
+  })
+
   it('is undefined when node is not on PATH', async () => {
     expect(await getNodeInfo()).toBeUndefined()
   })
