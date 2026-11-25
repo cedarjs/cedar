@@ -5,22 +5,29 @@ import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
 import { handler } from '../info.ts'
 
-const mockSystemInfo = vi.hoisted(() => ({
-  envinfoOutput: '',
-  osName: undefined as string | undefined,
-  shell: undefined as { version: string; path?: string } | undefined,
-  node: undefined as { version: string; path?: string } | undefined,
-  yarn: undefined as { version: string; path?: string } | undefined,
-}))
+const mockSystemInfo = vi.hoisted(() => {
+  const state: {
+    envinfoOutput: string
+    osName: string
+    shellPath: string | undefined
+    packageManager: { name: string; version: string } | undefined
+  } = {
+    envinfoOutput: '',
+    osName: 'macOS 15.2',
+    shellPath: undefined,
+    packageManager: undefined,
+  }
+
+  return state
+})
 
 vi.mock('envinfo', () => ({
   default: { run: async () => mockSystemInfo.envinfoOutput },
 }))
 vi.mock('@cedarjs/telemetry/systemInfo', () => ({
-  getOsName: async () => mockSystemInfo.osName,
-  getShellInfo: async () => mockSystemInfo.shell,
-  getNodeInfo: async () => mockSystemInfo.node,
-  getYarnInfo: async () => mockSystemInfo.yarn,
+  getOsName: () => mockSystemInfo.osName,
+  getShellPath: () => mockSystemInfo.shellPath,
+  getPackageManager: () => mockSystemInfo.packageManager,
 }))
 vi.mock('@cedarjs/project-config', () => ({
   getPaths: () => ({}),
@@ -47,19 +54,23 @@ beforeEach(() => {
 afterEach(() => {
   vi.mocked(console).log.mockRestore()
   mockSystemInfo.envinfoOutput = ''
-  mockSystemInfo.osName = undefined
-  mockSystemInfo.shell = undefined
-  mockSystemInfo.node = undefined
-  mockSystemInfo.yarn = undefined
+  mockSystemInfo.osName = 'macOS 15.2'
+  mockSystemInfo.shellPath = undefined
+  mockSystemInfo.packageManager = undefined
 })
+
+/** The part of the output from `cedar.toml:` on */
+function loggedTomlSection() {
+  const output = String(vi.mocked(console).log.mock.calls[0]?.[0])
+
+  return output.slice(output.indexOf('  cedar.toml:'))
+}
 
 describe('yarn cedar info', () => {
   it('prints system info in the same format as envinfo', async () => {
     mockCedarToml.fileContents = 'title = "Hello World"'
-    mockSystemInfo.osName = 'macOS 15.2'
-    mockSystemInfo.shell = { version: '5.9', path: '/bin/zsh' }
-    mockSystemInfo.node = { version: '24.18.1', path: '/usr/local/bin/node' }
-    mockSystemInfo.yarn = { version: '4.14.1' }
+    mockSystemInfo.shellPath = '/bin/zsh'
+    mockSystemInfo.packageManager = { name: 'yarn', version: '4.14.1' }
     mockSystemInfo.envinfoOutput = '\n  Browsers:\n    Safari: 18.2\n'
 
     await handler()
@@ -69,12 +80,30 @@ describe('yarn cedar info', () => {
         '',
         '  System:',
         '    OS: macOS 15.2',
-        '    Shell: 5.9 - /bin/zsh',
+        '    Shell: /bin/zsh',
         '  Binaries:',
-        '    Node: 24.18.1 - /usr/local/bin/node',
+        `    Node: ${process.versions.node} - ${process.execPath}`,
         '    Yarn: 4.14.1',
         '  Browsers:',
         '    Safari: 18.2',
+        '  cedar.toml:',
+        '    title = "Hello World"',
+      ].join('\n'),
+    )
+  })
+
+  it('leaves out what is not known', async () => {
+    mockCedarToml.fileContents = 'title = "Hello World"'
+
+    await handler()
+
+    expect(vi.mocked(console).log).toHaveBeenCalledWith(
+      [
+        '',
+        '  System:',
+        '    OS: macOS 15.2',
+        '  Binaries:',
+        `    Node: ${process.versions.node} - ${process.execPath}`,
         '  cedar.toml:',
         '    title = "Hello World"',
       ].join('\n'),
@@ -87,13 +116,8 @@ describe('yarn cedar info', () => {
 
       await handler()
 
-      expect(vi.mocked(console).log).toHaveBeenCalledWith(
-        [
-          // There should be nothing before 'cedar.toml:' in the output
-          // because we mock envinfo and the system info lookups
-          '  cedar.toml:',
-          '    title = "Hello World"',
-        ].join('\n'),
+      expect(loggedTomlSection()).toEqual(
+        ['  cedar.toml:', '    title = "Hello World"'].join('\n'),
       )
     })
 
@@ -106,7 +130,7 @@ describe('yarn cedar info', () => {
 
       await handler()
 
-      expect(vi.mocked(console).log).toHaveBeenCalledWith(
+      expect(loggedTomlSection()).toEqual(
         [
           // The important part is that there is no blank line after [web]
           '  cedar.toml:',
@@ -129,7 +153,7 @@ describe('yarn cedar info', () => {
 
       await handler()
 
-      expect(vi.mocked(console).log).toHaveBeenCalledWith(
+      expect(loggedTomlSection()).toEqual(
         [
           '  cedar.toml:',
           '    [web]',
@@ -152,7 +176,7 @@ describe('yarn cedar info', () => {
 
       await handler()
 
-      expect(vi.mocked(console).log).toHaveBeenCalledWith(
+      expect(loggedTomlSection()).toEqual(
         [
           '  cedar.toml:',
           '    [web]',

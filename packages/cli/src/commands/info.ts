@@ -10,12 +10,10 @@ import type { Argv } from 'yargs'
 import { recordTelemetryAttributes } from '@cedarjs/cli-helpers/telemetry'
 import { getConfigPath } from '@cedarjs/project-config'
 import {
-  getNodeInfo,
   getOsName,
-  getShellInfo,
-  getYarnInfo,
+  getPackageManager,
+  getShellPath,
 } from '@cedarjs/telemetry/systemInfo'
-import type { ToolInfo } from '@cedarjs/telemetry/systemInfo'
 
 export const command = 'info'
 export const description = 'Print your system environment information'
@@ -30,30 +28,28 @@ export const builder = (yargs: Argv) => {
 export const handler = async () => {
   recordTelemetryAttributes({ command: 'info' })
 
+  const envinfoOutput = await envinfo.run({
+    Browsers: ['Chrome', 'Edge', 'Firefox', 'Safari'],
+    // yarn workspaces not supported :-/
+    npmPackages: '@cedarjs/*',
+    Databases: ['SQLite'],
+  })
+
   // System and Binaries come from the same lookups telemetry uses, so this
   // output shows the values telemetry reports
-  const [osName, shell, node, yarn, envinfoOutput] = await Promise.all([
-    getOsName(),
-    getShellInfo(),
-    getNodeInfo(),
-    getYarnInfo(),
-    envinfo.run({
-      Browsers: ['Chrome', 'Edge', 'Firefox', 'Safari'],
-      // yarn workspaces not supported :-/
-      npmPackages: '@cedarjs/*',
-      Databases: ['SQLite'],
-    }),
-  ])
-
+  const packageManager = getPackageManager()
   const sections =
-    formatSection('System', { OS: osName, Shell: shell }) +
-    formatSection('Binaries', { Node: node, Yarn: yarn })
+    formatSection('System', { OS: getOsName(), Shell: getShellPath() }) +
+    formatSection('Binaries', {
+      Node: `${process.versions.node} - ${process.execPath}`,
+      ...(packageManager && {
+        [packageManagerLabel(packageManager.name)]: packageManager.version,
+      }),
+    })
 
   // Like envinfo's, the output starts with an empty line. envinfo's own
   // sections continue the ones above
-  const output = sections
-    ? '\n' + sections + envinfoOutput.replace(/^\n/, '')
-    : envinfoOutput
+  const output = '\n' + sections + envinfoOutput.replace(/^\n/, '')
 
   const configTomlPath = getConfigPath()
   const tomlContent = fs.readFileSync(configTomlPath, 'utf8')
@@ -70,27 +66,24 @@ export const handler = async () => {
   )
 }
 
+/** How envinfo names package managers, like `Yarn` or `npm` */
+function packageManagerLabel(name: string) {
+  const labels: Record<string, string> = { yarn: 'Yarn', bun: 'Bun' }
+
+  return labels[name] ?? name
+}
+
 /**
  * Formats a section the same way envinfo does, leaving out anything that
  * wasn't found
  */
 function formatSection(
   title: string,
-  entries: Record<string, string | ToolInfo | undefined>,
+  entries: Record<string, string | undefined>,
 ) {
-  const lines = Object.entries(entries).flatMap(([name, value]) => {
-    if (!value) {
-      return []
-    }
-
-    if (typeof value === 'string') {
-      return [`    ${name}: ${value}`]
-    }
-
-    return [
-      `    ${name}: ${value.version}` + (value.path ? ` - ${value.path}` : ''),
-    ]
-  })
+  const lines = Object.entries(entries).flatMap(([name, value]) =>
+    value ? [`    ${name}: ${value}`] : [],
+  )
 
   if (lines.length === 0) {
     return ''
