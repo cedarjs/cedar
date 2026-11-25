@@ -1,138 +1,43 @@
-import { exec, execFile } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
-import path from 'node:path'
 
-/**
- * A tool found on the machine. `path` is where it was found on `PATH`, if it
- * was found there
- */
-export interface ToolInfo {
+/** The package manager running the current process, like Yarn or npm */
+export interface PackageManagerInfo {
+  /** As the package manager names itself, like `yarn`, `npm` or `pnpm` */
+  name: string
   version: string
-  path?: string
 }
 
-const VERSION_REGEX = /\d+\.[\d+|.]+/
-
-/** The first version-looking part of `output`, or all of it if there's none */
-function findVersion(output: string) {
-  return output.match(VERSION_REGEX)?.[0] ?? output
-}
-
-/** Runs `command` in a shell. Resolves to its trimmed stdout, or `''` on error */
-function run(command: string): Promise<string> {
-  return new Promise((resolve) => {
-    exec(command, (error, stdout) => {
-      resolve(error ? '' : stdout.toString().trim())
-    })
-  })
-}
-
-/**
- * Runs `file` without a shell. Resolves to its trimmed stdout (and stderr, if
- * `withStderr` is set), or `''` on error
- */
-function runFile(
-  file: string,
-  args: string[],
-  { withStderr = false } = {},
-): Promise<string> {
-  return new Promise((resolve) => {
-    execFile(file, args, (error, stdout, stderr) => {
-      if (error) {
-        resolve('')
-        return
-      }
-
-      const output = withStderr
-        ? stdout.toString() + stderr.toString()
-        : stdout.toString()
-
-      resolve(output.trim())
-    })
-  })
-}
-
-async function isExecutableFile(filePath: string) {
+function readFile(filePath: string) {
   try {
-    const mode =
-      process.platform === 'win32' ? fs.constants.F_OK : fs.constants.X_OK
-    await fs.promises.access(filePath, mode)
-
-    return (await fs.promises.stat(filePath)).isFile()
+    return fs.readFileSync(filePath, 'utf8')
   } catch {
-    return false
+    return ''
   }
-}
-
-/** Where `command` is found on `PATH`, like the `which` shell command */
-async function which(command: string): Promise<string | undefined> {
-  if (!command) {
-    return undefined
-  }
-
-  const isWindows = process.platform === 'win32'
-  const hasSeparator = isWindows ? /[\\/]/.test(command) : command.includes('/')
-
-  const dirs = hasSeparator
-    ? ['']
-    : [
-        ...(isWindows ? [process.cwd()] : []),
-        // An empty entry stands for the current directory. It's kept, and
-        // `path.join()` turns it into a path relative to the current directory
-        ...(process.env.PATH ?? '')
-          .split(path.delimiter)
-          .map((dir) => dir.replace(/^"(.*)"$/, '$1')),
-      ]
-
-  const extensions = isWindows
-    ? [
-        ...(command.includes('.') ? [''] : []),
-        ...(process.env.PATHEXT ?? '.EXE;.CMD;.BAT;.COM')
-          .split(';')
-          .filter(Boolean),
-      ]
-    : ['']
-
-  for (const dir of dirs) {
-    for (const extension of extensions) {
-      const candidate = path.join(dir, command + extension)
-
-      if (await isExecutableFile(candidate)) {
-        return candidate
-      }
-    }
-  }
-
-  return undefined
-}
-
-function toToolInfo(version: string, toolPath: string | undefined) {
-  if (!version) {
-    return undefined
-  }
-
-  return toolPath ? { version, path: toolPath } : { version }
 }
 
 /**
  * The name and version of the operating system, like `macOS 15.2`,
- * `Linux 6.8 Ubuntu 24.04.1 LTS` or `Windows 11 10.0.22631`
+ * `Linux 6.8 Ubuntu 24.04.1 LTS (Noble Numbat)` or `Windows 11 10.0.22631`
  */
-export async function getOsName(): Promise<string> {
+export function getOsName(): string {
   const platform = os.platform()
   const release = os.release()
 
   if (platform === 'darwin') {
-    // Node 24 only runs on macOS releases that are all named "macOS"
-    const version = await run('sw_vers -productVersion')
+    const systemVersion = readFile(
+      '/System/Library/CoreServices/SystemVersion.plist',
+    )
+    const version = systemVersion.match(
+      /<key>ProductVersion<\/key>\s*<string>([^<]+)<\/string>/,
+    )?.[1]
 
     return version ? `macOS ${version}` : 'macOS'
   }
 
   if (platform === 'linux') {
     const kernel = release.replace(/^(\d+\.\d+).*/, '$1')
-    const distro = await getLinuxDistro()
+    const distro = getLinuxDistro()
     const name = kernel ? `Linux ${kernel}` : 'Linux'
 
     return distro ? `${name} ${distro}` : name
@@ -150,80 +55,34 @@ export async function getOsName(): Promise<string> {
   return platform
 }
 
-async function getLinuxDistro() {
-  let osRelease = ''
+/** The distro's name and version from `/etc/os-release`, like `Debian GNU/Linux 12 (bookworm)` */
+function getLinuxDistro() {
+  const osRelease = readFile('/etc/os-release')
 
-  try {
-    osRelease = await fs.promises.readFile('/etc/os-release', 'utf8')
-  } catch {
-    return ''
-  }
-
-  // The first `NAME="..."` is usually part of `PRETTY_NAME="..."`
-  const name = osRelease.match(/NAME="(.+)"/)?.[1] ?? ''
-  const version = osRelease.match(/VERSION="(.+)"/)?.[1] ?? ''
+  const name = osRelease.match(/^NAME="?([^"\n]+)"?$/m)?.[1] ?? ''
+  const version = osRelease.match(/^VERSION="?([^"\n]+)"?$/m)?.[1] ?? ''
 
   return `${name} ${version}`.trim()
 }
 
+/** The path to the user's shell, from `$SHELL` */
+export function getShellPath(): string | undefined {
+  return process.env.SHELL || undefined
+}
+
 /**
- * The user's shell, from `$SHELL` or else their login shell. Not available
- * on Windows
+ * The package manager that started this process, from the
+ * `npm_config_user_agent` environment variable that Yarn, npm, pnpm and Bun
+ * set for the scripts and binaries they run
  */
-export async function getShellInfo(): Promise<ToolInfo | undefined> {
-  if (process.platform !== 'darwin' && process.platform !== 'linux') {
+export function getPackageManager(): PackageManagerInfo | undefined {
+  // Like `yarn/4.14.1 npm/? node/v24.11.0 darwin arm64`
+  const userAgent = process.env.npm_config_user_agent ?? ''
+  const match = userAgent.match(/^([a-z]+)\/(\d\S*)/)
+
+  if (!match) {
     return undefined
   }
 
-  const shell =
-    process.env.SHELL ||
-    (await run('getent passwd $LOGNAME | cut -d: -f7 | head -1'))
-
-  // BusyBox's ash has no `--version`, but prints its version with `--help`
-  const versionArg = shell.includes('/bin/ash') ? '--help' : '--version'
-
-  const [output, shellPath] = await Promise.all([
-    shell ? runFile(shell, [versionArg], { withStderr: true }) : '',
-    which(shell),
-  ])
-
-  return toToolInfo(findVersion(output) || 'Unknown', shellPath)
-}
-
-/** The `node` on `PATH`, which isn't necessarily the one running this code */
-export async function getNodeInfo(): Promise<ToolInfo | undefined> {
-  const nodePath = await which('node')
-
-  const output =
-    process.platform === 'win32'
-      ? await run('node -v')
-      : nodePath
-        ? await runFile(nodePath, ['-v'])
-        : ''
-
-  return toToolInfo(findVersion(output), nodePath)
-}
-
-/** The `yarn` on `PATH`, as it reports itself in the current directory */
-export async function getYarnInfo(): Promise<ToolInfo | undefined> {
-  const [version, yarnPath] = await Promise.all([run('yarn -v'), which('yarn')])
-
-  return toToolInfo(version, yarnPath)
-}
-
-/** The `npm` on `PATH` */
-export async function getNpmInfo(): Promise<ToolInfo | undefined> {
-  const [version, npmPath] = await Promise.all([run('npm -v'), which('npm')])
-
-  return toToolInfo(version, npmPath)
-}
-
-/** VS Code's `code` command on `PATH` */
-export async function getVSCodeInfo(): Promise<ToolInfo | undefined> {
-  const [output, codePath] = await Promise.all([
-    run('code --version'),
-    which('code'),
-  ])
-
-  return toToolInfo(findVersion(output), codePath)
+  return { name: match[1], version: match[2] }
 }

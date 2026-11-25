@@ -27,9 +27,9 @@ export interface TelemetryEnvironment {
   osVersion: string | undefined
   shell: string | undefined
   nodeVersion: string | undefined
-  yarnVersion: string | undefined
-  npmVersion: string | undefined
-  vscodeVersion: string | undefined
+  /** The package manager that ran the command, like `yarn` or `npm` */
+  packageManager: string | undefined
+  packageManagerVersion: string | undefined
   cpuCount: number
   memoryGb: number
   /** `development`, `production`, `test` or `other` */
