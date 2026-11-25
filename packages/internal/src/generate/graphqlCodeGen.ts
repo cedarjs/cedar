@@ -35,6 +35,12 @@ enum CodegenSide {
   WEB,
 }
 
+/**
+ * Where web side types import `Prisma` from, for the `JSON` and `JSONObject`
+ * scalar mappings
+ */
+export const WEB_PRISMA_IMPORT_SOURCE = '$api/src/lib/db'
+
 type TypeDefResult = {
   typeDefFiles: string[]
   errors: { message: string; error: unknown }[]
@@ -145,7 +151,7 @@ export const generateTypeDefGraphQLWeb = async (): Promise<TypeDefResult> => {
       name: 'add',
       options: {
         content: [
-          `import { Prisma } from "$api/src/lib/db"`,
+          `import { Prisma } from "${WEB_PRISMA_IMPORT_SOURCE}"`,
           ...getApolloScalarDeclarations(),
         ],
         placement: 'prepend',
@@ -199,7 +205,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /**
  * Merges the `scalars` from a user's codegen config into Cedar's, one scalar at
  * a time, so that a scalar the user doesn't list keeps Cedar's mapping instead
- * of becoming `any`. An unset `scalars`, which is `undefined` in a JavaScript
+ * of becoming `unknown`. An unset `scalars`, which is `undefined` in a JavaScript
  * config and `null` for an empty key in YAML, leaves Cedar's mappings as they
  * are. Any other value that isn't a map is returned as is, for codegen to
  * report.
@@ -214,6 +220,29 @@ function mergeScalars(cedarScalars: unknown, userScalars: unknown): unknown {
   }
 
   return userScalars
+}
+
+/**
+ * Loads the plugin `config` from the user's codegen config file, if there is
+ * one
+ */
+async function loadUserPluginConfig(): Promise<CodegenTypes.PluginConfig> {
+  const userCodegenConfig = await loadCodegenConfig({
+    configFilePath: getPaths().base,
+  })
+
+  return userCodegenConfig?.config?.config ?? {}
+}
+
+/**
+ * The scalar mappings for the web side: Cedar's built-in mappings, with the
+ * `scalars` from the user's codegen config merged in. Some mappings refer to
+ * `Prisma`, which has to be imported from `WEB_PRISMA_IMPORT_SOURCE`.
+ */
+export async function getWebScalars(): Promise<unknown> {
+  const { scalars: userScalars } = await loadUserPluginConfig()
+
+  return mergeScalars(getCedarScalars(CodegenSide.WEB), userScalars)
 }
 
 /**
@@ -254,14 +283,10 @@ async function runCodegenGraphQL(
   filename: string,
   side: CodegenSide,
 ) {
-  const userCodegenConfig = await loadCodegenConfig({
-    configFilePath: getPaths().base,
-  })
+  const { scalars: userScalars, ...userPluginConfig } =
+    await loadUserPluginConfig()
 
   const pluginConfig = await getPluginConfig(side)
-
-  const { scalars: userScalars, ...userPluginConfig } =
-    userCodegenConfig?.config?.config ?? {}
 
   // Merge in user codegen config with the rw built-in one
   const mergedConfig: CodegenTypes.PluginConfig = {
@@ -461,32 +486,10 @@ async function getPrismaModels() {
   return prismaModels
 }
 
-async function getPluginConfig(side: CodegenSide) {
-  const prismaModels: Record<string, string> = await getPrismaModels()
-  // Resolver types are only used on the api side
-  const fieldResolvers =
-    side === CodegenSide.API ? getServiceFieldResolvers() : {}
-
-  Object.keys(prismaModels).forEach((key) => {
-    /** creates an object like this
-     * {
-     *  Post: MergePrismaWithSdlTypes<PrismaPost, MakeRelationsOptional<Post, AllMappedModels>, AllMappedModels>
-     *  Organization: MergePrismaWithSdlTypes<PrismaOrganization, MakeRelationsOptional<Organization, AllMappedModels>, AllMappedModels, "smsSenderDefault">
-     *  ...
-     * }
-     *
-     * The last type argument lists the fields that the type's field resolvers
-     * provide, so that resolvers returning the type don't have to
-     */
-    const resolvedFields = fieldResolvers[key] ?? []
-    const resolvedFieldsArg = resolvedFields.length
-      ? `, ${resolvedFields.map((field) => JSON.stringify(field)).join(' | ')}`
-      : ''
-
-    prismaModels[key] =
-      `MergePrismaWithSdlTypes<Prisma${key}, MakeRelationsOptional<${key}, AllMappedModels>, AllMappedModels${resolvedFieldsArg}>`
-  })
-
+/**
+ * The TypeScript types Cedar maps its built-in GraphQL scalars to
+ */
+function getCedarScalars(side: CodegenSide) {
   interface ScalarInputOutput {
     input: string
     output: string
@@ -502,7 +505,7 @@ async function getPluginConfig(side: CodegenSide) {
     | 'Byte'
     | 'File'
   const scalars: Partial<Record<ScalarKeys, string | ScalarInputOutput>> = {
-    // We need these, otherwise these scalars are mapped to any
+    // Without these mappings codegen types these scalars as `unknown`
     // On the api side resolvers can return a `bigint` (which is what Prisma
     // returns for BigInt columns) or a `number`. graphql-scalars'
     // BigIntResolver parses incoming values to a `number` when they fit in a
@@ -539,6 +542,36 @@ async function getPluginConfig(side: CodegenSide) {
   if (config.graphql.includeScalars.File) {
     scalars.File = 'File'
   }
+
+  return scalars
+}
+
+async function getPluginConfig(side: CodegenSide) {
+  const scalars = getCedarScalars(side)
+  const prismaModels: Record<string, string> = await getPrismaModels()
+  // Resolver types are only used on the api side
+  const fieldResolvers =
+    side === CodegenSide.API ? getServiceFieldResolvers() : {}
+
+  Object.keys(prismaModels).forEach((key) => {
+    /** creates an object like this
+     * {
+     *  Post: MergePrismaWithSdlTypes<PrismaPost, MakeRelationsOptional<Post, AllMappedModels>, AllMappedModels>
+     *  Organization: MergePrismaWithSdlTypes<PrismaOrganization, MakeRelationsOptional<Organization, AllMappedModels>, AllMappedModels, "smsSenderDefault">
+     *  ...
+     * }
+     *
+     * The last type argument lists the fields that the type's field resolvers
+     * provide, so that resolvers returning the type don't have to
+     */
+    const resolvedFields = fieldResolvers[key] ?? []
+    const resolvedFieldsArg = resolvedFields.length
+      ? `, ${resolvedFields.map((field) => JSON.stringify(field)).join(' | ')}`
+      : ''
+
+    prismaModels[key] =
+      `MergePrismaWithSdlTypes<Prisma${key}, MakeRelationsOptional<${key}, AllMappedModels>, AllMappedModels${resolvedFieldsArg}>`
+  })
 
   const pluginConfig: CodegenTypes.PluginConfig &
     rwTypescriptResolvers.TypeScriptResolversPluginConfig = {

@@ -6,11 +6,98 @@ import { addTypenameSelectionDocumentTransform } from '@graphql-codegen/client-p
 
 import { getConfig, getPaths } from '@cedarjs/project-config'
 
+import { getWebScalars, WEB_PRISMA_IMPORT_SOURCE } from './graphqlCodeGen.js'
 import {
   trustedDocumentsStore,
   replaceGqlTagWithTrustedDocumentGraphql,
 } from './trustedDocuments.js'
 import type { GeneratedFile } from './types.js'
+
+/**
+ * Rewrites a relative module path, like `../../types/scalars`, so that it
+ * points from `toDir` to the same file it points to from `fromDir`. Package
+ * imports and aliases are returned as they are.
+ */
+function rebaseModulePath(
+  source: string,
+  fromDir: string,
+  toDir: string,
+): string {
+  if (!source.startsWith('./') && !source.startsWith('../')) {
+    return source
+  }
+
+  const target = path.resolve(fromDir, source)
+  const rebased = path.relative(toDir, target).split(path.sep).join('/')
+
+  return rebased.startsWith('./') || rebased.startsWith('../')
+    ? rebased
+    : `./${rebased}`
+}
+
+/**
+ * Rewrites the module path of a relative scalar mapping, like
+ * `../../types/scalars#Money`, with `rebaseModulePath`. Inline types, which
+ * have no `#`, are returned as they are.
+ */
+function rebaseScalarMapping(
+  mapping: unknown,
+  fromDir: string,
+  toDir: string,
+): unknown {
+  if (typeof mapping !== 'string') {
+    return mapping
+  }
+
+  const hashIndex = mapping.indexOf('#')
+
+  if (hashIndex === -1) {
+    return mapping
+  }
+
+  return (
+    rebaseModulePath(mapping.slice(0, hashIndex), fromDir, toDir) +
+    mapping.slice(hashIndex)
+  )
+}
+
+/**
+ * Rebases the relative scalar mappings in `scalars` with
+ * `rebaseScalarMapping`, including separate `input` and `output` mappings.
+ * A string `scalars` is the module that every scalar is imported from, and
+ * is rebased with `rebaseModulePath`
+ */
+function rebaseScalarMappings(
+  scalars: unknown,
+  fromDir: string,
+  toDir: string,
+): unknown {
+  if (typeof scalars === 'string') {
+    return rebaseModulePath(scalars, fromDir, toDir)
+  }
+
+  if (typeof scalars !== 'object' || scalars === null) {
+    return scalars
+  }
+
+  return Object.fromEntries(
+    Object.entries(scalars).map(([name, mapping]) => {
+      if (typeof mapping === 'object' && mapping !== null) {
+        return [
+          name,
+          Object.fromEntries(
+            Object.entries(mapping).map(([key, value]) => [
+              key,
+              rebaseScalarMapping(value, fromDir, toDir),
+            ]),
+          ),
+        ]
+      }
+
+      return [name, rebaseScalarMapping(mapping, fromDir, toDir)]
+    }),
+  )
+}
 
 export const shouldGenerateTrustedDocuments = (): boolean => {
   const config = getConfig()
@@ -34,30 +121,45 @@ export const generateClientPreset = async () => {
   // and throws
   const documentsGlob = './web/src/**/!(*.d).{ts,tsx,js,jsx}'
 
-  const config: CodegenConfig = {
-    cwd: getPaths().base,
-    schema: getPaths().generated.schema,
-    documents: documentsGlob,
-    silent: true, // Plays nicely with cli task output
-    generates: {
-      ['./web/src/graphql/']: {
-        preset: 'client',
-        presetConfig: {
-          persistedDocuments: true,
-        },
-        documentTransforms: [addTypenameSelectionDocumentTransform],
-        config: {
-          // DO NOT USE documentMode: 'string',
-          // The client preset has no scalar mappings, so custom scalars,
-          // including Cedar's built-in ones like DateTime, are typed as
-          // `any`, not codegen's default of `unknown`
-          defaultScalarType: 'any',
+  try {
+    const config: CodegenConfig = {
+      cwd: getPaths().base,
+      schema: getPaths().generated.schema,
+      documents: documentsGlob,
+      silent: true, // Plays nicely with cli task output
+      generates: {
+        ['./web/src/graphql/']: {
+          preset: 'client',
+          presetConfig: {
+            persistedDocuments: true,
+          },
+          documentTransforms: [addTypenameSelectionDocumentTransform],
+          // The preset adds these plugins to `graphql.ts`, the file with the
+          // operation types
+          plugins: [
+            {
+              add: {
+                content: `import type { Prisma } from '${WEB_PRISMA_IMPORT_SOURCE}'`,
+                placement: 'prepend',
+              },
+            },
+          ],
+          config: {
+            // DO NOT USE documentMode: 'string',
+            // The same scalar mappings as in web/types/graphql.d.ts, so that
+            // an operation's types are the same in both files. Relative
+            // mappings are written for web/types/, so they're rebased to
+            // point to the same files from web/src/graphql/
+            scalars: rebaseScalarMappings(
+              await getWebScalars(),
+              getPaths().web.types,
+              path.join(getPaths().web.src, 'graphql'),
+            ),
+          },
         },
       },
-    },
-  }
+    }
 
-  try {
     // The codegen returns filenames relative to `cwd`, but everything
     // downstream (and our callers) expects absolute paths
     // `generate()` only resolves without files in watch mode, which isn't
