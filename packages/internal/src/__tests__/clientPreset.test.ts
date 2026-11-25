@@ -101,7 +101,17 @@ describe('Generate client preset', () => {
       const projectCopy = fs.mkdtempSync(
         path.join(cacheDir, 'cedar-client-preset-'),
       )
-      fs.cpSync(FIXTURE_PATH, projectCopy, { recursive: true })
+      // Other test files write to the fixture while it's copied: temporary
+      // directories in `.cedar`, which holds generated files, and a
+      // temporary `codegen.yml`. Neither is part of the fixture, and a
+      // directory removed while it's being copied crashes the test worker
+      const leftOut = new Set(
+        ['.cedar', 'codegen.yml'].map((name) => path.join(FIXTURE_PATH, name)),
+      )
+      fs.cpSync(FIXTURE_PATH, projectCopy, {
+        recursive: true,
+        filter: (source) => !leftOut.has(source),
+      })
       process.env.CEDAR_CWD = projectCopy
 
       const probeFile = path.join(
@@ -162,6 +172,16 @@ describe('Generate client preset', () => {
       // types/scalars. From web/src/graphql/ the same file is three levels up
       expect(output).toMatch(
         /import (type )?\{ JsonValue \} from '\.\.\/\.\.\/\.\.\/types\/scalars'/,
+      )
+    })
+
+    test('keeps a rebased mapping into a dot-directory relative', async () => {
+      const output = await generateProbeTypes(
+        'config:\n  scalars:\n    JSON: ../src/graphql/.generated/scalars#JsonValue\n',
+      )
+
+      expect(output).toMatch(
+        /import (type )?\{ JsonValue \} from '\.\/\.generated\/scalars'/,
       )
     })
 

@@ -37,7 +37,10 @@ function rebaseScalarMapping(
 
   const target = path.resolve(fromDir, source)
   const rebased = path.relative(toDir, target).split(path.sep).join('/')
-  const relativeSource = rebased.startsWith('.') ? rebased : `./${rebased}`
+  const relativeSource =
+    rebased.startsWith('./') || rebased.startsWith('../')
+      ? rebased
+      : `./${rebased}`
 
   return relativeSource + mapping.slice(hashIndex)
 }
