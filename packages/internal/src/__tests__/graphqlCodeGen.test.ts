@@ -20,6 +20,7 @@ const mockConfig = vi.hoisted((): { parsedScalars: { DateTime?: 'Date' } } => ({
   parsedScalars: {},
 }))
 
+import { dedent } from 'ts-dedent'
 import ts from 'typescript'
 import {
   beforeAll,
@@ -168,6 +169,55 @@ test('passes service field resolvers to the mapped model types', async () => {
   }
 })
 
+/**
+ * Returns the type errors in `files`, one `<file>:<line>: <message>` string
+ * per error. Errors in the framework's and its dependencies' published types
+ * aren't what the tests are about, so only `files` are checked
+ */
+function getTypeErrors(program: ts.Program, files: string[]) {
+  const diagnostics = files.flatMap((file) => {
+    const sourceFile = program.getSourceFile(file)
+
+    return sourceFile
+      ? [
+          ...program.getSyntacticDiagnostics(sourceFile),
+          ...program.getSemanticDiagnostics(sourceFile),
+        ]
+      : []
+  })
+
+  return diagnostics.map((diagnostic) => {
+    const message = ts.flattenDiagnosticMessageText(
+      diagnostic.messageText,
+      '\n',
+    )
+    const position =
+      diagnostic.file && diagnostic.start !== undefined
+        ? diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start)
+        : undefined
+
+    return `${path.basename(diagnostic.file?.fileName ?? '')}:${(position?.line ?? 0) + 1}: ${message}`
+  })
+}
+
+/**
+ * Stands in for the app's `src/lib/db`, which re-exports the Prisma client.
+ * The generated types import the Prisma namespace, and on the api side the
+ * model types, from it
+ */
+const DB_STUB = dedent`
+  export declare namespace Prisma {
+    type JsonValue = string | number | boolean | null | JsonObject | JsonValue[]
+    type JsonObject = { [key: string]: JsonValue }
+    type InputJsonValue = string | number | boolean | InputJsonObject | InputJsonValue[]
+    type InputJsonObject = { readonly [key: string]: InputJsonValue | null }
+  }
+  export type PrismaModelOne = { id: string }
+  export type PrismaModelTwo = { id: string }
+  export type Post = { id: string }
+  export type Todo = { id: number; body: string; status: string }
+`
+
 test('generated api types type-check without skipLibCheck', async () => {
   await generateGraphQLSchema()
   const {
@@ -179,44 +229,29 @@ test('generated api types type-check without skipLibCheck', async () => {
   const stubDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-codegen-'))
   const dbStub = path.join(stubDir, 'db.d.ts')
 
-  // Stands in for the app's `src/lib/db`, which re-exports the Prisma client.
-  // The generated types import the Prisma namespace and the model types from
-  // it
-  fs.writeFileSync(
-    dbStub,
-    `export declare namespace Prisma {
-  type JsonValue = string | number | boolean | null | JsonObject | JsonValue[]
-  type JsonObject = { [key: string]: JsonValue }
-  type InputJsonValue = string | number | boolean | InputJsonObject | InputJsonValue[]
-  type InputJsonObject = { readonly [key: string]: InputJsonValue | null }
-}
-export type PrismaModelOne = { id: string }
-export type PrismaModelTwo = { id: string }
-export type Post = { id: string }
-export type Todo = { id: number; body: string; status: string }
-`,
-  )
+  fs.writeFileSync(dbStub, DB_STUB)
 
   // A broken import in the generated types gives every resolver's `context`
   // TypeScript's error type, which accepts anything, so the
   // `@ts-expect-error` below would be unused
   fs.writeFileSync(
     checkFile,
-    `import type { QueryResolvers } from './graphql'
+    dedent`
+      import type { QueryResolvers } from './graphql'
 
-type Ctx = NonNullable<
-  Parameters<NonNullable<QueryResolvers['todos']>>[1]
->['context']
+      type Ctx = NonNullable<
+        Parameters<NonNullable<QueryResolvers['todos']>>[1]
+      >['context']
 
-// @ts-expect-error A number isn't a valid context
-export const notAContext: Ctx = 5
-`,
+      // @ts-expect-error A number isn't a valid context
+      export const notAContext: Ctx = 5
+    `,
   )
 
   try {
-    // These match the api tsconfig.json of a new Cedar app, except for
-    // `skipLibCheck`. The generated types are a .d.ts file, so
-    // `skipLibCheck: true` would hide every error in them
+    // The module and strictness options of a new Cedar app's api
+    // tsconfig.json. `skipLibCheck` is off, because the generated types are a
+    // .d.ts file and `skipLibCheck: true` would hide every error in them
     const program = ts.createProgram([graphqlTypesPath, checkFile], {
       target: ts.ScriptTarget.ES2023,
       module: ts.ModuleKind.ESNext,
@@ -228,36 +263,96 @@ export const notAContext: Ctx = 5
       paths: { 'src/lib/db': [dbStub] },
     })
 
-    // Errors in the framework's and its dependencies' published types aren't
-    // what this test is about, so only the files above are checked
-    const diagnostics = [graphqlTypesPath, checkFile].flatMap((file) => {
-      const sourceFile = program.getSourceFile(file)
-
-      return sourceFile
-        ? [
-            ...program.getSyntacticDiagnostics(sourceFile),
-            ...program.getSemanticDiagnostics(sourceFile),
-          ]
-        : []
-    })
-
-    const messages = diagnostics.map((diagnostic) => {
-      const message = ts.flattenDiagnosticMessageText(
-        diagnostic.messageText,
-        '\n',
-      )
-      const position =
-        diagnostic.file && diagnostic.start !== undefined
-          ? diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start)
-          : undefined
-
-      return `${path.basename(diagnostic.file?.fileName ?? '')}:${(position?.line ?? 0) + 1}: ${message}`
-    })
-
-    expect(messages).toEqual([])
+    expect(getTypeErrors(program, [graphqlTypesPath, checkFile])).toEqual([])
   } finally {
     fs.rmSync(checkFile)
     fs.rmSync(stubDir, { recursive: true, force: true })
+  }
+})
+
+test('generated web types type-check without skipLibCheck', async () => {
+  // A copy of the fixture with an operation that uses an input type and an
+  // enum. Codegen writes the schema's input types and enums once, and the
+  // operation types refer to them
+  const projectCopy = fs.mkdtempSync(path.join(os.tmpdir(), 'cedar-codegen-'))
+  fs.cpSync(FIXTURE_PATH, projectCopy, { recursive: true })
+  process.env.CEDAR_CWD = projectCopy
+
+  fs.writeFileSync(
+    path.join(projectCopy, 'api/src/graphql/posts.sdl.ts'),
+    dedent`
+      export const schema = gql\`
+        enum PostStatus {
+          DRAFT
+          PUBLISHED
+        }
+
+        input CreatePostInput {
+          title: String!
+          status: PostStatus!
+        }
+
+        type Post {
+          id: Int!
+          title: String!
+          status: PostStatus!
+        }
+
+        type Mutation {
+          createPost(input: CreatePostInput!): Post! @requireAuth
+        }
+      \`
+    `,
+  )
+
+  const probeFile = path.join(
+    projectCopy,
+    'web/src/components/PostProbe/PostProbe.js',
+  )
+  fs.mkdirSync(path.dirname(probeFile), { recursive: true })
+  fs.writeFileSync(
+    probeFile,
+    dedent`
+      export const MUTATION = gql\`
+        mutation PostProbe_CreatePost($input: CreatePostInput!) {
+          createPost(input: $input) {
+            id
+            status
+          }
+        }
+      \`
+    `,
+  )
+
+  const dbStub = path.join(projectCopy, 'db.d.ts')
+  fs.writeFileSync(dbStub, DB_STUB)
+
+  try {
+    await generateGraphQLSchema()
+    const {
+      typeDefFiles: [graphqlTypesPath],
+      errors,
+    } = await generateTypeDefGraphQLWeb()
+    expect(errors).toEqual([])
+
+    // The module and strictness options of a new Cedar app's web
+    // tsconfig.json. `skipLibCheck` is off, because the generated types are a
+    // .d.ts file and `skipLibCheck: true` would hide every error in them
+    const program = ts.createProgram([graphqlTypesPath], {
+      target: ts.ScriptTarget.ES2023,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      strict: true,
+      noEmit: true,
+      skipLibCheck: false,
+      types: [],
+      paths: { '$api/src/lib/db': [dbStub] },
+    })
+
+    expect(getTypeErrors(program, [graphqlTypesPath])).toEqual([])
+  } finally {
+    process.env.CEDAR_CWD = FIXTURE_PATH
+    fs.rmSync(projectCopy, { recursive: true, force: true })
   }
 })
 
