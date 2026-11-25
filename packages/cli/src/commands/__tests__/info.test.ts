@@ -5,7 +5,23 @@ import { vi, afterEach, beforeEach, describe, it, expect } from 'vitest'
 
 import { handler } from '../info.ts'
 
-vi.mock('envinfo', () => ({ default: { run: () => '' } }))
+const mockSystemInfo = vi.hoisted(() => ({
+  envinfoOutput: '',
+  osName: undefined as string | undefined,
+  shell: undefined as { version: string; path?: string } | undefined,
+  node: undefined as { version: string; path?: string } | undefined,
+  yarn: undefined as { version: string; path?: string } | undefined,
+}))
+
+vi.mock('envinfo', () => ({
+  default: { run: async () => mockSystemInfo.envinfoOutput },
+}))
+vi.mock('@cedarjs/telemetry/systemInfo', () => ({
+  getOsName: async () => mockSystemInfo.osName,
+  getShellInfo: async () => mockSystemInfo.shell,
+  getNodeInfo: async () => mockSystemInfo.node,
+  getYarnInfo: async () => mockSystemInfo.yarn,
+}))
 vi.mock('@cedarjs/project-config', () => ({
   getPaths: () => ({}),
   getConfigPath: () => 'cedar.toml',
@@ -30,9 +46,41 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.mocked(console).log.mockRestore()
+  mockSystemInfo.envinfoOutput = ''
+  mockSystemInfo.osName = undefined
+  mockSystemInfo.shell = undefined
+  mockSystemInfo.node = undefined
+  mockSystemInfo.yarn = undefined
 })
 
 describe('yarn cedar info', () => {
+  it('prints system info in the same format as envinfo', async () => {
+    mockCedarToml.fileContents = 'title = "Hello World"'
+    mockSystemInfo.osName = 'macOS 15.2'
+    mockSystemInfo.shell = { version: '5.9', path: '/bin/zsh' }
+    mockSystemInfo.node = { version: '24.18.1', path: '/usr/local/bin/node' }
+    mockSystemInfo.yarn = { version: '4.14.1' }
+    mockSystemInfo.envinfoOutput = '\n  Browsers:\n    Safari: 18.2\n'
+
+    await handler()
+
+    expect(vi.mocked(console).log).toHaveBeenCalledWith(
+      [
+        '',
+        '  System:',
+        '    OS: macOS 15.2',
+        '    Shell: 5.9 - /bin/zsh',
+        '  Binaries:',
+        '    Node: 24.18.1 - /usr/local/bin/node',
+        '    Yarn: 4.14.1',
+        '  Browsers:',
+        '    Safari: 18.2',
+        '  cedar.toml:',
+        '    title = "Hello World"',
+      ].join('\n'),
+    )
+  })
+
   describe('cedar.toml', () => {
     it('is included in the output', async () => {
       mockCedarToml.fileContents = 'title = "Hello World"'
@@ -42,7 +90,7 @@ describe('yarn cedar info', () => {
       expect(vi.mocked(console).log).toHaveBeenCalledWith(
         [
           // There should be nothing before 'cedar.toml:' in the output
-          // because we mock envinfo
+          // because we mock envinfo and the system info lookups
           '  cedar.toml:',
           '    title = "Hello World"',
         ].join('\n'),

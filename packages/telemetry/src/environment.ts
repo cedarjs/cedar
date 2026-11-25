@@ -1,55 +1,39 @@
 import os from 'node:os'
 
 import ci from 'ci-info'
-import envinfo from 'envinfo'
 
 import type { TelemetryEnvironment } from './payload.js'
-
-interface EnvInfo {
-  System?: {
-    OS?: string
-    Shell?: { path?: string }
-  }
-  Binaries?: {
-    Node?: { version?: string }
-    Yarn?: { version?: string }
-    npm?: { version?: string }
-  }
-  IDEs?: {
-    VSCode?: { version?: string }
-  }
-}
+import {
+  getNodeInfo,
+  getNpmInfo,
+  getOsName,
+  getShellInfo,
+  getVSCodeInfo,
+  getYarnInfo,
+} from './systemInfo.js'
 
 export async function getTelemetryEnvironment(): Promise<TelemetryEnvironment> {
-  let info: EnvInfo = {}
+  // Everything in here is optional, so a failure just leaves that field empty
+  const [osName, shell, node, yarn, npm, vscode] = await Promise.all([
+    getOsName().catch(() => undefined),
+    getShellInfo().catch(() => undefined),
+    getNodeInfo().catch(() => undefined),
+    getYarnInfo().catch(() => undefined),
+    getNpmInfo().catch(() => undefined),
+    getVSCodeInfo().catch(() => undefined),
+  ])
 
-  try {
-    info = JSON.parse(
-      await envinfo.run(
-        {
-          System: ['OS', 'Shell'],
-          Binaries: ['Node', 'Yarn', 'npm'],
-          IDEs: ['VSCode'],
-        },
-        { json: true },
-      ),
-    )
-  } catch {
-    // Everything envinfo provides is optional, so a failure just leaves those
-    // fields empty
-  }
-
-  const [osType, osVersion] = info.System?.OS?.split(' ') ?? []
+  const [osType, osVersion] = osName?.split(' ') ?? []
 
   return {
     osType,
     osVersion,
     // Only the name of the shell, never the path to it
-    shell: info.System?.Shell?.path?.split(/[\\/]/).pop(),
-    nodeVersion: info.Binaries?.Node?.version,
-    yarnVersion: info.Binaries?.Yarn?.version,
-    npmVersion: info.Binaries?.npm?.version,
-    vscodeVersion: info.IDEs?.VSCode?.version,
+    shell: shell?.path?.split(/[\\/]/).pop(),
+    nodeVersion: node?.version,
+    yarnVersion: yarn?.version,
+    npmVersion: npm?.version,
+    vscodeVersion: vscode?.version,
     cpuCount: os.availableParallelism(),
     memoryGb: Math.round(os.totalmem() / 1073741824),
     nodeEnv: describeNodeEnv(process.env.NODE_ENV),
