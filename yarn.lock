@@ -3169,6 +3169,7 @@ __metadata:
     "@prisma/dmmf": "catalog:prisma"
     "@prisma/internals": "catalog:prisma"
     "@types/archiver": "npm:^7.0.0"
+    "@types/envinfo": "npm:7.8.4"
     ansis: "catalog:"
     archiver: "npm:7.0.1"
     boxen: "catalog:"
@@ -3957,10 +3958,8 @@ __metadata:
   dependencies:
     "@cedarjs/project-config": "workspace:*"
     "@cedarjs/structure": "workspace:*"
-    "@types/envinfo": "npm:7.8.4"
     "@types/yargs": "catalog:"
     ci-info: "catalog:"
-    envinfo: "catalog:"
     typescript: "catalog:"
     uuid: "catalog:"
     vite: "catalog:"

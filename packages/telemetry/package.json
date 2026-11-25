@@ -21,6 +21,10 @@
       "types": "./dist/record.d.ts",
       "default": "./dist/record.js"
     },
+    "./systemInfo": {
+      "types": "./dist/systemInfo.d.ts",
+      "default": "./dist/systemInfo.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
@@ -39,12 +43,10 @@
     "@cedarjs/project-config": "workspace:*",
     "@cedarjs/structure": "workspace:*",
     "ci-info": "catalog:",
-    "envinfo": "catalog:",
     "uuid": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {
-    "@types/envinfo": "7.8.4",
     "@types/yargs": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
