@@ -185,6 +185,16 @@ describe('Generate client preset', () => {
       )
     })
 
+    test('imports every scalar from a relative scalars module', async () => {
+      const output = await generateProbeTypes(
+        'config:\n  scalars: ../../types/scalars\n',
+      )
+
+      expect(output).toMatch(
+        /import (type )?\{[^}]*\bJSON\b[^}]*\} from '\.\.\/\.\.\/\.\.\/types\/scalars'/,
+      )
+    })
+
     test("keeps Cedar's mappings for scalars the codegen config doesn't list", async () => {
       const output = await generateProbeTypes(
         'config:\n  scalars:\n    DateTime: Date\n',

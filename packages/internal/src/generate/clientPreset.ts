@@ -14,10 +14,31 @@ import {
 import type { GeneratedFile } from './types.js'
 
 /**
+ * Rewrites a relative module path, like `../../types/scalars`, so that it
+ * points from `toDir` to the same file it points to from `fromDir`. Package
+ * imports and aliases are returned as they are.
+ */
+function rebaseModulePath(
+  source: string,
+  fromDir: string,
+  toDir: string,
+): string {
+  if (!source.startsWith('./') && !source.startsWith('../')) {
+    return source
+  }
+
+  const target = path.resolve(fromDir, source)
+  const rebased = path.relative(toDir, target).split(path.sep).join('/')
+
+  return rebased.startsWith('./') || rebased.startsWith('../')
+    ? rebased
+    : `./${rebased}`
+}
+
+/**
  * Rewrites the module path of a relative scalar mapping, like
- * `../../types/scalars#Money`, so that it points from `toDir` to the same
- * file it points to from `fromDir`. Package imports, aliases and inline types
- * are returned as they are.
+ * `../../types/scalars#Money`, with `rebaseModulePath`. Inline types, which
+ * have no `#`, are returned as they are.
  */
 function rebaseScalarMapping(
   mapping: unknown,
@@ -29,31 +50,32 @@ function rebaseScalarMapping(
   }
 
   const hashIndex = mapping.indexOf('#')
-  const source = hashIndex === -1 ? '' : mapping.slice(0, hashIndex)
 
-  if (!source.startsWith('./') && !source.startsWith('../')) {
+  if (hashIndex === -1) {
     return mapping
   }
 
-  const target = path.resolve(fromDir, source)
-  const rebased = path.relative(toDir, target).split(path.sep).join('/')
-  const relativeSource =
-    rebased.startsWith('./') || rebased.startsWith('../')
-      ? rebased
-      : `./${rebased}`
-
-  return relativeSource + mapping.slice(hashIndex)
+  return (
+    rebaseModulePath(mapping.slice(0, hashIndex), fromDir, toDir) +
+    mapping.slice(hashIndex)
+  )
 }
 
 /**
  * Rebases the relative scalar mappings in `scalars` with
- * `rebaseScalarMapping`, including separate `input` and `output` mappings
+ * `rebaseScalarMapping`, including separate `input` and `output` mappings.
+ * A string `scalars` is the module that every scalar is imported from, and
+ * is rebased with `rebaseModulePath`
  */
 function rebaseScalarMappings(
   scalars: unknown,
   fromDir: string,
   toDir: string,
 ): unknown {
+  if (typeof scalars === 'string') {
+    return rebaseModulePath(scalars, fromDir, toDir)
+  }
+
   if (typeof scalars !== 'object' || scalars === null) {
     return scalars
   }
