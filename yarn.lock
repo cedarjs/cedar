@@ -3823,7 +3823,7 @@ __metadata:
     "@envelop/types": "catalog:"
     "@graphql-tools/schema": "catalog:"
     "@graphql-tools/utils": "catalog:"
-    "@graphql-yoga/plugin-defer-stream": "npm:4.1.0"
+    "@graphql-yoga/plugin-defer-stream": "npm:4.1.1"
     "@graphql-yoga/plugin-graphql-sse": "npm:4.1.0"
     "@graphql-yoga/redis-event-target": "npm:4.0.0"
     "@graphql-yoga/subscription": "npm:6.0.0"
@@ -7328,15 +7328,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphql-yoga/plugin-defer-stream@npm:4.1.0":
-  version: 4.1.0
-  resolution: "@graphql-yoga/plugin-defer-stream@npm:4.1.0"
+"@graphql-yoga/plugin-defer-stream@npm:4.1.1":
+  version: 4.1.1
+  resolution: "@graphql-yoga/plugin-defer-stream@npm:4.1.1"
   dependencies:
     "@graphql-tools/utils": "npm:^13.1.1"
   peerDependencies:
     graphql: ^16.0.0 || ^17.0.0
-    graphql-yoga: ^6.1.0
-  checksum: 10c0/d60750fe06acd29370976ee8152d79784b77a71ec5d8b7cb8c8833a5c2b35813b871dbdea64a44c0f5c2591e803fc559246d56a894aff0823e85e461d62c1422
+    graphql-yoga: ^6.1.1
+  checksum: 10c0/67256785ba91240ed5ba5ff123504eeea0a8f49928bc31e0323d58deb7ef8142fccda13b043b5233140a168567db8446e3869c7b8be4fb84a899ce106071150c
   languageName: node
   linkType: hard
 
