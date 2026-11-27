@@ -3777,7 +3777,7 @@ __metadata:
     mime-types: "catalog:"
     publint: "catalog:"
     rollup: "catalog:"
-    rollup-plugin-swc3: "npm:0.12.2"
+    rollup-plugin-swc3: "npm:0.12.3"
     typescript: "catalog:"
     unimport: "catalog:"
     unplugin-auto-import: "catalog:"
@@ -18539,7 +18539,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"foxts@npm:^5.9.1":
+"foxts@npm:^5.9.2":
   version: 5.9.2
   resolution: "foxts@npm:5.9.2"
   dependencies:
@@ -26467,21 +26467,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup-plugin-swc3@npm:0.12.2":
-  version: 0.12.2
-  resolution: "rollup-plugin-swc3@npm:0.12.2"
+"rollup-plugin-swc3@npm:0.12.3":
+  version: 0.12.3
+  resolution: "rollup-plugin-swc3@npm:0.12.3"
   dependencies:
     "@dual-bundle/import-meta-resolve": "npm:^4.2.1"
     "@fastify/deepmerge": "npm:^3.2.4"
     "@rollup/pluginutils": "npm:^5.5.1"
     "@swc/types": "npm:^0.1.28"
-    foxts: "npm:^5.9.1"
+    foxts: "npm:^5.9.2"
     get-tsconfig: "npm:^4.14.3"
     rollup-preserve-directives: "npm:^1.1.3"
   peerDependencies:
     "@swc/core": ">=1.2.165"
     rollup: ^2.0.0 || ^3.0.0 || ^4.0.0
-  checksum: 10c0/925eff7fbba9e84eb8ca8da6b10a457d6e76a7e16816b2e34d085bfc73508a468982fcc36935d7ab67b2ce5e1a2eedaabe70960b643ca22102cd7e1d1309c1a4
+  checksum: 10c0/c6e179c45586e7d9966922382e1d4dbcb07771eed987995e15d3afcd2ba51a98185232ae6f0a6f26c625451044c72e626f5098e3ff3faa4deecc1f2bab276115
   languageName: node
   linkType: hard
 
