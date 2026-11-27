@@ -48,7 +48,7 @@
     "@graphql-tools/merge": "catalog:",
     "@graphql-tools/schema": "catalog:",
     "@graphql-tools/utils": "catalog:",
-    "@graphql-yoga/plugin-persisted-operations": "4.1.0",
+    "@graphql-yoga/plugin-persisted-operations": "4.1.1",
     "@opentelemetry/api": "1.10.0",
     "cookie": "catalog:",
     "graphql": "catalog:",
