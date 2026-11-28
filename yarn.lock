@@ -4243,7 +4243,7 @@ __metadata:
     fast-glob: "catalog:"
     find-my-way: "npm:9.10.2"
     http-proxy-middleware: "npm:3.0.11"
-    isbot: "npm:5.2.3"
+    isbot: "npm:5.2.4"
     magic-string: "catalog:"
     memfs: "catalog:"
     oxc-parser: "catalog:"
@@ -20417,10 +20417,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"isbot@npm:5.2.3":
-  version: 5.2.3
-  resolution: "isbot@npm:5.2.3"
-  checksum: 10c0/41f50ca62a91325731e781cc2d68a151953e50acaf0311f6a495603ec29ceb7bfe181278463c154022e9430ccf1567453714d7ded2c5d09f9cb56b63ca610a61
+"isbot@npm:5.2.4":
+  version: 5.2.4
+  resolution: "isbot@npm:5.2.4"
+  checksum: 10c0/b117f48d3260c722e39477060004e71f452963fc03a37b94ba49d07e1bd87a0e33d3fb43ff2ca12d05c0aa347fd3ac7ab08a75a79da87558462d8da1393ee6c5
   languageName: node
   linkType: hard
 
