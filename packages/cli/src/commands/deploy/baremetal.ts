@@ -106,14 +106,16 @@ export const builder = (yargs: Argv) => {
   })
 
   yargs.option('git-check', {
-    describe: 'Check for unpushed commits before deploying',
+    describe:
+      'Check that HEAD has no commits missing from the deploy branch before deploying',
     default: true,
     type: 'boolean',
   })
 
   yargs.option('yes', {
     alias: 'y',
-    describe: 'Deploy despite unpushed commits, without prompting',
+    describe:
+      'Deploy despite commits missing from the deploy branch, without prompting',
     default: false,
     type: 'boolean',
   })
