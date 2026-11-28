@@ -3366,7 +3366,7 @@ __metadata:
   dependencies:
     "@cedarjs/framework-tools": "workspace:*"
     "@types/eslint": "npm:8.56.12"
-    "@types/estree": "npm:1.0.10"
+    "@types/estree": "npm:1.0.11"
     "@typescript-eslint/parser": "catalog:"
     "@typescript-eslint/rule-tester": "npm:8.73.0"
     "@typescript-eslint/typescript-estree": "npm:8.73.0"
@@ -12250,10 +12250,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/estree@npm:*, @types/estree@npm:1.0.10, @types/estree@npm:^1.0.0, @types/estree@npm:^1.0.10":
-  version: 1.0.10
-  resolution: "@types/estree@npm:1.0.10"
-  checksum: 10c0/d258926dac68425e77e43fd64045123b77f998ab2cf0bd0cc5a6ff016c365e60ed26f42adac64551906c1beab3bea08d60d113f905829ac60cfd6409db4761e9
+"@types/estree@npm:*, @types/estree@npm:1.0.11, @types/estree@npm:^1.0.0, @types/estree@npm:^1.0.10":
+  version: 1.0.11
+  resolution: "@types/estree@npm:1.0.11"
+  checksum: 10c0/1a3f48546509f10e6359eeabaf35e8f033aa0e170e1812348a6e819e8e3d0697b5121efba7fc4b4061ba1da98b74792ce225d52d0f22ed276eea5fdb2c6c71e3
   languageName: node
   linkType: hard
 
