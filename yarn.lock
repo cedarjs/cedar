@@ -12508,12 +12508,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:24.19.3, @types/node@npm:>=12.12.47, @types/node@npm:>=13.7.0":
-  version: 24.19.3
-  resolution: "@types/node@npm:24.19.3"
+"@types/node@npm:*, @types/node@npm:24.19.4, @types/node@npm:>=12.12.47, @types/node@npm:>=13.7.0":
+  version: 24.19.4
+  resolution: "@types/node@npm:24.19.4"
   dependencies:
     undici-types: "npm:>=7.24.0 <7.24.7"
-  checksum: 10c0/f1074f4827f622406fefc7e96a7760a963f99a0771e029cff81d07fb642e1b06521ae66df49290aed6a38ce4c9d98d7fa45ac3431ca73556d2fbf3da905e39da
+  checksum: 10c0/3fce002ce5d6baa78be1b03f24ef676a12d14ef22a600ad07e78308d10ae62fb10d8ac18a67bcdcdd631a6f1de2129cb9e0c1d2badab85e36fc075d319191d99
   languageName: node
   linkType: hard
 
