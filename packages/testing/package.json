@@ -88,7 +88,7 @@
     "@cedarjs/auth": "workspace:*",
     "@cedarjs/router": "workspace:*",
     "@cedarjs/web": "workspace:*",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   },
   "peerDependenciesMeta": {
     "vitest": {
