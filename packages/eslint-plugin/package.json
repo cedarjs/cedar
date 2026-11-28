@@ -30,7 +30,7 @@
   "devDependencies": {
     "@cedarjs/framework-tools": "workspace:*",
     "@types/eslint": "8.56.12",
-    "@types/estree": "1.0.10",
+    "@types/estree": "1.0.11",
     "@typescript-eslint/parser": "catalog:",
     "@typescript-eslint/rule-tester": "8.73.0",
     "ts-dedent": "catalog:",
