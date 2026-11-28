@@ -81,7 +81,7 @@
     "fast-glob": "catalog:",
     "find-my-way": "9.10.2",
     "http-proxy-middleware": "3.0.11",
-    "isbot": "5.2.3",
+    "isbot": "5.2.4",
     "magic-string": "catalog:",
     "oxc-parser": "catalog:",
     "react-server-dom-webpack": "catalog:",
