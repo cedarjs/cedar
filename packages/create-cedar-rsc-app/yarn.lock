@@ -857,12 +857,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:24.19.2":
-  version: 24.19.2
-  resolution: "@types/node@npm:24.19.2"
+"@types/node@npm:*, @types/node@npm:24.19.3":
+  version: 24.19.3
+  resolution: "@types/node@npm:24.19.3"
   dependencies:
     undici-types: "npm:>=7.24.0 <7.24.7"
-  checksum: 10c0/b51a7f8854007ad579dffdd0633d8addbfeb2c97cceb380f2eba0ed163638ec52e17565385a6cc04d54ac4ff99c70c64aee68a4ca45b6128c035e828794e29c5
+  checksum: 10c0/f1074f4827f622406fefc7e96a7760a963f99a0771e029cff81d07fb642e1b06521ae66df49290aed6a38ce4c9d98d7fa45ac3431ca73556d2fbf3da905e39da
   languageName: node
   linkType: hard
 
@@ -1277,7 +1277,7 @@ __metadata:
     "@eslint-community/eslint-plugin-eslint-comments": "npm:^4.3.0"
     "@eslint/js": "npm:9.39.5"
     "@types/eslint-plugin-markdown": "npm:^2.0.2"
-    "@types/node": "npm:24.19.2"
+    "@types/node": "npm:24.19.3"
     "@types/which": "npm:3.0.4"
     "@types/yauzl-promise": "npm:4.0.1"
     ansis: "npm:4.5.0"
